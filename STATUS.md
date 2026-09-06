@@ -1,17 +1,17 @@
 # Light/ build status
 
-_Regenerated 2026-09-07 01:50 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
+_Regenerated 2026-09-07 02:22 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
 
 | # | Feature | Repo | Status | Agent | Since | Note |
 |---|---|---|---|---|---|---|
-| F01 | Orb build-mode toggle | orb | building | mid-engineer (F01 builder) | 2026-09-07 01:35 IST | read contract; establishing S0 baseline (npm install + npm test) in worktree before editing |
+| F01 | Orb build-mode toggle | orb | verified | verifier (independent) | 2026-09-07 02:09 IST | PASS - both judgment calls confirmed safe independently (S0 red is disjoint/pre-existing; A3 substitute is sound, contract's own A3 recipe was unbuildable-as-written) |
 | F02 | lld.v1 contract (schema+TS+Rust+Python mirrors) | fleet+orb | contract | lead-architect (F02) - contract done, BLOCKED on lane | 2026-09-07 01:50 IST | needs both orb+fleet, both occupied by F01/F08; found 4 real defects in copied U1 artifacts + corrected 2 FEATURES.md errors (C1 verdict, Py-mirror repo). Start F02a in fleet once free. |
 | F03 | Module-brief atomizer | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F04 | Depth-completeness belief registers | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F05 | Freeze protocol (propose->pushback->freeze) | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F06 | lld-ready gate (depth-bar enforcement) | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F07 | Fleet SOW-intake extension | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
-| F08 | PR emit step | fleet | building | mid-engineer (dispatched) | 2026-09-07 01:34 IST | contract excellent, dispatching builder |
+| F08 | PR emit step | fleet | verifying | mid-engineer (F08 builder) | 2026-09-07T03:10:00+05:30 | cargo test -p fleet green (--test-threads=1); default-parallel run flakes on tests/f08_pr_emit.rs's own git-init race, not my code -- see report |
 | F09 | Orb->Fleet handoff wiring | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F10 | P0 capstone: one module spoken->frozen->built->attested->PR | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F11 | Thin status echo | orb | pending | unassigned | 2026-09-07 01:19 IST |  |

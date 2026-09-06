@@ -1,7 +1,7 @@
 ID=F01
 FEATURE=Orb build-mode toggle
 REPO=orb
-STATUS=building
-AGENT=mid-engineer (F01 builder)
-SINCE=2026-09-07 01:35 IST
-NOTE=read contract; establishing S0 baseline (npm install + npm test) in worktree before editing
+STATUS=done
+AGENT=verifier (independent)
+SINCE=2026-09-07 02:25 IST
+NOTE=client-side only, apps/macos cannot reach it (Swift can't import TS) - gap closed by redefined F04, server-side

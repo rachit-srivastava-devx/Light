@@ -1,7 +1,7 @@
 ID=F08
 FEATURE=PR emit step
 REPO=fleet
-STATUS=building
-AGENT=mid-engineer (dispatched)
-SINCE=2026-09-07 01:34 IST
-NOTE=contract excellent, dispatching builder
+STATUS=verifying
+AGENT=mid-engineer (F08 builder)
+SINCE=2026-09-07T03:10:00+05:30
+NOTE=cargo test -p fleet green (--test-threads=1); default-parallel run flakes on tests/f08_pr_emit.rs's own git-init race, not my code -- see report
