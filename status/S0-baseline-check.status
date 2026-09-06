@@ -3,5 +3,5 @@ FEATURE=Baseline gate check (each repo's own pre-existing verify gate, unchanged
 REPO=orb+fleet+apps/macos
 STATUS=building
 AGENT=main session
-SINCE=2026-09-07 01:25 IST
-NOTE=re-checking illegal_lifecycle_transitions_do_not_compile per speed-of-thought-fleet-rules skill
+SINCE=2026-09-07 01:31 IST
+NOTE=illegal_lifecycle_transitions_do_not_compile: CONFIRMED GREEN (1 passed, 165s, isolated); full cargo test running now

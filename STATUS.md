@@ -1,17 +1,17 @@
 # Light/ build status
 
-_Regenerated 2026-09-07 01:25 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
+_Regenerated 2026-09-07 01:50 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
 
 | # | Feature | Repo | Status | Agent | Since | Note |
 |---|---|---|---|---|---|---|
-| F01 | Orb build-mode toggle | orb | contract | lead-architect (dispatched) | 2026-09-07 01:23 IST | writing contract now |
-| F02 | lld.v1 contract (schema+TS+Rust+Python mirrors) | fleet+orb | pending | unassigned | 2026-09-07 01:19 IST |  |
+| F01 | Orb build-mode toggle | orb | building | mid-engineer (F01 builder) | 2026-09-07 01:35 IST | read contract; establishing S0 baseline (npm install + npm test) in worktree before editing |
+| F02 | lld.v1 contract (schema+TS+Rust+Python mirrors) | fleet+orb | contract | lead-architect (F02) - contract done, BLOCKED on lane | 2026-09-07 01:50 IST | needs both orb+fleet, both occupied by F01/F08; found 4 real defects in copied U1 artifacts + corrected 2 FEATURES.md errors (C1 verdict, Py-mirror repo). Start F02a in fleet once free. |
 | F03 | Module-brief atomizer | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F04 | Depth-completeness belief registers | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F05 | Freeze protocol (propose->pushback->freeze) | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F06 | lld-ready gate (depth-bar enforcement) | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F07 | Fleet SOW-intake extension | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
-| F08 | PR emit step | fleet | contract | lead-architect (dispatched) | 2026-09-07 01:23 IST | writing contract now |
+| F08 | PR emit step | fleet | building | mid-engineer (dispatched) | 2026-09-07 01:34 IST | contract excellent, dispatching builder |
 | F09 | Orb->Fleet handoff wiring | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F10 | P0 capstone: one module spoken->frozen->built->attested->PR | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F11 | Thin status echo | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
@@ -45,6 +45,6 @@ _Regenerated 2026-09-07 01:25 IST from `status/*.status` — do not hand-edit th
 | F39 | Retro loop | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F40 | Local cost dashboard (D12) | apps/macos | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F41 | Multi-harness dispatch (generalize claude+codex adapter pair) | fleet | pending | unassigned | 2026-09-07 01:25 IST | owner's explicit standing rule, found via speed-of-thought-fleet-rules skill; upstream backlog S5 |
-| S0 | Baseline gate check (each repo's own pre-existing verify gate, unchanged) | orb+fleet+apps/macos | building | main session | 2026-09-07 01:25 IST | re-checking illegal_lifecycle_transitions_do_not_compile per speed-of-thought-fleet-rules skill |
+| S0 | Baseline gate check (each repo's own pre-existing verify gate, unchanged) | orb+fleet+apps/macos | building | main session | 2026-09-07 01:31 IST | illegal_lifecycle_transitions_do_not_compile: CONFIRMED GREEN (1 passed, 165s, isolated); full cargo test running now |
 | S1 | Step 1 — copy adhd-focus-orb+fleet-rs+OrbMac into Light/, reorganize | Light (all) | done | main session | 2026-09-07 01:17 IST | 1545 files, single fresh git history, commit 8f86440 |
 | S2 | Step 2 — write Light/FEATURES.md (atomic list, ordered by time-to-visible-output) | Light (all) | done | main session | 2026-09-07 01:23 IST | 40 features, P0-P4, committed |

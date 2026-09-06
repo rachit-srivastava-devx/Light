@@ -1,7 +1,7 @@
 ID=F01
 FEATURE=Orb build-mode toggle
 REPO=orb
-STATUS=contract
-AGENT=lead-architect (dispatched)
-SINCE=2026-09-07 01:23 IST
-NOTE=writing contract now
+STATUS=building
+AGENT=mid-engineer (F01 builder)
+SINCE=2026-09-07 01:35 IST
+NOTE=read contract; establishing S0 baseline (npm install + npm test) in worktree before editing

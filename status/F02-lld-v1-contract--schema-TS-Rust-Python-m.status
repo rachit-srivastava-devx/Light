@@ -1,7 +1,7 @@
 ID=F02
 FEATURE=lld.v1 contract (schema+TS+Rust+Python mirrors)
 REPO=fleet+orb
-STATUS=pending
-AGENT=unassigned
-SINCE=2026-09-07 01:19 IST
-NOTE=
+STATUS=contract
+AGENT=lead-architect (F02) - contract done, BLOCKED on lane
+SINCE=2026-09-07 01:50 IST
+NOTE=needs both orb+fleet, both occupied by F01/F08; found 4 real defects in copied U1 artifacts + corrected 2 FEATURES.md errors (C1 verdict, Py-mirror repo). Start F02a in fleet once free.
