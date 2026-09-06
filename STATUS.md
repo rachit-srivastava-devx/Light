@@ -1,17 +1,17 @@
 # Light/ build status
 
-_Regenerated 2026-09-07 02:22 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
+_Regenerated 2026-09-07 02:53 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
 
 | # | Feature | Repo | Status | Agent | Since | Note |
 |---|---|---|---|---|---|---|
-| F01 | Orb build-mode toggle | orb | verified | verifier (independent) | 2026-09-07 02:09 IST | PASS - both judgment calls confirmed safe independently (S0 red is disjoint/pre-existing; A3 substitute is sound, contract's own A3 recipe was unbuildable-as-written) |
+| F01 | Orb build-mode toggle | orb | done | verifier (independent) | 2026-09-07 02:25 IST | client-side only, apps/macos cannot reach it (Swift can't import TS) - gap closed by redefined F04, server-side |
 | F02 | lld.v1 contract (schema+TS+Rust+Python mirrors) | fleet+orb | contract | lead-architect (F02) - contract done, BLOCKED on lane | 2026-09-07 01:50 IST | needs both orb+fleet, both occupied by F01/F08; found 4 real defects in copied U1 artifacts + corrected 2 FEATURES.md errors (C1 verdict, Py-mirror repo). Start F02a in fleet once free. |
 | F03 | Module-brief atomizer | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
-| F04 | Depth-completeness belief registers | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
+| F04 | Server-side build-mode session + depth-completeness belief registers (relay-py) - closes F01 reachability gap | orb | building | mid-engineer (building) | 2026-09-07 02:41 IST | contract excellent - found mode=build crashes (500), apps/macos dials nothing yet (F04b follow-up flagged) |
 | F05 | Freeze protocol (propose->pushback->freeze) | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F06 | lld-ready gate (depth-bar enforcement) | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F07 | Fleet SOW-intake extension | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
-| F08 | PR emit step | fleet | verifying | mid-engineer (F08 builder) | 2026-09-07T03:10:00+05:30 | cargo test -p fleet green (--test-threads=1); default-parallel run flakes on tests/f08_pr_emit.rs's own git-init race, not my code -- see report |
+| F08 | PR emit step | fleet | verifying | verifier (dispatched) | 2026-09-07 02:35 IST | cargo test -p fleet green (--test-threads=1); default-parallel run flakes on tests/f08_pr_emit.rs's own git-init race, not my code -- see report |
 | F09 | Orb->Fleet handoff wiring | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F10 | P0 capstone: one module spoken->frozen->built->attested->PR | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F11 | Thin status echo | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
@@ -39,7 +39,7 @@ _Regenerated 2026-09-07 02:22 IST from `status/*.status` — do not hand-edit th
 | F33 | D10 trigger mechanism | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F34 | no-ambient injection gate | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F35 | Contract-codegen pipeline | apps/macos+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
-| F36 | AEC/VPIO wiring | apps/macos | pending | unassigned | 2026-09-07 01:19 IST |  |
+| F36 | AEC/VPIO wiring | apps/macos | blocked | verifier | 2026-09-07 02:43 IST | FAIL: build/68 tests reproduce clean, but VoiceProcessingIOManager.start() throws propertySetFailed(-10863) on real hardware (never calls AudioUnitInitialize) and its render callback is an unconditional no-op that can never invoke onProcessedFrame/onFrame even if start succeeded — AEC path delivers zero frames, not an honest CI-only gap as claimed. |
 | F37 | Two-pane chat UI shell | apps/macos | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F38 | L3 procedural memory / learning loop | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F39 | Retro loop | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |

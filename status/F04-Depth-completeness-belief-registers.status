@@ -1,7 +1,7 @@
 ID=F04
-FEATURE=Depth-completeness belief registers
+FEATURE=Server-side build-mode session + depth-completeness belief registers (relay-py) - closes F01 reachability gap
 REPO=orb
-STATUS=pending
-AGENT=unassigned
-SINCE=2026-09-07 01:19 IST
-NOTE=
+STATUS=building
+AGENT=mid-engineer (building)
+SINCE=2026-09-07 02:41 IST
+NOTE=contract excellent - found mode=build crashes (500), apps/macos dials nothing yet (F04b follow-up flagged)

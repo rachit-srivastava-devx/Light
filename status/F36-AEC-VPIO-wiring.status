@@ -1,7 +1,7 @@
 ID=F36
 FEATURE=AEC/VPIO wiring
 REPO=apps/macos
-STATUS=pending
-AGENT=unassigned
-SINCE=2026-09-07 01:19 IST
-NOTE=
+STATUS=blocked
+AGENT=verifier
+SINCE=2026-09-07 02:43 IST
+NOTE=FAIL: build/68 tests reproduce clean, but VoiceProcessingIOManager.start() throws propertySetFailed(-10863) on real hardware (never calls AudioUnitInitialize) and its render callback is an unconditional no-op that can never invoke onProcessedFrame/onFrame even if start succeeded — AEC path delivers zero frames, not an honest CI-only gap as claimed.
