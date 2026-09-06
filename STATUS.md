@@ -1,17 +1,17 @@
 # Light/ build status
 
-_Regenerated 2026-09-07 01:19 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
+_Regenerated 2026-09-07 01:23 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
 
 | # | Feature | Repo | Status | Agent | Since | Note |
 |---|---|---|---|---|---|---|
-| F01 | Orb build-mode toggle | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
+| F01 | Orb build-mode toggle | orb | contract | lead-architect (dispatched) | 2026-09-07 01:23 IST | writing contract now |
 | F02 | lld.v1 contract (schema+TS+Rust+Python mirrors) | fleet+orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F03 | Module-brief atomizer | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F04 | Depth-completeness belief registers | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F05 | Freeze protocol (propose->pushback->freeze) | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F06 | lld-ready gate (depth-bar enforcement) | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F07 | Fleet SOW-intake extension | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
-| F08 | PR emit step | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
+| F08 | PR emit step | fleet | contract | lead-architect (dispatched) | 2026-09-07 01:23 IST | writing contract now |
 | F09 | Orb->Fleet handoff wiring | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F10 | P0 capstone: one module spoken->frozen->built->attested->PR | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F11 | Thin status echo | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
@@ -45,4 +45,4 @@ _Regenerated 2026-09-07 01:19 IST from `status/*.status` — do not hand-edit th
 | F39 | Retro loop | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F40 | Local cost dashboard (D12) | apps/macos | pending | unassigned | 2026-09-07 01:19 IST |  |
 | S1 | Step 1 — copy adhd-focus-orb+fleet-rs+OrbMac into Light/, reorganize | Light (all) | done | main session | 2026-09-07 01:17 IST | 1545 files, single fresh git history, commit 8f86440 |
-| S2 | Step 2 — write Light/FEATURES.md (atomic list, ordered by time-to-visible-output) | Light (all) | building | main session | 2026-09-07 01:17 IST | drafting the atomic feature list now |
+| S2 | Step 2 — write Light/FEATURES.md (atomic list, ordered by time-to-visible-output) | Light (all) | done | main session | 2026-09-07 01:23 IST | 40 features, P0-P4, committed |

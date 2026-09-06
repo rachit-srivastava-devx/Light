@@ -1,7 +1,7 @@
 ID=F08
 FEATURE=PR emit step
 REPO=fleet
-STATUS=pending
-AGENT=unassigned
-SINCE=2026-09-07 01:19 IST
-NOTE=
+STATUS=contract
+AGENT=lead-architect (dispatched)
+SINCE=2026-09-07 01:23 IST
+NOTE=writing contract now
