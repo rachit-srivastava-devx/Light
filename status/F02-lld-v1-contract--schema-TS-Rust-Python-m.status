@@ -1,7 +1,7 @@
 ID=F02
 FEATURE=lld.v1 contract (schema+TS+Rust+Python mirrors)
 REPO=fleet+orb
-STATUS=contract
-AGENT=lead-architect (F02) - contract done, BLOCKED on lane
-SINCE=2026-09-07 01:50 IST
-NOTE=needs both orb+fleet, both occupied by F01/F08; found 4 real defects in copied U1 artifacts + corrected 2 FEATURES.md errors (C1 verdict, Py-mirror repo). Start F02a in fleet once free.
+STATUS=verified
+AGENT=verifier (independent, Sonnet 5, worktree Light/.worktrees/F02-verify, commit 6fd66f3)
+SINCE=2026-09-07 05:10 IST
+NOTE=PASS. Re-derived fresh (orb npm install + relay-py venv, no undocumented steps); all 4 ladder commands matched exactly (lld-crosslang.sh "ok 3 mirrors agree on 6 fixtures" exit 0; cargo test f02_lld_crosslang 7/7; vitest lld-v1+LldReadyGate 18/18; pytest schema-conformance 9/9). Read the actual code (not just green tests) for all 6 claimed defect-fixes -- stamped_by, alternatives/killed_alternatives flat floor incl. LldReadyGate.ts + both hand-validators, sha256: prefix, numeric-leaf refusal at depth in all 3 canonicalizers, TS additionalProperties rejection, Rust valid_node_id's b.len()<3 -- all genuine. Reproduced the stamped_by mutation myself (flip->F02-T7 red + comparator exit 6 "MIRROR FAILED: ts", revert->clean, git diff empty). Independently re-ran fleet/verify.sh on this tree (14 passed/7 failed/22 stages) and on a disposable git-worktree at merge-base dafffe5 (15 passed/5 failed/21 stages); the only deltas are F02's own new green lld-crosslang stage and the F08 tests/f08_pr_emit.rs race intermittently tripping unit-tests/coverage (reproduced the flip directly, 3 reruns, no F02 file involved) -- fmt/clippy/gitleaks/semgrep/corpus failure sets confirmed byte-identical on both trees by direct content diff, zero touch F02 files. Re-executed 2+ builder-claimed commands independently (crew pytest 22/22 both trees; gitleaks 2 findings/17 commits both trees) plus extra (orb full vitest 750/750 + 2 pre-existing @pe/* collect failures, full relay-py pytest 430/430, tsc apps/mobile clean). Adversarial CLI testing (fleet contract lld validate): nonexistent file, empty file, malformed JSON, empty object, bare array, missing args -- all clean typed exit codes (0/3/7/8), no crashes, deterministic across repeat runs.
