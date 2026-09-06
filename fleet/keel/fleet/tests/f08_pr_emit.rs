@@ -22,6 +22,51 @@ fn run_git(repo: &Path, args: &[&str]) {
     assert!(status.success(), "git {args:?} failed in {repo:?}");
 }
 
+/// `git init` / `git init --bare` copy Homebrew git's hook/template directory
+/// (`--template=$(brew --prefix)/share/git-core/templates`, git's own compiled-in default) on
+/// every invocation. Under `cargo test`'s default parallelism this test's own fixture setup
+/// calls `git init` from multiple threads near-simultaneously, and two can race on copying the
+/// same template file: `fatal: cannot copy '.../git-core/templates/hooks/....sample' to
+/// '...': File exists`. That is a transient race in git's template-copy step, not a real setup
+/// failure -- retry with a short jittered backoff, mirroring `worktree.rs::create`'s handling
+/// of the same class of git administrative-file contention (`src/worktree.rs:58-76`). Scoped
+/// to exactly the two `git init` calls in `init_fixture_repo` below; every other call in this
+/// file still goes through the plain, non-retrying `run_git` above.
+fn run_git_init(repo: &Path, args: &[&str]) {
+    let mut last_stderr = String::new();
+    for attempt in 0..8u32 {
+        if attempt > 0 {
+            // Same cheap, dependency-free jitter as `worktree.rs::create`: mix the pid, the
+            // attempt number, and a coarse timestamp to desynchronise racing threads.
+            let now_nanos = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.subsec_nanos())
+                .unwrap_or(0);
+            let jitter_ms = (std::process::id() ^ now_nanos ^ attempt) % 40;
+            std::thread::sleep(std::time::Duration::from_millis(10 + u64::from(jitter_ms)));
+        }
+        let output = Command::new("git")
+            .arg("-C")
+            .arg(repo)
+            .args(args)
+            .output()
+            .expect("git must be on PATH for this test");
+        if output.status.success() {
+            return;
+        }
+        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+        // Only retry the exact transient template-copy race; any other failure is real and
+        // must fail immediately, exactly as `run_git` does for every other call in this file.
+        if !(stderr.contains("cannot copy") && stderr.contains("File exists")) {
+            panic!("git {args:?} failed in {repo:?}: {stderr}");
+        }
+        last_stderr = stderr;
+    }
+    panic!(
+        "git {args:?} failed in {repo:?} after 8 retries (template-copy race never cleared): {last_stderr}"
+    );
+}
+
 fn unique_dir(tag: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
         "fleet-f08-{tag}-{}-{}",
@@ -38,9 +83,9 @@ fn unique_dir(tag: &str) -> PathBuf {
 /// A real work repo with a real local bare `origin`. Nothing here is stubbed.
 fn init_fixture_repo() -> (PathBuf, PathBuf) {
     let bare = unique_dir("origin");
-    run_git(&bare, &["init", "--bare", "-q"]);
+    run_git_init(&bare, &["init", "--bare", "-q"]);
     let repo = unique_dir("repo");
-    run_git(&repo, &["init", "-q", "-b", "main"]);
+    run_git_init(&repo, &["init", "-q", "-b", "main"]);
     run_git(&repo, &["config", "user.email", "f08-test@example.com"]);
     run_git(&repo, &["config", "user.name", "f08-test"]);
     std::fs::write(repo.join("main.rs"), b"fn main() {}\n").expect("write fixture main.rs");
