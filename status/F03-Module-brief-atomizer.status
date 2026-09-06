@@ -1,7 +1,7 @@
 ID=F03
 FEATURE=Module-brief atomizer
 REPO=orb
-STATUS=contract
-AGENT=lead-architect (dispatched)
-SINCE=2026-09-07 05:12 IST
-NOTE=
+STATUS=building
+AGENT=mid-engineer (dispatched)
+SINCE=2026-09-07 05:23 IST
+NOTE=Contract written to docs/lane-contracts/F03-module-brief-atomizer.md. C1 verdict = install (NOT build-new): lld_decomposer.py already emits ModuleBrief with the clarify fail-closed -- the repoint is done, but it has ZERO production callers (grep + drive-the-runtime both confirm app.py imports atomize, never decompose), so F03 is a WIRING lane. Seam = /v1/respond mode=build (F04 2.4 killed a new /v1/build/* route family; binding). 2nd defect found: the one bounded repair is spent blind (validate_module_brief collapses every violation to a constant string) -- fixed via F02's validate_module_brief_detailed. 9-case suite T1-T8 + 8-row mutation table specified; red/green-on-arrival stated per case. Fixture mechanism executed not assumed. Human-merge (touches proxy/schemas.py).
