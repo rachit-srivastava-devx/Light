@@ -11,6 +11,7 @@ mod status;
 mod swarm;
 mod worktree;
 use fleet::agent;
+use fleet::lifecycle;
 use fs2::FileExt;
 use libc::{c_int, c_void};
 use serde_json::{json, Map, Value};
@@ -51,8 +52,6 @@ fn main() {
 }
 
 fn dispatch(args: Vec<String>) -> Result<(), i32> {
-    use fleet::lifecycle;
-
     match args.first().map(String::as_str) {
         Some("__repl") if args.len() == 1 => repl::run(),
         Some("meter") => meter::command(&args[1..]),
@@ -137,6 +136,19 @@ fn dispatch(args: Vec<String>) -> Result<(), i32> {
             let id = args.get(2).ok_or(EXIT_REFUSAL)?;
             attest_verify(id)
         }
+        Some("pr") if args.get(1).map(String::as_str) == Some("emit") => {
+            pr_emit_command(&args[2..])
+        }
+        Some("pr") => {
+            eprintln!("{PR_EMIT_USAGE}");
+            Err(EXIT_REFUSAL)
+        }
+        // Test-only probe for F08's acceptance test, mirroring `__lanes_probe` above: seeds a
+        // real fixture (real diff, real ledger receipts, real attestation file) through
+        // production primitives, then calls the SAME production `pr_emit_run` that `fleet pr
+        // emit` calls, so the acceptance test drives real code, not a test-only path. Not a
+        // user-facing command. See `keel/fleet/tests/f08_pr_emit.rs`.
+        Some("__pr_emit_probe") => pr_emit_probe_command(&args[1..]),
         Some("status") if args.len() == 1 => status_command(false),
         Some("status") if args.len() == 2 && args[1] == "--json" => status_command(true),
         Some("status") => refusal_with_receipt(
@@ -4500,6 +4512,716 @@ fn print_completions(shell: &str) {
             println!("complete -F _fleet fleet");
         }
     }
+}
+
+// ---------------------------------------------------------------------------------------
+// F08: `Accepted -> Proposed` -- emit a real pull request carrying the attested diff.
+//
+// The typed edge and its gates live in `fleet::lifecycle` (`Task<Accepted>::propose`,
+// `AttestationBundle`, `ChangeEmitter`). Everything below is the bin-side driver: real I/O
+// (reading the artifact/attestation off disk, running `attest_verify_inner`, shelling out to
+// `git`/`gh`) that the lib crate must not do itself (lifecycle.rs cannot depend on main.rs;
+// see `ChangeEmitter`'s doc comment in lifecycle.rs).
+// ---------------------------------------------------------------------------------------
+
+const PR_EMIT_USAGE: &str =
+    "usage: fleet pr emit --task <ID> --artifact <ARTIFACT_ID> --repo <PATH> --base <BRANCH> [--head <BRANCH>]";
+
+fn pr_emit_command(args: &[String]) -> Result<(), i32> {
+    let mut task = None;
+    let mut artifact = None;
+    let mut repo = None;
+    let mut base = None;
+    let mut head = None;
+    let mut i = 0usize;
+    while i < args.len() {
+        let key = args[i].as_str();
+        let val = match args.get(i + 1) {
+            Some(v) => v.clone(),
+            None => {
+                eprintln!("fleet: pr emit: {key} needs a value.\n{PR_EMIT_USAGE}");
+                return Err(EXIT_REFUSAL);
+            }
+        };
+        match key {
+            "--task" => task = Some(val),
+            "--artifact" => artifact = Some(val),
+            "--repo" => repo = Some(val),
+            "--base" => base = Some(val),
+            "--head" => head = Some(val),
+            _ => {
+                eprintln!("fleet: pr emit: unknown flag {key}.\n{PR_EMIT_USAGE}");
+                return Err(EXIT_REFUSAL);
+            }
+        }
+        i += 2;
+    }
+    let task = task.ok_or_else(|| {
+        eprintln!("fleet: pr emit: --task is required.\n{PR_EMIT_USAGE}");
+        EXIT_REFUSAL
+    })?;
+    let artifact = artifact.ok_or_else(|| {
+        eprintln!("fleet: pr emit: --artifact is required.\n{PR_EMIT_USAGE}");
+        EXIT_REFUSAL
+    })?;
+    let repo = repo.ok_or_else(|| {
+        eprintln!("fleet: pr emit: --repo is required.\n{PR_EMIT_USAGE}");
+        EXIT_REFUSAL
+    })?;
+    let base = base.ok_or_else(|| {
+        eprintln!("fleet: pr emit: --base is required.\n{PR_EMIT_USAGE}");
+        EXIT_REFUSAL
+    })?;
+    pr_emit_run(&task, &artifact, &repo, &base, head.as_deref())
+}
+
+/// The one production path both `fleet pr emit` and the test-only `__pr_emit_probe` drive
+/// (F08 contract §4.4), so the acceptance test exercises real code, not a test-only
+/// shortcut.
+fn pr_emit_run(
+    task: &str,
+    artifact_id: &str,
+    repo: &str,
+    base: &str,
+    head: Option<&str>,
+) -> Result<(), i32> {
+    let state = state_dir()?;
+    let task_id = lifecycle::TaskId::new(task).map_err(|error| {
+        eprintln!("fleet: pr emit: {error}");
+        EXIT_REFUSAL
+    })?;
+
+    // Step 1 (§4.4): the cheap precondition first -- refuse before touching the attestation.
+    let persisted = lifecycle::load_state(&state, &task_id).map_err(|error| {
+        eprintln!("fleet: pr emit: {error}");
+        EXIT_ENV
+    })?;
+    if persisted != "Accepted" {
+        return pr_emit_refuse(
+            "NOT_ACCEPTED",
+            &format!("persisted state is {persisted}, not Accepted"),
+            None,
+        );
+    }
+
+    // Steps 2/3: re-derive the digest ourselves with the reused primitive (`blake3_hex`)
+    // before doing anything else -- a tampered artifact must never reach the slower checks.
+    if !valid_artifact_id(artifact_id) {
+        return pr_emit_refuse(
+            "ARTIFACT_DIGEST_MISMATCH",
+            "--artifact is not a valid 64-hex blake3 digest",
+            None,
+        );
+    }
+    let artifact_path = state.join("artifacts").join(artifact_id);
+    let diff = match fs::read(&artifact_path) {
+        Ok(bytes) => bytes,
+        Err(_) => {
+            return pr_emit_refuse(
+                "ARTIFACT_DIGEST_MISMATCH",
+                "the artifact file could not be read",
+                None,
+            )
+        }
+    };
+    if blake3_hex(&diff) != artifact_id {
+        return pr_emit_refuse(
+            "ARTIFACT_DIGEST_MISMATCH",
+            "blake3(bytes on disk) does not match the artifact id",
+            None,
+        );
+    }
+
+    // Step 2 proper: the existing, real, full check -- reused, not re-implemented.
+    let attest_verify_ok = attest_verify_inner(artifact_id, false).is_ok();
+
+    // Step 4: build the bundle used both to name a missing element and as the propose
+    // edge's own (compiled, unbypassable) gate.
+    let attestation_path = state.join("attestations").join(format!("{artifact_id}.json"));
+    let attestation: Value = match fs::read(&attestation_path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+    {
+        Some(value) => value,
+        None => {
+            return pr_emit_refuse(
+                "INCOMPLETE_ATTESTATION",
+                "no attestation found for this artifact",
+                Some("attestation"),
+            )
+        }
+    };
+    let elements = attestation
+        .get("predicate")
+        .and_then(Value::as_object)
+        .and_then(|predicate| predicate.get("elements"))
+        .cloned()
+        .unwrap_or(Value::Null);
+    let bundle = lifecycle::AttestationBundle::new(elements);
+
+    if let Some(missing) = bundle.missing_element() {
+        return pr_emit_refuse(
+            "INCOMPLETE_ATTESTATION",
+            &format!("missing required element: {missing}"),
+            Some(missing),
+        );
+    }
+    if !attest_verify_ok {
+        // The bundle's own (shallower, filesystem-free) check found nothing missing, but the
+        // real validator disagrees -- e.g. a measured element (blast_radius/cost) that does
+        // not match the actual diff bytes. Refuse anyway; attest_verify_inner is the
+        // authority, the bundle is only for naming.
+        return pr_emit_refuse(
+            "INCOMPLETE_ATTESTATION",
+            "attest_verify_inner rejected this attestation",
+            None,
+        );
+    }
+    if diff.is_empty() {
+        return pr_emit_refuse(
+            "EMPTY_DIFF",
+            "a run that changes nothing must not produce an attested artifact",
+            None,
+        );
+    }
+
+    let head = head
+        .map(str::to_string)
+        .unwrap_or_else(|| format!("fleet/{task}"));
+    let title = format!("fleet: {task}");
+    let body = build_pr_body(&attestation, artifact_id);
+    let request = lifecycle::ProposalRequest {
+        repo: PathBuf::from(repo),
+        base: base.to_string(),
+        head,
+        artifact_id: artifact_id.to_string(),
+        diff,
+        title,
+        body,
+    };
+    let emitter = RealChangeEmitter;
+    match lifecycle::propose_change(&state, task_id, &bundle, &request, &emitter) {
+        Ok(change) => {
+            println!(
+                "pr_emit: state=Proposed branch={} pr_url={} commit={} changed_files={}",
+                change.head, change.url, change.commit, change.changed_files
+            );
+            Ok(())
+        }
+        Err(refusal) => {
+            let missing = if refusal.code() == "INCOMPLETE_ATTESTATION" {
+                bundle.missing_element()
+            } else {
+                None
+            };
+            pr_emit_refuse(refusal.code(), refusal.message(), missing)
+        }
+    }
+}
+
+fn pr_emit_refuse(code: &str, message: &str, missing: Option<&str>) -> Result<(), i32> {
+    match missing {
+        Some(missing) => println!("pr_emit_refused: code={code} missing={missing}"),
+        None => println!("pr_emit_refused: code={code}"),
+    }
+    let _ = append_receipt(
+        "refusal",
+        json!({"reason":code,"detail":message}),
+        "fleet",
+        None,
+        Some(EXIT_REFUSAL),
+    );
+    Err(EXIT_REFUSAL)
+}
+
+/// The PR body: the evidence bundle a human reviewer needs to see what the machine actually
+/// proved (F08 contract §4.7, G8), plus the explicit "do not self-merge" line. Best-effort
+/// field reads -- a placeholder here is a display nicety, not a gate; completeness is
+/// `attest_verify_inner`'s and `AttestationBundle`'s job, already run before this is built.
+fn build_pr_body(attestation: &Value, artifact_id: &str) -> String {
+    let predicate = attestation.get("predicate").and_then(Value::as_object);
+    let elements = predicate
+        .and_then(|p| p.get("elements"))
+        .and_then(Value::as_object);
+    let str_field = |object: Option<&Map<String, Value>>, key: &str| -> String {
+        object
+            .and_then(|o| o.get(key))
+            .and_then(Value::as_str)
+            .unwrap_or("unknown")
+            .to_string()
+    };
+    let builder = predicate.and_then(|p| p.get("builder")).and_then(Value::as_object);
+    let builder_id = str_field(builder, "id");
+    let resolved_model = str_field(builder, "resolved_model");
+    let independent = elements
+        .and_then(|e| e.get("independent_verification"))
+        .and_then(Value::as_object);
+    let verifier = str_field(independent, "verifier");
+    let verdict = str_field(independent, "verdict");
+    let reproduced = independent
+        .and_then(|o| o.get("reproduced"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let adequacy = elements.and_then(|e| e.get("adequacy")).and_then(Value::as_object);
+    let adequacy_line = match (
+        adequacy.and_then(|o| o.get("checked")).and_then(Value::as_u64),
+        adequacy.and_then(|o| o.get("total")).and_then(Value::as_u64),
+    ) {
+        (Some(checked), Some(total)) => format!("{checked}/{total}"),
+        _ => "no-measurable-surface".to_string(),
+    };
+    let blast = elements.and_then(|e| e.get("blast_radius")).and_then(Value::as_object);
+    let blast_count = blast
+        .and_then(|o| o.get("count"))
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let blast_files = blast
+        .and_then(|o| o.get("files"))
+        .and_then(Value::as_array)
+        .map(|files| {
+            files
+                .iter()
+                .filter_map(Value::as_str)
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
+    let rollback = elements
+        .and_then(|e| e.get("rollback"))
+        .cloned()
+        .unwrap_or(Value::Null);
+    let wall_ms = elements
+        .and_then(|e| e.get("cost"))
+        .and_then(Value::as_object)
+        .and_then(|o| o.get("wall_ms"))
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let quadrant = elements
+        .and_then(|e| e.get("oracle_independence"))
+        .and_then(Value::as_object)
+        .and_then(|o| o.get("quadrant"))
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+
+    format!(
+        "## fleet delivery attestation\n\n\
+         - artifact: `{artifact_id}` (blake3)\n\
+         - builder: `{builder_id}` (resolved model: `{resolved_model}`)\n\
+         - independent verifier: `{verifier}` -- verdict `{verdict}`, reproduced: {reproduced}\n\
+         - adequacy: {adequacy_line}\n\
+         - blast radius: {blast_count} file(s): {blast_files}\n\
+         - rollback: `{rollback}`\n\
+         - cost: {wall_ms}ms wall time\n\
+         - oracle independence quadrant: `{quadrant}`\n\n\
+         **This PR was opened by an automated agent and must not be self-merged.** \
+         A human must review and merge it on the forge, under branch protection \
+         (author != integrator).\n"
+    )
+}
+
+/// The production [`fleet::lifecycle::ChangeEmitter`]: a real worktree
+/// (`worktree::create`), a real `git apply` + commit + push, and a real `gh pr create`.
+/// Lives here, not in `lifecycle.rs` -- the lib crate must not shell out to `git`/`gh`
+/// itself (see `ChangeEmitter`'s doc comment there).
+struct RealChangeEmitter;
+
+impl lifecycle::ChangeEmitter for RealChangeEmitter {
+    fn emit(
+        &self,
+        request: &lifecycle::ProposalRequest,
+    ) -> Result<lifecycle::ProposedChange, lifecycle::Refusal> {
+        use lifecycle::Refusal;
+
+        let name = request.head.strip_prefix("fleet/").unwrap_or(&request.head);
+        let wt = worktree::create(&request.repo, name).map_err(|_| {
+            Refusal::new(
+                "PR_EMIT_FAILED",
+                "could not create a worktree for the proposal branch",
+            )
+        })?;
+
+        let result = (|| -> Result<lifecycle::ProposedChange, Refusal> {
+            // `git apply` reads the diff from stdin -- the bytes are already in memory
+            // (read by the caller from $FLEET_STATE/artifacts/<id>), so there is no need for
+            // an extra temp file. `--binary` mirrors `rollback_artifact`'s own invocation.
+            let mut apply = Command::new("git")
+                .arg("-C")
+                .arg(&wt.path)
+                .args(["apply", "--binary"])
+                .stdin(Stdio::piped())
+                .stdout(Stdio::null())
+                .stderr(Stdio::piped())
+                .spawn()
+                .map_err(|_| Refusal::new("PR_EMIT_FAILED", "could not start git apply"))?;
+            apply
+                .stdin
+                .take()
+                .ok_or_else(|| Refusal::new("PR_EMIT_FAILED", "git apply has no stdin"))?
+                .write_all(&request.diff)
+                .map_err(|_| Refusal::new("PR_EMIT_FAILED", "could not write the diff to git apply"))?;
+            let applied = apply
+                .wait_with_output()
+                .map_err(|_| Refusal::new("PR_EMIT_FAILED", "git apply did not exit"))?;
+            if !applied.status.success() {
+                return Err(Refusal::new(
+                    "PR_EMIT_FAILED",
+                    format!(
+                        "git apply failed: {}",
+                        String::from_utf8_lossy(&applied.stderr)
+                    ),
+                ));
+            }
+
+            git_ok(&wt.path, &["add", "-A"])?;
+            git_ok(&wt.path, &["commit", "-q", "-m", &request.title])?;
+
+            let rev_parse = Command::new("git")
+                .arg("-C")
+                .arg(&wt.path)
+                .args(["rev-parse", "HEAD"])
+                .output()
+                .map_err(|_| Refusal::new("PR_EMIT_FAILED", "could not run git rev-parse"))?;
+            if !rev_parse.status.success() {
+                return Err(Refusal::new("PR_EMIT_FAILED", "git rev-parse HEAD failed"));
+            }
+            let commit = String::from_utf8_lossy(&rev_parse.stdout).trim().to_string();
+
+            // Landmine (F08 contract §5): push BEFORE any cleanup -- `worktree::remove`
+            // deletes the local branch, so the remote ref must already carry the commit.
+            git_ok(&wt.path, &["push", "-q", "-u", "origin", &wt.branch])?;
+
+            let body_path = std::env::temp_dir().join(format!(
+                "fleet-pr-body-{}-{}.md",
+                std::process::id(),
+                request.artifact_id
+            ));
+            fs::write(&body_path, &request.body)
+                .map_err(|_| Refusal::new("PR_EMIT_FAILED", "could not write the PR body file"))?;
+            let gh = Command::new("gh")
+                .current_dir(&wt.path)
+                .args([
+                    "pr",
+                    "create",
+                    "--title",
+                    &request.title,
+                    "--body-file",
+                    &body_path.to_string_lossy(),
+                    "--head",
+                    &wt.branch,
+                    "--base",
+                    &request.base,
+                ])
+                .output();
+            let _ = fs::remove_file(&body_path);
+            let gh = gh.map_err(|_| Refusal::new("PR_EMIT_FAILED", "could not run gh"))?;
+            if !gh.status.success() {
+                return Err(Refusal::new(
+                    "PR_EMIT_FAILED",
+                    format!("gh pr create failed: {}", String::from_utf8_lossy(&gh.stderr)),
+                ));
+            }
+            // Exit 0 is not a pull request (F08 contract §3.1/§4.5, PR_URL_ABSENT): a real
+            // `gh pr create` prints the URL on stdout, so an empty stdout is a refusal even
+            // though the process exited 0.
+            let url = String::from_utf8_lossy(&gh.stdout)
+                .lines()
+                .find(|line| !line.trim().is_empty())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            if url.is_empty() {
+                return Err(Refusal::new("PR_URL_ABSENT", "gh exited 0 but printed no URL"));
+            }
+
+            let changed_files = diff_files(&request.diff)
+                .map(|files| files.len() as u64)
+                .unwrap_or(0);
+
+            Ok(lifecycle::ProposedChange {
+                url,
+                head: wt.branch.clone(),
+                commit,
+                changed_files,
+            })
+        })();
+
+        let _ = worktree::remove(&request.repo, &wt);
+        result
+    }
+}
+
+fn git_ok(repo: &Path, args: &[&str]) -> Result<(), lifecycle::Refusal> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(args)
+        .output()
+        .map_err(|error| {
+            lifecycle::Refusal::new(
+                "PR_EMIT_FAILED",
+                format!("could not run git {}: {error}", args.join(" ")),
+            )
+        })?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(lifecycle::Refusal::new(
+            "PR_EMIT_FAILED",
+            format!(
+                "git {} failed: {}",
+                args.join(" "),
+                String::from_utf8_lossy(&output.stderr)
+            ),
+        ))
+    }
+}
+
+/// Test-only probe for F08's acceptance test (`keel/fleet/tests/f08_pr_emit.rs`), mirroring
+/// `__lanes_probe` above: seeds a real fixture then calls the exact same `pr_emit_run` that
+/// `fleet pr emit` calls, so the acceptance test drives real code, not a test-only path.
+fn pr_emit_probe_command(args: &[String]) -> Result<(), i32> {
+    let mut repo = None;
+    let mut task = None;
+    let mut base = None;
+    let mut oracle = "adjudicated".to_string();
+    let mut corrupt_artifact = false;
+    let mut i = 0usize;
+    while i < args.len() {
+        if args[i] == "--corrupt-artifact" {
+            corrupt_artifact = true;
+            i += 1;
+            continue;
+        }
+        let value = args.get(i + 1).ok_or(EXIT_REFUSAL)?.clone();
+        match args[i].as_str() {
+            "--repo" => repo = Some(value),
+            "--task" => task = Some(value),
+            "--base" => base = Some(value),
+            "--oracle" => oracle = value,
+            _ => return Err(EXIT_REFUSAL),
+        }
+        i += 2;
+    }
+    let repo = repo.ok_or(EXIT_REFUSAL)?;
+    let task = task.ok_or(EXIT_REFUSAL)?;
+    let base = base.ok_or(EXIT_REFUSAL)?;
+
+    let state = state_dir()?;
+    let task_id = lifecycle::TaskId::new(task.clone()).map_err(|error| {
+        eprintln!("fleet: __pr_emit_probe: {error}");
+        EXIT_REFUSAL
+    })?;
+    let artifact_id = seed_pr_emit_fixture(&state, &repo, &task, &oracle, corrupt_artifact)?;
+    lifecycle::persist_state(&state, &task_id, "Accepted").map_err(|error| {
+        eprintln!("fleet: __pr_emit_probe: could not persist Accepted state: {error}");
+        EXIT_ENV
+    })?;
+
+    pr_emit_run(&task, &artifact_id, &repo, &base, None)
+}
+
+/// Seeds a REAL, `attest_verify_inner`-passing attestation for `__pr_emit_probe`, through
+/// production primitives (`append_receipt`, `write_json_atomic`, `blake3_hex`,
+/// `diff_files`) -- never a second JSON validator. `oracle_status` is the ONLY thing that
+/// varies between the pass and refusal cases (F08 contract §6.2, matching
+/// `tests/f08_pr_emit.rs`'s own seeder comment); `corrupt_artifact` varies only the on-disk
+/// artifact bytes, applied AFTER everything else has already been computed from the correct
+/// bytes, so a corrupted artifact still carries an otherwise-complete attestation (proving
+/// the digest check, not attestation shape, is what catches it).
+fn seed_pr_emit_fixture(
+    state: &Path,
+    repo: &str,
+    task: &str,
+    oracle_status: &str,
+    corrupt_artifact: bool,
+) -> Result<String, i32> {
+    let repo_path = Path::new(repo);
+
+    // A REAL diff: mutate the fixture's tracked file, capture it with the same `git_diff`
+    // production code uses, then restore the working tree (never `git stash` -- landmine).
+    // Every fallible step here names itself on failure: a bare, unexplained exit is exactly
+    // the D40/Q1-class defect this codebase's own conventions (see `state_dir`) exist to
+    // eliminate, and it is the only way an intermittent, load-dependent failure here (this
+    // probe forks many `git` subprocesses; the acceptance test runs four of these
+    // concurrently) is diagnosable instead of just "flaky".
+    let target = repo_path.join("main.rs");
+    let original = fs::read(&target).map_err(|error| {
+        eprintln!("fleet: __pr_emit_probe: could not read {}: {error}", target.display());
+        EXIT_ENV
+    })?;
+    let mut mutated = original;
+    mutated.extend_from_slice(b"\n// f08 proposed change\n");
+    fs::write(&target, &mutated).map_err(|error| {
+        eprintln!("fleet: __pr_emit_probe: could not write {}: {error}", target.display());
+        EXIT_ENV
+    })?;
+    let diff = git_diff(repo).map_err(|code| {
+        eprintln!("fleet: __pr_emit_probe: git diff HEAD failed in {repo} (exit {code})");
+        code
+    })?;
+    let restored = Command::new("git")
+        .arg("-C")
+        .arg(repo_path)
+        .args(["checkout", "--", "main.rs"])
+        .output()
+        .map_err(|error| {
+            eprintln!("fleet: __pr_emit_probe: could not run git checkout in {repo}: {error}");
+            EXIT_ENV
+        })?;
+    if !restored.status.success() {
+        eprintln!(
+            "fleet: __pr_emit_probe: git checkout -- main.rs failed in {repo}: {}",
+            String::from_utf8_lossy(&restored.stderr)
+        );
+        return Err(EXIT_ENV);
+    }
+    if diff.is_empty() {
+        eprintln!("fleet: __pr_emit_probe: the mutation produced an empty diff in {repo}");
+        return Err(EXIT_INVARIANT);
+    }
+
+    let artifact_id = blake3_hex(&diff);
+    let artifact_path = state.join("artifacts").join(&artifact_id);
+    freeze_artifact(&artifact_path, &diff).map_err(|code| {
+        eprintln!(
+            "fleet: __pr_emit_probe: could not freeze artifact {} (exit {code})",
+            artifact_path.display()
+        );
+        code
+    })?;
+
+    let named_receipt = |event: &'static str, body: Value| -> Result<String, i32> {
+        append_receipt(event, body, "fleet", None, None).map_err(|code| {
+            eprintln!("fleet: __pr_emit_probe: could not append {event} receipt (exit {code})");
+            code
+        })
+    };
+    let run_id = format!("f08-probe-{}", std::process::id());
+    let start_hash = named_receipt(
+        "run_start",
+        json!({"run_id":run_id,"agent":"stub","repo":repo,"task":task}),
+    )?;
+    let frozen_hash = named_receipt(
+        "artifact_frozen",
+        json!({"artifact_id":artifact_id,"bytes":diff.len(),"repo":repo}),
+    )?;
+    let attested_hash = named_receipt(
+        "attested",
+        json!({"artifact_id":artifact_id,"attestation_id":artifact_id}),
+    )?;
+    let ended_hash = named_receipt(
+        "run_end",
+        json!({"run_id":run_id,"artifact_id":artifact_id,"status":"ok","resolved_model":null}),
+    )?;
+
+    let blast_files = diff_files(&diff).map_err(|code| {
+        eprintln!("fleet: __pr_emit_probe: diff_files could not parse the seeded diff (exit {code})");
+        code
+    })?;
+    let blast_count = blast_files.len() as u64;
+    let characters_in_diff = String::from_utf8_lossy(&diff).chars().count() as u64;
+
+    // The ONLY element that varies with `--oracle`: `run_with_evidence` really does write
+    // exactly `{"status":"pending-adjudication"}` (main.rs:1658) before adjudication fills
+    // it in, so this is the real, routinely-produced incomplete attestation, not a
+    // synthetic hole (F08 contract §4.5 note).
+    let oracle_element = if oracle_status == "adjudicated" {
+        json!({
+            "o1_author":"lead",
+            "o2_author":"verifier",
+            "o1_hash": blake3_hex(b"f08-probe-o1"),
+            "o2_hash": blake3_hex(b"f08-probe-o2"),
+            "distinct": true,
+            "quadrant": "ACCEPT"
+        })
+    } else {
+        json!({"status": oracle_status})
+    };
+
+    let attestation = json!({
+        "_type":"https://in-toto.io/Statement/v1",
+        "subject":[{"name":"git-diff","digest":{"blake3":artifact_id}}],
+        "predicateType":"https://fleet.local/DeliveryAttestation/v1",
+        "predicate":{
+            "tier":"T-min",
+            "elements":{
+                "sow":{"task":task},
+                "blind_suite":{
+                    "in_worktree_tree":true,
+                    "in_object_store":false,
+                    "in_env":false,
+                    "on_any_fd":false,
+                    "suite_hash":blake3_hex(b"f08-probe-suite")
+                },
+                "independent_verification":{
+                    "builder":"stub",
+                    "verifier":"stub-verifier",
+                    "distinct":true,
+                    "reproduced":true,
+                    "verdict":"ACCEPT"
+                },
+                "adequacy":{"status":"no-measurable-surface"},
+                "blast_radius":{"files":blast_files,"count":blast_count,"source":"recorded-diff"},
+                "rollback":{"executed":true,"suite_went_red":false,"reverted_files":blast_count},
+                "cost":{
+                    "wall_ms":1,
+                    "characters_in_diff":characters_in_diff,
+                    "tokens":null,
+                    "tokenizer_generation":null,
+                    "source":"observed"
+                },
+                "oracle_independence":oracle_element
+            },
+            "receipts":[start_hash,frozen_hash,attested_hash,ended_hash],
+            "builder":{"id":"stub","resolved_model":null}
+        }
+    });
+    let att_path = state.join("attestations").join(format!("{artifact_id}.json"));
+    write_json_atomic(&att_path, &attestation).map_err(|code| {
+        eprintln!(
+            "fleet: __pr_emit_probe: could not write attestation {} (exit {code})",
+            att_path.display()
+        );
+        code
+    })?;
+
+    if corrupt_artifact {
+        // Tamper the ON-DISK bytes AFTER everything above was computed from the correct
+        // ones: the attestation stays structurally complete, but the file no longer hashes
+        // to its own filename -- exactly a corrupted/tampered artifact, and the ONLY thing
+        // this flag varies (the seeder is not what produces the PASS or this refusal).
+        fs::set_permissions(&artifact_path, fs::Permissions::from_mode(0o600)).map_err(|error| {
+            eprintln!(
+                "fleet: __pr_emit_probe: chmod 0600 on {} failed: {error}",
+                artifact_path.display()
+            );
+            EXIT_ENV
+        })?;
+        let mut bytes = fs::read(&artifact_path).map_err(|error| {
+            eprintln!(
+                "fleet: __pr_emit_probe: read {} failed: {error}",
+                artifact_path.display()
+            );
+            EXIT_ENV
+        })?;
+        bytes.push(b'\n');
+        fs::write(&artifact_path, &bytes).map_err(|error| {
+            eprintln!(
+                "fleet: __pr_emit_probe: write {} failed: {error}",
+                artifact_path.display()
+            );
+            EXIT_ENV
+        })?;
+        fs::set_permissions(&artifact_path, fs::Permissions::from_mode(0o444)).map_err(|error| {
+            eprintln!(
+                "fleet: __pr_emit_probe: chmod 0444 on {} failed: {error}",
+                artifact_path.display()
+            );
+            EXIT_ENV
+        })?;
+    }
+
+    Ok(artifact_id)
 }
 
 #[cfg(test)]
