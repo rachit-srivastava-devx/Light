@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fleet.local/contracts/lane-status.v1.json",
+  "title": "Lane status — one role's live position in a swarm dispatch (PROJECTED)",
+  "comment": "A lane status is a PROJECTION, never a free-standing claim and never the receipt body itself. The receipt's `body` carries only the fields a worker routes/authored (schema_version, lane_id, role, state, agent, resolved_model); the ledger_required `ledger_ref` is STAMPED onto the projection AFTER append from the immutable receipt envelope (seq, hash, ts_wall). It cannot live in the body: append_receipt hashes the body before the envelope hash exists, so a body can never self-reference its own row. A consumer MUST assemble the projection from (body + envelope) the way keel/fleet/src/console.rs does in load_lane_status — it must never trust an authored ledger_ref. fleet's `fleet contract lane-status validate` does exactly this projection against the live ledger.
+
+This is fleet-rs's half of the design-graph / lane-status object described in the orb repo's 11-THREE-MEMORY-LAYERS.md. The orb-side voice/graph UI that consumes this is a different repo and is NOT covered here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "lane_id", "role", "state", "ledger_ref", "actor", "ts_wall"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "lane_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable identifier for this lane within one dispatch, currently the role name (one lane per role until C8 multi-lane concurrency lands)."
+    },
+    "role": {
+      "type": "string",
+      "enum": ["lead", "designer", "builder", "verifier", "meter"],
+      "description": "AUTHORED BY THE ROUTER at routing time -- one of fleet-rs's five swarm roles (keel/fleet/src/roles.rs)."
+    },
+    "state": {
+      "type": "string",
+      "enum": ["queued", "running", "passed", "failed", "refused"],
+      "description": "AUTHORED BY THE DISPATCH CALLER as it observes each lane transition. queued: routed but not yet executing. running: handed to run_with_evidence. passed: evidence verified and credited. failed: evidence faulted or the run errored. refused: a role gate (e.g. LEAD_WROTE_CODE, SELF_VERIFIED) refused the lane before it ran."
+    },
+    "agent": {
+      "type": ["string", "null"],
+      "description": "AUTHORED. The adapter this lane was routed to (claude/codex/stub/...), null if not yet resolved."
+    },
+    "resolved_model": {
+      "type": ["string", "null"],
+      "description": "AUTHORED. The model tier the router resolved for this lane, null if not applicable."
+    },
+    "actor": {
+      "type": "string",
+      "description": "STAMPED BY THE LEDGER (copied from the producing receipt's envelope actor, always the launcher, never a worker)."
+    },
+    "ts_wall": {
+      "type": "string",
+      "format": "date-time",
+      "description": "STAMPED BY THE LEDGER (copied from the producing receipt's ts_wall). Never supplied by a worker."
+    },
+    "ledger_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "hash"],
+      "description": "STAMPED BY THE LEDGER at projection time. Links this status back to the exact append-only receipt row (seq, hash) that produced it -- a lane status is a projection of a ledger event, never a free-standing claim, and is never authored into the receipt body.",
+      "properties": {
+        "seq": { "type": "integer", "minimum": 0 },
+        "hash": { "type": "string", "pattern": "^blake3:[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

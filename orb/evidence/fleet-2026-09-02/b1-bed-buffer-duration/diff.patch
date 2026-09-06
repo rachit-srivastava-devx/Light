@@ -1,0 +1,68 @@
+diff --git a/apps/mobile/src/presence/PresenceBoot.test.ts b/apps/mobile/src/presence/PresenceBoot.test.ts
+index 11b5122..12f5119 100644
+--- a/apps/mobile/src/presence/PresenceBoot.test.ts
++++ b/apps/mobile/src/presence/PresenceBoot.test.ts
+@@ -1,7 +1,7 @@
+ import { describe, expect, it } from 'vitest';
+ 
+ import { bootPresenceBed, getBootedPresenceBed, getOrBootPresenceBed } from './PresenceBoot';
+-import { BED_SAMPLE_RATE_HZ, BED_STARTUP_BUFFER_SECONDS } from './contracts';
++import { BED_BUFFER_SECONDS, BED_SAMPLE_RATE_HZ } from './contracts';
+ import type { AudioBufferSourceNodeLike, AudioContextLike } from './AudioGraph';
+ 
+ class FakeParam {
+@@ -73,7 +73,7 @@ describe('bootPresenceBed', () => {
+ 
+     expect(graph.bedSource.loop).toBe(true);
+     expect((graph.bedSource as FakeSource).startedAt).toBe(1.25);
+-    expect(ctx.buffers[0]?.length).toBe(BED_STARTUP_BUFFER_SECONDS * BED_SAMPLE_RATE_HZ);
++    expect(ctx.buffers[0]?.length).toBe(BED_BUFFER_SECONDS * BED_SAMPLE_RATE_HZ);
+   });
+ 
+   it('boots one graph for an app runtime across rerenders', () => {
+diff --git a/apps/mobile/src/presence/PresenceBoot.ts b/apps/mobile/src/presence/PresenceBoot.ts
+index 491dee0..772eff3 100644
+--- a/apps/mobile/src/presence/PresenceBoot.ts
++++ b/apps/mobile/src/presence/PresenceBoot.ts
+@@ -1,9 +1,9 @@
+ import { buildAudioGraph, type AudioContextLike, type BuiltAudioGraph } from './AudioGraph';
+ import {
++  BED_BUFFER_SECONDS,
++  BED_CROSSFADE_MS,
+   BED_GAIN_NOMINAL_DBFS,
+   BED_SAMPLE_RATE_HZ,
+-  BED_STARTUP_BUFFER_SECONDS,
+-  BED_STARTUP_CROSSFADE_MS,
+   type AudioGraphConfig,
+ } from './contracts';
+ import { buildNoiseBuffer, type NoiseColor } from './NoiseEngine';
+@@ -25,9 +25,9 @@ export const DEFAULT_AUDIO_GRAPH_CONFIG: AudioGraphConfig = {
+   bed: {
+     source: {
+       loop: true,
+-      buffer_seconds: BED_STARTUP_BUFFER_SECONDS,
++      buffer_seconds: BED_BUFFER_SECONDS,
+       sample_rate_hz: BED_SAMPLE_RATE_HZ,
+-      crossfade_ms: BED_STARTUP_CROSSFADE_MS,
++      crossfade_ms: BED_CROSSFADE_MS,
+     },
+     gain: { gain_db: BED_GAIN_NOMINAL_DBFS },
+     filter: { type: 'lowpass', frequency_hz: 850, q: 0.7 },
+diff --git a/apps/mobile/src/presence/contracts.ts b/apps/mobile/src/presence/contracts.ts
+index 74853a5..f4af8ac 100644
+--- a/apps/mobile/src/presence/contracts.ts
++++ b/apps/mobile/src/presence/contracts.ts
+@@ -20,13 +20,6 @@ export const BED_BUFFER_SECONDS = 30;
+ export const BED_SAMPLE_RATE_HZ = 48_000;
+ export const BED_CROSSFADE_MS = 250;
+ 
+-/**
+- * App-open starter bed. The full 30s generator above is still the long-loop contract used by the
+- * audio-quality tests; the native app cannot spend seconds of JS time before the bed starts.
+- */
+-export const BED_STARTUP_BUFFER_SECONDS = 0.25;
+-export const BED_STARTUP_CROSSFADE_MS = 50;
+-
+ /** §1 DuckingMixer — bed gain ramps −18 → −30 dBFS (the −12dB duck of §3) over 80–150ms. */
+ export const BED_GAIN_NOMINAL_DBFS = -18;
+ export const BED_GAIN_DUCKED_DBFS = -30;

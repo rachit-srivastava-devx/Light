@@ -1,0 +1,19 @@
+# npm run verify (full gate)
+```
+
+> adhd-focus-orb@0.1.0 verify
+> npm run lint && npm run typecheck && npm run test && npm run test:py && npm run test:rs
+
+
+> adhd-focus-orb@0.1.0 lint
+> node tooling/boundary-lint.mjs
+
+boundary-lint: clean
+
+> adhd-focus-orb@0.1.0 typecheck
+> tsc --noEmit -p apps/mobile && tsc --noEmit -p backend/gateway-sidecar && tsc --noEmit -p backend/voice-provider-sidecar
+
+apps/mobile/src/runtime/T0FocusSession.ts(1,66): error TS2307: Cannot find module '@pe/realtime-voice' or its corresponding type declarations.
+apps/mobile/src/runtime/T0FocusSession.ts(2,50): error TS2307: Cannot find module '@pe/realtime-voice/adapters/memory' or its corresponding type declarations.
+verify exit code: 2
+```

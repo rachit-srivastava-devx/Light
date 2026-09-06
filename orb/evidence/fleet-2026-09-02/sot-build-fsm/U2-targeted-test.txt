@@ -1,0 +1,10 @@
+
+ RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/sot-build-fsm
+
+ ✓ apps/mobile/src/build/BuildStateMachine.test.ts (5 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  22:20:58
+   Duration  496ms (transform 43ms, setup 0ms, collect 45ms, tests 2ms, environment 0ms, prepare 58ms)
+

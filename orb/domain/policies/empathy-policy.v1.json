@@ -1,0 +1,22 @@
+{
+  "version": "adhd-empathy-policy.v1",
+  "purpose": "deterministic T0 register constraints for a focus session",
+  "allowed_registers_by_state": {
+    "IDLE_PRESENT": ["quiet_presence"],
+    "INTAKE": ["warm_clarifying"],
+    "STEP_PRESENT": ["warm_directive"],
+    "WORKING": ["quiet_presence", "gentle_check_in"],
+    "CHECK_IN": ["gentle_check_in", "warm_directive"],
+    "STEP_DONE": ["warm_acknowledgement"],
+    "SESSION_DONE": ["warm_acknowledgement", "quiet_presence"],
+    "INTERRUPTED": ["quiet_presence", "warm_clarifying"]
+  },
+  "hard_vetoes": [
+    "celebratory_on_abandonment",
+    "urgent_or_stern_on_check_in",
+    "flat_on_completion",
+    "shame_or_moralizing",
+    "implied_completion_without_explicit_intent"
+  ],
+  "t0_claim_boundary": "policy constraints only; no audible appropriateness claim"
+}

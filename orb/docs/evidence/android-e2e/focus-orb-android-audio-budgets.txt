@@ -1,0 +1,2 @@
+presence_ready=pass observed_ms=0 budget_ms=120
+speech_request=pass observed_ms=0 budget_ms=250

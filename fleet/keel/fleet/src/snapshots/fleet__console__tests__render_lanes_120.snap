@@ -1,0 +1,21 @@
+---
+source: fleet/src/console.rs
+expression: "snapshot(120, View::Lanes)"
+---
+┌fleet console─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1 FLEET · running · blocked · cost │ 2 TASK · agents · lifecycle · verdicts │ 3 AGENT · brief · diff · verdict · rece│
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌LANES · 2 tracked─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│LANE (ROLE)              STATE                   AGENT                          LEDGER REF                            │
+│builder (builder) [recei ▶ Running [receipt]     codex [receipt]                seq=3 hash=blake3:aaaa000.. [receipt] │
+│verifier (verifier) [rec · Queued [receipt]      claude [receipt]               seq=1 hash=blake3:bbbb000.. [receipt] │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+q quit · ←/→ or tab views · ↑/↓ or j/k select · [source] is provenance

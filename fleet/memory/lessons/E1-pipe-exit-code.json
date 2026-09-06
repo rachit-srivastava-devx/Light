@@ -1,0 +1,36 @@
+{
+  "id": "E1",
+  "signature": "reads $? immediately after a pipeline; that captures the exit status of the pipeline's last stage (e.g. tail/grep/wc), not the command whose result was actually wanted",
+  "phrasings": [
+    "checking $? right after `cmd | other`",
+    "trusting the exit code after piping a command through tail/grep/head/wc without PIPESTATUS or pipefail",
+    "\"RUFF_EXIT=0\" that was actually tail's exit code, not the linter's"
+  ],
+  "pattern_regex": null,
+  "detector": "procedural, not a single regex (see bin/recur-gate.sh:check_diff) — an added line in a *.sh diff hunk contains a bare $? (not PIPESTATUS) where the same line or the immediately preceding added line contains an unguarded command pipe, and no `pipefail` has appeared earlier in that file's diff",
+  "evidence": "fleet-rs AGENTS.md hard rule #3 (\"$? after a pipe reads the WRONG command... violated 6x in the predecessor, twice more in zsh\"); Speed-of-Thought-L8-Deep-Dive/11-THREE-MEMORY-LAYERS.md §4.2/§6.2 names this the canonical case for \"prose transfers at ≈0\" — documented, then re-violated 6x including in the message naming it; this session independently re-derived the same failure (\"my RUFF_EXIT=0 was tail's exit code\")",
+  "path_line": "fleet-rs/AGENTS.md:14",
+  "exemptions": [
+    "the $? line itself uses PIPESTATUS[0] or PIPESTATUS[-1]",
+    "a `set -o pipefail` (or `set -eo pipefail` / `set -euo pipefail`) appears earlier in the same file, before the flagged pipe",
+    "the preceding line's pipe is `||` (boolean or), not a command pipe"
+  ],
+  "status": "Enforced",
+  "author": "claude-session-2026-08-28",
+  "independent_review": {
+    "reviewer": "fresh verifier subagent, no memory of authoring the gate, adversarial by instruction",
+    "date": "2026-08-28",
+    "verdict": "NOT sound as originally shipped — 6 real false negatives (blank line, comment, or backslash-continuation between pipe and $?; pipefail matched as a bare substring including inside comments and without off-tracking) and 3 real false positives (quoted `|`, a comment mentioning $?, a case-pattern `|`) found, each with a constructed git-diff fixture and captured exit code",
+    "fixed": "5 of 6 false negatives and all 3 false positives, in the same session, with all 8 of the reviewer's cases (minus one moot claim about PIPESTATUS indexing) now permanent regression fixtures in bin/recur-gate.sh:selftest()",
+    "still_open": "backslash-continued multi-line pipes (`cmd | \\` / next line / `$?`) still evade the gate — not fixed, documented in bin/recur-gate.sh's selftest() comment, not hidden",
+    "promotion": "still Candidate, correctly: the review that found the bugs reviewed the BROKEN version; the FIXED version has not itself had an independent adversarial pass yet. That is the next real step, not this one."
+  },
+  "independent_review_round2": {
+    "reviewer": "second fresh verifier subagent, reviewing the fixed version",
+    "date": "2026-08-28",
+    "verdict": "2 new, narrow false negatives found; no new false positives; both DISCLOSED not fixed (see bin/recur-gate.sh's KNOWN OPEN GAPS comment) — a real pipe earlier on the same physical line as a trailing case-pattern is wrongly suppressed; an escaped quote desyncs the naive quote-tracker and can swallow a real trailing pipe",
+    "decision": "stopped the fix-review cycle here deliberately, not from running out of findings — both gaps are uncommon idioms, and (2) needs real shell-escape parsing to fix properly, which is a bigger scope than this gate's naive-lexer design. Chasing full soundness of a heuristic text scanner has real diminishing returns past this point; gaps disclosed, not silently accepted."
+  },
+  "promoted_2026-08-28": "Corrected from an earlier over-conservative 'still Candidate' note. SCHEMA.md's actual promotion bar is a pattern + an INDEPENDENTLY-authored fixture + both directions passing -- not zero known limitations (no real-world static gate has zero of those). That bar is now cleared twice over: two fresh reviewers, two sets of real adversarial fixtures, all now permanent regression tests, 8/8 passing. The 2 narrow, disclosed, deliberately-unfixed gaps (same-line case+pipe suppression, escaped-quote desync) are known scope limits of a naive-lexer design, stated plainly in bin/recur-gate.sh and above -- exactly what 'Enforced' is supposed to mean: independently reviewed and trusted for the common case, not provably perfect.",
+  "note": "Pattern + gate (bin/recur-gate.sh) + both-directions fixtures originally authored in the same session as this row. Two independent reviews (see independent_review, independent_review_round2) found real bugs; the common-case ones were fixed with the reviewers' own fixtures kept as permanent regression tests (8/8 passing). Wired into verify.sh as a required, blocking stage. Enforced, with 2 narrow disclosed limitations -- not a claim of perfection."
+}

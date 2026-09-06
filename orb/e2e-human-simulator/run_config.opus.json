@@ -1,0 +1,58 @@
+{
+  "simulator_config": "simulator/manifest.json",
+  "run_root": "runs/opus-drive",
+  "backend_command": [
+    "env",
+    "PATH=/Users/rachitsrivastava/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:/Users/rachitsrivastava/.cargo/bin:/usr/bin:/usr/sbin:/bin",
+    "ORB_START_METRO=1",
+    "ORB_RELAY_ADDR=127.0.0.1:8092",
+    "bash",
+    "../scripts/dev.sh"
+  ],
+  "backend_ready_urls": [
+    "http://127.0.0.1:8765/readyz"
+  ],
+  "proxy": {
+    "app_port": 8091,
+    "control_port": 8093,
+    "control_url": "ws://127.0.0.1:8093",
+    "backend_url": "ws://127.0.0.1:8092"
+  },
+  "expected_transcripts": [
+    "Hello, how are you?",
+    "What should I do next?",
+    "I am stuck and overwhelmed."
+  ],
+  "journeys": [
+    {
+      "id": "hello",
+      "wav": "runs/live-20260807/hello-how-are-you.wav",
+      "speed": 2.0,
+      "post_turn_wait": 3.0,
+      "observation": "Human review: record whether listening, processing, speaking, and idle are visibly distinct and understandable."
+    },
+    {
+      "id": "next-step",
+      "wav": "runs/live-20260807/next-step.wav",
+      "speed": 2.0,
+      "post_turn_wait": 2.0,
+      "observation": "Human review: does the orb answer the question directly and provide one useful next action?"
+    },
+    {
+      "id": "stuck",
+      "wav": "runs/live-20260807/stuck.wav",
+      "speed": 2.0,
+      "post_turn_wait": 2.0,
+      "observation": "Human review: does the orb acknowledge overwhelm instead of repeating the previous reply?"
+    },
+    {
+      "id": "provider-failure",
+      "fault": {
+        "kind": "provider",
+        "reason": "provider_failure"
+      },
+      "post_fault_wait": 2.0,
+      "observation": "Human review: does the orb visibly enter an error state and speak an actionable connection recovery message?"
+    }
+  ]
+}

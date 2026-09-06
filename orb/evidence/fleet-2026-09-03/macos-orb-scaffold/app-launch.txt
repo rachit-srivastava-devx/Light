@@ -1,0 +1,2 @@
+app process exit/signal code: 124
+(124 = SIGTERM sent by `timeout` after 3s elapsed with no earlier crash = healthy start; any other code before 3s = investigate crash)

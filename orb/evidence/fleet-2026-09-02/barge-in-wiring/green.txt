@@ -1,0 +1,17 @@
+COMMAND
+npm test -- apps/mobile/src/voice/BargeInPlaybackLatency.test.ts
+
+EXIT CODE
+0
+
+REAL OUTPUT
+> adhd-focus-orb@0.1.0 test
+> vitest run apps/mobile/src/voice/BargeInPlaybackLatency.test.ts
+
+RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/barge-in-wiring
+
+✓ apps/mobile/src/voice/BargeInPlaybackLatency.test.ts (29 tests) 48ms
+
+Test Files  1 passed (1)
+     Tests  29 passed (29)
+  Duration  1.35s

@@ -1,0 +1,35 @@
+{
+  "workspace_root": "../..",
+  "app": {
+    "bundle_id": "org.reactjs.native.example.OrbMobile",
+    "app_path": "/tmp/focus-orb-e2e-build/Build/Products/Debug-iphonesimulator/OrbMobile.app"
+  },
+  "simulator": {
+    "create_new": true,
+    "device_name": "ADHD Focus Orb E2E",
+    "device_type": "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro",
+    "runtime": "latest",
+    "erase_before_boot": true,
+    "leave_open": true
+  },
+  "permissions": ["microphone"],
+  "services": {
+    "relay_ws_url": "ws://127.0.0.1:8091",
+    "relay_control_url": "ws://127.0.0.1:8093",
+    "relay_http_url": "http://127.0.0.1:8765",
+    "gateway_url": "http://127.0.0.1:8082",
+    "voice_url": "http://127.0.0.1:8083"
+  },
+  "replay": {
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "sample_width_bytes": 2,
+    "frame_duration_ms": 20,
+    "speed": 1.0
+  },
+  "judges": {
+    "codex_command": "codex",
+    "claude_command": "claude",
+    "timeout_seconds": 120
+  }
+}

@@ -1,0 +1,43 @@
+diff --git a/audio-gate/README.md b/audio-gate/README.md
+index 058e582..61dd58d 100644
+--- a/audio-gate/README.md
++++ b/audio-gate/README.md
+@@ -2,7 +2,10 @@
+ 
+ This gate measures the sound that left the Simulator/Mac audio path, not application log lines.
+ It reports `presence_latency_ms`, `content_latency_ms`, and `presence_only_duration_ms` separately
+-and fails on any rendered-output gap over 250 ms or when no audio/turn samples were measured.
++and fails on any rendered-output gap over `--max-gap-ms` (default **20 ms** — the tripwire from
++`blueprints/ADHD-Focus-Orb-L8-Deep-Dive/02-ALWAYS-ON-AUDIO-ENGINE.md` §11.2's loudness-floor probe:
++"assert no window > 20 ms falls below the bed's noise floor"; the invariant itself is a 0 ms gap
++budget per §1) or when no audio/turn samples were measured.
+ 
+ Capture uses a fixed turn schedule and a stereo artifact: microphone on channel 0, rendered output
+ on channel 1. The harness rejects missing/off-cadence turns, preventing coordinated omission.
+diff --git a/audio-gate/gate.py b/audio-gate/gate.py
+index badb909..ecceff8 100755
+--- a/audio-gate/gate.py
++++ b/audio-gate/gate.py
+@@ -397,7 +397,7 @@ def evaluate(args: argparse.Namespace) -> tuple[dict[str, Any], bool]:
+             "total_audio_analysed_ms": duration_ms,
+             "longest_gap_ms": watchdog.longest_gap_ms,
+             "p95_gap_ms": _percentiles(gap_values)["p95"],
+-            "turns_exceeding_250ms": turns_exceeding,
++            "turns_exceeding_max_gap_ms": turns_exceeding,
+             "gap_events": watchdog.gap_events,
+         },
+         "metrics": {
+@@ -428,7 +428,12 @@ def build_parser() -> argparse.ArgumentParser:
+     parser.add_argument("--report")
+     parser.add_argument("--mic-channel", type=int, default=0)
+     parser.add_argument("--output-channel", type=int, default=1)
+-    parser.add_argument("--max-gap-ms", type=float, default=250.0)
++    # Blueprint 02-ALWAYS-ON-AUDIO-ENGINE.md §11.2 (the loudness-floor probe this gate implements):
++    # "assert no window > 20 ms falls below the bed's noise floor". The gap budget itself is 0 ms
++    # (§1), bounded below one buffer period (~5-10 ms); 20 ms is the probe's own stated tripwire,
++    # not a looser placeholder. Override tighter per-capture only if a specific rig's measurement
++    # noise floor demands it; never loosen this default to make a capture pass.
++    parser.add_argument("--max-gap-ms", type=float, default=20.0)
+     parser.add_argument("--minimum-silence-ms", type=float, default=20.0)
+     parser.add_argument("--mic-silence-db", type=float, default=-35.0)
+     parser.add_argument("--presence-silence-db", type=float, default=-50.0)

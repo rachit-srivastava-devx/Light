@@ -1,0 +1,14 @@
+{"ts":"2026-08-07T10:00:00.000Z","seq":1,"source":"mobile","event":"run.expectations","run_id":"good","session_id":"s1","data":{"expected_transcripts":[{"text":"hello how are you","max_word_error_rate":0.25}]}}
+{"ts":"2026-08-07T10:00:00.010Z","seq":2,"source":"mobile","event":"orb.state","run_id":"good","session_id":"s1","data":{"state":"booting"}}
+{"ts":"2026-08-07T10:00:00.100Z","seq":3,"source":"mobile","event":"orb.state","run_id":"good","session_id":"s1","data":{"state":"greeting"}}
+{"ts":"2026-08-07T10:00:00.200Z","seq":4,"source":"mobile","event":"assistant.response","run_id":"good","session_id":"s1","data":{"turn_id":"greeting","speech":{"spoken_text":"[chuckle] Good morning, Rachit!","plain_text":"Good morning, Rachit!"}}}
+{"ts":"2026-08-07T10:00:00.600Z","seq":5,"source":"mobile","event":"orb.state","run_id":"good","session_id":"s1","data":{"state":"idle"}}
+{"ts":"2026-08-07T10:00:01.000Z","seq":6,"source":"mobile","event":"orb.state","run_id":"good","session_id":"s1","data":{"state":"listening"}}
+{"ts":"2026-08-07T10:00:02.000Z","seq":7,"source":"mobile","event":"turn.end","run_id":"good","session_id":"s1","data":{"turn_id":"u1"}}
+{"ts":"2026-08-07T10:00:02.200Z","seq":8,"source":"relay-rs","event":"stt.final","run_id":"good","session_id":"s1","data":{"turn_id":"u1","text":"hello how are you","expected_text":"hello how are you"}}
+{"ts":"2026-08-07T10:00:02.250Z","seq":9,"source":"mobile","event":"orb.state","run_id":"good","session_id":"s1","data":{"state":"processing"}}
+{"ts":"2026-08-07T10:00:02.600Z","seq":10,"source":"gateway","event":"gateway.response","run_id":"good","session_id":"s1","data":{"turn_id":"u1","latency_ms":350}}
+{"ts":"2026-08-07T10:00:02.700Z","seq":11,"source":"voice-provider","event":"tts.first_audio","run_id":"good","session_id":"s1","data":{"turn_id":"u1","latency_ms":100}}
+{"ts":"2026-08-07T10:00:02.750Z","seq":12,"source":"mobile","event":"assistant.response","run_id":"good","session_id":"s1","data":{"turn_id":"u1","speech":{"spoken_text":"[chuckle] I’m doing well! [emphasis]How are you feeling?","plain_text":"I’m doing well! How are you feeling?"}}}
+{"ts":"2026-08-07T10:00:02.760Z","seq":13,"source":"mobile","event":"orb.state","run_id":"good","session_id":"s1","data":{"state":"speaking"}}
+{"ts":"2026-08-07T10:00:03.300Z","seq":14,"source":"mobile","event":"orb.state","run_id":"good","session_id":"s1","data":{"state":"idle"}}

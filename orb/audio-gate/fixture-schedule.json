@@ -1,0 +1,15 @@
+{
+  "cadence_ms": 2000,
+  "turns": [
+    {
+      "turn_id": "fixture-turn-1",
+      "provider": "fake",
+      "scheduled_start_ms": 200
+    },
+    {
+      "turn_id": "fixture-turn-2",
+      "provider": "fake",
+      "scheduled_start_ms": 2200
+    }
+  ]
+}

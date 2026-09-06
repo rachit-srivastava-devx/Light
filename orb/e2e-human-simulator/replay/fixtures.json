@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "utterances": [
+    {
+      "id": "hello-how-are-you",
+      "phrase": "Hello, how are you?",
+      "wav": "hello-how-are-you.wav",
+      "expected_transcript": "hello how are you",
+      "tags": ["social", "english"]
+    },
+    {
+      "id": "open-tax-portal",
+      "phrase": "Open the tax portal",
+      "wav": "open-tax-portal.wav",
+      "expected_transcript": "open the tax portal",
+      "tags": ["task", "english"]
+    },
+    {
+      "id": "done",
+      "phrase": "Done",
+      "wav": "done.wav",
+      "expected_transcript": "done",
+      "tags": ["progress", "english"]
+    },
+    {
+      "id": "unclear-speech",
+      "phrase": "[deliberately unclear audio]",
+      "wav": "noise-and-mumble.wav",
+      "expected_transcript": "",
+      "tags": ["failure-path"]
+    }
+  ]
+}

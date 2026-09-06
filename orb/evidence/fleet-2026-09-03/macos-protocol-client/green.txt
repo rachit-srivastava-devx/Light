@@ -1,0 +1,83 @@
+[0/1] Planning build
+Building for debugging...
+[0/5] Write swift-version--58304C5D6DBC2206.txt
+[2/7] Compiling OrbMacCoreTests WireProtocolTests.swift
+[3/7] Compiling OrbMacCoreTests OrbMacCoreTests.swift
+[4/7] Compiling OrbMacCoreTests RelaySocketTests.swift
+[5/7] Emitting module OrbMacCoreTests
+[5/7] Write Objects.LinkFileList
+[6/7] Linking OrbMacPackageTests
+Build complete! (3.27s)
+Test Suite 'All tests' started at 2026-09-03 01:24:20.365.
+Test Suite 'OrbMacPackageTests.xctest' started at 2026-09-03 01:24:20.366.
+Test Suite 'OrbMacCoreTests' started at 2026-09-03 01:24:20.366.
+Test Case '-[OrbMacCoreTests.OrbMacCoreTests testModuleNameIsSet]' started.
+Test Case '-[OrbMacCoreTests.OrbMacCoreTests testModuleNameIsSet]' passed (0.001 seconds).
+Test Suite 'OrbMacCoreTests' passed at 2026-09-03 01:24:20.367.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'RelaySocketTests' started at 2026-09-03 01:24:20.367.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testASecondUnexpectedCloseNeverTriggersASecondReconnectAttempt]' started.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testASecondUnexpectedCloseNeverTriggersASecondReconnectAttempt]' passed (0.114 seconds).
+Test Case '-[OrbMacCoreTests.RelaySocketTests testFramesSentWhileConnectingQueueAndFlushInOrderOnceOpen]' started.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testFramesSentWhileConnectingQueueAndFlushInOrderOnceOpen]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.RelaySocketTests testOpenBeforeTimeoutDoesNotFireTheTimeoutError]' started.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testOpenBeforeTimeoutDoesNotFireTheTimeoutError]' passed (0.367 seconds).
+Test Case '-[OrbMacCoreTests.RelaySocketTests testOpenTimeoutSurfacesATypedErrorInsteadOfHangingForever]' started.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testOpenTimeoutSurfacesATypedErrorInsteadOfHangingForever]' passed (0.036 seconds).
+Test Case '-[OrbMacCoreTests.RelaySocketTests testReconnectNeverAttemptedIfTheSocketHadNeverPreviouslyOpened]' started.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testReconnectNeverAttemptedIfTheSocketHadNeverPreviouslyOpened]' passed (0.106 seconds).
+Test Case '-[OrbMacCoreTests.RelaySocketTests testSendOnceOpenGoesStraightThroughWithoutQueueing]' started.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testSendOnceOpenGoesStraightThroughWithoutQueueing]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.RelaySocketTests testUnexpectedCloseAfterOpenGetsExactlyOneBoundedReconnectAttempt]' started.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testUnexpectedCloseAfterOpenGetsExactlyOneBoundedReconnectAttempt]' passed (0.115 seconds).
+Test Case '-[OrbMacCoreTests.RelaySocketTests testUserInitiatedCloseNeverTriggersAReconnect]' started.
+Test Case '-[OrbMacCoreTests.RelaySocketTests testUserInitiatedCloseNeverTriggersAReconnect]' passed (0.108 seconds).
+Test Suite 'RelaySocketTests' passed at 2026-09-03 01:24:21.223.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.846 (0.857) seconds
+Test Suite 'WireProtocolTests' started at 2026-09-03 01:24:21.223.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testAudioBedFallbackRoundTrips]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testAudioBedFallbackRoundTrips]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testBargeInRoundTrips]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testBargeInRoundTrips]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testClientFrameDecodesRawJSONExactlyAsRelayRsWouldProduceIt]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testClientFrameDecodesRawJSONExactlyAsRelayRsWouldProduceIt]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testCloseReasonDistinguishesPauseFromFailure]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testCloseReasonDistinguishesPauseFromFailure]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testClosingRoundTripsWithProviderFailureReason]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testClosingRoundTripsWithProviderFailureReason]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testClosingRoundTripsWithUserPauseReason]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testClosingRoundTripsWithUserPauseReason]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testEndOfTurnRoundTrips]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testEndOfTurnRoundTrips]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testListeningConfirmedDecodesExactlyAsRelayRsWouldProduceIt]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testListeningConfirmedDecodesExactlyAsRelayRsWouldProduceIt]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testPauseRoundTrips]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testPauseRoundTrips]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testServerFrameMissingTypeFieldIsRejected]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testServerFrameMissingTypeFieldIsRejected]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testSpeakRoundTripsWithAllFields]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testSpeakRoundTripsWithAllFields]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testSpeechCompleteRoundTrips]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testSpeechCompleteRoundTrips]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testSpeechStartingRoundTrips]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testSpeechStartingRoundTrips]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testStartListeningRoundTripsAndMustBeFirstFrameShape]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testStartListeningRoundTripsAndMustBeFirstFrameShape]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testTranscriptDecodesWithIsFinalFlag]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testTranscriptDecodesWithIsFinalFlag]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testTranscriptRoundTripsWithIsFinalFalse]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testTranscriptRoundTripsWithIsFinalFalse]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testUnknownClientFrameTypeIsRejectedRatherThanSilentlyIgnored]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testUnknownClientFrameTypeIsRejectedRatherThanSilentlyIgnored]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.WireProtocolTests testUnknownServerFrameTypeIsRejectedRatherThanSilentlyIgnored]' started.
+Test Case '-[OrbMacCoreTests.WireProtocolTests testUnknownServerFrameTypeIsRejectedRatherThanSilentlyIgnored]' passed (0.004 seconds).
+Test Suite 'WireProtocolTests' passed at 2026-09-03 01:24:21.245.
+	 Executed 18 tests, with 0 failures (0 unexpected) in 0.014 (0.022) seconds
+Test Suite 'OrbMacPackageTests.xctest' passed at 2026-09-03 01:24:21.245.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.860 (0.879) seconds
+Test Suite 'All tests' passed at 2026-09-03 01:24:21.245.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.860 (0.880) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􁁛  Test run with 0 tests in 0 suites passed after 0.001 seconds.

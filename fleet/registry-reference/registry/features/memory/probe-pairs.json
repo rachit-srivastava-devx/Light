@@ -1,0 +1,30 @@
+{
+  "positive": [
+    {"id": "idx-1787419401963", "probe": "How can an operator discover a safeguard without knowing the solver's terminology?"},
+    {"id": "T30", "probe": "An indiscriminate directory transformation altered unrelated names and validation artifacts."},
+    {"id": "T31", "probe": "Shifting source farther can invalidate parent-location math for dependents."},
+    {"id": "idx-1787417330291", "probe": "A shell sequence can conceal an earlier failure unless every stage outcome is inspected."},
+    {"id": "idx-1787417325936", "probe": "Ambient variables can contaminate supposedly self-contained verification."},
+    {"id": "idx-1787417326467", "probe": "A passive dashboard query must not trigger the jobs that produce its inputs, or the call graph can cycle."},
+    {"id": "idx-1787417328707", "probe": "An overlong validation included in routine execution encourages omission of the safeguard."},
+    {"id": "idx-1787417329312", "probe": "Simultaneous changes can backlog automated tasks and stall interactive work."},
+    {"id": "idx-1787418457190", "probe": "Quiet output may mean the detector lacks policy support, not that the implementation is safe."},
+    {"id": "idx-1787418490211", "probe": "The operating system accepts random markers only at the terminal edge of a generated artifact."},
+    {"id": "idx-1787418489755", "probe": "Everyday writing yields a modest size change versus demonstrations built from repetition."},
+    {"id": "idx-1787418458092", "probe": "A worker task cannot repair its launch location from within itself when that location is absent."}
+  ],
+  "negative": [
+    {"id": "idx-1787419401963", "probe": "I am choosing a recipe for roasted vegetables."},
+    {"id": "T30", "probe": "I need a bedtime story about a lighthouse."},
+    {"id": "T31", "probe": "Which sunscreen is best for a beach holiday?"},
+    {"id": "idx-1787417330291", "probe": "How should I water an indoor fern?"},
+    {"id": "idx-1787417325936", "probe": "I want a playlist for a birthday party."},
+    {"id": "idx-1787417326467", "probe": "What is a good marinade for tofu?"},
+    {"id": "idx-1787417328707", "probe": "Compare two hiking trails near a lake."},
+    {"id": "idx-1787417329312", "probe": "How do I fold a fitted bedsheet?"},
+    {"id": "idx-1787418457190", "probe": "Recommend a quiet cafe for breakfast."},
+    {"id": "idx-1787418490211", "probe": "What colors work well in a watercolor landscape?"},
+    {"id": "idx-1787418489755", "probe": "I am packing clothes for a winter trip."},
+    {"id": "idx-1787418458092", "probe": "How long should rice cool before serving?"}
+  ]
+}

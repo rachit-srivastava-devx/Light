@@ -1,0 +1,53 @@
+{
+  "complete_module": {
+    "ok": true,
+    "errors": [],
+    "content_hash": "51fb575a17859979fec3a4ad25956d3f02bdfbe460929bf42959e06f88e6e502"
+  },
+  "one_line_freeze": {
+    "ok": false,
+    "errors": [
+      {
+        "path": "node_id",
+        "message": "node_id must match ^[a-z0-9][a-z0-9-]{2,63}$"
+      },
+      {
+        "path": "purpose",
+        "message": "purpose must be a string of 1..200 characters"
+      },
+      {
+        "path": "interface",
+        "message": "interface must be a non-empty array"
+      },
+      {
+        "path": "registry.searched",
+        "message": "searched must be a non-empty array of non-empty strings"
+      },
+      {
+        "path": "acceptance.artifact",
+        "message": "artifact must be a non-empty string"
+      },
+      {
+        "path": "guarantees[0].derivation.calc",
+        "message": "a numeric derivation needs non-empty arithmetic (a digit and an operator)"
+      },
+      {
+        "path": "alternatives",
+        "message": "alternatives must have at least 2 entries at grain=\"module\""
+      },
+      {
+        "path": "failure_story.trigger",
+        "message": "trigger must be >=10 non-blank characters"
+      },
+      {
+        "path": "failure_story.blast_radius",
+        "message": "blast_radius must be >=10 non-blank characters"
+      },
+      {
+        "path": "failure_story.fail_safe",
+        "message": "fail_safe must be >=10 non-blank characters"
+      }
+    ],
+    "content_hash": "639f8d56140ffcb7352469f0e3625c23e1e886ecad28bb9ea2f4ad34e21005ec"
+  }
+}

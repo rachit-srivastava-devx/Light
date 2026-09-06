@@ -1,0 +1,62 @@
+[0/1] Planning build
+Building for debugging...
+[0/4] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (1.93s)
+Test Suite 'All tests' started at 2026-09-03 01:21:54.350.
+Test Suite 'OrbMacPackageTests.xctest' started at 2026-09-03 01:21:54.354.
+Test Suite 'MicCaptureTests' started at 2026-09-03 01:21:54.354.
+Test Case '-[OrbMacCoreTests.MicCaptureTests testOnFrameIsSettableAndDefaultsToNil]' started.
+Test Case '-[OrbMacCoreTests.MicCaptureTests testOnFrameIsSettableAndDefaultsToNil]' passed (0.005 seconds).
+Test Case '-[OrbMacCoreTests.MicCaptureTests testStopWithoutStartIsSafeNoOp]' started.
+Test Case '-[OrbMacCoreTests.MicCaptureTests testStopWithoutStartIsSafeNoOp]' passed (0.000 seconds).
+Test Suite 'MicCaptureTests' passed at 2026-09-03 01:21:54.360.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'OrbMacCoreTests' started at 2026-09-03 01:21:54.360.
+Test Case '-[OrbMacCoreTests.OrbMacCoreTests testModuleNameIsSet]' started.
+Test Case '-[OrbMacCoreTests.OrbMacCoreTests testModuleNameIsSet]' passed (0.001 seconds).
+Test Suite 'OrbMacCoreTests' passed at 2026-09-03 01:21:54.361.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'PCM16BuffersTests' started at 2026-09-03 01:21:54.361.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testConvertDownsamplingProducesRoughlyExpectedSampleCount]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testConvertDownsamplingProducesRoughlyExpectedSampleCount]' passed (0.009 seconds).
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testConvertSameSampleRateIsIdentityForFullScaleValue]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testConvertSameSampleRateIsIdentityForFullScaleValue]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferDropsTrailingOddByteRatherThanCorrupting]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferDropsTrailingOddByteRatherThanCorrupting]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferPacksInt16SamplesInOrder]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferPacksInt16SamplesInOrder]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferReturnsNilForEmptyData]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferReturnsNilForEmptyData]' passed (0.000 seconds).
+Test Suite 'PCM16BuffersTests' passed at 2026-09-03 01:21:54.371.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.010 (0.010) seconds
+Test Suite 'PCM16FrameAccumulatorTests' started at 2026-09-03 01:21:54.371.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testAppendAcrossCallsPreservesOrderAtBoundary]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testAppendAcrossCallsPreservesOrderAtBoundary]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testByteLayoutIsLittleEndianInt16]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testByteLayoutIsLittleEndianInt16]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testExactMultipleProducesNoLeftover]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testExactMultipleProducesNoLeftover]' passed (0.004 seconds).
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testIrregularChunkSizesStillProduceExactFrames]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testIrregularChunkSizesStillProduceExactFrames]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testResetDiscardsPendingSamples]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testResetDiscardsPendingSamples]' passed (0.000 seconds).
+Test Suite 'PCM16FrameAccumulatorTests' passed at 2026-09-03 01:21:54.377.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.005 (0.005) seconds
+Test Suite 'TTSPlaybackTests' started at 2026-09-03 01:21:54.377.
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testMakeBufferFromArbitraryChunkSizeRoundTrips]' started.
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testMakeBufferFromArbitraryChunkSizeRoundTrips]' passed (0.002 seconds).
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testScheduleChunkBeforeStartIsSafeNoOp]' started.
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testScheduleChunkBeforeStartIsSafeNoOp]' passed (0.035 seconds).
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testStartScheduleChunkStopDoesNotThrowOnRealOutputDevice]' started.
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testStartScheduleChunkStopDoesNotThrowOnRealOutputDevice]' passed (1.481 seconds).
+Test Suite 'TTSPlaybackTests' passed at 2026-09-03 01:21:55.895.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 1.517 (1.518) seconds
+Test Suite 'OrbMacPackageTests.xctest' passed at 2026-09-03 01:21:55.895.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 1.538 (1.541) seconds
+Test Suite 'All tests' passed at 2026-09-03 01:21:55.895.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 1.538 (1.545) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􁁛  Test run with 0 tests in 0 suites passed after 0.001 seconds.
+TEST_EXIT=0

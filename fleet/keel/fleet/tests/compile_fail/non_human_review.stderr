@@ -1,0 +1,13 @@
+error[E0308]: mismatched types
+ --> tests/compile_fail/non_human_review.rs:6:38
+  |
+6 |     let _reviewed = specified.review("agent says yes", &NoLedger);
+  |                               ------ ^^^^^^^^^^^^^^^^ expected `HumanApproval`, found `&str`
+  |                               |
+  |                               arguments to this method are incorrect
+  |
+note: method defined here
+ --> src/lifecycle.rs
+  |
+  |     pub fn review(
+  |            ^^^^^^

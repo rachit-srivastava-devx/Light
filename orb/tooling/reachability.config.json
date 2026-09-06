@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "typescript": {
+    "tsconfigs": [
+      "apps/mobile/tsconfig.json",
+      "backend/gateway-sidecar/tsconfig.json",
+      "backend/voice-provider-sidecar/tsconfig.json"
+    ],
+    "returnValueDeclarationPatterns": [
+      "/registry/features/realtime-voice/"
+    ]
+  },
+  "python": {
+    "binary": "python3",
+    "sourceRoots": [
+      "backend/relay-py/src"
+    ],
+    "testRoots": [
+      "backend/relay-py/tests"
+    ]
+  },
+  "rust": {
+    "cargoManifest": "backend/relay-rs/Cargo.toml",
+    "runClippy": true
+  },
+  "suppressionRoots": [
+    "apps",
+    "backend",
+    "domain"
+  ],
+  "composition": {
+    "roots": [
+      "apps/mobile/src/App.tsx",
+      "backend/gateway-sidecar/src/index.ts",
+      "backend/voice-provider-sidecar/src/index.ts"
+    ],
+    "thresholdParameterPatterns": [
+      "^(?:pause|utterance|timeout|duration|threshold|silence|budget|delay|interval)[A-Za-z]*(?:Ms|Millis|Seconds)$"
+    ]
+  },
+  "wireContracts": [
+    {
+      "name": "mobile-relay-conversation",
+      "clientFile": "apps/mobile/src/runtime/ConversationPort.ts",
+      "inputInterface": "ConversationPortInput",
+      "resultInterface": "ConversationPortResult",
+      "factoryFunction": "createRelayConversationPort",
+      "responseVariable": "body",
+      "pythonFile": "backend/relay-py/src/orb_relay/app.py",
+      "requestClass": "ConversationRequest",
+      "responseClass": "ConversationResponse"
+    }
+  ],
+  "allowlist": [
+    {
+      "id": "orphan:apps/mobile/src/App.tsx:default",
+      "reason": "React Native loads the default App export through the native bundle entrypoint, so there is intentionally no TypeScript importer."
+    },
+    {
+      "id": "wire:mobile-relay-conversation:request:client_not_serialized:task",
+      "reason": "The session seed task is represented on this route by active_task; sending both would duplicate payload state."
+    },
+    {
+      "id": "wire:mobile-relay-conversation:request:client_not_serialized:context_pack",
+      "reason": "The context pack is local session state loaded through the warmup contract, not part of the per-turn response request."
+    },
+    {
+      "id": "wire:mobile-relay-conversation:response:client_not_server:failure_message",
+      "reason": "failure_message is created only by the local static fallback and is intentionally absent from successful relay responses."
+    },
+    {
+      "id": "literal:apps/mobile/src/App.tsx:submitTyped:handleTranscript:pauseMs:0",
+      "reason": "Typed input has no voice frames, so PauseClock defines pauseMs zero as the truthful no-audio sentinel for this named path."
+    },
+    {
+      "id": "literal:apps/mobile/src/App.tsx:submitTyped:handleTranscript:utteranceMs:0",
+      "reason": "Typed input has no measured utterance duration, so zero is the explicit no-audio sentinel only inside submitTyped."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Focus Orb T0 contract corpus",
+  "type": "object",
+  "required": ["version", "atomizer_cases", "schema_safety_cases", "policy_cases"],
+  "properties": {
+    "version": {"type": "string", "minLength": 1},
+    "atomizer_cases": {"type": "array"},
+    "schema_safety_cases": {"type": "array"},
+    "policy_cases": {"type": "array"},
+    "voice_replay_cases": {"type": "array"},
+    "classifier_cases": {"type": "array"},
+    "consistency_cases": {"type": "array"},
+    "belief_replay_cases": {"type": "array"},
+    "policy_behavior_cases": {"type": "array"},
+    "cost_replay_cases": {"type": "array"},
+    "latency_replay_cases": {"type": "array"}
+  }
+}

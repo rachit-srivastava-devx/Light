@@ -1,0 +1,31 @@
+{
+  "node_id": "x",
+  "grain": "module",
+  "purpose": "",
+  "owner": "me",
+  "owner_path": "apps/mobile/src/build/",
+  "interface": [],
+  "data_owned": [],
+  "deps": [],
+  "registry": { "kind": "build_new", "searched": [] },
+  "acceptance": {
+    "given": "a user",
+    "when": "they use it",
+    "then": "it works",
+    "oracle_kind": "test",
+    "artifact": ""
+  },
+  "non_goals": [],
+  "open_questions": ["what store?"],
+  "guarantees": [
+    {
+      "claim": "fast",
+      "derivation": { "kind": "number", "value": "fast", "calc": "" },
+      "label": "mitigates"
+    }
+  ],
+  "alternatives": [
+    { "option": "redis", "why_killed": "no", "revive_trigger": "tbd" }
+  ],
+  "failure_story": { "trigger": "bug", "blast_radius": "", "fail_safe": "retry" }
+}

@@ -1,0 +1,7 @@
+$ uv run --project backend/relay-py --extra dev pytest -q backend/relay-py/tests/test_cost_meter.py -k oversized_settlement
+.                                                                        [100%]
+1 passed, 20 deselected in 0.07s
+
+$ uv run --project backend/relay-py --extra dev pytest -q backend/relay-py/tests/test_cost_meter.py
+.....................                                                    [100%]
+21 passed in 0.25s

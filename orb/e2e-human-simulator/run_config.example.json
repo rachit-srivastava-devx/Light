@@ -1,0 +1,46 @@
+{
+  "simulator_config": "simulator/manifest.json",
+  "run_root": "runs",
+  "backend_command": [],
+  "backend_ready_urls": [],
+  "proxy": {
+    "app_port": 8091,
+    "control_port": 8093,
+    "control_url": "ws://127.0.0.1:8093",
+    "backend_url": "ws://127.0.0.1:8092"
+  },
+  "expected_transcripts": ["Hello, how are you?", "What should I do next?"],
+  "audio_quality": {
+    "enabled": false,
+    "stt_audio": "{run_root}/input/hello-how-are-you.wav",
+    "expected_transcript": "Hello, how are you?",
+    "tts_audio": "{run_root}/audio/assistant-hello.wav",
+    "tts_expected_transcript": "Hey, Rachit. Good to hear from you.",
+    "tts_reference_audio": "fixtures/tts/hello-how-are-you-clean.wav",
+    "whisper_model": "/models/faster-whisper-small.en",
+    "nisqa_model": "/models/nisqa_tts.tar",
+    "max_wer": 0.35,
+    "max_cer": 0.20,
+    "max_tts_wer": 0.25,
+    "max_tts_cer": 0.15,
+    "min_stoi": 0.75,
+    "min_nisqa_mos": 3.0
+  },
+  "journeys": [
+    {
+      "id": "hello",
+      "wav": "runs/input/hello-how-are-you.wav",
+      "speed": 1.0,
+      "observation": "Record what the orb visibly does while listening, processing, and speaking."
+    },
+    {
+      "id": "provider-failure",
+      "fault": {
+        "kind": "provider",
+        "reason": "provider_failure"
+      },
+      "post_fault_wait": 2.0,
+      "observation": "Record whether the orb enters a visible error state and speaks an actionable recovery message."
+    }
+  ]
+}

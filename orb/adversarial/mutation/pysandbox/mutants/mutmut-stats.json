@@ -1,0 +1,78 @@
+{
+    "tests_by_mangled_function_name": {
+        "orb_relay.cost.meter.x__check_continuous": [
+            "tests/test_cost_meter.py::test_would_exceed_predicts_the_refusal_without_spending",
+            "tests/test_cost_meter.py::test_charge_at_exactly_the_remaining_balance_is_allowed",
+            "tests/test_cost_meter.py::test_reservation_is_held_before_spend_and_released_on_settlement",
+            "tests/test_cost_meter.py::test_price_rounds_up_so_a_cap_never_under_counts",
+            "tests/test_cost_meter.py::test_stt_seconds_may_be_fractional",
+            "tests/test_cost_meter.py::test_charge_refuses_before_spending_when_over_reservation",
+            "tests/test_cost_meter.py::test_charge_accumulates_and_reports_remaining",
+            "tests/test_cost_meter.py::test_rejects_non_finite_seconds",
+            "tests/test_cost_meter.py::test_price_is_zero_for_zero_usage"
+        ],
+        "orb_relay.cost.meter.x__check_discrete": [
+            "tests/test_cost_meter.py::test_would_exceed_predicts_the_refusal_without_spending",
+            "tests/test_cost_meter.py::test_charge_at_exactly_the_remaining_balance_is_allowed",
+            "tests/test_cost_meter.py::test_reservation_is_held_before_spend_and_released_on_settlement",
+            "tests/test_cost_meter.py::test_price_rounds_up_so_a_cap_never_under_counts",
+            "tests/test_cost_meter.py::test_rejects_negative_usage",
+            "tests/test_cost_meter.py::test_stt_seconds_may_be_fractional",
+            "tests/test_cost_meter.py::test_charge_refuses_before_spending_when_over_reservation",
+            "tests/test_cost_meter.py::test_rejects_bool_as_a_count",
+            "tests/test_cost_meter.py::test_charge_accumulates_and_reports_remaining",
+            "tests/test_cost_meter.py::test_discrete_counts_reject_floats",
+            "tests/test_cost_meter.py::test_rejects_non_finite_seconds",
+            "tests/test_cost_meter.py::test_price_is_zero_for_zero_usage"
+        ],
+        "orb_relay.cost.meter.x_price_paise": [
+            "tests/test_cost_meter.py::test_would_exceed_predicts_the_refusal_without_spending",
+            "tests/test_cost_meter.py::test_charge_at_exactly_the_remaining_balance_is_allowed",
+            "tests/test_cost_meter.py::test_reservation_is_held_before_spend_and_released_on_settlement",
+            "tests/test_cost_meter.py::test_charge_refuses_before_spending_when_over_reservation",
+            "tests/test_cost_meter.py::test_price_rounds_up_so_a_cap_never_under_counts",
+            "tests/test_cost_meter.py::test_charge_accumulates_and_reports_remaining",
+            "tests/test_cost_meter.py::test_price_is_zero_for_zero_usage"
+        ],
+        "orb_relay.cost.meter.x\u01c1ReservationExceededError\u01c1__init__": [
+            "tests/test_cost_meter.py::test_charge_refuses_before_spending_when_over_reservation"
+        ]
+    },
+    "duration_by_test": {
+        "tests/test_cost_meter.py::test_stt_seconds_may_be_fractional": 0.048221000004559755,
+        "tests/test_cost_meter.py::test_discrete_counts_reject_floats": 0.0002626669593155384,
+        "tests/test_cost_meter.py::test_rejects_negative_usage": 0.00020520901307463646,
+        "tests/test_cost_meter.py::test_rejects_non_finite_seconds": 0.0002249149838462472,
+        "tests/test_cost_meter.py::test_rejects_bool_as_a_count": 0.00015904195606708527,
+        "tests/test_cost_meter.py::test_price_rounds_up_so_a_cap_never_under_counts": 0.0001622919226065278,
+        "tests/test_cost_meter.py::test_price_is_zero_for_zero_usage": 0.00015908293426036835,
+        "tests/test_cost_meter.py::test_charge_refuses_before_spending_when_over_reservation": 0.00032570911571383476,
+        "tests/test_cost_meter.py::test_charge_accumulates_and_reports_remaining": 0.00043800100684165955,
+        "tests/test_cost_meter.py::test_charge_at_exactly_the_remaining_balance_is_allowed": 0.0004946670960634947,
+        "tests/test_cost_meter.py::test_would_exceed_predicts_the_refusal_without_spending": 0.0002227920340374112,
+        "tests/test_cost_meter.py::test_reservation_is_held_before_spend_and_released_on_settlement": 0.00021416705567389727
+    },
+    "stats_time": 0.8186559999999999,
+    "function_hashes": {
+        "orb_relay.cost.meter.x\u01c1ReservationExceededError\u01c1__init__": "77dd22595604",
+        "orb_relay.cost.meter.x__check_discrete": "1e64a50357fc",
+        "orb_relay.cost.meter.x__check_continuous": "54c7caf92196",
+        "orb_relay.cost.meter.x_price_paise": "0cb2aaafaefb"
+    },
+    "function_dependencies": {},
+    "config_fingerprint": {
+        "test_execution": "2e38e77b22c3",
+        "test_selection": "64572344d697",
+        "timeout": "d3052321fdc3",
+        "type_check": "2e38e77b22c3"
+    },
+    "watched_file_hashes": {
+        "pyproject.toml": "fb3768926d38",
+        "mutants/pyproject.toml": "fb3768926d38",
+        "mutants/src/orb_relay/cost/__init__.py.meta": "8337af0c4106",
+        "mutants/src/orb_relay/cost/__init__.py.spans": "50434fb64e05",
+        "mutants/src/orb_relay/cost/meter.py.meta": "6481dd4776a8",
+        "mutants/src/orb_relay/cost/meter.py.spans": "bc9dbbe8e51e"
+    },
+    "git_commit": "fbccbd54e3c0430a0fbbbbfbc4579a23449426e4"
+}

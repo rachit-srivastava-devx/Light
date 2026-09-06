@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.toolchain }})
+    runs-on: macos-latest
+    continue-on-error: false
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [stable, beta]
+    env:
+      # Must live outside the checked-out repo tree, or the M2 corpus detector
+      # (file-count cap) and every other tree-walking check will trip on build
+      # artifacts. Same convention as .githooks/pre-commit and AGENTS.md.
+      CARGO_TARGET_DIR: ${{ runner.temp }}/fleet-rs-target
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 (B11: pinned, semgrep github-actions-mutable-action-tag)
+
+      - name: Install Rust
+        # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+        # -- `stable` here is the action's whole contract (dtolnay/rust-toolchain's README documents
+        # `@stable` as the intended, moving reference so CI always builds against the current stable
+        # Rust release); pinning to a SHA would freeze the Rust *version*, not just the action code,
+        # silently defeating the "always test against current stable" purpose this step exists for.
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: rustfmt, clippy
+
+      - name: Cache cargo and target
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4 (B11: pinned)
+        with:
+          path: |
+            ~/.cargo
+            ${{ runner.temp }}/fleet-rs-target
+          key: ${{ runner.os }}-${{ matrix.toolchain }}-cargo-${{ hashFiles('keel/Cargo.lock', 'tests/tools/b3oracle/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.toolchain }}-cargo-
+
+      - name: Install verification tools
+        run: |
+          command -v cargo-deny >/dev/null 2>&1 || cargo +stable install cargo-deny --locked
+          command -v cargo-audit >/dev/null 2>&1 || cargo +stable install cargo-audit --locked
+          brew list gitleaks >/dev/null 2>&1 || brew install gitleaks
+
+      - name: Wire prompter parity smoke
+        run: |
+          cargo build --manifest-path keel/Cargo.toml --quiet
+          bash bin/parity-run.sh --smoke --output "$RUNNER_TEMP/parity-observations.jsonl"
+
+      - name: Run the developer verification gate
+        run: ./verify.sh

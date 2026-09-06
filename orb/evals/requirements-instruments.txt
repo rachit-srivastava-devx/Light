@@ -1,0 +1,16 @@
+# Owner directive, 2026-08-28: "do not hand-roll" dead-air detection or latency percentiles —
+# use real instruments. Package names verified against the live PyPI JSON API before pinning
+# (the directive's literal "hdrh" does not exist on PyPI; the real package is "hdrhistogram").
+
+silero-vad>=6.2.1         # MIT. snakers4/silero-vad. Verified on PyPI: 6.2.1, 2026-02-24 (fresh).
+                           # Primary dead-air/VAD instrument — real adoption, active release cadence.
+webrtcvad>=2.0.10         # MIT. Verified on PyPI: 2.0.10, released 2017-01-07 — over 9 years old,
+                           # fails the recency bar badly. Kept ONLY as a last-resort fallback if
+                           # silero-vad cannot run in this sandbox; not the primary pick. See report.
+hdrhistogram>=0.10.7      # Apache-2.0 (PyPI classifier). Verified on PyPI: 0.10.7, 2026-06-09 (fresh).
+                           # This is the real HdrHistogram_py port; "hdrh" is not a real package name.
+pysbd>=0.3.4               # MIT. Verified on PyPI: 0.3.4, 2021-02-11 — over 5 years old (stale by the
+                           # recency guideline), but it is a narrow, stable, dependency-free
+                           # rule-based sentence splitter with no CVE surface and wide indirect
+                           # adoption; no actively maintained MIT alternative was found. Flagged, not
+                           # hidden.

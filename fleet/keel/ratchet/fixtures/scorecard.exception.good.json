@@ -1,0 +1,12 @@
+{
+  "change": "exception-e3",
+  "checked": 7,
+  "total": 7,
+  "mutation_kill_rate": "0.80",
+  "mutant_count": 21,
+  "acceptance_pass_rate": "0.96",
+  "arch_violations": 2,
+  "p95_dispatch_latency_ms": 180,
+  "change_failure_rate": "0.09",
+  "rework_rate": "0.19"
+}

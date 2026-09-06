@@ -1,0 +1,56 @@
+{
+  "product": "adhd-focus-orb",
+  "version": "0.1.0",
+  "tier": "T0-first",
+  "blueprint": "../../../blueprints/ADHD-Focus-Orb-L8-Deep-Dive",
+  "company_os": "../../../Company-OS",
+  "registry_services": [
+    {
+      "package": "@pe/llm-gateway",
+      "registry_path": "../../../registry/services/llm-gateway",
+      "pin": "file:../../../registry/services/llm-gateway",
+      "status": "wired",
+      "purpose": "C9 one model door: relay-py calls the gateway sidecar, which invokes this package"
+    },
+    {
+      "package": "@pe/cost-control-plane",
+      "registry_path": "../../../registry/services/cost-control-plane",
+      "pin": "file:../../../registry/services/cost-control-plane",
+      "status": "declared-only",
+      "purpose": "Monthly ledger package is installed but not imported; SessionMeter owns the live pre-spend reservation"
+    },
+    {
+      "package": "@pe/voice-realtime",
+      "registry_path": "../../../registry/services/voice-realtime",
+      "pin": "file:../../../registry/services/voice-realtime",
+      "status": "transitive-fake-only",
+      "purpose": "Used only behind realtime-voice's memory adapter; production voice protocol is implemented by mobile plus relay-rs"
+    }
+  ],
+  "registry_features": [
+    {
+      "package": "@pe/realtime-voice",
+      "registry_path": "../../../registry/features/realtime-voice",
+      "pin": "file:../../../registry/features/realtime-voice",
+      "status": "called-output-discarded",
+      "purpose": "Mobile awaits the memory-backed driver but discards frames, snapshot, and meta; no production behavior depends on its output"
+    }
+  ],
+  "domain_pack": {
+    "path": "domain",
+    "purpose": "ADHD-specific prompts, policies, schemas, and evalsets; dies with this product per C2"
+  },
+  "future_extraction_candidates": [
+    {
+      "candidate": "SessionMeter atomic reservation primitive",
+      "registry_target": "@pe/cost-control-plane",
+      "trigger": "Promote before a second product or replica needs reserve/settle/release; keep meter.py until every adapter passes the atomic contract suite"
+    },
+    {
+      "candidate": "Shared realtime voice wire protocol schema",
+      "registry_target": "@pe/voice-realtime",
+      "trigger": "Extract when a second product consumes the protocol or the next protocol revision would require editing both mobile contracts.ts and relay-rs protocol.rs"
+    }
+  ],
+  "verify": "npm run verify"
+}

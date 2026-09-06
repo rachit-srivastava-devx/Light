@@ -1,0 +1,10 @@
+
+ RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/sot-lld-ready-gate
+
+ ✓ apps/mobile/src/build/LldReadyGate.test.ts (6 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  21:51:47
+   Duration  723ms (transform 81ms, setup 0ms, collect 73ms, tests 6ms, environment 0ms, prepare 99ms)
+

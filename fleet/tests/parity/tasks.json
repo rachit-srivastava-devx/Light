@@ -1,0 +1,42 @@
+[
+  {
+    "task": "version-flag",
+    "terse": "Add a version flag.",
+    "detailed": "Add a --version command-line flag that prints the program version and exits successfully without changing repository state."
+  },
+  {
+    "task": "status-output",
+    "terse": "Show status.",
+    "detailed": "Add a status command that prints the current application status in a human-readable form and returns a nonzero exit code when status cannot be determined."
+  },
+  {
+    "task": "config-validation",
+    "terse": "Validate the config.",
+    "detailed": "Validate configuration before use, report the name of every missing required field, and refuse to continue when validation fails."
+  },
+  {
+    "task": "retry-logging",
+    "terse": "Log retries.",
+    "detailed": "Emit one structured log entry for every retry attempt, including the attempt number and reason, without logging credentials or secret values."
+  },
+  {
+    "task": "dry-run",
+    "terse": "Add dry run.",
+    "detailed": "Add a --dry-run option that reports the changes the command would make while guaranteeing that it performs no filesystem writes."
+  },
+  {
+    "task": "json-output",
+    "terse": "Support JSON output.",
+    "detailed": "Add a --json output mode that emits exactly one valid JSON object on stdout and sends diagnostics to stderr."
+  },
+  {
+    "task": "operation-timeout",
+    "terse": "Add a timeout.",
+    "detailed": "Add a configurable operation timeout that terminates overdue work, reports which operation timed out, and returns a nonzero exit code."
+  },
+  {
+    "task": "missing-file-error",
+    "terse": "Fix the missing-file error.",
+    "detailed": "When an input file is absent, return a concise error naming the missing path and exit nonzero instead of panicking or silently continuing."
+  }
+]

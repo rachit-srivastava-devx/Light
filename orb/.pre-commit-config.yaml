@@ -1,0 +1,30 @@
+minimum_pre_commit_version: '4.0.0'
+repos:
+  - repo: local
+    hooks:
+      - id: gitleaks-staged
+        name: gitleaks staged secret scan
+        entry: gitleaks git --pre-commit --staged --redact=100 --no-banner
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      - id: ruff-python
+        name: ruff check and format-check
+        entry: scripts/ruff-hook.sh
+        language: script
+        files: ^backend/relay-py/.*\.py$
+
+      - id: boundary-lint
+        name: architecture boundary lint
+        entry: node tooling/boundary-lint.mjs
+        language: system
+        pass_filenames: false
+        files: ^(apps/mobile/src|backend/(gateway-sidecar|relay-py|relay-rs)/src)/
+
+      - id: eslint-typescript
+        name: type-aware TypeScript ESLint
+        entry: scripts/eslint.sh
+        language: script
+        files: ^(apps/[^/]+|backend/[^/]+-sidecar)/src/.*\.tsx?$

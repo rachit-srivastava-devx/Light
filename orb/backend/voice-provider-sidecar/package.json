@@ -1,0 +1,15 @@
+{
+  "name": "@orb/voice-provider-sidecar",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Real STT/TTS provider sidecar behind the JSON-over-HTTP contract backend/relay-rs/src/provider.rs's HttpContractProvider already speaks. Mirrors backend/gateway-sidecar's role for the LLM door (C9): this is the one place STT/TTS provider HTTP calls happen.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "typescript": "^5.9.3"
+  }
+}

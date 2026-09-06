@@ -1,0 +1,48 @@
+
+ RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b4-silent-auto-resume
+
+ ❯ apps/mobile/src/presence/PresenceLifecycle.test.ts (2 tests | 1 failed) 9ms
+   × bindPresenceToAppLifecycle > pauses the bed while backgrounded and does NOT auto-recover it on return to foreground 7ms
+     → expected "spy" to not be called at all, but actually been called 1 times[90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m    Array []
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m
+   ✓ bindPresenceToAppLifecycle > notifies the event scheduler without changing audio behavior 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/mobile/src/presence/PresenceLifecycle.test.ts > bindPresenceToAppLifecycle > pauses the bed while backgrounded and does NOT auto-recover it on return to foreground
+AssertionError: expected "spy" to not be called at all, but actually been called 1 times[90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m    Array []
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m
+ ❯ apps/mobile/src/presence/PresenceLifecycle.test.ts:46:31
+     44| 
+     45|     expect(graph.pause).toHaveBeenCalledTimes(2);
+     46|     expect(graph.recover).not.toHaveBeenCalled();
+       |                               ^
+     47|     expect(lifecycle.remove).toHaveBeenCalledTimes(1);
+     48|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  23:13:08
+   Duration  6.60s (transform 463ms, setup 0ms, collect 249ms, tests 9ms, environment 0ms, prepare 1.36s)
+

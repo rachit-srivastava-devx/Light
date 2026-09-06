@@ -1,0 +1,19 @@
+
+# CARGO_TARGET_DIR lives OUTSIDE the repo at ~/.cache/fleet-rs-target-shared (see tests/corpus/M2.sh D30)
+# agent worktrees live INSIDE the repo, never beside it (owner rule 2026-08-24)
+# cargo-mutants run output — regenerated, never reviewed, must not be tracked
+**/mutants.out/
+.codebase-memory/
+.venv/
+.worktrees/
+crew/.venv/
+mutants.out/
+# B11: cargo-llvm-cov (bin/coverage-report.sh) drops raw instrumentation counters here mid-run;
+# they're consumed and merged into the report before this script exits, and are not useful alone.
+*.profraw
+node_modules/
+target-shared/
+target/
+var/
+var/salvage/
+var/target-shared/

@@ -1,0 +1,21 @@
+{
+  "main_rs": [
+    "keel/src/main.rs",
+    "crew/src/main.rs"
+  ],
+  "packages": [
+    {
+      "name": "fleet",
+      "runtime_dependencies": [
+        "serde",
+        "serde_json"
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "path": "keel/src/hash.rs",
+      "hand_rolled_permutation": true
+    }
+  ]
+}

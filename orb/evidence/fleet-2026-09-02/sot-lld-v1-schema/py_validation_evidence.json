@@ -1,0 +1,10 @@
+{
+  "complete_module": {
+    "ok": true,
+    "content_hash": "51fb575a17859979fec3a4ad25956d3f02bdfbe460929bf42959e06f88e6e502"
+  },
+  "one_line_freeze": {
+    "ok": false,
+    "content_hash": "639f8d56140ffcb7352469f0e3625c23e1e886ecad28bb9ea2f4ad34e21005ec"
+  }
+}

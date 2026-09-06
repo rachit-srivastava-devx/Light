@@ -1,0 +1,11 @@
+{"ts":"2026-08-07T11:00:00.000Z","seq":1,"source":"mobile","event":"orb.state","run_id":"bad","session_id":"s2","data":{"state":"booting"}}
+{"ts":"2026-08-07T11:00:00.100Z","seq":2,"source":"mobile","event":"orb.state","run_id":"bad","session_id":"s2","data":{"state":"listening"}}
+{"ts":"2026-08-07T11:00:01.000Z","seq":3,"source":"mobile","event":"turn.end","run_id":"bad","session_id":"s2","data":{"turn_id":"u1"}}
+{"ts":"2026-08-07T11:00:01.200Z","seq":4,"source":"relay-rs","event":"stt.final","run_id":"bad","session_id":"s2","data":{"turn_id":"u1","text":"नमस्ते आप कैसे हैं","expected_text":"hello how are you"}}
+{"ts":"2026-08-07T11:00:01.250Z","seq":5,"source":"mobile","event":"orb.state","run_id":"bad","session_id":"s2","data":{"state":"processing"}}
+{"ts":"2026-08-07T11:00:10.000Z","seq":6,"source":"gateway","event":"gateway.response","run_id":"bad","session_id":"s2","data":{"turn_id":"u1","latency_ms":6500}}
+{"ts":"2026-08-07T11:00:10.100Z","seq":7,"source":"mobile","event":"assistant.response","run_id":"bad","session_id":"s2","data":{"turn_id":"u1","speech":{"spoken_text":"I’m here","plain_text":"I’m here"}}}
+{"ts":"2026-08-07T11:00:10.200Z","seq":8,"source":"mobile","event":"orb.state","run_id":"bad","session_id":"s2","data":{"state":"error"}}
+{"ts":"2026-08-07T11:00:10.300Z","seq":9,"source":"relay-rs","event":"failure","run_id":"bad","session_id":"s2","data":{"turn_id":"u1","failure_type":"provider_failure"}}
+{"ts":"2026-08-07T11:00:10.400Z","seq":10,"source":"mobile","event":"assistant.response","run_id":"bad","session_id":"s2","data":{"turn_id":"u1","speech":{"spoken_text":"[alien] I’m here","plain_text":"[alien] I’m here"}}}
+{"ts":"2026-08-07T11:00:10.500Z","seq":11,"source":"mobile","event":"orb.state","run_id":"bad","session_id":"s2","data":{"state":"listening"}}

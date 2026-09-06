@@ -1,0 +1,73 @@
+[0/1] Planning build
+Building for debugging...
+[0/7] Write sources
+[1/7] Write swift-version--58304C5D6DBC2206.txt
+[3/9] Emitting module OrbMacCore
+[4/9] Compiling OrbMacCore OrbMacCore.swift
+[4/13] Write Objects.LinkFileList
+error: emit-module command failed with exit code 1 (use -v to see invocation)
+[6/13] Emitting module OrbMacCoreTests
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-protocol-client/macos/OrbMac/Tests/OrbMacCoreTests/RelaySocketTests.swift:7:25: error: cannot find type 'SocketLike' in scope
+  5 | /// production). Tests drive its lifecycle explicitly (`triggerOpen()`, `triggerClose()`, ...)
+  6 | /// rather than touching a real socket, so these are deterministic and need no network / relay.
+  7 | final class FakeSocket: SocketLike {
+    |                         `- error: cannot find type 'SocketLike' in scope
+  8 |     var onMessage: ((SocketData) -> Void)?
+  9 |     var onOpen: (() -> Void)?
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-protocol-client/macos/OrbMac/Tests/OrbMacCoreTests/RelaySocketTests.swift:8:22: error: cannot find type 'SocketData' in scope
+  6 | /// rather than touching a real socket, so these are deterministic and need no network / relay.
+  7 | final class FakeSocket: SocketLike {
+  8 |     var onMessage: ((SocketData) -> Void)?
+    |                      `- error: cannot find type 'SocketData' in scope
+  9 |     var onOpen: (() -> Void)?
+ 10 |     var onError: ((Error?) -> Void)?
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-protocol-client/macos/OrbMac/Tests/OrbMacCoreTests/RelaySocketTests.swift:11:20: error: cannot find type 'SocketCloseEvent' in scope
+  9 |     var onOpen: (() -> Void)?
+ 10 |     var onError: ((Error?) -> Void)?
+ 11 |     var onClose: ((SocketCloseEvent?) -> Void)?
+    |                    `- error: cannot find type 'SocketCloseEvent' in scope
+ 12 |     private(set) var readyState: SocketReadyState
+ 13 |     private(set) var sent: [SocketData] = []
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-protocol-client/macos/OrbMac/Tests/OrbMacCoreTests/RelaySocketTests.swift:12:34: error: cannot find type 'SocketReadyState' in scope
+ 10 |     var onError: ((Error?) -> Void)?
+ 11 |     var onClose: ((SocketCloseEvent?) -> Void)?
+ 12 |     private(set) var readyState: SocketReadyState
+    |                                  `- error: cannot find type 'SocketReadyState' in scope
+ 13 |     private(set) var sent: [SocketData] = []
+ 14 |     private(set) var closeCallCount = 0
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-protocol-client/macos/OrbMac/Tests/OrbMacCoreTests/RelaySocketTests.swift:13:29: error: cannot find type 'SocketData' in scope
+ 11 |     var onClose: ((SocketCloseEvent?) -> Void)?
+ 12 |     private(set) var readyState: SocketReadyState
+ 13 |     private(set) var sent: [SocketData] = []
+    |                             `- error: cannot find type 'SocketData' in scope
+ 14 |     private(set) var closeCallCount = 0
+ 15 | 
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-protocol-client/macos/OrbMac/Tests/OrbMacCoreTests/RelaySocketTests.swift:16:22: error: cannot find type 'SocketReadyState' in scope
+ 14 |     private(set) var closeCallCount = 0
+ 15 | 
+ 16 |     init(readyState: SocketReadyState = .connecting) {
+    |                      `- error: cannot find type 'SocketReadyState' in scope
+ 17 |         self.readyState = readyState
+ 18 |     }
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-protocol-client/macos/OrbMac/Tests/OrbMacCoreTests/RelaySocketTests.swift:20:23: error: cannot find type 'SocketData' in scope
+ 18 |     }
+ 19 | 
+ 20 |     func send(_ data: SocketData) {
+    |                       `- error: cannot find type 'SocketData' in scope
+ 21 |         sent.append(data)
+ 22 |     }
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-protocol-client/macos/OrbMac/Tests/OrbMacCoreTests/RelaySocketTests.swift:34:32: error: cannot find type 'SocketCloseEvent' in scope
+ 32 |     }
+ 33 | 
+ 34 |     func triggerClose(_ event: SocketCloseEvent? = nil) {
+    |                                `- error: cannot find type 'SocketCloseEvent' in scope
+ 35 |         readyState = .closed
+ 36 |         onClose?(event)
+[7/13] Compiling OrbMacCoreTests WireProtocolTests.swift

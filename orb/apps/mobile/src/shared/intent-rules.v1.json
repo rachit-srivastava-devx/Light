@@ -1,0 +1,278 @@
+{
+  "version": "intent-rules.v1",
+  "completion_words": [
+    "done",
+    "finished",
+    "complete",
+    "completed"
+  ],
+  "negated_completion_prefixes": [
+    "not",
+    "never",
+    "hardly",
+    "barely",
+    "havent",
+    "haven't"
+  ],
+  "question_form_prefixes": [
+    "can i",
+    "could i",
+    "should i",
+    "do i",
+    "am i allowed to"
+  ],
+  "task_request_prefixes": [
+    "i need to",
+    "i want to",
+    "i would like to",
+    "i'd like to",
+    "i am looking to",
+    "i'm looking to",
+    "im looking to",
+    "i have to",
+    "i've got to",
+    "i am trying to",
+    "i'm trying to",
+    "help me",
+    "let us",
+    "let's",
+    "lets"
+  ],
+  "rules": [
+    {
+      "label": "done",
+      "keywords": [
+        "done",
+        "finished",
+        "complete",
+        "completed",
+        "did it"
+      ]
+    },
+    {
+      "label": "next",
+      "keywords": [
+        "next",
+        "skip",
+        "move on"
+      ]
+    },
+    {
+      "label": "pause",
+      "keywords": [
+        "pause",
+        "stop",
+        "hold on",
+        "wait a sec",
+        "break"
+      ]
+    },
+    {
+      "label": "stuck",
+      "keywords": [
+        "stuck",
+        "can't do this",
+        "help",
+        "don't know how",
+        "confused"
+      ]
+    },
+    {
+      "label": "question",
+      "keywords": [
+        "what",
+        "why",
+        "how",
+        "when",
+        "where",
+        "who",
+        "?"
+      ]
+    },
+    {
+      "label": "chitchat",
+      "keywords": [
+        "hey",
+        "hello",
+        "hola",
+        "hi there",
+        "lol",
+        "haha",
+        "by the way"
+      ]
+    }
+  ],
+  "intake_open_domain_v1": {
+    "_comment": "Track B (ORB-ACCEPTANCE-CONTRACT B1-B3): rule data consumed by IntentClassifier.classifyIntakeUtterance to route a FIRST utterance at INTAKE to task/converse/teach. Versioned per the L8 rule that new rule categories get their own key rather than scattering regexes across modules.",
+    "teach_markers": [
+      "teach me",
+      "teach me about",
+      "can you teach",
+      "explain",
+      "can you explain",
+      "could you explain",
+      "help me understand",
+      "walk me through",
+      "give me an overview of",
+      "break down",
+      "tell me about",
+      "i want to learn about",
+      "i want to learn"
+    ],
+    "opinion_markers": [
+      "what do you think",
+      "do you think",
+      "your take",
+      "your opinion",
+      "your view",
+      "how do you feel about",
+      "what's your take"
+    ],
+    "meta_orb_markers": [
+      "are you real",
+      "are you an ai",
+      "are you a bot",
+      "are you a robot",
+      "are you human",
+      "who are you",
+      "what are you",
+      "are you alive",
+      "are you a person"
+    ],
+    "feeling_markers": [
+      "i feel",
+      "i'm feeling",
+      "im feeling",
+      "i've been feeling",
+      "ive been feeling",
+      "feel like",
+      "i'm so",
+      "im so",
+      "i am so",
+      "having a hard time",
+      "having a rough",
+      "hard day",
+      "rough day",
+      "tough day",
+      "bad day",
+      "nothing is going right",
+      "nothing seems to be going right"
+    ],
+    "reactive_interjections": [
+      "wow",
+      "hmm",
+      "hmmm",
+      "really",
+      "seriously",
+      "interesting",
+      "cool",
+      "nice one",
+      "no way",
+      "huh",
+      "ugh"
+    ],
+    "ambiguous_fragment_markers": [
+      "not sure",
+      "no idea",
+      "i dont know",
+      "i don't know",
+      "thinking out loud",
+      "just thinking",
+      "maybe later",
+      "who knows"
+    ],
+    "hinglish_markers": [
+      "yaar",
+      "matlab",
+      "samajh nahi",
+      "samajh nahi aa raha",
+      "bata do",
+      "kya karu",
+      "kaise ho",
+      "theek hai na",
+      "accha",
+      "arre",
+      "aur",
+      "lekin",
+      "phir"
+    ],
+    "conversational_framing_markers": [
+      "i am",
+      "i'm",
+      "i feel",
+      "i had",
+      "i was",
+      "i think",
+      "how are",
+      "what is",
+      "what's",
+      "can you",
+      "could you",
+      "do you"
+    ]
+  },
+  "conversation_control_v1": {
+    "_why": "Utterances that STEER the conversation rather than name work. Every one of these used to fall through classifyIntakeUtterance's task default and load the step-atomizer prompt, so the owner reported 'not able to stop the conversation in between, divert or have a conversation' from a live voice session on 2026-08-28.",
+    "stop_markers": [
+      "stop",
+      "wait",
+      "hold on",
+      "hold up",
+      "pause",
+      "one second",
+      "one sec",
+      "give me a second",
+      "hang on",
+      "shush",
+      "quiet",
+      "stop talking",
+      "let me finish",
+      "let me think"
+    ],
+    "reject_markers": [
+      "no not that",
+      "not that",
+      "not that one",
+      "no thanks",
+      "nope",
+      "no",
+      "skip that",
+      "something else",
+      "different one",
+      "nah"
+    ],
+    "divert_markers": [
+      "forget it",
+      "never mind",
+      "nevermind",
+      "different topic",
+      "change the subject",
+      "change topic",
+      "let's talk about something else",
+      "lets talk about something else",
+      "talk about something else",
+      "moving on",
+      "anyway",
+      "on another note",
+      "unrelated",
+      "off topic",
+      "new topic"
+    ],
+    "chat_invitation_markers": [
+      "can we just chat",
+      "can we chat",
+      "can we talk",
+      "let's just talk",
+      "lets just talk",
+      "let's just chat",
+      "lets just chat",
+      "just want to talk",
+      "just wanna talk",
+      "can we just talk",
+      "i just want to talk",
+      "what should we talk about",
+      "let's chat",
+      "lets chat"
+    ]
+  }
+}

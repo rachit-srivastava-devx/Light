@@ -1,0 +1,19 @@
+# evals/golden/ — real-conversation datasets for the ADHD-orb golden eval set.
+#
+# Isolated venv for this directory only (also matched by the repo-root .venv/ rule, but
+# listed here explicitly so this directory documents its own boundary).
+.venv/
+
+# Raw downloaded archives/extracts (tarballs, zips, source CSVs/JSON shards) for every
+# dataset. These are re-downloadable via each <dataset>/fetch_and_convert.py and are up to
+# hundreds of MB uncompressed (e.g. SGD) — never commit them, only the sampled,
+# converted conversations.jsonl (capped at ~2000 dialogues per dataset).
+*/raw/
+raw/
+
+# AnnoMI specifically: the source repo (github.com/uccollab/AnnoMI) has no LICENSE file and
+# no license statement in its README or cited papers. Per the hard rule "if a licence
+# forbids redistribution, keep the script and do not commit the data", we treat "no licence
+# found" the same way here — the converted file is produced locally so it can be counted
+# and sanity-checked, but it must never be committed. See annomi/PROVENANCE.md.
+annomi/conversations.jsonl

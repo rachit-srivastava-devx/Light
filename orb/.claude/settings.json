@@ -1,0 +1,41 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/l8-session-context.sh\"",
+            "timeout": 10,
+            "statusMessage": "loading L8 operating contract"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/l8-auto-verify.sh\"",
+            "timeout": 40,
+            "statusMessage": "L8 auto-verify"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/l8-stop-gate.sh\"",
+            "timeout": 600,
+            "statusMessage": "L8 verify gate"
+          }
+        ]
+      }
+    ]
+  }
+}

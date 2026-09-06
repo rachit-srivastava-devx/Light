@@ -1,0 +1,47 @@
+{
+  "version": "chat-responses.v1",
+  "utterances": {
+    "greeting": [
+      "hi",
+      "hello",
+      "hey",
+      "hola",
+      "hi there",
+      "hey there",
+      "good morning",
+      "good afternoon",
+      "good evening",
+      "namaste",
+      "yo",
+      "hello how are you",
+      "hi how are you",
+      "hello how are you doing"
+    ],
+    "presence": [
+      "are you there",
+      "you there",
+      "can you hear me",
+      "how are you",
+      "how are you doing",
+      "what's up",
+      "i'm here",
+      "im here",
+      "thanks",
+      "thank you"
+    ]
+  },
+  "responses": {
+    "greeting": [
+      "Hi, Rachit. I'm here with you.",
+      "Hey, Rachit. Good to hear from you.",
+      "Hola, Rachit. I'm listening.",
+      "Hello. What's on your mind?"
+    ],
+    "presence": [
+      "Yes, I'm here. You can talk to me.",
+      "I'm right here with you. No task needed.",
+      "I hear you. We can chat, or start with one small thing.",
+      "Still here. Take your time."
+    ]
+  }
+}

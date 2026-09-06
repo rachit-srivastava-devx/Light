@@ -1,0 +1,415 @@
+=== RED (implementation files removed) ===
+[0/1] Planning build
+Building for debugging...
+[0/7] Write sources
+[1/7] Write swift-version--58304C5D6DBC2206.txt
+[3/9] Compiling OrbMacCore OrbMacCore.swift
+[4/9] Emitting module OrbMacCore
+[4/13] Write Objects.LinkFileList
+[6/15] Emitting module OrbMacCoreTests
+[7/15] Compiling OrbMacCoreTests OrbMacCoreTests.swift
+[8/15] Compiling OrbMacCoreTests PCM16FrameAccumulatorTests.swift
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16FrameAccumulatorTests.swift:12:19: error: cannot find 'PCM16FrameAccumulator' in scope
+10 | final class PCM16FrameAccumulatorTests: XCTestCase {
+11 |     func testExactMultipleProducesNoLeftover() {
+12 |         let acc = PCM16FrameAccumulator(frameSampleCount: 320)
+   |                   `- error: cannot find 'PCM16FrameAccumulator' in scope
+13 |         let samples = (0..<640).map { Int16($0 % 100) }
+14 |         let frames = acc.append(samples)
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16FrameAccumulatorTests.swift:24:19: error: cannot find 'PCM16FrameAccumulator' in scope
+22 |         // Mirrors the real-world case the brief describes: tap buffer sizes
+23 |         // never align to exactly 320 samples.
+24 |         let acc = PCM16FrameAccumulator(frameSampleCount: 320)
+   |                   `- error: cannot find 'PCM16FrameAccumulator' in scope
+25 |         var allSamples: [Int16] = []
+26 |         var emittedFrames: [Data] = []
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16FrameAccumulatorTests.swift:56:19: error: cannot find 'PCM16FrameAccumulator' in scope
+54 | 
+55 |     func testByteLayoutIsLittleEndianInt16() {
+56 |         let acc = PCM16FrameAccumulator(frameSampleCount: 2)
+   |                   `- error: cannot find 'PCM16FrameAccumulator' in scope
+57 |         let frames = acc.append([Int16(1), Int16(-1)])
+58 |         XCTAssertEqual(frames.count, 1)
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16FrameAccumulatorTests.swift:69:19: error: cannot find 'PCM16FrameAccumulator' in scope
+67 | 
+68 |     func testAppendAcrossCallsPreservesOrderAtBoundary() {
+69 |         let acc = PCM16FrameAccumulator(frameSampleCount: 4)
+   |                   `- error: cannot find 'PCM16FrameAccumulator' in scope
+70 |         var frames: [Data] = []
+71 |         frames.append(contentsOf: acc.append([1, 2, 3])) // 3 pending, no frame yet
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16FrameAccumulatorTests.swift:85:19: error: cannot find 'PCM16FrameAccumulator' in scope
+83 | 
+84 |     func testResetDiscardsPendingSamples() {
+85 |         let acc = PCM16FrameAccumulator(frameSampleCount: 10)
+   |                   `- error: cannot find 'PCM16FrameAccumulator' in scope
+86 |         _ = acc.append([1, 2, 3])
+87 |         XCTAssertEqual(acc.pendingSampleCount, 3)
+[9/15] Compiling OrbMacCoreTests TTSPlaybackTests.swift
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/TTSPlaybackTests.swift:13:24: error: cannot find 'TTSPlayback' in scope
+11 | final class TTSPlaybackTests: XCTestCase {
+12 |     func testStartScheduleChunkStopDoesNotThrowOnRealOutputDevice() throws {
+13 |         let playback = TTSPlayback()
+   |                        `- error: cannot find 'TTSPlayback' in scope
+14 |         do {
+15 |             try playback.start()
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/TTSPlaybackTests.swift:33:24: error: cannot find 'TTSPlayback' in scope
+31 | 
+32 |     func testScheduleChunkBeforeStartIsSafeNoOp() {
+33 |         let playback = TTSPlayback()
+   |                        `- error: cannot find 'TTSPlayback' in scope
+34 |         let chunk = [Int16](repeating: 0, count: 10).withUnsafeBytes { Data($0) }
+35 |         playback.scheduleChunk(chunk) // not running yet — must not crash
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/TTSPlaybackTests.swift:43:36: error: cannot find 'PCM16Buffers' in scope
+41 |         // against the pure buffer-construction helper, independent of
+42 |         // whether a real output device is available.
+43 |         let format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: AudioIOFormat.ttsSampleRate))
+   |                                    `- error: cannot find 'PCM16Buffers' in scope
+44 |         for sampleCount in [1, 7, 2_400, 4_096] {
+45 |             let samples = (0..<sampleCount).map { Int16($0 % 30_000) }
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/TTSPlaybackTests.swift:43:77: error: cannot find 'AudioIOFormat' in scope
+41 |         // against the pure buffer-construction helper, independent of
+42 |         // whether a real output device is available.
+43 |         let format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: AudioIOFormat.ttsSampleRate))
+   |                                                                             `- error: cannot find 'AudioIOFormat' in scope
+44 |         for sampleCount in [1, 7, 2_400, 4_096] {
+45 |             let samples = (0..<sampleCount).map { Int16($0 % 30_000) }
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/TTSPlaybackTests.swift:43:26: error: generic parameter 'T' could not be inferred
+41 |         // against the pure buffer-construction helper, independent of
+42 |         // whether a real output device is available.
+43 |         let format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: AudioIOFormat.ttsSampleRate))
+   |                          `- error: generic parameter 'T' could not be inferred
+44 |         for sampleCount in [1, 7, 2_400, 4_096] {
+45 |             let samples = (0..<sampleCount).map { Int16($0 % 30_000) }
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/TTSPlaybackTests.swift:47:40: error: cannot find 'PCM16Buffers' in scope
+45 |             let samples = (0..<sampleCount).map { Int16($0 % 30_000) }
+46 |             let data = samples.withUnsafeBytes { Data($0) }
+47 |             let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+   |                                        `- error: cannot find 'PCM16Buffers' in scope
+48 |             XCTAssertEqual(Int(buffer.frameLength), sampleCount)
+49 |             XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/TTSPlaybackTests.swift:47:30: error: generic parameter 'T' could not be inferred
+45 |             let samples = (0..<sampleCount).map { Int16($0 % 30_000) }
+46 |             let data = samples.withUnsafeBytes { Data($0) }
+47 |             let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+   |                              `- error: generic parameter 'T' could not be inferred
+48 |             XCTAssertEqual(Int(buffer.frameLength), sampleCount)
+49 |             XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/TTSPlaybackTests.swift:49:28: error: cannot find 'PCM16Buffers' in scope
+47 |             let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+48 |             XCTAssertEqual(Int(buffer.frameLength), sampleCount)
+49 |             XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+   |                            `- error: cannot find 'PCM16Buffers' in scope
+50 |         }
+51 |     }
+[10/15] Compiling OrbMacCoreTests PCM16BuffersTests.swift
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:11:36: error: cannot find 'PCM16Buffers' in scope
+ 9 | final class PCM16BuffersTests: XCTestCase {
+10 |     func testMakeBufferPacksInt16SamplesInOrder() throws {
+11 |         let format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: 16_000))
+   |                                    `- error: cannot find 'PCM16Buffers' in scope
+12 |         let samples: [Int16] = [1, -1, 32767, -32768, 0]
+13 |         let data = samples.withUnsafeBytes { Data($0) }
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:11:26: error: generic parameter 'T' could not be inferred
+ 9 | final class PCM16BuffersTests: XCTestCase {
+10 |     func testMakeBufferPacksInt16SamplesInOrder() throws {
+11 |         let format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: 16_000))
+   |                          `- error: generic parameter 'T' could not be inferred
+12 |         let samples: [Int16] = [1, -1, 32767, -32768, 0]
+13 |         let data = samples.withUnsafeBytes { Data($0) }
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:14:36: error: cannot find 'PCM16Buffers' in scope
+12 |         let samples: [Int16] = [1, -1, 32767, -32768, 0]
+13 |         let data = samples.withUnsafeBytes { Data($0) }
+14 |         let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+   |                                    `- error: cannot find 'PCM16Buffers' in scope
+15 |         XCTAssertEqual(buffer.frameLength, AVAudioFrameCount(samples.count))
+16 |         XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:14:26: error: generic parameter 'T' could not be inferred
+12 |         let samples: [Int16] = [1, -1, 32767, -32768, 0]
+13 |         let data = samples.withUnsafeBytes { Data($0) }
+14 |         let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+   |                          `- error: generic parameter 'T' could not be inferred
+15 |         XCTAssertEqual(buffer.frameLength, AVAudioFrameCount(samples.count))
+16 |         XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:16:24: error: cannot find 'PCM16Buffers' in scope
+14 |         let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+15 |         XCTAssertEqual(buffer.frameLength, AVAudioFrameCount(samples.count))
+16 |         XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+   |                        `- error: cannot find 'PCM16Buffers' in scope
+17 |     }
+18 | 
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:20:36: error: cannot find 'PCM16Buffers' in scope
+18 | 
+19 |     func testMakeBufferDropsTrailingOddByteRatherThanCorrupting() throws {
+20 |         let format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: 16_000))
+   |                                    `- error: cannot find 'PCM16Buffers' in scope
+21 |         let samples: [Int16] = [10, 20, 30]
+22 |         var data = samples.withUnsafeBytes { Data($0) }
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:20:26: error: generic parameter 'T' could not be inferred
+18 | 
+19 |     func testMakeBufferDropsTrailingOddByteRatherThanCorrupting() throws {
+20 |         let format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: 16_000))
+   |                          `- error: generic parameter 'T' could not be inferred
+21 |         let samples: [Int16] = [10, 20, 30]
+22 |         var data = samples.withUnsafeBytes { Data($0) }
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:24:36: error: cannot find 'PCM16Buffers' in scope
+22 |         var data = samples.withUnsafeBytes { Data($0) }
+23 |         data.append(0xAB) // one trailing odd byte
+24 |         let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+   |                                    `- error: cannot find 'PCM16Buffers' in scope
+25 |         XCTAssertEqual(Int(buffer.frameLength), 3)
+26 |         XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:24:26: error: generic parameter 'T' could not be inferred
+22 |         var data = samples.withUnsafeBytes { Data($0) }
+23 |         data.append(0xAB) // one trailing odd byte
+24 |         let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+   |                          `- error: generic parameter 'T' could not be inferred
+25 |         XCTAssertEqual(Int(buffer.frameLength), 3)
+26 |         XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:26:24: error: cannot find 'PCM16Buffers' in scope
+24 |         let buffer = try XCTUnwrap(PCM16Buffers.makeBuffer(from: data, format: format))
+25 |         XCTAssertEqual(Int(buffer.frameLength), 3)
+26 |         XCTAssertEqual(PCM16Buffers.int16Samples(from: buffer), samples)
+   |                        `- error: cannot find 'PCM16Buffers' in scope
+27 |     }
+28 | 
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:30:22: error: cannot find 'PCM16Buffers' in scope
+28 | 
+29 |     func testMakeBufferReturnsNilForEmptyData() {
+30 |         let format = PCM16Buffers.monoInt16Format(sampleRate: 16_000)!
+   |                      `- error: cannot find 'PCM16Buffers' in scope
+31 |         XCTAssertNil(PCM16Buffers.makeBuffer(from: Data(), format: format))
+32 |     }
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:31:22: error: cannot find 'PCM16Buffers' in scope
+29 |     func testMakeBufferReturnsNilForEmptyData() {
+30 |         let format = PCM16Buffers.monoInt16Format(sampleRate: 16_000)!
+31 |         XCTAssertNil(PCM16Buffers.makeBuffer(from: Data(), format: format))
+   |                      `- error: cannot find 'PCM16Buffers' in scope
+32 |     }
+33 | 
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:41:41: error: cannot find 'PCM16Buffers' in scope
+39 |             AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false)
+40 |         )
+41 |         let int16Format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: 16_000))
+   |                                         `- error: cannot find 'PCM16Buffers' in scope
+42 |         let frameCount: AVAudioFrameCount = 4
+43 |         let inputBuffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: floatFormat, frameCapacity: frameCount))
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:41:31: error: generic parameter 'T' could not be inferred
+39 |             AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false)
+40 |         )
+41 |         let int16Format = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: 16_000))
+   |                               `- error: generic parameter 'T' could not be inferred
+42 |         let frameCount: AVAudioFrameCount = 4
+43 |         let inputBuffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: floatFormat, frameCapacity: frameCount))
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:52:36: error: cannot find 'PCM16Buffers' in scope
+50 | 
+51 |         let converter = try XCTUnwrap(AVAudioConverter(from: floatFormat, to: int16Format))
+52 |         let output = try XCTUnwrap(PCM16Buffers.convert(inputBuffer, using: converter))
+   |                                    `- error: cannot find 'PCM16Buffers' in scope
+53 | 
+54 |         XCTAssertEqual(output.count, 4)
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:52:26: error: generic parameter 'T' could not be inferred
+50 | 
+51 |         let converter = try XCTUnwrap(AVAudioConverter(from: floatFormat, to: int16Format))
+52 |         let output = try XCTUnwrap(PCM16Buffers.convert(inputBuffer, using: converter))
+   |                          `- error: generic parameter 'T' could not be inferred
+53 | 
+54 |         XCTAssertEqual(output.count, 4)
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:69:42: error: cannot find 'PCM16Buffers' in scope
+67 |             AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 48_000, channels: 1, interleaved: false)
+68 |         )
+69 |         let targetFormat = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: 16_000))
+   |                                          `- error: cannot find 'PCM16Buffers' in scope
+70 |         let frameCount: AVAudioFrameCount = 1024
+71 |         let inputBuffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: frameCount))
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:69:32: error: generic parameter 'T' could not be inferred
+67 |             AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 48_000, channels: 1, interleaved: false)
+68 |         )
+69 |         let targetFormat = try XCTUnwrap(PCM16Buffers.monoInt16Format(sampleRate: 16_000))
+   |                                `- error: generic parameter 'T' could not be inferred
+70 |         let frameCount: AVAudioFrameCount = 1024
+71 |         let inputBuffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: frameCount))
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:77:36: error: cannot find 'PCM16Buffers' in scope
+75 | 
+76 |         let converter = try XCTUnwrap(AVAudioConverter(from: sourceFormat, to: targetFormat))
+77 |         let output = try XCTUnwrap(PCM16Buffers.convert(inputBuffer, using: converter))
+   |                                    `- error: cannot find 'PCM16Buffers' in scope
+78 | 
+79 |         let expected = Double(frameCount) * 16_000.0 / 48_000.0
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/PCM16BuffersTests.swift:77:26: error: generic parameter 'T' could not be inferred
+75 | 
+76 |         let converter = try XCTUnwrap(AVAudioConverter(from: sourceFormat, to: targetFormat))
+77 |         let output = try XCTUnwrap(PCM16Buffers.convert(inputBuffer, using: converter))
+   |                          `- error: generic parameter 'T' could not be inferred
+78 | 
+79 |         let expected = Double(frameCount) * 16_000.0 / 48_000.0
+
+XCTest.XCTUnwrap:1:13: note: in call to function 'XCTUnwrap(_:_:file:line:)'
+1 | public func XCTUnwrap<T>(_ expression: @autoclosure () throws -> T?, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T
+  |             `- note: in call to function 'XCTUnwrap(_:_:file:line:)'
+[11/15] Compiling OrbMacCoreTests MicCaptureTests.swift
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/MicCaptureTests.swift:13:23: error: cannot find 'MicCapture' in scope
+11 | final class MicCaptureTests: XCTestCase {
+12 |     func testOnFrameIsSettableAndDefaultsToNil() {
+13 |         let capture = MicCapture()
+   |                       `- error: cannot find 'MicCapture' in scope
+14 |         var received: Data?
+15 |         capture.onFrame = { data in received = data }
+
+/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/macos-audio-io/macos/OrbMac/Tests/OrbMacCoreTests/MicCaptureTests.swift:23:23: error: cannot find 'MicCapture' in scope
+21 | 
+22 |     func testStopWithoutStartIsSafeNoOp() {
+23 |         let capture = MicCapture()
+   |                       `- error: cannot find 'MicCapture' in scope
+24 |         capture.stop() // must not crash/throw when never started
+25 |     }
+[11/15] Linking OrbMac
+error: fatalError
+RED_EXIT=1
+
+=== GREEN (implementation restored) ===
+[0/1] Planning build
+Building for debugging...
+[0/5] Write sources
+[1/5] Write swift-version--58304C5D6DBC2206.txt
+[3/11] Emitting module OrbMacCore
+[4/11] Compiling OrbMacCore PCM16FrameAccumulator.swift
+[5/11] Compiling OrbMacCore AudioCapture.swift
+[6/11] Compiling OrbMacCore AudioFormat.swift
+[7/11] Compiling OrbMacCore AudioPlayback.swift
+[8/11] Compiling OrbMacCore PCM16Buffers.swift
+[8/12] Write Objects.LinkFileList
+[10/18] Compiling OrbMacCoreTests TTSPlaybackTests.swift
+[11/18] Compiling OrbMacCoreTests PCM16FrameAccumulatorTests.swift
+[11/18] Linking OrbMac
+[12/18] Applying OrbMac
+[14/18] Compiling OrbMacCoreTests OrbMacCoreTests.swift
+[15/18] Compiling OrbMacCoreTests MicCaptureTests.swift
+[16/18] Compiling OrbMacCoreTests PCM16BuffersTests.swift
+[17/18] Emitting module OrbMacCoreTests
+[17/19] Write Objects.LinkFileList
+[18/19] Linking OrbMacPackageTests
+Build complete! (10.77s)
+Test Suite 'All tests' started at 2026-09-03 01:21:42.350.
+Test Suite 'OrbMacPackageTests.xctest' started at 2026-09-03 01:21:42.357.
+Test Suite 'MicCaptureTests' started at 2026-09-03 01:21:42.357.
+Test Case '-[OrbMacCoreTests.MicCaptureTests testOnFrameIsSettableAndDefaultsToNil]' started.
+Test Case '-[OrbMacCoreTests.MicCaptureTests testOnFrameIsSettableAndDefaultsToNil]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.MicCaptureTests testStopWithoutStartIsSafeNoOp]' started.
+Test Case '-[OrbMacCoreTests.MicCaptureTests testStopWithoutStartIsSafeNoOp]' passed (0.000 seconds).
+Test Suite 'MicCaptureTests' passed at 2026-09-03 01:21:42.358.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'OrbMacCoreTests' started at 2026-09-03 01:21:42.358.
+Test Case '-[OrbMacCoreTests.OrbMacCoreTests testModuleNameIsSet]' started.
+Test Case '-[OrbMacCoreTests.OrbMacCoreTests testModuleNameIsSet]' passed (0.000 seconds).
+Test Suite 'OrbMacCoreTests' passed at 2026-09-03 01:21:42.358.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'PCM16BuffersTests' started at 2026-09-03 01:21:42.358.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testConvertDownsamplingProducesRoughlyExpectedSampleCount]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testConvertDownsamplingProducesRoughlyExpectedSampleCount]' passed (0.004 seconds).
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testConvertSameSampleRateIsIdentityForFullScaleValue]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testConvertSameSampleRateIsIdentityForFullScaleValue]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferDropsTrailingOddByteRatherThanCorrupting]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferDropsTrailingOddByteRatherThanCorrupting]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferPacksInt16SamplesInOrder]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferPacksInt16SamplesInOrder]' passed (0.002 seconds).
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferReturnsNilForEmptyData]' started.
+Test Case '-[OrbMacCoreTests.PCM16BuffersTests testMakeBufferReturnsNilForEmptyData]' passed (0.001 seconds).
+Test Suite 'PCM16BuffersTests' passed at 2026-09-03 01:21:42.366.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.007 (0.008) seconds
+Test Suite 'PCM16FrameAccumulatorTests' started at 2026-09-03 01:21:42.366.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testAppendAcrossCallsPreservesOrderAtBoundary]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testAppendAcrossCallsPreservesOrderAtBoundary]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testByteLayoutIsLittleEndianInt16]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testByteLayoutIsLittleEndianInt16]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testExactMultipleProducesNoLeftover]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testExactMultipleProducesNoLeftover]' passed (0.000 seconds).
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testIrregularChunkSizesStillProduceExactFrames]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testIrregularChunkSizesStillProduceExactFrames]' passed (0.001 seconds).
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testResetDiscardsPendingSamples]' started.
+Test Case '-[OrbMacCoreTests.PCM16FrameAccumulatorTests testResetDiscardsPendingSamples]' passed (0.000 seconds).
+Test Suite 'PCM16FrameAccumulatorTests' passed at 2026-09-03 01:21:42.368.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'TTSPlaybackTests' started at 2026-09-03 01:21:42.368.
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testMakeBufferFromArbitraryChunkSizeRoundTrips]' started.
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testMakeBufferFromArbitraryChunkSizeRoundTrips]' passed (0.002 seconds).
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testScheduleChunkBeforeStartIsSafeNoOp]' started.
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testScheduleChunkBeforeStartIsSafeNoOp]' passed (0.012 seconds).
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testStartScheduleChunkStopDoesNotThrowOnRealOutputDevice]' started.
+Test Case '-[OrbMacCoreTests.TTSPlaybackTests testStartScheduleChunkStopDoesNotThrowOnRealOutputDevice]' passed (0.893 seconds).
+Test Suite 'TTSPlaybackTests' passed at 2026-09-03 01:21:43.276.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.907 (0.907) seconds
+Test Suite 'OrbMacPackageTests.xctest' passed at 2026-09-03 01:21:43.276.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 0.917 (0.919) seconds
+Test Suite 'All tests' passed at 2026-09-03 01:21:43.276.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 0.917 (0.926) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􁁛  Test run with 0 tests in 0 suites passed after 0.007 seconds.
+GREEN_EXIT=0

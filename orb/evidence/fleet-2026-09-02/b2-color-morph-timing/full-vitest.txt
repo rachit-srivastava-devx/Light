@@ -1,0 +1,287 @@
+
+ RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b2-color-morph-timing
+
+ ✓ apps/mobile/src/voice/NativeMicPort.test.ts (35 tests) 155ms
+ ✓ apps/mobile/src/router/ConversationControl.test.ts (41 tests) 56ms
+ ✓ apps/mobile/src/voice/voice.test.ts (38 tests) 68ms
+ ✓ apps/mobile/src/runtime/VoiceLoopController.test.ts (19 tests) 129ms
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > renders only the cloud orb on a dark background
+focus-orb:relay-websocket-unavailable
+focus-orb:presence-ready elapsed_ms=12 boot_ms=8
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > renders only the cloud orb on a dark background
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > ends the turn early on a complete thought, without waiting out the VAD hangover
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/runtime/T0FocusSession.test.ts > ORB-ACCEPTANCE-CONTRACT Track B — intake open-domain routing (B1-B5) > B2 (runtime wiring, published denominator): >= N-1 of 13 open-domain first utterances reach the conversation port at a fresh INTAKE, never the atomizer
+[B2-runtime] 13 of 13 reached conversation without touching the atomizer. Misses: none
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > auto-starts and speaks the launch greeting instead of injecting a first task
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > ends the turn early on a complete thought, without waiting out the VAD hangover
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not cut off a Hinglish speaker mid-thought on the same pause
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not cut off a Hinglish speaker mid-thought on the same pause
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > auto-starts and speaks the launch greeting instead of injecting a first task
+focus-orb:relay-websocket-unavailable
+focus-orb:speech-request elapsed_ms=2
+focus-orb:presence-ready elapsed_ms=35 boot_ms=3
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not endpoint when no voice frame has been observed in the turn
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not endpoint when no voice frame has been observed in the turn
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+focus-orb:speech-request elapsed_ms=2
+focus-orb:presence-ready elapsed_ms=6 boot_ms=1
+focus-orb:mic-permission-denied
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not carry the previous turn's silence into the next one
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not carry the previous turn's silence into the next one
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+focus-orb:relay-reconnecting endpoint=ws://10.0.2.2:8091 Relay socket closed unexpectedly
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > sends provider cancellation when the mic detects sustained speech over an in-flight reply
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > sends provider cancellation when the mic detects sustained speech over an in-flight reply
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > sends provider cancellation when the mic detects sustained speech over an in-flight reply
+focus-orb:relay-speech-starting
+
+stdout | apps/mobile/src/runtime/T0FocusSession.test.ts > ORB-ACCEPTANCE-CONTRACT Track B — intake open-domain routing (B1-B5) > B3 (runtime wiring, regression, published denominator): all 10 task utterances still reach the atomizer/clarify path at a fresh INTAKE, never the conversation port
+[B3-runtime] 10 of 10 still reached atomizer/clarify. Misses: none
+
+ ✓ apps/mobile/src/runtime/T0FocusSession.test.ts (35 tests) 389ms
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stderr | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not cancel presence on audio_bed_fallback
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not cancel presence on audio_bed_fallback
+focus-orb:presence-ready elapsed_ms=9 boot_ms=3
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not cancel presence on audio_bed_fallback
+focus-orb:relay-audio-bed-fallback
+
+stderr | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not close the transport on audio_bed_fallback (the session stays alive)
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not close the transport on audio_bed_fallback (the session stays alive)
+focus-orb:presence-ready elapsed_ms=5 boot_ms=5
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not close the transport on audio_bed_fallback (the session stays alive)
+focus-orb:relay-audio-bed-fallback
+
+stderr | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > still speaks the provider_failure apology on audio_bed_fallback
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > still speaks the provider_failure apology on audio_bed_fallback
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > still speaks the provider_failure apology on audio_bed_fallback
+focus-orb:relay-audio-bed-fallback
+
+stderr | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does NOT fall through to the generic protocol-error path (which used to cancel presence and drop the apology)
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does NOT fall through to the generic protocol-error path (which used to cancel presence and drop the apology)
+focus-orb:presence-ready elapsed_ms=4 boot_ms=2
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does NOT fall through to the generic protocol-error path (which used to cancel presence and drop the apology)
+focus-orb:relay-audio-bed-fallback
+
+ ✓ apps/mobile/src/AppAudioBedFallback.test.tsx (4 tests) 147ms
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+focus-orb:endpoint-latency semantic_ms=1160 vad_only_ms=1800 saved_ms=640
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+focus-orb:relay-reconnected attempt=1
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+focus-orb:relay-transport-error endpoint=ws://10.0.2.2:8091 Relay socket closed unexpectedly
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > stops mic capture when native start fails, releasing any partially-acquired resource
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ✓ apps/mobile/src/AppVoiceWiring.test.tsx (6 tests) 373ms
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > stops mic capture when native start fails, releasing any partially-acquired resource
+focus-orb:speech-request elapsed_ms=1
+focus-orb:presence-ready elapsed_ms=5 boot_ms=2
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > stops mic capture when native start fails, releasing any partially-acquired resource
+focus-orb:mic-start-error native start failed
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > offers a typed path when the mic is unusable, and a typed turn crosses the runtime seam
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > offers a typed path when the mic is unusable, and a typed turn crosses the runtime seam
+focus-orb:speech-request elapsed_ms=1
+focus-orb:presence-ready elapsed_ms=4 boot_ms=2
+focus-orb:mic-permission-denied
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > offers a typed path when the mic is unusable, and a typed turn crosses the runtime seam
+focus-orb:speech-request elapsed_ms=18
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > never sends an empty or whitespace-only typed turn
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > never sends an empty or whitespace-only typed turn
+focus-orb:speech-request elapsed_ms=1
+focus-orb:presence-ready elapsed_ms=5 boot_ms=2
+focus-orb:mic-permission-denied
+
+ ✓ apps/mobile/src/AppSurface.test.tsx (6 tests) 477ms
+ ✓ backend/gateway-sidecar/__tests__/preflight.test.ts (18 tests) 65ms
+ ✓ apps/mobile/src/voice/RelaySocket.test.ts (9 tests) 73ms
+stderr | backend/voice-provider-sidecar/__tests__/http-contract.test.ts
+voice-provider-sidecar: ORB_STT_PROVIDER=fake selected — transcripts are SYNTHETIC, not real STT.
+voice-provider-sidecar: ORB_TTS_PROVIDER=fake selected — audio produced is SYNTHETIC, not real speech.
+
+stdout | apps/mobile/src/router/IntentClassifier.test.ts > classifyIntakeUtterance — ORB-ACCEPTANCE-CONTRACT Track B (B1-B3) > B2 (aggregate, published denominator): >= N-1 of 13 open-domain first utterances route to conversation
+[B2] open-domain routing: 13 of 13 routed to conversation. Misses: none
+
+stdout | apps/mobile/src/router/IntentClassifier.test.ts > classifyIntakeUtterance — ORB-ACCEPTANCE-CONTRACT Track B (B1-B3) > B3 (aggregate, published denominator): all 10 task utterances still classify as task — zero tolerance
+[B3] task-regression: 10 of 10 still atomize. Misses: none
+
+ ✓ apps/mobile/src/router/IntentClassifier.test.ts (50 tests) 115ms
+stderr | backend/voice-provider-sidecar/__tests__/http-contract.test.ts > voice-provider-sidecar HTTP contract > malformed JSON returns 400 instead of crashing the process
+voice-provider-sidecar: unhandled request error: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+
+ ✓ backend/voice-provider-sidecar/__tests__/http-contract.test.ts (8 tests) 134ms
+ ✓ apps/mobile/src/voice/PauseClock.test.ts (9 tests) 4ms
+ ✓ apps/mobile/src/voice/BargeInPlaybackLatency.test.ts (29 tests) 91ms
+ ✓ apps/mobile/src/build/lld-v1.test.ts (5 tests) 24ms
+ ✓ apps/mobile/src/presence/PresenceBoot.test.ts (4 tests) 13ms
+ ✓ backend/voice-provider-sidecar/__tests__/wav.test.ts (7 tests) 10ms
+ ✓ backend/voice-provider-sidecar/__tests__/real-providers.test.ts (20 tests) 52ms
+ ✓ apps/mobile/src/runtime/ConversationPort.test.ts (4 tests) 14ms
+stderr | apps/mobile/src/orb/AuroraMist.test.tsx > AuroraMist reduced-motion contract > renders a completely static image when speed=0 and breathDepth=0
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/orb/AuroraMist.test.tsx > AuroraMist reduced-motion contract > positive control: the same harness DOES detect motion when speed/breathDepth are non-zero
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ✓ apps/mobile/src/orb/AuroraMist.test.tsx (2 tests) 47ms
+ ✓ apps/mobile/src/runtime/AtomizerPort.test.ts (4 tests) 18ms
+ ✓ apps/mobile/src/presence/InterruptionHandler.test.ts (14 tests) 39ms
+ ✓ backend/voice-provider-sidecar/__tests__/sarvam-speaker.test.ts (5 tests) 14ms
+ ✓ backend/gateway-sidecar/__tests__/devlog-safe-name.test.ts (6 tests) 5ms
+ ✓ apps/mobile/src/router/Router.test.ts (9 tests) 5ms
+ ✓ apps/mobile/src/lld/lld.test.ts (15 tests) 17ms
+stderr | apps/mobile/src/AppController.test.ts > FocusOrb launch/real-turn contract > speaks a backend failure and still opens the listening loop when warmup fails
+focus-orb:warmup-failed relay unavailable
+
+ ✓ apps/mobile/src/AppController.test.ts (4 tests) 64ms
+ ✓ apps/mobile/src/voice/SpeechAudio.test.ts (6 tests) 4ms
+ ✓ apps/mobile/src/presence/NoiseEngine.test.ts (20 tests) 6458ms
+   ✓ seededRandom / generateWhiteNoise > stays within [-1, 1]  339ms
+   ✓ brownNoise > never exceeds the [-1, 1] clamp (§1 formula)  2880ms
+   ✓ buildNoiseBuffer > loops without an audible seam for both colours, at the real 30s/48kHz size  1867ms
+   ✓ buildNoiseBuffer > keeps every brown sample inside the [-1,1] buffer domain  468ms
+   ✓ buildNoiseBuffer > gives brown strictly less high-frequency energy than pink (the colours are real)  323ms
+ ✓ apps/mobile/src/cognitive/cognitive.test.ts (37 tests) 26ms
+ ✓ backend/gateway-sidecar/__tests__/speech-markup.test.ts (11 tests) 10ms
+ ✓ apps/mobile/src/voice/RelayAudioPlayer.test.ts (14 tests) 52ms
+ ✓ apps/mobile/src/voice/Utf8.test.ts (1 test) 1ms
+ ✓ apps/mobile/src/session/CostReservation.test.ts (12 tests) 3ms
+stderr | apps/mobile/src/AppColorMorphTiming.test.tsx > presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT)
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppColorMorphTiming.test.tsx > presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT)
+focus-orb:presence-ready elapsed_ms=173 boot_ms=20
+
+ ✓ apps/mobile/src/AppColorMorphTiming.test.tsx (1 test) 307ms
+   ✓ presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT)  305ms
+ ✓ apps/mobile/src/session/CheckInTimer.test.ts (5 tests) 6ms
+ ✓ apps/mobile/src/lld/ProsodyDirector.test.ts (8 tests) 4ms
+ ✓ backend/voice-provider-sidecar/__tests__/session-audio-buffer.test.ts (4 tests) 2ms
+ ✓ apps/mobile/src/presence/ColorMorph.test.ts (7 tests) 11ms
+ ✓ apps/mobile/src/presence/StimulationController.test.ts (4 tests) 11ms
+ ✓ apps/mobile/src/voice/SemanticEndpointer.test.ts (19 tests) 6ms
+ ✓ apps/mobile/src/session/StateMachine.test.ts (48 tests) 19ms
+ ✓ apps/mobile/src/AppModel.test.ts (12 tests) 8ms
+ ✓ apps/mobile/src/voice/RelayClient.test.ts (2 tests) 3ms
+ ✓ apps/mobile/src/presence/AudioGraph.test.ts (10 tests) 4ms
+ ✓ apps/mobile/src/presence/PresenceEventQueue.test.ts (5 tests) 5ms
+ ✓ apps/mobile/src/voice/FishSpeech.test.ts (2 tests) 7ms
+ ✓ apps/mobile/src/presence/DuckingMixer.test.ts (5 tests) 8ms
+ ✓ backend/voice-provider-sidecar/__tests__/fake-backends.test.ts (5 tests) 11ms
+ ✓ apps/mobile/src/presence/PresenceLifecycle.test.ts (2 tests) 5ms
+ ✓ apps/mobile/src/cognitive/CrisisDetector.test.ts (12 tests) 9ms
+stderr | backend/voice-provider-sidecar/__tests__/config.test.ts > provider selection fails closed with no explicit config (no silent fake fallback) > an explicit ORB_STT_PROVIDER=fake / ORB_TTS_PROVIDER=fake still opts in to the fake backend
+voice-provider-sidecar: ORB_STT_PROVIDER=fake selected — transcripts are SYNTHETIC, not real STT.
+voice-provider-sidecar: ORB_TTS_PROVIDER=fake selected — audio produced is SYNTHETIC, not real speech.
+
+ ✓ backend/voice-provider-sidecar/__tests__/config.test.ts (13 tests) 6ms
+ ✓ apps/mobile/src/App.test.ts (2 tests) 9ms
+ ✓ apps/mobile/src/orb/motion.test.ts (13 tests) 3ms
+ ✓ apps/mobile/src/session/StepGate.test.ts (10 tests) 3ms
+ ✓ backend/gateway-sidecar/__tests__/adapterEvidence.test.ts (10 tests) 7ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts [ backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts ]
+Error: Cannot find module '@pe/llm-gateway/adapters/memory' imported from '/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b2-color-morph-timing/backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts:3:1
+      1| import { describe, expect, it, afterEach } from 'vitest';
+      2| import type { Server } from 'node:http';
+      3| import { createMemoryGateway } from '@pe/llm-gateway/adapters/memory';
+       | ^
+      4| import type { LlmGatewayPort } from '@pe/llm-gateway';
+      5| import { createGatewayServer } from '../src/index';
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  backend/gateway-sidecar/__tests__/complete.test.ts [ backend/gateway-sidecar/__tests__/complete.test.ts ]
+Error: Cannot find module '@pe/llm-gateway/adapters/memory' imported from '/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b2-color-morph-timing/backend/gateway-sidecar/__tests__/complete.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ backend/gateway-sidecar/__tests__/complete.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { createMemoryGateway } from '@pe/llm-gateway/adapters/memory';
+       | ^
+      3| import { MissingTenantError, type LlmGatewayPort, type UsageEvent } fr…
+      4| import { createGatewayFromEnv, createGatewayServer, gatewayAdapterFrom…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 56 passed (58)
+      Tests  706 passed (706)
+   Start at  23:42:33
+   Duration  10.94s (transform 2.52s, setup 0ms, collect 9.47s, tests 9.61s, environment 28ms, prepare 12.60s)
+
+exit:1

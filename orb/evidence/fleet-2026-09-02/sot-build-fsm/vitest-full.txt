@@ -1,0 +1,131 @@
+# Full vitest suite
+```
+
+ RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/sot-build-fsm
+
+stdout | apps/mobile/src/router/IntentClassifier.test.ts > classifyIntakeUtterance — ORB-ACCEPTANCE-CONTRACT Track B (B1-B3) > B2 (aggregate, published denominator): >= N-1 of 13 open-domain first utterances route to conversation
+[B2] open-domain routing: 13 of 13 routed to conversation. Misses: none
+
+stdout | apps/mobile/src/router/IntentClassifier.test.ts > classifyIntakeUtterance — ORB-ACCEPTANCE-CONTRACT Track B (B1-B3) > B3 (aggregate, published denominator): all 10 task utterances still classify as task — zero tolerance
+[B3] task-regression: 10 of 10 still atomize. Misses: none
+
+ ✓ apps/mobile/src/router/IntentClassifier.test.ts (50 tests) 20ms
+ ✓ apps/mobile/src/voice/BargeInPlaybackLatency.test.ts (27 tests) 57ms
+ ✓ apps/mobile/src/voice/NativeMicPort.test.ts (35 tests) 404ms
+ ✓ apps/mobile/src/voice/RelaySocket.test.ts (7 tests) 8ms
+stderr | apps/mobile/src/orb/AuroraMist.test.tsx > AuroraMist reduced-motion contract > renders a completely static image when speed=0 and breathDepth=0
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/orb/AuroraMist.test.tsx > AuroraMist reduced-motion contract > positive control: the same harness DOES detect motion when speed/breathDepth are non-zero
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ✓ apps/mobile/src/orb/AuroraMist.test.tsx (2 tests) 48ms
+stderr | backend/voice-provider-sidecar/__tests__/http-contract.test.ts > voice-provider-sidecar HTTP contract > malformed JSON returns 400 instead of crashing the process
+voice-provider-sidecar: unhandled request error: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+
+ ✓ backend/voice-provider-sidecar/__tests__/http-contract.test.ts (8 tests) 62ms
+ ✓ backend/voice-provider-sidecar/__tests__/fake-backends.test.ts (5 tests) 16ms
+ ✓ apps/mobile/src/router/ConversationControl.test.ts (41 tests) 42ms
+ ✓ apps/mobile/src/voice/voice.test.ts (37 tests) 11ms
+ ✓ apps/mobile/src/voice/RelayAudioPlayer.test.ts (14 tests) 29ms
+ ✓ backend/gateway-sidecar/__tests__/preflight.test.ts (18 tests) 106ms
+ ✓ apps/mobile/src/runtime/ConversationPort.test.ts (4 tests) 13ms
+ ✓ apps/mobile/src/presence/PresenceEventQueue.test.ts (5 tests) 5ms
+ ✓ backend/voice-provider-sidecar/__tests__/wav.test.ts (7 tests) 14ms
+ ✓ apps/mobile/src/runtime/AtomizerPort.test.ts (4 tests) 8ms
+ ✓ apps/mobile/src/cognitive/CrisisDetector.test.ts (12 tests) 3ms
+stderr | apps/mobile/src/AppController.test.ts > FocusOrb launch/real-turn contract > speaks a backend failure and still opens the listening loop when warmup fails
+focus-orb:warmup-failed relay unavailable
+
+ ✓ apps/mobile/src/AppController.test.ts (4 tests) 12ms
+ ✓ apps/mobile/src/session/CostReservation.test.ts (12 tests) 5ms
+ ✓ backend/gateway-sidecar/__tests__/adapterEvidence.test.ts (10 tests) 2ms
+ ✓ apps/mobile/src/lld/lld.test.ts (15 tests) 9ms
+ ✓ apps/mobile/src/presence/PresenceLifecycle.test.ts (2 tests) 22ms
+ ✓ apps/mobile/src/voice/PauseClock.test.ts (9 tests) 9ms
+ ✓ apps/mobile/src/presence/NoiseEngine.test.ts (20 tests) 3612ms
+   ✓ seededRandom / generateWhiteNoise > stays within [-1, 1]  399ms
+   ✓ brownNoise > never exceeds the [-1, 1] clamp (§1 formula)  1742ms
+   ✓ buildNoiseBuffer > loops without an audible seam for both colours, at the real 30s/48kHz size  714ms
+ ✓ apps/mobile/src/lld/ProsodyDirector.test.ts (8 tests) 4ms
+ ✓ apps/mobile/src/voice/SemanticEndpointer.test.ts (19 tests) 6ms
+ ✓ apps/mobile/src/presence/ColorMorph.test.ts (7 tests) 8ms
+ ✓ apps/mobile/src/session/StateMachine.test.ts (48 tests) 28ms
+ ✓ apps/mobile/src/presence/StimulationController.test.ts (4 tests) 23ms
+ ✓ backend/voice-provider-sidecar/__tests__/sarvam-speaker.test.ts (5 tests) 4ms
+ ✓ backend/gateway-sidecar/__tests__/speech-markup.test.ts (11 tests) 10ms
+ ✓ apps/mobile/src/presence/AudioGraph.test.ts (10 tests) 6ms
+ ✓ apps/mobile/src/voice/SpeechAudio.test.ts (6 tests) 13ms
+ ✓ backend/voice-provider-sidecar/__tests__/real-providers.test.ts (18 tests) 10ms
+ ✓ apps/mobile/src/cognitive/cognitive.test.ts (37 tests) 6ms
+ ✓ backend/voice-provider-sidecar/__tests__/session-audio-buffer.test.ts (3 tests) 11ms
+ ✓ apps/mobile/src/presence/PresenceBoot.test.ts (4 tests) 11ms
+ ✓ apps/mobile/src/voice/FishSpeech.test.ts (2 tests) 7ms
+ ✓ apps/mobile/src/AppModel.test.ts (10 tests) 8ms
+ ✓ apps/mobile/src/App.test.ts (2 tests) 6ms
+ ✓ apps/mobile/src/voice/Utf8.test.ts (1 test) 3ms
+ ✓ backend/gateway-sidecar/__tests__/devlog-safe-name.test.ts (6 tests) 17ms
+ ✓ backend/voice-provider-sidecar/__tests__/config.test.ts (11 tests) 9ms
+ ✓ apps/mobile/src/presence/DuckingMixer.test.ts (5 tests) 3ms
+ ✓ apps/mobile/src/presence/InterruptionHandler.test.ts (14 tests) 7ms
+ ✓ apps/mobile/src/orb/motion.test.ts (13 tests) 4ms
+ ✓ apps/mobile/src/session/StepGate.test.ts (10 tests) 6ms
+ ✓ apps/mobile/src/build/BuildStateMachine.test.ts (5 tests) 12ms
+ ✓ apps/mobile/src/session/CheckInTimer.test.ts (5 tests) 8ms
+ ✓ apps/mobile/src/router/Router.test.ts (9 tests) 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts [ backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts ]
+Error: Cannot find module '@pe/llm-gateway/adapters/memory' imported from '/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/sot-build-fsm/backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts:3:1
+      1| import { describe, expect, it, afterEach } from 'vitest';
+      2| import type { Server } from 'node:http';
+      3| import { createMemoryGateway } from '@pe/llm-gateway/adapters/memory';
+       | ^
+      4| import type { LlmGatewayPort } from '@pe/llm-gateway';
+      5| import { createGatewayServer } from '../src/index';
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  backend/gateway-sidecar/__tests__/complete.test.ts [ backend/gateway-sidecar/__tests__/complete.test.ts ]
+Error: Cannot find module '@pe/llm-gateway/adapters/memory' imported from '/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/sot-build-fsm/backend/gateway-sidecar/__tests__/complete.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ backend/gateway-sidecar/__tests__/complete.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { createMemoryGateway } from '@pe/llm-gateway/adapters/memory';
+       | ^
+      3| import { MissingTenantError, type LlmGatewayPort, type UsageEvent } fr…
+      4| import { createGatewayFromEnv, createGatewayServer, gatewayAdapterFrom…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  apps/mobile/src/AppSurface.test.tsx [ apps/mobile/src/AppSurface.test.tsx ]
+ FAIL  apps/mobile/src/AppVoiceWiring.test.tsx [ apps/mobile/src/AppVoiceWiring.test.tsx ]
+ FAIL  apps/mobile/src/runtime/T0FocusSession.test.ts [ apps/mobile/src/runtime/T0FocusSession.test.ts ]
+ FAIL  apps/mobile/src/runtime/VoiceLoopController.test.ts [ apps/mobile/src/runtime/VoiceLoopController.test.ts ]
+Error: Cannot find package '@pe/realtime-voice/adapters/memory' imported from '/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/sot-build-fsm/apps/mobile/src/runtime/T0FocusSession.ts'
+ ❯ apps/mobile/src/runtime/T0FocusSession.ts:2:1
+      1| import type { RealtimeVoiceFeaturePort, VoiceFeatureInput } from '@pe/…
+      2| import { createMemoryRealtimeVoiceFeature } from '@pe/realtime-voice/a…
+       | ^
+      3| 
+      4| import { applyEvidence, initialBeliefs } from '../cognitive/BeliefMode…
+
+Caused by: Error: Failed to load url @pe/realtime-voice/adapters/memory (resolved id: @pe/realtime-voice/adapters/memory) in /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/sot-build-fsm/apps/mobile/src/runtime/T0FocusSession.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../../Principal%20Engineering/company/products/adhd-focus-orb-worktrees/sot-build-fsm/node_modules/vite/dist/node/chunks/config.js:22739:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  6 failed | 49 passed (55)
+      Tests  621 passed (621)
+   Start at  22:21:29
+   Duration  7.04s (transform 2.10s, setup 0ms, collect 4.13s, tests 4.75s, environment 11ms, prepare 7.86s)
+
+```

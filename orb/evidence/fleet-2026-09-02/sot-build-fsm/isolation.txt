@@ -1,0 +1,18 @@
+# Pre-existing failure isolation (diff vs base e942446)
+
+The following failing files are BYTE-IDENTICAL to base e942446 (git diff shows nothing for each).
+This proves the 6 failed vitest files + 2 mobile typecheck errors are pre-existing and not introduced by U2's build-fsm slice.
+
+```
+git diff e942446 -- backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts  =>  [no output = unchanged]
+git diff e942446 -- backend/gateway-sidecar/__tests__/complete.test.ts  =>  [no output = unchanged]
+git diff e942446 -- apps/mobile/src/AppSurface.test.tsx  =>  [no output = unchanged]
+git diff e942446 -- apps/mobile/src/AppVoiceWiring.test.tsx  =>  [no output = unchanged]
+git diff e942446 -- apps/mobile/src/runtime/T0FocusSession.test.ts  =>  [no output = unchanged]
+git diff e942446 -- apps/mobile/src/runtime/VoiceLoopController.test.ts  =>  [no output = unchanged]
+git diff e942446 -- apps/mobile/src/runtime/T0FocusSession.ts  =>  [no output = unchanged]
+```
+
+U2 added files (git status --porcelain after force-add):
+```
+```

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fleet.local/contracts/submission.v1.json",
+  "title": "Submission — worker -> parent, over fd 3. The ONLY channel out.",
+  "type": "object",
+  "additionalProperties": false,
+  "comment": "Fields a worker could benefit from lying about are ABSENT BY DESIGN: no timestamp, no actor, no resolved_model, no lease_id, no hash. The parent stamps all of those.",
+  "required": ["schema_version","kind","body"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "kind": {"type": "string", "enum": ["note","done","refuse"]},
+    "body": {"type": "object"}
+  }
+}

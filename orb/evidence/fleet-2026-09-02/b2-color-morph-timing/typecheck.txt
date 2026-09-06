@@ -1,0 +1,6 @@
+
+> adhd-focus-orb@0.1.0 typecheck
+> tsc --noEmit -p apps/mobile && tsc --noEmit -p backend/gateway-sidecar && tsc --noEmit -p backend/voice-provider-sidecar
+
+apps/mobile/src/AppAudioBedFallback.test.tsx(171,9): error TS2345: Argument of type 'AtomizerPort' is not assignable to parameter of type 'number'.
+exit:2

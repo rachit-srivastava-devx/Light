@@ -1,0 +1,50 @@
+[
+  {
+    "id": "intake-pm",
+    "may_produce": ["requirements", "ambiguity_decision"],
+    "must_consume": ["user_task"],
+    "cycle_states": ["discover", "specify"],
+    "reviewer": "architect",
+    "gate": {"id": "ambiguity", "failure": "an open question remains unanswered", "exit_code": 7}
+  },
+  {
+    "id": "architect",
+    "may_produce": ["acceptance_criteria", "contracts", "task_plan"],
+    "must_consume": ["requirements", "ambiguity_decision"],
+    "cycle_states": ["specify", "design", "plan"],
+    "reviewer": "verifier",
+    "gate": {"id": "contract", "failure": "acceptance checks are absent or drifted", "exit_code": 6}
+  },
+  {
+    "id": "builder",
+    "may_produce": ["work_output", "implementation_diff"],
+    "must_consume": ["acceptance_criteria", "contracts", "task_plan"],
+    "cycle_states": ["plan", "verify", "review"],
+    "reviewer": "verifier",
+    "gate": {"id": "implementation", "failure": "lint, typecheck, or the locked suite is red", "exit_code": 1}
+  },
+  {
+    "id": "designer",
+    "may_produce": ["design_review", "design_spec"],
+    "must_consume": ["requirements", "work_output"],
+    "cycle_states": ["design", "verify", "review"],
+    "reviewer": "human",
+    "gate": {"id": "design-a11y", "failure": "a view fails WCAG AA contrast, paints nothing at the real viewport, or npm run a11y is red", "exit_code": 1}
+  },
+  {
+    "id": "verifier",
+    "may_produce": ["verification_verdict", "quality_measurements"],
+    "must_consume": ["work_output", "acceptance_criteria"],
+    "cycle_states": ["discover", "specify", "design", "plan", "verify", "review"],
+    "reviewer": "human",
+    "gate": {"id": "independent-verification", "failure": "evidence cannot be reproduced or I1 is violated", "exit_code": 6}
+  },
+  {
+    "id": "meter-cfo",
+    "may_produce": ["budget_verdict"],
+    "must_consume": ["task_plan", "quota_measurement"],
+    "cycle_states": ["plan", "verify"],
+    "reviewer": "human",
+    "gate": {"id": "budget", "failure": "projected cost exceeds remaining budget or quota is unmeasurable", "exit_code": 5}
+  }
+]

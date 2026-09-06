@@ -1,0 +1,15 @@
+# Harness dependencies. These were UNDECLARED until 2026-08-28 — a clean checkout could not run
+# run_e2e.py at all (ModuleNotFoundError: websocket). Declared so the harness is reproducible.
+#
+# Core: needed for any run (transport + orchestration).
+websocket-client>=1.8
+websockets>=13.0
+
+# Audio-quality evaluation group: only needed WITHOUT --no-judges. Heavy (pulls torch).
+# NOTE: `nisqa` pretrained weights are CC BY-NC-SA (NON-COMMERCIAL) — see evals/ notes.
+# Do not ship these weights in a commercial build; UTMOSv2 (MIT) is the sanctioned replacement.
+#   faster-whisper>=1.0
+#   jiwer>=3.0
+#   numpy>=1.26
+#   pystoi>=0.4
+#   soundfile>=0.12

@@ -1,0 +1,28 @@
+name: Fleet supply chain
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 (B11: pinned, semgrep github-actions-mutable-action-tag)
+      # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+      # -- see ci.yml: `@stable` is this action's documented, intentional moving reference.
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Audit locked dependencies
+        run: cargo audit --file keel/Cargo.lock
+      - name: Build fleet
+        run: cargo build --manifest-path keel/Cargo.toml --locked
+      - name: Emit CycloneDX SBOM
+        env:
+          FLEET_STATE: ${{ runner.temp }}/fleet-state
+        run: keel/target/debug/fleet sbom > fleet.cdx.json
+      - name: Validate self attestation
+        env:
+          FLEET_STATE: ${{ runner.temp }}/fleet-state
+        run: |
+          keel/target/debug/fleet attest self > self-attestation.json
+          keel/target/debug/fleet attest self --verify

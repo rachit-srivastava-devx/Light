@@ -1,0 +1,69 @@
+[project]
+name = "orb-relay"
+version = "0.1.0"
+description = "The Focus Orb — orchestration backend: Atomizer, cost metering, eval harness, session warmup. See docs/adr/0004-backend-language-split.md."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "pydantic>=2.9",
+    "uvicorn>=0.32",
+    "httpx>=0.27",
+    # Teach-mode beat splitting (docs/adr/0012-pysbd-for-teach-beat-splitting.md) — rule-based
+    # sentence boundary detection so beats don't split on "Dr.", "e.g.", "3.14", etc. Pinned exact
+    # (not >=): last release was 2021-02-11 (ADOPT-WITH-CAVEAT per independent package
+    # due-diligence, 2026-08-28) — a floating range on an unmaintained package is how a silent
+    # break arrives later. Bump deliberately, never automatically.
+    "pysbd==0.3.4",
+    # Single fixed-memory percentile implementation; see ADR 0014 for convention and vetting.
+    "hdrhistogram==0.10.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "mypy>=1.13",
+    "ruff>=0.7",
+]
+audio-eval = [
+    "faster-whisper>=1.1",
+    "jiwer>=4.0",
+    "nisqa>=2.0.post2",
+    "numpy>=1.26",
+    "pystoi>=0.4.1",
+    "scipy>=1.11",
+    # NISQA's librosa adapter still imports pkg_resources.
+    "setuptools<81",
+    "soundfile>=0.12",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+
+# pysbd (docs/adr/0012-pysbd-for-teach-beat-splitting.md) ships no type stubs / py.typed marker.
+# Scoped to just this module rather than a blanket ignore or an inline `type: ignore` at every
+# call site.
+[[tool.mypy.overrides]]
+module = "pysbd"
+ignore_missing_imports = true
+
+# hdrhistogram exposes the `hdrh` import package without a py.typed marker.
+[[tool.mypy.overrides]]
+module = "hdrh.*"
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

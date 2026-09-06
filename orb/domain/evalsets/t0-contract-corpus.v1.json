@@ -1,0 +1,236 @@
+{
+  "version": "adhd-t0-contract-corpus.v1",
+  "claim_boundary": "T0 deterministic contract fixtures; not voice-to-voice or product evidence",
+  "atomizer_cases": [
+    {
+      "id": "email-one-message",
+      "task": "send one email to the landlord",
+      "output": {
+        "steps": [{"step_text": "Open the email app", "est_min": 1, "done_signal": "email app is open"}],
+        "steps_total": 1
+      }
+    },
+    {
+      "id": "laundry-start",
+      "task": "start laundry",
+      "output": {
+        "steps": [{"step_text": "Put the clothes beside the washer", "est_min": 2, "done_signal": "clothes are beside the washer"}],
+        "steps_total": 1
+      }
+    },
+    {
+      "id": "tax-portal",
+      "task": "file taxes",
+      "output": {
+        "steps": [{"step_text": "Open the tax portal", "est_min": 1, "done_signal": "tax portal is visible"}],
+        "steps_total": 1
+      }
+    },
+    {
+      "id": "reply-text-message",
+      "task": "reply to a text message from mom",
+      "output": {
+        "steps": [{"step_text": "Open the messaging app", "est_min": 1, "done_signal": "messaging app is open"}],
+        "steps_total": 1
+      }
+    },
+    {
+      "id": "dishes-unload",
+      "task": "unload the dishwasher",
+      "output": {
+        "steps": [{"step_text": "Open the dishwasher door", "est_min": 1, "done_signal": "dishwasher door is open"}],
+        "steps_total": 1
+      }
+    },
+    {
+      "id": "book-appointment",
+      "task": "book a dentist appointment",
+      "output": {
+        "steps": [{"step_text": "Find the dentist's phone number", "est_min": 1, "done_signal": "the phone number is visible"}],
+        "steps_total": 1
+      }
+    }
+  ],
+  "schema_safety_cases": [
+    {"id": "valid-step", "expected_caught": false, "payload": {"steps": [{"step_text": "Open the document", "est_min": 1, "done_signal": "document is open"}], "steps_total": 1}},
+    {"id": "count-mismatch", "expected_caught": true, "payload": {"steps": [{"step_text": "Open the document", "est_min": 1, "done_signal": "document is open"}], "steps_total": 2}},
+    {"id": "empty-step", "expected_caught": true, "payload": {"steps": [{"step_text": "", "est_min": 1, "done_signal": "nothing"}], "steps_total": 1}},
+    {"id": "duplicate-steps", "expected_caught": true, "payload": {"steps": [{"step_text": "Open the document", "est_min": 1, "done_signal": "document is open"}, {"step_text": "Open the document", "est_min": 1, "done_signal": "still open"}], "steps_total": 2}},
+    {"id": "empty-steps-array", "expected_caught": true, "payload": {"steps": [], "steps_total": 1}},
+    {"id": "est-min-out-of-range", "expected_caught": true, "payload": {"steps": [{"step_text": "Open the document", "est_min": 99, "done_signal": "document is open"}], "steps_total": 1}}
+  ],
+  "policy_cases": [
+    {"id": "working-presence", "state": "WORKING", "register": "quiet_presence"},
+    {"id": "check-in-gentle", "state": "CHECK_IN", "register": "gentle_check_in"},
+    {"id": "completion-warm", "state": "STEP_DONE", "register": "warm_acknowledgement"},
+    {"id": "idle-quiet", "state": "IDLE_PRESENT", "register": "quiet_presence"},
+    {"id": "intake-warm", "state": "INTAKE", "register": "warm_clarifying"},
+    {"id": "interrupted-clarifying", "state": "INTERRUPTED", "register": "warm_clarifying"}
+  ],
+  "voice_replay_cases": [
+    {"id": "fake-short", "voice_ms": 780, "silence_events": 0},
+    {"id": "fake-medium", "voice_ms": 920, "silence_events": 0},
+    {"id": "fake-long", "voice_ms": 1060, "silence_events": 0},
+    {"id": "fake-vshort", "voice_ms": 700, "silence_events": 0},
+    {"id": "fake-vlong", "voice_ms": 1150, "silence_events": 0},
+    {"id": "fake-borderline", "voice_ms": 990, "silence_events": 0}
+  ],
+  "classifier_cases": [
+    {"id": "done-explicit", "utterance": "done", "expected": "done"},
+    {"id": "done-negated", "utterance": "I'm not done yet", "expected": "chitchat"},
+    {"id": "next-explicit", "utterance": "next please", "expected": "next"},
+    {"id": "pause-explicit", "utterance": "pause for a sec", "expected": "pause"},
+    {"id": "stuck-word", "utterance": "I'm stuck", "expected": "stuck"},
+    {"id": "stuck-substring", "utterance": "I am unstuck now", "expected": "chitchat"},
+    {"id": "question-word", "utterance": "what do I do", "expected": "question"},
+    {"id": "question-substring", "utterance": "however this works", "expected": "chitchat"},
+    {"id": "question-mark", "utterance": "can I stop?", "expected": "chitchat"},
+    {"id": "ambiguous-stuck-question", "utterance": "I'm stuck, what do I do", "expected": "stuck"},
+    {"id": "finished-word", "utterance": "finished", "expected": "done"},
+    {"id": "completed-word", "utterance": "I completed it", "expected": "done"},
+    {"id": "did-it-phrase", "utterance": "I did it", "expected": "done"},
+    {"id": "skip-word", "utterance": "skip this step", "expected": "next"},
+    {"id": "move-on-phrase", "utterance": "lets move on", "expected": "next"},
+    {"id": "wait-a-sec-phrase", "utterance": "wait a sec please", "expected": "pause"},
+    {"id": "dont-know-how-phrase", "utterance": "I don't know how to start", "expected": "stuck"},
+    {"id": "hey-greeting", "utterance": "hey it's going well", "expected": "chitchat"},
+    {"id": "how-question", "utterance": "how do I start this", "expected": "question"},
+    {"id": "could-i-question-mark", "utterance": "could I take a break?", "expected": "chitchat"}
+  ],
+  "belief_replay_cases": [
+    {"id": "attention-high", "prediction": 0.92, "actual": 1},
+    {"id": "energy-low", "prediction": 0.14, "actual": 0},
+    {"id": "trust-neutral", "prediction": 0.48, "actual": 0.5},
+    {"id": "attention-mid", "prediction": 0.6, "actual": 0.5},
+    {"id": "energy-high", "prediction": 0.85, "actual": 1},
+    {"id": "trust-low", "prediction": 0.2, "actual": 0}
+  ],
+  "policy_behavior_cases": [
+    {"id": "focused-user", "expected_interrupt": false, "observed_interrupt": false},
+    {"id": "working-quiet", "expected_interrupt": false, "observed_interrupt": false},
+    {"id": "stuck-help", "expected_interrupt": true, "observed_interrupt": true},
+    {"id": "check-in-due", "expected_interrupt": true, "observed_interrupt": true},
+    {"id": "recently-checked-in", "expected_interrupt": false, "observed_interrupt": false},
+    {"id": "session-nearly-done", "expected_interrupt": false, "observed_interrupt": false}
+  ],
+  "cost_replay_cases": [
+    {"id": "short-voice-session", "cost_paise": 114},
+    {"id": "repair-once-session", "cost_paise": 186},
+    {"id": "long-t0-session", "cost_paise": 252},
+    {"id": "single-step-session", "cost_paise": 96},
+    {"id": "multi-repair-session", "cost_paise": 228},
+    {"id": "max-t0-session", "cost_paise": 300}
+  ],
+  "consistency_cases": [
+    {
+      "id": "reply-slack-message",
+      "task": "reply to one slack message",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Open the Slack app", "est_min": 1, "done_signal": "Slack app is open"}], "steps_total": 1},
+        {"steps": [{"step_text": "Open the Slack app", "est_min": 1, "done_signal": "Slack app is open"}], "steps_total": 1},
+        {"steps": [{"step_text": "Open the Slack app", "est_min": 1, "done_signal": "Slack app is open"}], "steps_total": 1},
+        {"steps": [{"step_text": "Open the Slack app", "est_min": 1, "done_signal": "Slack app is open"}], "steps_total": 1},
+        {"steps": [{"step_text": "Open the Slack app", "est_min": 1, "done_signal": "Slack app is open"}], "steps_total": 1}
+      ]
+    },
+    {
+      "id": "load-dishwasher",
+      "task": "load the dishwasher",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Bring the dirty dishes to the sink", "est_min": 2, "done_signal": "dishes are at the sink"}], "steps_total": 1},
+        {"steps": [{"step_text": "Bring the dirty dishes to the sink", "est_min": 2, "done_signal": "dishes are at the sink"}], "steps_total": 1},
+        {"steps": [{"step_text": "Bring the dirty dishes to the sink", "est_min": 2, "done_signal": "dishes are at the sink"}], "steps_total": 1},
+        {"steps": [{"step_text": "Bring the dirty dishes to the sink", "est_min": 2, "done_signal": "dishes are at the sink"}], "steps_total": 1},
+        {"steps": [{"step_text": "Bring the dirty dishes to the sink", "est_min": 2, "done_signal": "dishes are at the sink"}], "steps_total": 1}
+      ]
+    },
+    {
+      "id": "write-report-paragraph",
+      "task": "write one paragraph of the report",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Open the report document", "est_min": 1, "done_signal": "report document is open"}, {"step_text": "Write one paragraph in the report", "est_min": 5, "done_signal": "one paragraph is written"}], "steps_total": 2},
+        {"steps": [{"step_text": "Open the report document", "est_min": 1, "done_signal": "report document is open"}, {"step_text": "Write one paragraph in the report", "est_min": 5, "done_signal": "one paragraph is written"}], "steps_total": 2},
+        {"steps": [{"step_text": "Open the report document", "est_min": 1, "done_signal": "report document is open"}, {"step_text": "Write one paragraph in the report", "est_min": 5, "done_signal": "one paragraph is written"}], "steps_total": 2},
+        {"steps": [{"step_text": "Open the report document", "est_min": 1, "done_signal": "report document is open"}, {"step_text": "Write one paragraph in the report", "est_min": 5, "done_signal": "one paragraph is written"}], "steps_total": 2},
+        {"steps": [{"step_text": "Open the report document", "est_min": 1, "done_signal": "report document is open"}, {"step_text": "Write one paragraph in the report", "est_min": 5, "done_signal": "one paragraph is written"}], "steps_total": 2}
+      ]
+    },
+    {
+      "id": "clean-desk",
+      "task": "clean the desk",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Clear one small section of the desk surface", "est_min": 2, "done_signal": "one small desk section is clear"}], "steps_total": 1},
+        {"steps": [{"step_text": "Clear one small section of the desk surface", "est_min": 2, "done_signal": "one small desk section is clear"}], "steps_total": 1},
+        {"steps": [{"step_text": "Clear one small section of the desk surface", "est_min": 2, "done_signal": "one small desk section is clear"}], "steps_total": 1},
+        {"steps": [{"step_text": "Clear one small section of the desk surface", "est_min": 2, "done_signal": "one small desk section is clear"}], "steps_total": 1},
+        {"steps": [{"step_text": "Clear one small section of the desk surface", "est_min": 2, "done_signal": "one small desk section is clear"}], "steps_total": 1}
+      ]
+    },
+    {
+      "id": "call-dentist-book",
+      "task": "call the dentist to book an appointment",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Find the dentist's phone number", "est_min": 1, "done_signal": "the phone number is visible"}, {"step_text": "Call the dentist to book an appointment", "est_min": 5, "done_signal": "call has connected"}], "steps_total": 2},
+        {"steps": [{"step_text": "Find the dentist's phone number", "est_min": 1, "done_signal": "the phone number is visible"}, {"step_text": "Call the dentist to book an appointment", "est_min": 5, "done_signal": "call has connected"}], "steps_total": 2},
+        {"steps": [{"step_text": "Find the dentist's phone number", "est_min": 1, "done_signal": "the phone number is visible"}, {"step_text": "Call the dentist to book an appointment", "est_min": 5, "done_signal": "call has connected"}], "steps_total": 2},
+        {"steps": [{"step_text": "Find the dentist's phone number", "est_min": 1, "done_signal": "the phone number is visible"}, {"step_text": "Call the dentist to book an appointment", "est_min": 5, "done_signal": "call has connected"}], "steps_total": 2},
+        {"steps": [{"step_text": "Find the dentist's phone number", "est_min": 1, "done_signal": "the phone number is visible"}, {"step_text": "Call the dentist to book an appointment", "est_min": 5, "done_signal": "call has connected"}], "steps_total": 2}
+      ]
+    },
+    {
+      "id": "put-away-laundry",
+      "task": "put away the laundry",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Carry the clean laundry basket to the bedroom", "est_min": 2, "done_signal": "basket is in the bedroom"}], "steps_total": 1},
+        {"steps": [{"step_text": "Carry the clean laundry basket to the bedroom", "est_min": 2, "done_signal": "basket is in the bedroom"}], "steps_total": 1},
+        {"steps": [{"step_text": "Carry the clean laundry basket to the bedroom", "est_min": 2, "done_signal": "basket is in the bedroom"}], "steps_total": 1},
+        {"steps": [{"step_text": "Carry the clean laundry basket to the bedroom", "est_min": 2, "done_signal": "basket is in the bedroom"}], "steps_total": 1},
+        {"steps": [{"step_text": "Carry the clean laundry basket to the bedroom", "est_min": 2, "done_signal": "basket is in the bedroom"}], "steps_total": 1}
+      ]
+    },
+    {
+      "id": "review-pr-comment",
+      "task": "review one pull request comment",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Open the pull request in the browser", "est_min": 1, "done_signal": "pull request page is open"}], "steps_total": 1},
+        {"steps": [{"step_text": "Open the pull request in the browser", "est_min": 1, "done_signal": "pull request page is open"}], "steps_total": 1},
+        {"steps": [{"step_text": "Open the pull request in the browser", "est_min": 1, "done_signal": "pull request page is open"}], "steps_total": 1},
+        {"steps": [{"step_text": "Open the pull request in the browser", "est_min": 1, "done_signal": "pull request page is open"}], "steps_total": 1},
+        {"steps": [{"step_text": "Open the pull request in the browser", "est_min": 1, "done_signal": "pull request page is open"}], "steps_total": 1}
+      ]
+    },
+    {
+      "id": "water-plants",
+      "task": "water the plants",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Fill a cup with water", "est_min": 1, "done_signal": "cup is full of water"}], "steps_total": 1},
+        {"steps": [{"step_text": "Fill a cup with water", "est_min": 1, "done_signal": "cup is full of water"}], "steps_total": 1},
+        {"steps": [{"step_text": "Fill a cup with water", "est_min": 1, "done_signal": "cup is full of water"}], "steps_total": 1},
+        {"steps": [{"step_text": "Fill a cup with water", "est_min": 1, "done_signal": "cup is full of water"}], "steps_total": 1},
+        {"steps": [{"step_text": "Fill a cup with water", "est_min": 1, "done_signal": "cup is full of water"}], "steps_total": 1}
+      ]
+    },
+    {
+      "id": "pay-electricity-bill",
+      "task": "pay the electricity bill",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Open the electricity bill", "est_min": 1, "done_signal": "the bill is open"}, {"step_text": "Enter payment details", "est_min": 2, "done_signal": "payment details are filled"}, {"step_text": "Submit the payment", "est_min": 1, "done_signal": "payment confirmation appears"}], "steps_total": 3},
+        {"steps": [{"step_text": "Open the electricity bill", "est_min": 1, "done_signal": "the bill is open"}, {"step_text": "Enter payment details", "est_min": 2, "done_signal": "payment details are filled"}, {"step_text": "Submit the payment", "est_min": 1, "done_signal": "payment confirmation appears"}], "steps_total": 3},
+        {"steps": [{"step_text": "Open the electricity bill", "est_min": 1, "done_signal": "the bill is open"}, {"step_text": "Enter payment details", "est_min": 2, "done_signal": "payment details are filled"}, {"step_text": "Submit the payment", "est_min": 1, "done_signal": "payment confirmation appears"}], "steps_total": 3},
+        {"steps": [{"step_text": "Open the electricity bill", "est_min": 1, "done_signal": "the bill is open"}, {"step_text": "Enter payment details", "est_min": 2, "done_signal": "payment details are filled"}, {"step_text": "Submit the payment", "est_min": 1, "done_signal": "payment confirmation appears"}], "steps_total": 3},
+        {"steps": [{"step_text": "Open the electricity bill", "est_min": 1, "done_signal": "the bill is open"}, {"step_text": "Enter payment details", "est_min": 2, "done_signal": "payment details are filled"}, {"step_text": "Submit the payment", "est_min": 1, "done_signal": "payment confirmation appears"}], "steps_total": 3}
+      ]
+    },
+    {
+      "id": "organize-desk-drawer",
+      "task": "organize the desk drawer",
+      "scripted_outputs": [
+        {"steps": [{"step_text": "Take one item out of the desk drawer", "est_min": 2, "done_signal": "one item is out of the drawer"}], "steps_total": 1},
+        {"steps": [{"step_text": "Take one item out of the desk drawer", "est_min": 2, "done_signal": "one item is out of the drawer"}, {"step_text": "Put back only the items you use weekly", "est_min": 3, "done_signal": "drawer has only weekly items"}], "steps_total": 2},
+        {"steps": [{"step_text": "Take one item out of the desk drawer", "est_min": 2, "done_signal": "one item is out of the drawer"}], "steps_total": 1},
+        {"steps": [{"step_text": "Take one item out of the desk drawer", "est_min": 2, "done_signal": "one item is out of the drawer"}, {"step_text": "Put back only the items you use weekly", "est_min": 3, "done_signal": "drawer has only weekly items"}], "steps_total": 2},
+        {"steps": [{"step_text": "Take one item out of the desk drawer", "est_min": 2, "done_signal": "one item is out of the drawer"}], "steps_total": 1}
+      ]
+    }
+  ]
+}

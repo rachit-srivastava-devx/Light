@@ -1,0 +1,19 @@
+[tool.mutmut]
+# H2-4: mutation testing sandbox. This mutates a COPY of
+# backend/relay-py/src/orb_relay/cost/meter.py (see the H2 report for why: mutmut 3.x's config can
+# only be read from a pyproject.toml/setup.cfg in the CWD it's invoked from, and Track C owns
+# backend/relay-py/pyproject.toml -- this sandbox exists so mutation testing never touches that
+# file or the real source tree while the same file is being actively edited by another track).
+source_paths = ["src/orb_relay/cost"]
+# meter.py imports `..observability.devlog` -- source_paths only copies what it mutates, so the
+# sibling package it depends on (and the parent package's __init__.py) must be copied unmutated.
+also_copy = ["src/orb_relay/observability", "src/orb_relay/__init__.py"]
+# Scoped to the PRODUCT's own existing suite only, so mutmut has a clean green baseline (does the
+# EXISTING test suite catch mutants?). The H2 property tests (test_cost_meter_properties.py,
+# test_cost_meter_realistic_scale.py) are kept in tests/ for reference but are deliberately excluded
+# here: they already have real, deliberate failures (found defects -- see the H2 report), which
+# would make a green/red mutmut baseline meaningless.
+pytest_add_cli_args_test_selection = ["tests/test_cost_meter.py"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

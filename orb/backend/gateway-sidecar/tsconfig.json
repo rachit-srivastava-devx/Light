@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    // The registry packages ship TypeScript sources with no build step, and their package.json
+    // `exports` map points at .js paths that don't exist on disk. Map to the .ts sources directly
+    // rather than adding a build step to a registry package this product doesn't own (C4: we
+    // still import only via the contracts barrel / documented adapter entrypoints).
+    "paths": {
+      "@orb/gateway-sidecar/*": ["src/*"],
+      "@pe/llm-gateway": ["../../../../../registry/services/llm-gateway/src/llm-gateway/contracts/index.ts"],
+      "@pe/llm-gateway/adapters/memory": [
+        "../../../../../registry/services/llm-gateway/src/llm-gateway/adapters/memory/index.ts"
+      ],
+      "@pe/llm-gateway/adapters/anthropic": [
+        "../../../../../registry/services/llm-gateway/src/llm-gateway/adapters/anthropic/index.ts"
+      ],
+      "@anthropic-ai/sdk": [
+        "../../node_modules/@anthropic-ai/sdk"
+      ],
+      "@google/generative-ai": [
+        "../../node_modules/@google/generative-ai"
+      ]
+    }
+  },
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"]
+}

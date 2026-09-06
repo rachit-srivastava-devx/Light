@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # B11: semgrep's dependabot-missing-cooldown flagged both entries below (no `cooldown:` key,
+  # so a just-published (and possibly compromised or broken) release can be pulled in the same
+  # day it ships). A short cooldown buys time for upstream problems to surface before Dependabot
+  # opens a PR against this repo.
+  - package-ecosystem: cargo
+    directory: /keel
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+

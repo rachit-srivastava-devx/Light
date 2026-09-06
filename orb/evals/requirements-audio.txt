@@ -1,0 +1,33 @@
+# Audio-instrument layer for the Q score's naturalness/dead-air/intelligibility sub-scores (E4).
+#
+# LICENSE CORRECTION (2026-08-28, verified against https://github.com/gabrielmittag/NISQA):
+# NISQA's CODE is MIT, but its PRETRAINED WEIGHTS (nisqa.tar / nisqa_mos_only.tar / nisqa_tts.tar)
+# are CC BY-NC-SA 4.0 — non-commercial. This product is commercial, so NISQA MOS cannot be the
+# shipped naturalness gate even though e2e-human-simulator/evaluator/audio_quality.py and
+# docs/adr/0011-layered-audio-quality-gate.md already wire it end to end. `nisqa` is still listed
+# below (it installs cleanly, code-only, MIT, harmless) but its MOS output is NOT used in
+# evals/quality_score — see evals/quality_score/README.md for what replaced it (UTMOSv2, primary;
+# DNSMOS/speechmos, secondary — both verified MIT for CODE AND WEIGHTS before adoption).
+faster-whisper>=1.1       # MIT. WER/CER transcription accuracy — unaffected by the NISQA finding.
+jiwer>=4.0                 # Apache-2.0. WER/CER scoring — unaffected.
+nisqa>=2.0.post2          # MIT code. Installed but NOT used for the shipped Q score (see above).
+numpy>=1.26
+pystoi>=0.4.1              # Open BSD-2-Clause-style pystoi license. Intelligibility — unaffected.
+scipy>=1.11
+setuptools<81             # NISQA's librosa adapter still imports pkg_resources (relay-py's own note).
+soundfile>=0.12
+
+# speechmos (DNSMOS wrapper, Microsoft) — secondary/sanity naturalness check per owner directive.
+# MIT. Only 0.0.1.1 on PyPI (2023-07-13) — thin/low-adoption; see report for what actually ran.
+speechmos
+
+# UTMOSv2 — PRIMARY naturalness instrument (replaces NISQA). MIT code (github.com/sarulab-speech/
+# UTMOSv2) AND MIT weights (verified via https://huggingface.co/sarulab-speech/UTMOSv2 model card:
+# "License: mit") — top-2 in the VoiceMOS Challenge 2024, specifically proven for TTS-naturalness
+# ranking (the actual claim this track needs to make, not general speech-quality/denoising).
+# No PyPI release; installed straight from the tagged source (pip's standard git+https mechanism,
+# not a manual file fetch):
+#   pip install git+https://github.com/sarulab-speech/UTMOSv2.git
+# Pretrained weights are fetched by the library's own documented `pretrained=True` path from its
+# official HuggingFace repo on first call — the same class of action as faster-whisper's own
+# `--allow-model-download`, already a sanctioned pattern in this repo's own audio_quality.py.

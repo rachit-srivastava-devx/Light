@@ -1,0 +1,2 @@
+fn renamed_target() {}
+

@@ -1,0 +1,56 @@
+[[skills]]
+id = "systems"
+purpose = "Plan changes across Fleet's interacting subsystems."
+capabilities = ["plan"]
+
+[[skills]]
+id = "adjudication"
+purpose = "Review evidence and make final scope decisions."
+capabilities = ["review"]
+
+[[skills]]
+id = "rust"
+purpose = "Implement production changes in the Rust keel."
+capabilities = ["write"]
+
+[[skills]]
+id = "debugging"
+purpose = "Trace failures to their cause using repository evidence."
+capabilities = ["read"]
+
+[[skills]]
+id = "testing"
+purpose = "Run independent checks against delivered behavior."
+capabilities = ["test"]
+
+[[skills]]
+id = "invariants"
+purpose = "Inspect evidence for contract and safety violations."
+capabilities = ["inspect"]
+
+[[skills]]
+id = "architecture"
+purpose = "Propose coherent interfaces and system structure."
+capabilities = ["propose"]
+
+# `designer` also declares `ux`, intentionally absent here. The registry check must retain a
+# real unresolved case instead of passing because every declaration was copied into this file.
+
+[[skills]]
+id = "observability"
+purpose = "Measure Fleet health from durable evidence."
+capabilities = ["measure"]
+
+[[skills]]
+id = "metrics"
+purpose = "Report measurements with complete denominators."
+capabilities = ["report"]
+
+# Registered 2026-08-24 after `fleet skills --check` surfaced it as UNRESOLVED. The designer's
+# charter is "shape clear interfaces and workflows that operators can understand", so ux is a real
+# declared skill, not a declaration to delete. Registering it is the fix; deleting the declaration
+# to make the check pass would have been the suppression.
+[[skills]]
+id = "ux"
+purpose = "Judge whether an operator can understand and drive the surface without reading the source."
+capabilities = ["read", "propose", "review"]

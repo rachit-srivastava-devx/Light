@@ -1,0 +1,12 @@
+[licenses]
+allow = ["MIT","Apache-2.0","Apache-2.0 WITH LLVM-exception","BSD-2-Clause","BSD-3-Clause","ISC","Unicode-3.0","CC0-1.0","Zlib","MPL-2.0"]
+
+[bans]
+multiple-versions = "warn"
+
+[advisories]
+yanked = "deny"
+# `paste` is unmaintained (RUSTSEC-2024-0436): a TRANSITIVE proc-macro dep of ratatui,
+# compile-time only, no runtime surface. Named reason + review trigger — drop this the day
+# ratatui ships without it. An exception with no stated reason is how a ratchet dies.
+ignore = ["RUSTSEC-2024-0436"]

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# The committer's shell may or may not have exported CARGO_TARGET_DIR per AGENTS.md's convention.
+# Set it here unconditionally (only if unset) so the hook never depends on that external state --
+# M2 (build artifacts must not live inside the repo) must hold regardless of who invokes `git commit`.
+export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$HOME/.cache/fleet-rs-target-shared}"
+exec "$(git rev-parse --show-toplevel)/verify.sh"

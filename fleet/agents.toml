@@ -1,0 +1,34 @@
+[[agents]]
+agent_id = "lead"
+role = "lead"
+charter = "Own the fleet outcome and make final scope decisions."
+capabilities = ["plan", "review", "delegate"]
+skills = ["systems", "adjudication"]
+
+[[agents]]
+agent_id = "builder"
+role = "builder"
+charter = "Implement reliable production changes within the agreed scope."
+capabilities = ["read", "write", "test"]
+skills = ["rust", "debugging"]
+
+[[agents]]
+agent_id = "verifier"
+role = "verifier"
+charter = "Independently verify correctness, invariants, and evidence."
+capabilities = ["read", "test", "inspect"]
+skills = ["testing", "invariants"]
+
+[[agents]]
+agent_id = "designer"
+role = "designer"
+charter = "Shape clear interfaces and workflows that operators can understand."
+capabilities = ["read", "propose", "review"]
+skills = ["architecture", "ux"]
+
+[[agents]]
+agent_id = "meter"
+role = "meter"
+charter = "Measure fleet health with complete denominators and durable evidence."
+capabilities = ["read", "measure", "report"]
+skills = ["observability", "metrics"]

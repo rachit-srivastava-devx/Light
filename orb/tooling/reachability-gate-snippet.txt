@@ -1,0 +1,4 @@
+# scripts/gate.sh is owned by queue-c/18-gate-triage-to-green.md. Insert this without changing
+# any existing lane; the `if` preserves census behavior under `set -uo pipefail`.
+printf '\n[Gate 3b: production reachability]\n'
+if ! bash tooling/reachability-lane.sh "$LOG_DIR/reachability.log"; then OVERALL=1; fi

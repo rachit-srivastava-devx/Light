@@ -1,0 +1,44 @@
+node_modules/
+dist/
+build/
+# The Speed-of-Thought P0 build-mode FSM/gate slice (contract: SPEED-OF-THOUGHT-P0-CONTRACT.md)
+# lives at a real source path that happens to collide with the generic `build/` ignore above.
+# Un-ignore it explicitly rather than narrowing the repo-wide rule.
+!apps/mobile/src/build/
+!apps/mobile/src/build/**
+ios/build/
+ios/Pods/
+ios/.xcode.env.local
+android/build/
+android/.gradle/
+android/local.properties
+android/app/src/main/assets/index.android.bundle
+*.log
+.DS_Store
+coverage/
+.fleet/
+.venv/
+__pycache__/
+*.egg-info/
+target/
+.claude/worktrees/
+.data/
+*.db
+.env
+.env.local
+dev-logs/
+
+# Local editor, index, cache, and scratch files.
+.vscode/
+.idea/
+.codebase-memory/
+.gbrain-source
+.cxx/
+xcuserdata/
+*.keystore
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.gate-logs/
+.gate-tools/
+*.swp

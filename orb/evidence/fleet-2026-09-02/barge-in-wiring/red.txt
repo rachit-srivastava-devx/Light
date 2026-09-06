@@ -1,0 +1,17 @@
+COMMAND
+npm test -- apps/mobile/src/voice/BargeInPlaybackLatency.test.ts
+
+EXIT CODE
+1
+
+REAL OUTPUT (key lines)
+RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/barge-in-wiring
+
+❯ apps/mobile/src/voice/BargeInPlaybackLatency.test.ts (28 tests | 1 failed) 25ms
+× detected barge-in cancels provider work > aborts an in-flight provider call when sustained post-AEC speech is detected 4ms
+  → (0 , createBargeInCoordinator) is not a function
+
+Test Files  1 failed (1)
+     Tests  1 failed | 27 passed (28)
+
+Failure → no runtime coordinator existed to convert detected speech into provider cancellation.

@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2023"],
+    "strict": true,
+    "resolveJsonModule": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@orb/mobile/*": ["src/*"],
+      "@pe/voice-realtime": [
+        "../../../../../registry/services/voice-realtime/src/voice-realtime/contracts/index.ts"
+      ],
+      "@pe/voice-realtime/adapters/memory": [
+        "../../../../../registry/services/voice-realtime/src/voice-realtime/adapters/memory/index.ts"
+      ]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "__tests__/**/*.ts"]
+}

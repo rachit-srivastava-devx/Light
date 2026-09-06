@@ -1,0 +1,48 @@
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with None
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((0.0, 0.0))
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((0.0, 1.0))
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((0.0, -1.0))
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((1.0, 0.0))
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((1.0, 1.0))
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((1.0, -1.0))
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((-1.0, 0.0))
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((-1.0, 1.0))
+fleet/src/ratchet.rs:15:5: replace wilson_95 -> Option<(f64, f64)> with Some((-1.0, -1.0))
+fleet/src/ratchet.rs:15:10: replace == with != in wilson_95
+fleet/src/ratchet.rs:19:22: replace / with % in wilson_95
+fleet/src/ratchet.rs:19:22: replace / with * in wilson_95
+fleet/src/ratchet.rs:20:27: replace + with - in wilson_95
+fleet/src/ratchet.rs:20:27: replace + with * in wilson_95
+fleet/src/ratchet.rs:20:35: replace / with % in wilson_95
+fleet/src/ratchet.rs:20:35: replace / with * in wilson_95
+fleet/src/ratchet.rs:20:31: replace * with + in wilson_95
+fleet/src/ratchet.rs:20:31: replace * with / in wilson_95
+fleet/src/ratchet.rs:21:49: replace / with % in wilson_95
+fleet/src/ratchet.rs:21:49: replace / with * in wilson_95
+fleet/src/ratchet.rs:21:21: replace + with - in wilson_95
+fleet/src/ratchet.rs:21:21: replace + with * in wilson_95
+fleet/src/ratchet.rs:21:29: replace / with % in wilson_95
+fleet/src/ratchet.rs:21:29: replace / with * in wilson_95
+fleet/src/ratchet.rs:21:25: replace * with + in wilson_95
+fleet/src/ratchet.rs:21:25: replace * with / in wilson_95
+fleet/src/ratchet.rs:21:36: replace * with + in wilson_95
+fleet/src/ratchet.rs:21:36: replace * with / in wilson_95
+fleet/src/ratchet.rs:23:87: replace / with % in wilson_95
+fleet/src/ratchet.rs:23:87: replace / with * in wilson_95
+fleet/src/ratchet.rs:23:11: replace * with + in wilson_95
+fleet/src/ratchet.rs:23:11: replace * with / in wilson_95
+fleet/src/ratchet.rs:23:40: replace + with - in wilson_95
+fleet/src/ratchet.rs:23:40: replace + with * in wilson_95
+fleet/src/ratchet.rs:23:29: replace / with % in wilson_95
+fleet/src/ratchet.rs:23:29: replace / with * in wilson_95
+fleet/src/ratchet.rs:23:17: replace * with + in wilson_95
+fleet/src/ratchet.rs:23:17: replace * with / in wilson_95
+fleet/src/ratchet.rs:23:24: replace - with + in wilson_95
+fleet/src/ratchet.rs:23:24: replace - with / in wilson_95
+fleet/src/ratchet.rs:23:48: replace / with % in wilson_95
+fleet/src/ratchet.rs:23:48: replace / with * in wilson_95
+fleet/src/ratchet.rs:23:44: replace * with + in wilson_95
+fleet/src/ratchet.rs:23:44: replace * with / in wilson_95
+fleet/src/ratchet.rs:23:66: replace * with + in wilson_95
+fleet/src/ratchet.rs:23:66: replace * with / in wilson_95
+fleet/src/ratchet.rs:23:55: replace * with + in wilson_95

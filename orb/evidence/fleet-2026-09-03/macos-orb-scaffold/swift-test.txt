@@ -1,0 +1,20 @@
+[0/1] Planning build
+Building for debugging...
+[0/4] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.41s)
+Test Suite 'All tests' started at 2026-09-03 01:10:24.728.
+Test Suite 'OrbMacPackageTests.xctest' started at 2026-09-03 01:10:24.734.
+Test Suite 'OrbMacCoreTests' started at 2026-09-03 01:10:24.734.
+Test Case '-[OrbMacCoreTests.OrbMacCoreTests testModuleNameIsSet]' started.
+Test Case '-[OrbMacCoreTests.OrbMacCoreTests testModuleNameIsSet]' passed (0.002 seconds).
+Test Suite 'OrbMacCoreTests' passed at 2026-09-03 01:10:24.736.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'OrbMacPackageTests.xctest' passed at 2026-09-03 01:10:24.736.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'All tests' passed at 2026-09-03 01:10:24.736.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.008) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􁁛  Test run with 0 tests in 0 suites passed after 0.002 seconds.
+EXIT_CODE=0

@@ -1,0 +1,36 @@
+ORB PROVIDER REPORT — all recorded, 62908 log rows
+
+MONEY
+  total            ₹656.23  ($6.91)  65623 paise
+  sessions         1107
+  per session      ₹0.59
+  budget exceeded  3389   <-- sessions are hitting the reservation ceiling
+
+MODEL CALLS
+  (model not recorded)
+    calls 1191 · p50 61.6ms · p95 1374ms
+    tokens in 1072034 / out 30515 · 926/call
+    prompt cache 18% of input tokens served from cache
+
+QUALITY
+  replies          4195
+  degraded         115 (2.7%)
+      undefined: 115
+  safety vetoes    265
+      register_authority: 252
+      mental_load_shifted: 13
+  atomizer         3077/20980 rejected (14.7%)
+
+WHAT WOULD MEAN "CHANGE THE PROVIDER"
+  · p95 latency above the turn budget on the voice path
+  · degraded % rising without a matching code change
+  · atomizer reject % high — the model is not producing usable structure
+  · cost per session trending toward the ₹4 reservation
+  · prompt-cache hit rate falling — a prompt edit invalidated the cached prefix
+
+NOT COVERED (say it rather than imply it):
+  · the model name is not on gateway_client.completion rows, so per-MODEL comparison
+    is unavailable — everything lands in one bucket. Add `model` to that log line and
+    this report separates providers with no further work.
+  · no LLM-as-judge score runs in production; quality here is degradation and veto
+    counts, which are proxies for quality, not quality.

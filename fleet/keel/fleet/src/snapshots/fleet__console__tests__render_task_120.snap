@@ -1,0 +1,21 @@
+---
+source: fleet/src/console.rs
+expression: "snapshot(120, View::Task)"
+---
+┌fleet console─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1 FLEET · running · blocked · cost │ 2 TASK · agents · lifecycle · verdicts │ 3 AGENT · brief · diff · verdict · rece│
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+brief: ship the operator console [receipt]
+
+
+┌TASK task-001 [receipt] · ▶ Running [receipt]─────────────────────────────────────────────────────────────────────────┐
+│AGENT                                  LIFECYCLE                              VERDICT                                 │
+│codex [transcript]                     ✓ Complete [transcript]                PASS [receipt]                          │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+q quit · ←/→ or tab views · ↑/↓ or j/k select · [source] is provenance

@@ -1,0 +1,54 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, min_ios_version_supported
+prepare_react_native_project!
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'OrbMobile' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      # :ccache_enabled => true
+    )
+
+    # Xcode 26.6's Clang is stricter about consteval constant-expression evaluation than the
+    # `fmt` 11.0.2 pod (a React Native transitive dependency) expects — every FMT_COMPILE_STRING
+    # call site fails with "call to consteval function ... is not a constant expression". This
+    # predates this session's work (nobody touched Podfile/Pods before); it only surfaced once
+    # the host's CoreSimulator/Xcode version was updated far enough to attempt a real build.
+    #
+    # fmt/include/fmt/base.h decides FMT_USE_CONSTEVAL itself via an unconditional #define chain
+    # with no #ifndef guard — passing -DFMT_USE_CONSTEVAL=0 does nothing, the header's own
+    # #define silently overwrites it back. But one of that chain's own conditions is
+    # `FMT_CPLUSPLUS < 201709L` (i.e. pre-C++20) => FMT_USE_CONSTEVAL 0 — so forcing just this
+    # target to C++17 (fmt supports C++11+) makes fmt's own logic disable consteval, honestly,
+    # instead of fighting its macro with a losing override.
+    installer.pods_project.targets.each do |target|
+      if target.name == 'fmt'
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+        end
+      end
+    end
+  end
+end

@@ -1,0 +1,49 @@
+{
+  "workspace_root": "../..",
+  "artifacts_root": "artifacts",
+  "app": {
+    "bundle_id": "org.reactjs.native.example.OrbMobile",
+    "app_path": "/tmp/focus-orb-e2e-build/Build/Products/Debug-iphonesimulator/OrbMobile.app"
+  },
+  "simulator": {
+    "create_new": false,
+    "device_name": "ADHD Focus Orb E2E",
+    "device_type": "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-18-4",
+    "erase_before_boot": true,
+    "leave_open": true,
+    "show_window": true,
+    "gui_app_path": "/Applications/Xcode.app/Contents/Developer/Applications/Simulator.app"
+  },
+  "permissions": ["microphone"],
+  "commands": {
+    "build": null,
+    "install": null,
+    "open": null
+  },
+  "capture": {
+    "log_stream": true,
+    "log_predicate": "process == 'OrbMobile'",
+    "screenshot": true,
+    "ocr": true,
+    "video": true,
+    "wait_seconds": 30
+  },
+  "relay_replay": {
+    "enabled": false,
+    "fixture": "fixtures/hello-how-are-you.wav",
+    "command": ["python3", "relay_replay.py", "--fixture", "{fixture}", "--artifacts-dir", "{artifacts_dir}"]
+  },
+  "evaluators": [
+    {
+      "name": "codex",
+      "enabled": false,
+      "command": ["codex", "exec", "Review the run artifacts in {artifacts_dir} and write a human-felt report to {artifacts_dir}/codex-review.md"]
+    },
+    {
+      "name": "claude",
+      "enabled": false,
+      "command": ["claude", "-p", "Review the run artifacts in {artifacts_dir} and write a human-felt report to {artifacts_dir}/claude-review.md"]
+    }
+  ]
+}

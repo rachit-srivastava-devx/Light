@@ -1,0 +1,16 @@
+
+ RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b2-color-morph-timing
+
+stderr | apps/mobile/src/AppColorMorphTiming.test.tsx > presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT)
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppColorMorphTiming.test.tsx > presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT)
+focus-orb:presence-ready elapsed_ms=15 boot_ms=3
+
+ ✓ apps/mobile/src/AppColorMorphTiming.test.tsx (1 test) 33ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  23:42:22
+   Duration  1.64s (transform 530ms, setup 0ms, collect 845ms, tests 33ms, environment 0ms, prepare 75ms)
+

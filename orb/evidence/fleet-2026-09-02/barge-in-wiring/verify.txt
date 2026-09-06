@@ -1,0 +1,27 @@
+CURRENT WORKTREE COMMAND
+npm run verify
+
+EXIT CODE
+2
+
+REAL OUTPUT
+> adhd-focus-orb@0.1.0 verify
+> npm run lint && npm run typecheck && npm run test && npm run test:py && npm run test:rs
+
+> adhd-focus-orb@0.1.0 lint
+> node tooling/boundary-lint.mjs
+
+boundary-lint: clean
+
+> adhd-focus-orb@0.1.0 typecheck
+> tsc --noEmit -p apps/mobile && tsc --noEmit -p backend/gateway-sidecar && tsc --noEmit -p backend/voice-provider-sidecar
+
+apps/mobile/src/runtime/T0FocusSession.ts(1,66): error TS2307: Cannot find module '@pe/realtime-voice' or its corresponding type declarations.
+apps/mobile/src/runtime/T0FocusSession.ts(2,50): error TS2307: Cannot find module '@pe/realtime-voice/adapters/memory' or its corresponding type declarations.
+
+BASELINE ISOLATION
+The same command was run from a clean `git archive e942446` snapshot with this worktree's `node_modules` linked read-only for dependency parity. It exited 2 with the same two TS2307 errors and no A8-path error. The registry package manifest exports both paths, but its target `src/realtime-voice/...` files are absent at the shared registry location.
+
+Failure → shared `@pe/realtime-voice` package-resolution gap present at the unmodified base.
+Cause → exported source/type targets are absent from `registry/features/realtime-voice`.
+Fix → outside A8 and outside this worktree; restore/install the registry package implementation.

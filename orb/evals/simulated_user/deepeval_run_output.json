@@ -1,0 +1,30 @@
+[
+  {
+    "turns": [
+      {
+        "role": "user",
+        "content": "Ugh. My kitchen is a disaster. I keep avoiding it. Just feel so overwhelmed."
+      },
+      {
+        "role": "assistant",
+        "content": "[HTTP 502] {\"detail\":\"GATEWAY_ERROR\"}"
+      },
+      {
+        "role": "user",
+        "content": "What was that? Anyway, it's just really bad."
+      },
+      {
+        "role": "assistant",
+        "content": "[HTTP 502] {\"detail\":\"GATEWAY_ERROR\"}"
+      },
+      {
+        "role": "user",
+        "content": "Still getting errors. Can we just talk about the kitchen?"
+      },
+      {
+        "role": "assistant",
+        "content": "[HTTP 502] {\"detail\":\"GATEWAY_ERROR\"}"
+      }
+    ]
+  }
+]

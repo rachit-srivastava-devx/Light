@@ -1,0 +1,5 @@
+# Full mobile typecheck (tsc --noEmit -p apps/mobile)
+```
+apps/mobile/src/runtime/T0FocusSession.ts(1,66): error TS2307: Cannot find module '@pe/realtime-voice' or its corresponding type declarations.
+apps/mobile/src/runtime/T0FocusSession.ts(2,50): error TS2307: Cannot find module '@pe/realtime-voice/adapters/memory' or its corresponding type declarations.
+```

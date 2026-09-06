@@ -1,0 +1,33 @@
+
+ RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b2-color-morph-timing
+
+stderr | apps/mobile/src/AppColorMorphTiming.test.tsx > presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT)
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppColorMorphTiming.test.tsx > presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT)
+focus-orb:presence-ready elapsed_ms=48 boot_ms=32
+
+ ❯ apps/mobile/src/AppColorMorphTiming.test.tsx (1 test | 1 failed) 102ms
+   × presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT) 100ms
+     → expected 1200 not to be 1200 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/mobile/src/AppColorMorphTiming.test.tsx > presence bed color-morph timing (App.tsx-owned driver) > does not morph the bed to "thinking" just because the envelope is presenting a step (STEP_PRESENT)
+AssertionError: expected 1200 not to be 1200 // Object.is equality
+ ❯ apps/mobile/src/AppColorMorphTiming.test.tsx:244:40
+    242|     });
+    243| 
+    244|     expect(filter.frequency.value).not.toBe(BED_STATUS_CUTOFF_HZ.think…
+       |                                        ^
+    245|   });
+    246| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  23:42:59
+   Duration  2.24s (transform 599ms, setup 0ms, collect 967ms, tests 102ms, environment 0ms, prepare 123ms)
+

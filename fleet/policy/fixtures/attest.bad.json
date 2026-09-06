@@ -1,0 +1,28 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "fleet",
+      "digest": {
+        "blake3": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ],
+  "predicateType": "https://fleet.local/DeliveryAttestation/v1",
+  "predicate": {
+    "tier": "T-std",
+    "builder": {
+      "id": "builder-w3"
+    },
+    "elements": {
+      "sow": {},
+      "blind_suite": {},
+      "independent_verification": {},
+      "adequacy": {},
+      "blast_radius": {},
+      "rollback": {},
+      "cost": {}
+    },
+    "receipts": []
+  }
+}

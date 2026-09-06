@@ -1,0 +1,30 @@
+$ npm run verify
+
+> adhd-focus-orb@0.1.0 verify
+> npm run lint && npm run typecheck && npm run test && npm run test:py && npm run test:rs
+
+> adhd-focus-orb@0.1.0 lint
+> node tooling/boundary-lint.mjs
+
+boundary-lint: clean
+
+> adhd-focus-orb@0.1.0 typecheck
+> tsc --noEmit -p apps/mobile && tsc --noEmit -p backend/gateway-sidecar && tsc --noEmit -p backend/voice-provider-sidecar
+
+backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts(3,37): error TS2307: Cannot find module '@pe/llm-gateway/adapters/memory' or its corresponding type declarations.
+backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts(4,37): error TS2307: Cannot find module '@pe/llm-gateway' or its corresponding type declarations.
+backend/gateway-sidecar/__tests__/complete.test.ts(2,37): error TS2307: Cannot find module '@pe/llm-gateway/adapters/memory' or its corresponding type declarations.
+backend/gateway-sidecar/__tests__/complete.test.ts(3,74): error TS2307: Cannot find module '@pe/llm-gateway' or its corresponding type declarations.
+backend/gateway-sidecar/src/index.ts(10,37): error TS2307: Cannot find module '@pe/llm-gateway/adapters/memory' or its corresponding type declarations.
+backend/gateway-sidecar/src/index.ts(11,40): error TS2307: Cannot find module '@pe/llm-gateway/adapters/anthropic' or its corresponding type declarations.
+backend/gateway-sidecar/src/index.ts(12,37): error TS2307: Cannot find module '@pe/llm-gateway/adapters/gemini' or its corresponding type declarations.
+backend/gateway-sidecar/src/index.ts(13,56): error TS2307: Cannot find module '@pe/llm-gateway' or its corresponding type declarations.
+backend/gateway-sidecar/src/index.ts(14,58): error TS2307: Cannot find module '@pe/llm-gateway' or its corresponding type declarations.
+backend/gateway-sidecar/src/preflight.ts(30,37): error TS2307: Cannot find module '@pe/llm-gateway' or its corresponding type declarations.
+backend/gateway-sidecar/src/speechMarkup.ts(1,55): error TS2307: Cannot find module '@pe/llm-gateway' or its corresponding type declarations.
+
+Exit code: 2
+
+The full output also contains downstream implicit-any/unknown errors caused by the unresolved
+`@pe/llm-gateway` types. This gate stopped in gateway-sidecar typecheck before JavaScript tests,
+Python tests, or Rust tests.

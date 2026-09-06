@@ -1,0 +1,23 @@
+{
+  "name": "@orb/mobile",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The Focus Orb React Native client — one screen, one orb. No custom native modules; gap-critical audio runs on react-native-audio-api's C++ audio thread.",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "start": "metro start --config ../../metro.config.js",
+    "bundle:ios": "metro build index.js --platform ios --out /tmp/focus-orb.main.jsbundle --dev=false --reset-cache --config ../../metro.config.js"
+  },
+  "dependencies": {
+    "@pe/realtime-voice": "file:../../../../../registry/features/realtime-voice",
+    "react": "19.2.0",
+    "react-native": "0.83.0",
+    "react-native-audio-api": "^0.11.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "typescript": "^5.9.3"
+  }
+}

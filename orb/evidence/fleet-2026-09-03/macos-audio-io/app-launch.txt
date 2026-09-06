@@ -1,0 +1,1 @@
+APP_EXIT=124 (SIGTERM after 3s, healthy — see macos/OrbMac/README.md convention)

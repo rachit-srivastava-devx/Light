@@ -1,0 +1,49 @@
+{
+  "cadence": {
+    "cadence_ms": 4000.0,
+    "measured_turns": 1,
+    "scheduled_turns": 2,
+    "tolerance_ms": 100.0
+  },
+  "capture": {
+    "blackhole_license_boundary": "GPL-3 local test tooling only; never bundled",
+    "channels": 2,
+    "duration_ms": 4000.0,
+    "max_volume_dbfs": -10.5,
+    "path": "/private/tmp/claude-501/-Users-rachitsrivastava-youtube-Principal-Engineering/16004d40-a70e-4c13-b05c-19bf2cf0f3fc/scratchpad/capture3_nogap.wav"
+  },
+  "content_detector": {
+    "highpass_hz": 2000.0,
+    "method": "highpass",
+    "proof_status": "synthetic-control only; not valid real-content proof",
+    "threshold_db": -42.0
+  },
+  "continuity": {
+    "audio_intervals_analysed": 1,
+    "gap_events": 0,
+    "longest_gap_ms": 0.0,
+    "p95_gap_ms": 0.0,
+    "total_audio_analysed_ms": 4000.0,
+    "turns_exceeding_max_gap_ms": 0
+  },
+  "failures": [
+    "fixed-cadence schedule expected 2 turns; captured 1",
+    "turn t1 measured no rendered presence after user stop"
+  ],
+  "metrics": {
+    "content_latency_ms": {
+      "p50": null,
+      "p95": null
+    },
+    "presence_latency_ms": {
+      "p50": null,
+      "p95": null
+    },
+    "presence_only_duration_ms": {
+      "p50": null,
+      "p95": null
+    }
+  },
+  "passed": false,
+  "turns": []
+}

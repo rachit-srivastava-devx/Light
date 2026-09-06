@@ -1,0 +1,8 @@
+08-05 00:03:19.787  2203  2203 I OrbPresence: started elapsed_ms=235
+08-05 00:03:20.298  2203  2203 I OrbGreeting: speech_request elapsed_ms=0
+08-05 00:03:20.714  2203  2203 I OrbPresence: activity_ready state=playing elapsed_ms=0
+08-05 00:03:22.667  2203  2203 I OrbGreeting: queued
+08-05 00:03:23.264  2203  2421 I ReactNativeJS: focus-orb:presence-ready elapsed_ms=175 boot_ms=150
+08-05 00:03:23.317  2203  2421 I ReactNativeJS: focus-orb:speech-request elapsed_ms=228
+08-05 00:03:23.755  2203  2203 I OrbSpeech: queued
+08-05 00:03:23.759  2203  2421 I ReactNativeJS: focus-orb:speak Open the first small action

@@ -1,0 +1,24 @@
+RELAY IN-FLIGHT CANCELLATION TEST
+Command: cd backend/relay-rs && CARGO_TARGET_DIR=/tmp/focus-orb-cargo-target PATH="$HOME/.cargo/bin:$PATH" cargo test --quiet barge_in_during_synthesis_delivers_no_audio_at_all
+Exit: 0
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 56 filtered out; finished in 0.48s
+
+REALTIME SMOKE
+Command: npm run smoke:realtime
+Exit: 0
+
+> adhd-focus-orb@0.1.0 smoke:realtime
+> node scripts/smoke-realtime.mjs
+
+smoke:realtime passed
+
+BOUNDED BARGE HARNESS
+Command: BARGE_IN_FRAME_TYPES=barge_in BARGE_IN_SAMPLES=1 npm run e2e:bargein
+Exit: 6
+
+Primary sample: yield=3.8ms, frames_after=0, flag=STREAM_ALREADY_ENDED.
+Harness verdict: FAIL — only 1/1 usable samples (< floor 10).
+Isolation: the relay logged provider=fake-t0 and produced the full 640-byte burst before the delayed interrupt, so this run cannot grade an in-flight live-provider cancellation or physical speaker yield. No live-provider billing claim is made.

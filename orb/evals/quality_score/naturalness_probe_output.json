@@ -1,0 +1,32 @@
+{
+  "instrument": "speechmos.dnsmos (DNSMOS, MIT, self-contained ONNX weights)",
+  "note": "Both samples resampled to 16000 Hz mono (DNSMOS's required input rate) before scoring. Real command and full context: evals/quality_score/README.md, section 'Naturalness instrument decision'.",
+  "samples": [
+    {
+      "label": "fish_tts_sample.wav",
+      "description": "Real Fish Audio S2-Pro synthesis via the live voice-provider-sidecar (/v1/tts/synthesize), voice_id=orb.warm.v1, emotion=warm",
+      "source_sample_rate_hz": 24000,
+      "byte_length": 245062,
+      "duration_s": 5.11,
+      "dnsmos": {
+        "ovrl_mos": 3.211707954483195,
+        "sig_mos": 3.5067346103976966,
+        "bak_mos": 4.048946004669932,
+        "p808_mos": 3.800142
+      }
+    },
+    {
+      "label": "native_tts_sample.wav",
+      "description": "Genuine on-device/native TTS: macOS `say -v Samantha`, converted to 24kHz mono PCM16 to match the Fish sample before resampling for DNSMOS — the literal category of failure this product's canonical scar was about",
+      "source_sample_rate_hz": 24000,
+      "duration_s": 4.891042,
+      "dnsmos": {
+        "ovrl_mos": 3.296181072271968,
+        "sig_mos": 3.5686285286645405,
+        "bak_mos": 4.099260291847897,
+        "p808_mos": 4.003021
+      }
+    }
+  ],
+  "finding": "The native/on-device sample scored HIGHER than the real Fish sample on every DNSMOS sub-metric. DNSMOS is a denoising/signal-clarity metric, not a naturalness/expressiveness metric, so it does not discriminate correctly for this product's actual claim (premium neural voice vs on-device voice) and is not used as the shipped naturalness gate."
+}

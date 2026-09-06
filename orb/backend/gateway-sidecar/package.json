@@ -1,0 +1,21 @@
+{
+  "name": "@orb/gateway-sidecar",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Thin HTTP wrapper around @pe/llm-gateway + @pe/cost-control-plane (registry, C1) so the Python/Rust backend reaches them without re-implementing routing/budget logic. See docs/adr/0004-backend-language-split.md.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.26.0",
+    "@google/generative-ai": "^0.21.0",
+    "@pe/llm-gateway": "file:../../../../../registry/services/llm-gateway",
+    "@pe/cost-control-plane": "file:../../../../../registry/services/cost-control-plane"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "typescript": "^5.9.3"
+  }
+}

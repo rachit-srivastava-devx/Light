@@ -1,0 +1,451 @@
+diff --git a/backend/relay-rs/src/main.rs b/backend/relay-rs/src/main.rs
+index 07db45e..1e1319e 100644
+--- a/backend/relay-rs/src/main.rs
++++ b/backend/relay-rs/src/main.rs
+@@ -38,7 +38,7 @@ mod session;
+ use std::net::SocketAddr;
+ use std::sync::atomic::{AtomicU64, Ordering};
+ use std::sync::Arc;
+-use std::time::Instant;
++use std::time::{Duration, Instant};
+ 
+ use futures_util::stream::{SplitSink, SplitStream};
+ use futures_util::{SinkExt, StreamExt};
+@@ -81,6 +81,14 @@ const STT_QUEUE: usize = 256;
+ const OUTCOME_QUEUE: usize = 256;
+ /// How long teardown waits for already-cancelled provider work to report what it cost.
+ const TEARDOWN_DRAIN_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(750);
++/// Hard ceiling on a single provider call (an STT push/end-of-turn, or a TTS synthesis) dispatched
++/// via `spawn_blocking`. Without this, a provider that hangs (network partition, stalled peer,
++/// misbehaving sidecar) parks its blocking-pool thread indefinitely — one session's stuck call
++/// never un-stalls, and enough stuck calls exhaust the fixed-size blocking pool shared by every
++/// connection, starving sessions that were never near the bad provider. `tokio::time::timeout`
++/// bounds the wait so the caller gets `ProviderError::TimedOut` and moves on; it does not (and
++/// cannot) kill the blocking thread itself, only stop waiting on it.
++const PROVIDER_TIMEOUT: Duration = Duration::from_secs(30);
+ 
+ fn as_object(value: Value) -> Map<String, Value> {
+     match value {
+@@ -337,6 +345,7 @@ async fn stt_loop(
+     mut rx: mpsc::Receiver<SttJob>,
+     outcome_tx: mpsc::Sender<Outcome>,
+     cancel: CancelFlag,
++    provider_timeout: Duration,
+ ) {
+     while let Some(job) = rx.recv().await {
+         let is_end_of_turn = matches!(job.kind, SttJobKind::EndOfTurn);
+@@ -344,7 +353,7 @@ async fn stt_loop(
+         let cancel = cancel.clone();
+         // spawn_blocking: the provider's HTTP call is synchronous. Running it on a runtime worker
+         // thread would park that worker — and with it every other connection sharing it.
+-        let joined = tokio::task::spawn_blocking(move || match job.kind {
++        let handle = tokio::task::spawn_blocking(move || match job.kind {
+             SttJobKind::Push(frame) => SttOutcome::Push(
+                 providers
+                     .push_audio(&job.session_id, &frame, &cancel)
+@@ -355,8 +364,22 @@ async fn stt_loop(
+                     .end_of_turn(&job.session_id, &cancel)
+                     .map_err(SttFailure::from),
+             ),
+-        })
+-        .await;
++        });
++        // Bounded wait: a provider that never returns must not park this loop (and with it every
++        // job queued behind it, including this session's own barge-in-adjacent control frames)
++        // forever. The blocking thread itself keeps running detached — there is no way to kill a
++        // synchronous OS thread from here — but this loop stops waiting on it and moves on.
++        let joined = match tokio::time::timeout(provider_timeout, handle).await {
++            Ok(joined) => joined,
++            Err(_elapsed) => {
++                let failure = SttFailure::from(ProviderError::TimedOut);
++                Ok(if is_end_of_turn {
++                    SttOutcome::EndOfTurn(Err(failure))
++                } else {
++                    SttOutcome::Push(Err(failure))
++                })
++            }
++        };
+         let outcome = match joined {
+             Ok(outcome) => outcome,
+             // A panic inside the provider is an outage, not silence: surface it as one so the
+@@ -422,6 +445,7 @@ fn spawn_speech(
+     cancel: CancelFlag,
+     user_stopped_at: Option<Instant>,
+     speak_received_at: Instant,
++    provider_timeout: Duration,
+ ) {
+     tokio::spawn(async move {
+         let generation = request.generation;
+@@ -459,10 +483,16 @@ fn spawn_speech(
+             let text = request.text.clone();
+             let voice_id = request.voice_id.clone();
+             let emotion = request.emotion.clone();
+-            tokio::task::spawn_blocking(move || {
++            let handle = tokio::task::spawn_blocking(move || {
+                 providers.synthesize(&text, &voice_id, &emotion, &cancel)
+-            })
+-            .await
++            });
++            // Bounded wait: see `stt_loop`'s identical wrapper. A synthesis that never returns
++            // must not hold this task (and the generation it owns) open forever; the blocking
++            // thread itself keeps running detached, but this task stops waiting on it.
++            match tokio::time::timeout(provider_timeout, handle).await {
++                Ok(joined) => joined,
++                Err(_elapsed) => Ok(Err(ProviderError::TimedOut)),
++            }
+         };
+ 
+         let chunks = match synthesis {
+@@ -489,6 +519,18 @@ fn spawn_speech(
+                     .await;
+                 return;
+             }
++            Ok(Err(ProviderError::TimedOut)) => {
++                let _ = outcome_tx
++                    .send(Outcome::Speech {
++                        outcome: SpeechOutcome::Failed {
++                            generation,
++                            detail: "provider timed out".into(),
++                        },
++                        telemetry,
++                    })
++                    .await;
++                return;
++            }
+             Err(err) => {
+                 let _ = outcome_tx
+                     .send(Outcome::Speech {
+@@ -601,7 +643,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
+             as_object(json!({"provider": providers.label()})),
+         );
+         tokio::spawn(async move {
+-            if let Err(err) = serve_connection(stream, providers).await {
++            if let Err(err) = serve_connection(stream, providers, PROVIDER_TIMEOUT).await {
+                 eprintln!("connection ended: {err}");
+                 devlog::dev_log(
+                     "connection.error",
+@@ -625,6 +667,10 @@ struct Connection {
+     connection_cancel: CancelFlag,
+     speech: Option<SpeechHandle>,
+     stt_frames_dropped: u64,
++    /// Ceiling for the blocking TTS call `spawn_speech` dispatches. Same value `stt_loop` uses for
++    /// its own provider calls (`PROVIDER_TIMEOUT` in production); threaded as a field rather than a
++    /// bare `PROVIDER_TIMEOUT` reference at the call site so tests can shorten it.
++    provider_timeout: Duration,
+ }
+ 
+ impl Connection {
+@@ -654,6 +700,7 @@ impl Connection {
+ async fn serve_connection(
+     stream: TcpStream,
+     providers: Arc<dyn ProviderAdapter>,
++    provider_timeout: Duration,
+ ) -> ConnResult<()> {
+     let ws = tokio_tungstenite::accept_async(stream).await?;
+     let (sink, mut source): (WsSink, WsSource) = ws.split();
+@@ -676,6 +723,7 @@ async fn serve_connection(
+         stt_rx,
+         outcome_tx.clone(),
+         connection_cancel.clone(),
++        provider_timeout,
+     ));
+ 
+     let mut connection = Connection {
+@@ -688,6 +736,7 @@ async fn serve_connection(
+         connection_cancel: connection_cancel.clone(),
+         speech: None,
+         stt_frames_dropped: 0,
++        provider_timeout,
+     };
+ 
+     let mut session = Session::new();
+@@ -1151,6 +1200,7 @@ async fn execute(
+                 cancel,
+                 user_stopped_at,
+                 speak_received_at,
++                connection.provider_timeout,
+             );
+         }
+         Action::YieldSpeech(frames) => {
+@@ -1337,6 +1387,15 @@ mod tests {
+     }
+ 
+     async fn serve_one(provider: Arc<dyn ProviderAdapter>) -> String {
++        serve_one_with_timeout(provider, PROVIDER_TIMEOUT).await
++    }
++
++    /// Like `serve_one`, but with an explicit provider-call ceiling — for tests that need a
++    /// provider to actually trip the timeout without waiting out the real 30s production value.
++    async fn serve_one_with_timeout(
++        provider: Arc<dyn ProviderAdapter>,
++        provider_timeout: Duration,
++    ) -> String {
+         silence_dev_logs();
+         let listener = TcpListener::bind("127.0.0.1:0")
+             .await
+@@ -1344,7 +1403,34 @@ mod tests {
+         let addr = listener.local_addr().expect("test listener addr");
+         tokio::spawn(async move {
+             let (stream, _peer) = listener.accept().await.expect("accept test connection");
+-            let _ = serve_connection(stream, provider).await;
++            let _ = serve_connection(stream, provider, provider_timeout).await;
++        });
++        format!("ws://{addr}")
++    }
++
++    /// Serves every accepted connection on one listener with the same provider/timeout — lets a
++    /// test open a second, independent session against the same relay instance to prove a stuck
++    /// first session does not stall it.
++    async fn serve_many_with_timeout(
++        provider: Arc<dyn ProviderAdapter>,
++        provider_timeout: Duration,
++    ) -> String {
++        silence_dev_logs();
++        let listener = TcpListener::bind("127.0.0.1:0")
++            .await
++            .expect("bind test listener");
++        let addr = listener.local_addr().expect("test listener addr");
++        tokio::spawn(async move {
++            loop {
++                let (stream, _peer) = match listener.accept().await {
++                    Ok(accepted) => accepted,
++                    Err(_) => break,
++                };
++                let provider = Arc::clone(&provider);
++                tokio::spawn(async move {
++                    let _ = serve_connection(stream, provider, provider_timeout).await;
++                });
++            }
+         });
+         format!("ws://{addr}")
+     }
+@@ -1766,4 +1852,185 @@ mod tests {
+             "the client is told the session closed"
+         );
+     }
++
++    // -----------------------------------------------------------------------------------------
++    // A6: provider calls must be bounded, not blocking indefinitely.
++    // -----------------------------------------------------------------------------------------
++
++    /// A STT provider that never returns on its own — `push_audio` blocks forever unless
++    /// something external stops waiting on it. This is the shape of a genuinely wedged provider
++    /// (dead TCP peer, a sidecar that accepted the connection and then hung): a real network read
++    /// would eventually get an OS-level error, but nothing here provides that, so the ONLY thing
++    /// that can bound this call from the relay's side is `main.rs`'s own timeout.
++    struct HangingStt;
++
++    impl SttProvider for HangingStt {
++        fn push_audio(
++            &self,
++            _session_id: &str,
++            _frame: &[u8],
++            _cancel: &dyn CancelSignal,
++        ) -> Result<Option<Transcript>, ProviderError> {
++            std::thread::park();
++            unreachable!("a parked thread never wakes in this test");
++        }
++
++        fn end_of_turn(
++            &self,
++            _session_id: &str,
++            _cancel: &dyn CancelSignal,
++        ) -> Result<Transcript, ProviderError> {
++            Ok(Transcript {
++                text: "final".into(),
++                is_final: true,
++            })
++        }
++    }
++
++    impl TtsProvider for HangingStt {
++        fn synthesize(
++            &self,
++            _text: &str,
++            _voice_id: &str,
++            _emotion: &str,
++            _cancel: &dyn CancelSignal,
++        ) -> Result<Vec<Vec<u8>>, ProviderError> {
++            Ok(vec![vec![9u8; 320]])
++        }
++    }
++
++    impl ProviderAdapter for HangingStt {
++        fn label(&self) -> &'static str {
++            "hanging-test-stt"
++        }
++    }
++
++    /// `HangingStt`'s `spawn_blocking` closure parks its OS thread forever by design (see its doc
++    /// comment) — that thread never returns, on purpose, because a real wedged provider call gives
++    /// us no cooperative way to stop it either. `tokio::time::timeout` correctly stops the *async*
++    /// side from waiting on it (that's the fix under test), but it cannot cancel the blocking
++    /// thread itself — only abandon it. The catch: tokio's default `Runtime::drop` blocks until
++    /// every outstanding `spawn_blocking` task completes, including ones the async side has already
++    /// abandoned via an elapsed timeout. `#[tokio::test]` creates exactly such a runtime and drops
++    /// it right after the test body returns, so with a genuinely-forever-parked thread in flight,
++    /// the *test harness's own teardown* hangs even though the code under test already did the
++    /// right thing (the "session ended" line prints; the process just never gets back to report
++    /// it). Building the runtime by hand and calling `shutdown_background()` — which detaches
++    /// instead of joining — sidesteps that: it's safe here because the async body below has
++    /// already run every assertion to completion by the time we call it.
++    fn run_and_detach<F>(fut: F)
++    where
++        F: std::future::Future<Output = ()>,
++    {
++        let rt = tokio::runtime::Builder::new_current_thread()
++            .enable_all()
++            .build()
++            .expect("build test runtime");
++        rt.block_on(fut);
++        // Not `drop(rt)`: the default Drop impl joins every spawn_blocking task, which would hang
++        // forever on the deliberately-immortal thread(s) this test's fake provider leaves behind.
++        rt.shutdown_background();
++    }
++
++    /// The defect this task fixes: with no timeout, one mic frame handed to a provider that never
++    /// answers parks that session's STT worker forever — the read loop never hears back and the
++    /// connection just sits there, silently, until someone kills the process. `HangingStt::push_audio`
++    /// truly never returns (a parked OS thread, not a bounded sleep), so this test can only pass if
++    /// something OTHER than the provider itself stops the wait.
++    ///
++    /// Runs on a hand-built runtime via `run_and_detach` rather than `#[tokio::test]` — see that
++    /// helper's doc comment for why the ordinary teardown would hang the test binary itself.
++    #[test]
++    fn a_hung_stt_call_returns_a_bounded_typed_failure_instead_of_hanging_forever() {
++        run_and_detach(async {
++        let provider_timeout = Duration::from_millis(80);
++        let provider = Arc::new(HangingStt);
++        let url = serve_one_with_timeout(provider, provider_timeout).await;
++        let mut client = connect(&url).await;
++        client.send(control("start_listening")).await.expect("send");
++        let dispatched_at = Instant::now();
++        client
++            .send(Message::Binary(vec![1u8; 320]))
++            .await
++            .expect("send mic frame");
++
++        // Generous relative to `provider_timeout` (80ms) but tight relative to "forever": if the
++        // timeout wrapper is missing or a no-op, this provider never returns and nothing arrives
++        // before `cap`, so the test times out having observed nothing rather than passing.
++        let seen = drain(
++            &mut client,
++            Duration::from_millis(150),
++            Duration::from_secs(5),
++        )
++        .await;
++
++        let closed_at =
++            first_text_of_type(&seen, "closing").expect("a hung provider call must still close the session, not hang it forever");
++        let bound_ms = closed_at.duration_since(dispatched_at).as_millis() as u64;
++        assert!(
++            bound_ms < 2_000,
++            "closing arrived after {bound_ms}ms — must be bounded near provider_timeout ({}ms), not left to hang",
++            provider_timeout.as_millis(),
++        );
++        assert!(
++            seen.iter().any(|o| matches!(&o.message, Message::Text(t) if t.contains("provider_failure"))),
++            "the typed timeout must surface as the existing provider-failure close reason, not silence: {seen:?}",
++        );
++        });
++    }
++
++    /// The other half of the acceptance test: one session wedged on a hung provider call must not
++    /// stall the relay for anyone else. A second, independent connection against the same listener
++    /// (same provider, same timeout) is served normally while the first is still hung.
++    ///
++    /// Also runs via `run_and_detach` (see its doc comment) — this test's `stuck` session leaves
++    /// its own immortally-parked `spawn_blocking` thread behind, which would hang an ordinary
++    /// `#[tokio::test]`'s teardown exactly like the sibling test above.
++    #[test]
++    fn a_hung_session_does_not_stall_other_sessions_on_the_same_relay() {
++        run_and_detach(async {
++        let provider_timeout = Duration::from_millis(80);
++        let provider = Arc::new(HangingStt);
++        let url = serve_many_with_timeout(provider, provider_timeout).await;
++
++        let mut stuck = connect(&url).await;
++        stuck
++            .send(control("start_listening"))
++            .await
++            .expect("send");
++        stuck
++            .send(Message::Binary(vec![1u8; 320]))
++            .await
++            .expect("send mic frame that hangs this session's STT worker");
++
++        // Give the stuck session's frame time to actually reach `HangingStt::push_audio` before
++        // proving the second session is unaffected — otherwise this would pass trivially by
++        // racing ahead of the hang ever starting.
++        tokio::time::sleep(Duration::from_millis(20)).await;
++
++        let mut other = connect(&url).await;
++        let other_started_at = Instant::now();
++        other
++            .send(control("start_listening"))
++            .await
++            .expect("send");
++        other
++            .send(control("end_of_turn"))
++            .await
++            .expect("send end_of_turn");
++        let seen = drain(
++            &mut other,
++            Duration::from_millis(150),
++            Duration::from_secs(5),
++        )
++        .await;
++        let transcript_at = first_text_of_type(&seen, "transcript")
++            .expect("the second session must still be served while the first is hung");
++        let served_ms = transcript_at.duration_since(other_started_at).as_millis() as u64;
++        assert!(
++            served_ms < 1_000,
++            "second session took {served_ms}ms while another session was hung on a provider call",
++        );
++        });
++    }
+ }
+diff --git a/backend/relay-rs/src/provider.rs b/backend/relay-rs/src/provider.rs
+index 0b7e691..2cc71b0 100644
+--- a/backend/relay-rs/src/provider.rs
++++ b/backend/relay-rs/src/provider.rs
+@@ -42,6 +42,13 @@ pub enum ProviderError {
+     /// and must never close the session or be reported as a provider failure. Conflating the two
+     /// would make every barge-in look like an outage in dev-logs/ and drop the user's bed.
+     Cancelled,
++    /// The provider call ran past `main.rs`'s `PROVIDER_TIMEOUT` without returning.
++    ///
++    /// Deliberately NOT a flavour of `Unavailable`: a hung provider left its `spawn_blocking`
++    /// thread still running (this variant is synthesised by the caller when the timeout elapses,
++    /// not by the provider itself), and dev-logs/ needs to tell "the provider answered with an
++    /// error" apart from "the provider never answered at all" when someone is diagnosing a stall.
++    TimedOut,
+ }
+ 
+ /// Polled from blocking provider code between socket reads. Implementations must never block.
+diff --git a/backend/relay-rs/src/session.rs b/backend/relay-rs/src/session.rs
+index 04f89c7..ed01962 100644
+--- a/backend/relay-rs/src/session.rs
++++ b/backend/relay-rs/src/session.rs
+@@ -114,6 +114,10 @@ impl From<ProviderError> for SttFailure {
+         match err {
+             ProviderError::Unavailable(detail) => SttFailure::Unavailable(detail),
+             ProviderError::Cancelled => SttFailure::Cancelled,
++            // Bounded, not silent: a hung STT call surfaces the same way an outage would (closes
++            // the session so the client keeps its bed alive per §5) rather than parking the read
++            // loop forever waiting for a provider that will never answer.
++            ProviderError::TimedOut => SttFailure::Unavailable("provider timed out".into()),
+         }
+     }
+ }
+@@ -880,5 +884,10 @@ mod tests {
+             SttFailure::from(ProviderError::Unavailable("boom".into())),
+             SttFailure::Unavailable("boom".into())
+         );
++        assert_eq!(
++            SttFailure::from(ProviderError::TimedOut),
++            SttFailure::Unavailable("provider timed out".into()),
++            "a timeout must still close the session as a typed failure, not hang or be silent"
++        );
+     }
+ }

@@ -1,0 +1,28 @@
+2026-09-03: `npm run -s verify` is red on `main` before this session's changes.
+
+Confirmed via `git stash` + `npx tsc --noEmit -p apps/mobile`: the same 8 TS errors in
+apps/mobile/src/AppAudioBedFallback.test.tsx and apps/mobile/src/build/BuildModeWire.test.ts
+reproduce identically with this session's diff stashed out. Pre-existing, not introduced here.
+
+This session's own changes are scoped to backend/voice-provider-sidecar/ (Muse STT provider
+addition — src/stt/muse.ts, config.ts, tests). That package's own tsc + vitest are green
+(68/68 tests). Did not touch apps/mobile — out of scope for this unit (CLAUDE.md: don't touch
+another unit's internals) and the failures predate this session.
+
+apps/mobile fix needed (separate task): ConversationPortInput now requires a `task` field that
+BuildModeWire.test.ts's fixtures don't supply, and AtomizerPort is passed where a number is
+expected in AppAudioBedFallback.test.tsx:171 — likely a signature drifted out from under its
+tests.
+
+UPDATE 2026-09-03 (same session): fixed both TS errors above (added `task` to the two
+BuildModeWire.test.ts fixtures + fixed the arg cast; moved createStaticAtomizerPort back to the
+2nd positional arg in AppAudioBedFallback.test.tsx to match createT0FocusSession's current
+(input, atomizer, greetingIndex, conversation) signature). tsc now clean.
+
+Remaining red on `npm run -s verify` is NOT this session's code: two different perf-threshold
+tests fail on different runs — apps/mobile/src/presence/NoiseEngine.test.ts (brown-noise clamp,
+5000ms budget) and apps/mobile/src/voice/NativeMicPort.test.ts (classifier cost bound, 50ms
+budget). Both pass standalone (NoiseEngine: 3.7s vs isolated run). Symptomatic of concurrent
+load on the machine (other agents were reported running in parallel this session) rather than a
+real regression — do not "fix" by loosening the budgets without re-checking under a quiet
+machine first.

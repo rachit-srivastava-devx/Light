@@ -1,0 +1,4 @@
+runs/
+artifacts/
+config.json
+*.local.json

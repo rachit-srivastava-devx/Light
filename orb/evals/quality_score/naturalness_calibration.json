@@ -1,0 +1,44 @@
+{
+  "instrument": "UTMOSv2",
+  "instrument_version": "1.3.1.dev0",
+  "source_commit": "cc2700db57bb83ee13dc31ebe1b868c254e15d09",
+  "model_config": "fusion_stage3",
+  "model_fold": 0,
+  "device": "cpu",
+  "random_seed": 42,
+  "num_repetitions": 10,
+  "threshold_mos": 2.77,
+  "threshold_basis": "Two real Fish S2-Pro clips were scored with deterministic 10-repetition UTMOSv2. The decision boundary is the midpoint between the lowest Fish score (2.8807785511016846) and the native macOS say score (2.652761459350586): 2.7667700052261353, rounded conservatively to 2.77.",
+  "minimum_measured_gap_mos": 0.22801709175109863,
+  "worst_positive_margin_mos": 0.11077855110168455,
+  "negative_margin_mos": 0.11723854064941408,
+  "samples": [
+    {
+      "label": "positive_fish_s2_pro",
+      "path": "evals/quality_score/samples/fish_tts_sample.wav",
+      "sha256": "d6145c7f224a7c4af742a45c8deeec17a5f022312a2d5c1ea7ec30d774b417c6",
+      "duration_seconds": 5.105458,
+      "mos": 3.162919044494629,
+      "passed": true
+    },
+    {
+      "label": "positive_fish_s2_pro_track_o_fresh",
+      "path": "evals/quality_score/samples/fish_tts_track_o_20260828.wav",
+      "sha256": "e883005e3b1f741b90c0bec60b68511b80f4025d2f53cbc34f421e76cacb5600",
+      "provider_evidence": "voice-provider-sidecar /healthz returned tts=fish immediately before synthesis; environment checks confirmed FISH_TTS_MODEL=s2-pro and FISH_REFERENCE_ID_ORB_WARM_V1 set without logging secret values",
+      "paid_request_count": 1,
+      "input_characters": 67,
+      "duration_seconds": 4.757125,
+      "mos": 2.8807785511016846,
+      "passed": true
+    },
+    {
+      "label": "negative_native_macos_say_samantha",
+      "path": "evals/quality_score/samples/native_tts_sample.wav",
+      "sha256": "c4979bb55b99ebafe3854269c09ea197e9f00ef9e1afbce8772d9b2166920232",
+      "duration_seconds": 4.891042,
+      "mos": 2.652761459350586,
+      "passed": false
+    }
+  ]
+}

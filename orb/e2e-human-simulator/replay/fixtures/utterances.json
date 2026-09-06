@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "description": "Human-simulation turns. Supply the referenced WAV files beside this fixture.",
+  "utterances": [
+    {
+      "id": "hello",
+      "expected_transcript": "Hello, how are you?",
+      "wav": "hello.wav",
+      "pause_after_ms": 500
+    },
+    {
+      "id": "task",
+      "expected_transcript": "I need to write the first paragraph.",
+      "wav": "task.wav",
+      "pause_before_ms": 700,
+      "pause_after_ms": 800
+    },
+    {
+      "id": "done",
+      "expected_transcript": "Done.",
+      "wav": "done.wav",
+      "pause_before_ms": 1200
+    }
+  ]
+}

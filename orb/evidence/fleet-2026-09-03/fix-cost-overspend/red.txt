@@ -1,0 +1,14 @@
+$ uv run --project backend/relay-py --extra dev pytest -q backend/relay-py/tests/test_cost_meter.py -k oversized_settlement
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_oversized_settlement_rejects_and_releases_the_hold_atomically ______
+
+    assert meter.spent_paise == 0
+>   assert meter.reserved_paise == 0
+E   AssertionError: assert 10 == 0
+E    +  where 10 = SessionMeter(tenant_id='t1', session_id='s1', user_id='u1', reservation_paise=10, spent_paise=0, reserved_paise=10, ledger=[]).reserved_paise
+
+backend/relay-py/tests/test_cost_meter.py:179: AssertionError
+=========================== short test summary info ============================
+FAILED backend/relay-py/tests/test_cost_meter.py::test_oversized_settlement_rejects_and_releases_the_hold_atomically
+1 failed, 20 deselected in 0.32s

@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://adhd-focus-orb.internal/contracts/lld.v1.json",
+  "title": "lld.v1",
+  "description": "Canonical definition of the Speed-of-Thought P0 lld.v1 artifact (docs/SPEED-OF-THOUGHT-P0-CONTRACT.md §2). This file is the single source of truth for field names/types; apps/mobile/src/build/lld-v1.ts and backend/relay-py/src/orb_relay/proxy/lld_schemas.py are hand-mirrored from it (no codegen step exists in this repo's build — see the 'generate the Python validator' killed alternative in fixtures/complete_module.json). Drift between the two mirrors is caught by the conformance tests (lld-v1.test.ts U1-T1/T2, test_lld_schema_conformance.py U1-T6), not by this file being machine-executed.",
+  "$defs": {
+    "grain": { "enum": ["module", "leaf"] },
+    "registryVerdict": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "matched_path"],
+          "properties": {
+            "kind": { "const": "install" },
+            "matched_path": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "matched_path"],
+          "properties": {
+            "kind": { "const": "extract" },
+            "matched_path": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "searched"],
+          "properties": {
+            "kind": { "const": "build_new" },
+            "searched": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+          }
+        }
+      ]
+    },
+    "derivation": {
+      "description": "R17: a claim carries its working, or names what it makes unrepresentable. Nothing else.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value", "calc"],
+          "properties": {
+            "kind": { "const": "number" },
+            "value": { "type": "string" },
+            "calc": { "type": "string", "minLength": 1, "pattern": "[0-9]" },
+            "source": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "invariant", "enforced_by"],
+          "properties": {
+            "kind": { "const": "structural" },
+            "invariant": { "type": "string", "minLength": 1 },
+            "enforced_by": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "guarantee": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim", "derivation", "label"],
+      "properties": {
+        "claim": { "type": "string", "minLength": 1 },
+        "derivation": { "$ref": "#/$defs/derivation" },
+        "label": { "enum": ["kills_structural", "kills_mechanical", "mitigates"] }
+      }
+    },
+    "killedAlt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["option", "why_killed", "revive_trigger"],
+      "properties": {
+        "option": { "type": "string", "minLength": 1 },
+        "why_killed": { "type": "string", "minLength": 1 },
+        "revive_trigger": { "type": "string", "minLength": 1 }
+      }
+    },
+    "failureStory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger", "blast_radius", "fail_safe"],
+      "properties": {
+        "trigger": { "type": "string", "minLength": 10 },
+        "blast_radius": { "type": "string", "minLength": 10 },
+        "fail_safe": { "type": "string", "minLength": 10 }
+      }
+    },
+    "interfaceDecl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "signature"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "signature": { "type": "string", "minLength": 1 }
+      }
+    },
+    "dataDecl": {
+      "description": "owned_by_node MUST === the enclosing brief's node_id (checked cross-field, not expressible in plain JSON Schema).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["store", "owned_by_node"],
+      "properties": {
+        "store": { "type": "string", "minLength": 1 },
+        "owned_by_node": { "type": "string", "minLength": 1 }
+      }
+    },
+    "acceptanceLine": {
+      "description": "artifact must start with owner_path, and `then` must contain the artifact substring (§3 C3-ACC-GROUND) — cross-field, checked by the validator, not by this file alone.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["given", "when", "then", "oracle_kind", "artifact"],
+      "properties": {
+        "given": { "type": "string", "minLength": 3 },
+        "when": { "type": "string", "minLength": 3 },
+        "then": { "type": "string", "minLength": 3 },
+        "oracle_kind": { "enum": ["test", "property", "metric"] },
+        "artifact": { "type": "string", "minLength": 1 }
+      }
+    },
+    "moduleBrief": {
+      "description": "The proposer-authored half. Everything here is content; none of it is authority (§2.1) — content_hash/freeze_id/depth_score/stamped_by/state/version are absent by design, not merely optional.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id", "grain", "purpose", "owner", "owner_path", "interface", "data_owned",
+        "deps", "registry", "acceptance", "non_goals", "open_questions", "guarantees",
+        "alternatives", "failure_story"
+      ],
+      "properties": {
+        "node_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$" },
+        "grain": { "$ref": "#/$defs/grain" },
+        "purpose": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "owner": { "type": "string", "minLength": 1 },
+        "owner_path": { "type": "string", "minLength": 1, "not": { "pattern": "\\.\\." } },
+        "interface": { "type": "array", "items": { "$ref": "#/$defs/interfaceDecl" }, "minItems": 1 },
+        "data_owned": { "type": "array", "items": { "$ref": "#/$defs/dataDecl" } },
+        "deps": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "registry": { "$ref": "#/$defs/registryVerdict" },
+        "acceptance": { "$ref": "#/$defs/acceptanceLine" },
+        "non_goals": { "type": "array", "items": { "type": "string" } },
+        "open_questions": { "type": "array", "items": { "type": "string" } },
+        "guarantees": { "type": "array", "items": { "$ref": "#/$defs/guarantee" }, "minItems": 1 },
+        "alternatives": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/killedAlt" },
+          "description": "minItems 2 at grain='module', 1 at grain='leaf' — cross-field with `grain`, enforced by the validator, not expressible as a single JSON-Schema minItems."
+        },
+        "failure_story": { "$ref": "#/$defs/failureStory" }
+      }
+    },
+    "depthScore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks_total", "checks_passed", "ratio", "failed_check_ids"],
+      "properties": {
+        "checks_total": { "type": "integer", "minimum": 0 },
+        "checks_passed": { "type": "integer", "minimum": 0 },
+        "ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "failed_check_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "freezeRecord": {
+      "description": "The gate-authored half. No proposer-emittable form exists (§2.1) — this type is never constructed from user/model input, only stamped by the lld-ready gate.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "freeze_id", "version", "node_id", "content_hash", "decision", "why",
+        "killed_alternatives", "acceptance_test", "owner", "depth_score", "supersedes", "stamped_by"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "freeze_id": { "type": "string", "pattern": "^fz-[0-9a-f]{16}$" },
+        "version": { "type": "integer", "minimum": 1 },
+        "node_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$" },
+        "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "decision": { "type": "string", "minLength": 1 },
+        "why": { "type": "string", "minLength": 1 },
+        "killed_alternatives": { "type": "array", "items": { "$ref": "#/$defs/killedAlt" } },
+        "acceptance_test": { "$ref": "#/$defs/acceptanceLine" },
+        "owner": { "type": "string", "minLength": 1 },
+        "depth_score": { "$ref": "#/$defs/depthScore" },
+        "supersedes": { "type": ["string", "null"], "pattern": "^fz-[0-9a-f]{16}$" },
+        "stamped_by": { "const": "orb:lld-ready" }
+      }
+    }
+  },
+  "$ref": "#/$defs/moduleBrief"
+}

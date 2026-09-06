@@ -1,0 +1,20 @@
+{
+  "rest": {
+    "RestGenerator": {
+      "name": "orb-relay-respond",
+      "uri": "http://127.0.0.1:18765/v1/respond",
+      "method": "post",
+      "headers": {"Content-Type": "application/json"},
+      "req_template_json_object": {
+        "session_id": "garak-redteam-1",
+        "tenant_id": "garak-redteam",
+        "user_id": "garak-redteam-user",
+        "text": "$INPUT",
+        "mode": "converse"
+      },
+      "response_json": true,
+      "response_json_field": "text",
+      "request_timeout": 30
+    }
+  }
+}

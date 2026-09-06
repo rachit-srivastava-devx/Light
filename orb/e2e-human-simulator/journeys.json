@@ -1,0 +1,134 @@
+{
+  "version": "focus-orb-human-journeys.v1",
+  "journeys": [
+    {
+      "id": "launch-greeting",
+      "description": "A human opens the app and hears the Orb speak first.",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "expect": { "speech_contains": ["Good morning", "Rachit"], "state": "IDLE_PRESENT" } }
+      ]
+    },
+    {
+      "id": "social-hello",
+      "description": "A human says hello and receives a conversational answer.",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "action": "speak_fixture", "fixture": "hello-how-are-you.wav" },
+        { "expect": { "transcript_contains": "hello", "response_not": ["I'm here. Tell me the task."], "one_reply": true } }
+      ]
+    },
+    {
+      "id": "task-progress",
+      "description": "A human gives a task, hears one small step, then completes it.",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "action": "speak_fixture", "fixture": "open-tax-portal.wav" },
+        { "expect": { "states_in_order": ["INTAKE", "STEP_PRESENT", "WORKING"], "backend_atomize_calls": 1, "speech_non_empty": true } },
+        { "action": "speak_fixture", "fixture": "done.wav" },
+        { "expect": { "state": "STEP_PRESENT", "progress_advanced": true } }
+      ]
+    },
+    {
+      "id": "unclear-speech",
+      "description": "Noise or unintelligible speech produces a spoken repair rather than repetition.",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "action": "speak_fixture", "fixture": "noise-and-mumble.wav" },
+        { "expect": { "response_contains_any": ["couldn't make that out", "say it again", "didn't catch"], "no_backend_loop": true } }
+      ]
+    },
+    {
+      "id": "provider-failure",
+      "description": "A provider failure is visible, logged, and spoken once.",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "action": "inject_fault", "fault": "tts_provider_failure" },
+        { "action": "speak_fixture", "fixture": "hello-how-are-you.wav" },
+        { "expect": { "spoken_failure": true, "error_state": true, "failure_reply_count": 1 } }
+      ]
+    },
+    {
+      "id": "barge-in",
+      "description": "A human interrupts a long response and the Orb returns to listening.",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "action": "speak_fixture", "fixture": "long-task.wav" },
+        { "action": "barge_in", "fixture": "stop.wav" },
+        { "expect": { "states_in_order": ["WORKING", "INTERRUPTED", "INTAKE"], "old_audio_cancelled": true } }
+      ]
+    },
+    {
+      "id": "teach-me-something",
+      "description": "A human asks to be taught something, as the FIRST utterance, and the orb explains it over several short turns, building on what it already said rather than dumping one monologue. Exercises acceptance-contract Track B1/B4 (routes to conversation/teach, not clarify/atomize) and Track C3/C4 (multi-turn build, voice-shaped chunks).",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "action": "speak_fixture", "fixture": "teach-ask.wav" },
+        {
+          "expect": {
+            "mode": "teach",
+            "state": "SPEAKING",
+            "backend_atomize_calls": 0,
+            "speech_non_empty": true,
+            "response_not": ["I'm here. Tell me the task.", "I'm here. Let's keep the next move small."]
+          }
+        },
+        { "action": "speak_fixture", "fixture": "teach-followup1.wav" },
+        { "expect": { "mode": "teach", "one_reply": true, "speech_non_empty": true } },
+        { "action": "speak_fixture", "fixture": "teach-followup2.wav" },
+        {
+          "expect": {
+            "mode": "teach",
+            "one_reply": true,
+            "speech_non_empty": true,
+            "response_contains_any": ["chlorophyll", "green", "pigment", "light"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "open-domain-vent",
+      "description": "A human opens the app to vent about feeling overwhelmed — not to start a task. The ADHD case from the acceptance contract: the orb must hold the conversation without misrouting to task intake/atomize and without a generic 'tell me the task' or empty-input presence line.",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "action": "speak_fixture", "fixture": "vent-open.wav" },
+        {
+          "expect": {
+            "mode": "converse",
+            "state": "SPEAKING",
+            "backend_atomize_calls": 0,
+            "speech_non_empty": true,
+            "response_not": ["I'm here. Tell me the task.", "I'm here. Let's keep the next move small."]
+          }
+        },
+        { "action": "speak_fixture", "fixture": "vent-continue.wav" },
+        {
+          "expect": {
+            "mode": "converse",
+            "one_reply": true,
+            "backend_atomize_calls": 0,
+            "response_not": ["I'm here. Tell me the task."]
+          }
+        }
+      ]
+    },
+    {
+      "id": "topic-switch",
+      "description": "A human starts on one topic, then explicitly switches subject mid-conversation. Context must follow the switch — the new answer must not bleed the old topic's specifics into it (Track D: context is a first-class passed object, not re-derived, but the new turn's own topic must still win).",
+      "steps": [
+        { "action": "fresh_launch" },
+        { "action": "speak_fixture", "fixture": "topic-original.wav" },
+        { "expect": { "state": "SPEAKING", "speech_non_empty": true, "one_reply": true } },
+        { "action": "speak_fixture", "fixture": "topic-switch.wav" },
+        {
+          "expect": {
+            "one_reply": true,
+            "speech_non_empty": true,
+            "response_not_contains_any": ["landlord", "leak", "email", "bathroom"],
+            "response_contains_any": ["warm up", "warmup", "run", "stretch", "workout", "jog"]
+          }
+        }
+      ]
+    }
+  ]
+}

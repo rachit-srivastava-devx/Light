@@ -1,0 +1,21 @@
+diff --git a/apps/mobile/src/App.tsx b/apps/mobile/src/App.tsx
+index c9e7972..bf9b816 100644
+--- a/apps/mobile/src/App.tsx
++++ b/apps/mobile/src/App.tsx
+@@ -709,7 +709,15 @@ export default function FocusOrbApp({
+       return;
+     }
+     presenceBed.current?.recover();
+-    presenceBed.current?.morphColor(currentEnvelope.session.state === 'STEP_PRESENT' ? 'thinking' : 'idle');
++    // Color-morph (brown<->pink) is NOT driven from session-envelope state here. Per
++    // `presence/ColorMorph.ts`'s own header and blueprint 02 §7, "thinking" is scoped to the
++    // crew-forming/computation window, not to STEP_PRESENT (which AppModel.ts's own `voiceState()`
++    // maps to 'speaking' — an already-computed step being presented, the opposite moment).
++    // `runtime/VoiceLoopController.ts`'s `schedulePresenceMorph` already owns that real window
++    // (turn-end-signaled -> 'thinking', next user speech -> 'idle') and calls `morphColor` directly
++    // on this same presence bed graph. A second driver keyed off session state here previously
++    // forced the bed pink for the entire STEP_PRESENT/speaking duration — exactly the "permanently
++    // brighter after a step is presented" case ColorMorph.ts's header says must never happen.
+   }, [currentEnvelope.session.state]);
+ 
+   useEffect(() => {

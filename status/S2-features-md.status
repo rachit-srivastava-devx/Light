@@ -1,0 +1,7 @@
+ID=S2
+FEATURE=Step 2 — write Light/FEATURES.md (atomic list, ordered by time-to-visible-output)
+REPO=Light (all)
+STATUS=pending
+AGENT=main session
+SINCE=2026-09-07 01:14 IST
+NOTE=starts once S1 copy is verified

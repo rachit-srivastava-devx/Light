@@ -1,0 +1,601 @@
+
+ RUN  v3.2.7 /Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b4-silent-auto-resume
+
+stdout | apps/mobile/src/runtime/T0FocusSession.test.ts > ORB-ACCEPTANCE-CONTRACT Track B — intake open-domain routing (B1-B5) > B2 (runtime wiring, published denominator): >= N-1 of 13 open-domain first utterances reach the conversation port at a fresh INTAKE, never the atomizer
+[B2-runtime] 13 of 13 reached conversation without touching the atomizer. Misses: none
+
+stdout | apps/mobile/src/runtime/T0FocusSession.test.ts > ORB-ACCEPTANCE-CONTRACT Track B — intake open-domain routing (B1-B5) > B3 (runtime wiring, regression, published denominator): all 10 task utterances still reach the atomizer/clarify path at a fresh INTAKE, never the conversation port
+[B3-runtime] 10 of 10 still reached atomizer/clarify. Misses: none
+
+ ✓ apps/mobile/src/runtime/T0FocusSession.test.ts (35 tests) 2154ms
+   ✓ T0FocusSession runtime > does not turn an unrecognised transcript into a repeated presence response  622ms
+   ✓ T0FocusSession runtime > preserves code-mixed Indic transcripts before handing them to the atomizer port  638ms
+stderr | backend/voice-provider-sidecar/__tests__/http-contract.test.ts
+voice-provider-sidecar: ORB_STT_PROVIDER=fake selected — transcripts are SYNTHETIC, not real STT.
+voice-provider-sidecar: ORB_TTS_PROVIDER=fake selected — audio produced is SYNTHETIC, not real speech.
+
+stderr | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not cancel presence on audio_bed_fallback
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > ends the turn early on a complete thought, without waiting out the VAD hangover
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not cancel presence on audio_bed_fallback
+focus-orb:presence-ready elapsed_ms=243 boot_ms=238
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > renders only the cloud orb on a dark background
+focus-orb:relay-websocket-unavailable
+focus-orb:presence-ready elapsed_ms=289 boot_ms=30
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > renders only the cloud orb on a dark background
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not cancel presence on audio_bed_fallback
+focus-orb:relay-audio-bed-fallback
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > auto-starts and speaks the launch greeting instead of injecting a first task
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > ends the turn early on a complete thought, without waiting out the VAD hangover
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > auto-starts and speaks the launch greeting instead of injecting a first task
+focus-orb:relay-websocket-unavailable
+focus-orb:speech-request elapsed_ms=29
+focus-orb:presence-ready elapsed_ms=55 boot_ms=5
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+focus-orb:speech-request elapsed_ms=1
+focus-orb:presence-ready elapsed_ms=2 boot_ms=0
+focus-orb:mic-permission-denied
+
+stderr | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not close the transport on audio_bed_fallback (the session stays alive)
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not close the transport on audio_bed_fallback (the session stays alive)
+focus-orb:presence-ready elapsed_ms=87 boot_ms=67
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does not close the transport on audio_bed_fallback (the session stays alive)
+focus-orb:relay-audio-bed-fallback
+
+stderr | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > still speaks the provider_failure apology on audio_bed_fallback
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > still speaks the provider_failure apology on audio_bed_fallback
+focus-orb:presence-ready elapsed_ms=1 boot_ms=0
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > still speaks the provider_failure apology on audio_bed_fallback
+focus-orb:relay-audio-bed-fallback
+
+stderr | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does NOT fall through to the generic protocol-error path (which used to cancel presence and drop the apology)
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does NOT fall through to the generic protocol-error path (which used to cancel presence and drop the apology)
+focus-orb:presence-ready elapsed_ms=2 boot_ms=2
+
+stdout | apps/mobile/src/AppAudioBedFallback.test.tsx > App.tsx voice wiring: audio_bed_fallback frame > does NOT fall through to the generic protocol-error path (which used to cancel presence and drop the apology)
+focus-orb:relay-audio-bed-fallback
+
+stderr | backend/voice-provider-sidecar/__tests__/http-contract.test.ts > voice-provider-sidecar HTTP contract > malformed JSON returns 400 instead of crashing the process
+voice-provider-sidecar: unhandled request error: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+
+ ✓ apps/mobile/src/AppAudioBedFallback.test.tsx (4 tests) 992ms
+   ✓ App.tsx voice wiring: audio_bed_fallback frame > does not cancel presence on audio_bed_fallback  821ms
+ ✓ backend/voice-provider-sidecar/__tests__/http-contract.test.ts (8 tests) 1024ms
+   ✓ voice-provider-sidecar HTTP contract > POST /v1/stt/push returns {text:null,is_final:false} then a partial on the 3rd frame  638ms
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not cut off a Hinglish speaker mid-thought on the same pause
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+focus-orb:relay-reconnecting endpoint=ws://10.0.2.2:8091 Relay socket closed unexpectedly
+
+ ✓ apps/mobile/src/runtime/VoiceLoopController.test.ts (19 tests) 1305ms
+   ✓ VoiceLoopController > does not complete the turn locally on VAD end-of-turn — waits for the relay transcript  300ms
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not cut off a Hinglish speaker mid-thought on the same pause
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not endpoint when no voice frame has been observed in the turn
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not endpoint when no voice frame has been observed in the turn
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not carry the previous turn's silence into the next one
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > does not carry the previous turn's silence into the next one
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > sends provider cancellation when the mic detects sustained speech over an in-flight reply
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > sends provider cancellation when the mic detects sustained speech over an in-flight reply
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > sends provider cancellation when the mic detects sustained speech over an in-flight reply
+focus-orb:relay-speech-starting
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+focus-orb:relay-reconnected attempt=1
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes
+focus-orb:relay-transport-error endpoint=ws://10.0.2.2:8091 Relay socket closed unexpectedly
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > stops mic capture when native start fails, releasing any partially-acquired resource
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > stops mic capture when native start fails, releasing any partially-acquired resource
+focus-orb:speech-request elapsed_ms=193
+focus-orb:presence-ready elapsed_ms=249 boot_ms=28
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > stops mic capture when native start fails, releasing any partially-acquired resource
+focus-orb:mic-start-error native start failed
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > offers a typed path when the mic is unusable, and a typed turn crosses the runtime seam
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > offers a typed path when the mic is unusable, and a typed turn crosses the runtime seam
+focus-orb:speech-request elapsed_ms=22
+focus-orb:presence-ready elapsed_ms=25 boot_ms=1
+focus-orb:mic-permission-denied
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > offers a typed path when the mic is unusable, and a typed turn crosses the runtime seam
+focus-orb:speech-request elapsed_ms=361
+
+stderr | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > never sends an empty or whitespace-only typed turn
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppSurface.test.tsx > FocusOrbApp surface > never sends an empty or whitespace-only typed turn
+focus-orb:speech-request elapsed_ms=1
+focus-orb:presence-ready elapsed_ms=2 boot_ms=0
+focus-orb:mic-permission-denied
+
+stderr | apps/mobile/src/AppSurface.test.tsx
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ apps/mobile/src/AppSurface.test.tsx (6 tests) 3135ms
+   ✓ FocusOrbApp surface > renders only the cloud orb on a dark background  302ms
+   ✓ FocusOrbApp surface > auto-starts and speaks the launch greeting instead of injecting a first task  329ms
+   ✓ FocusOrbApp surface > keeps mic capture during one reconnect, then stops it after the retry closes  987ms
+   ✓ FocusOrbApp surface > stops mic capture when native start fails, releasing any partially-acquired resource  383ms
+   ✓ FocusOrbApp surface > offers a typed path when the mic is unusable, and a typed turn crosses the runtime seam  628ms
+   ✓ FocusOrbApp surface > never sends an empty or whitespace-only typed turn  429ms
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to FocusOrbApp inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | ../../adhd-focus-orb/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+An update to AuroraMist inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+focus-orb:presence-ready elapsed_ms=0 boot_ms=0
+
+ ✓ apps/mobile/src/presence/PresenceBoot.test.ts (4 tests) 183ms
+stdout | apps/mobile/src/AppVoiceWiring.test.tsx > App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces
+focus-orb:endpoint-latency semantic_ms=1160 vad_only_ms=1800 saved_ms=640
+
+ ✓ apps/mobile/src/AppVoiceWiring.test.tsx (6 tests) 4609ms
+   ✓ App.tsx voice wiring: measured pause reaches the semantic endpointer > ends the turn early on a complete thought, without waiting out the VAD hangover  1191ms
+   ✓ App.tsx voice wiring: measured pause reaches the semantic endpointer > sends provider cancellation when the mic detects sustained speech over an in-flight reply  328ms
+   ✓ App.tsx voice wiring: measured pause reaches the semantic endpointer > reaches end_of_turn hundreds of ms earlier than the VAD-only path it replaces  2746ms
+ ✓ apps/mobile/src/voice/BargeInPlaybackLatency.test.ts (29 tests) 895ms
+ ✓ backend/voice-provider-sidecar/__tests__/wav.test.ts (7 tests) 371ms
+ ✓ backend/voice-provider-sidecar/__tests__/real-providers.test.ts (20 tests) 624ms
+ ✓ apps/mobile/src/voice/RelayClient.test.ts (2 tests) 355ms
+ ✓ backend/voice-provider-sidecar/__tests__/fake-backends.test.ts (5 tests) 157ms
+ ❯ apps/mobile/src/voice/NativeMicPort.test.ts (35 tests | 1 failed) 2932ms
+   ✓ energyToSpeechProbability > reads pure silence as zero probability 8ms
+   ✓ energyToSpeechProbability > reads a loud tone as high probability 0ms
+   ✓ energyToSpeechProbability > reads a quiet tone somewhere between silence and full speech 0ms
+   ✓ energyToSpeechProbability > treats an empty frame as silence rather than dividing by zero 0ms
+   ✓ energyToSpeechProbability > is monotonic in loudness 0ms
+   ✓ decodeBase64 > round-trips known bytes 0ms
+   ✓ decodeBase64 > decodes without padding 0ms
+   ✓ decodeBase64 > decodes an empty string to an empty buffer 0ms
+   ✓ computePowerSpectrum / computeSpectralFlatness — FFT correctness > conserves energy between time and frequency domain (Parseval) 1ms
+   ✓ computePowerSpectrum / computeSpectralFlatness — FFT correctness > places a pure tone's energy at the expected bin 6ms
+   ✓ computePowerSpectrum / computeSpectralFlatness — FFT correctness > reads a pure tone as much less flat (more tonal) than a 20-tone broadband-like signal 26ms
+   ✓ computePowerSpectrum / computeSpectralFlatness — FFT correctness > handles a too-short frame and an empty frame without NaN or throwing 0ms
+   ✓ computePowerSpectrum / computeSpectralFlatness — FFT correctness > reads pure digital silence as "flat" by the formula (every bin is equally epsilon) — the energy gate, not flatness, is what must suppress silence 0ms
+   ✓ computePowerSpectrum / computeSpectralFlatness — FFT correctness > bounds analysis cost on a huge frame instead of scaling the FFT to it  535ms
+   ✓ updateNoiseFloor > rises slowly toward a sustained higher level 0ms
+   ✓ updateNoiseFloor > falls quickly toward a sustained lower level 0ms
+   ✓ updateNoiseFloor > never rises high enough to swallow genuinely loud speech 0ms
+   ✓ updateNoiseFloor > ignores non-finite or negative input rather than corrupting state 5ms
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > THE HEADLINE CASE: a sustained loud hum reads as speech under the old heuristic forever, but decays toward silence under the new one  369ms
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > a broadband-like loud noise is suppressed immediately (frame 1), before the floor has time to adapt 1ms
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > a formant-like speech burst is not over-suppressed 1ms
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > a quiet formant-like burst still registers meaningfully above a quiet room-tone-only floor 45ms
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > handles an empty frame 0ms
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > handles an all-zero (digital silence) frame 0ms
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > handles a clipped/full-scale frame without NaN or throwing 0ms
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > falls back to the default sample rate on a non-finite or non-positive sampleRateHz 0ms
+   × classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > bounds analysis cost on a huge frame (adversarial input) 1645ms
+     → expected 100.93279100000109 to be less than 50
+   ✓ classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > two independent PCM channel layouts (mono vs interleaved-stereo-shaped data) both produce a bounded, non-throwing result 23ms
+   ✓ VAD classifier port — swappability and the Silero seam > createRmsVadClassifier tags its output heuristic-rms and matches the standalone function 0ms
+   ✓ VAD classifier port — swappability and the Silero seam > createMultiFeatureVadClassifier tags its output heuristic-multifeature and carries state across calls 12ms
+   ✓ VAD classifier port — swappability and the Silero seam > createSileroVadClassifier fails loudly, naming the exact missing dependency, instead of silently falling back 1ms
+   ✓ buildVadFrame — the frame construction + source tagging startCapture wires to the native listener > tags the frame with the active classifier source — the "detectable, never silent" contract 0ms
+   ✓ buildVadFrame — the frame construction + source tagging startCapture wires to the native listener > threads classifier state across successive frames (the floor keeps adapting across a real capture session) 204ms
+   ✓ buildVadFrame — the frame construction + source tagging startCapture wires to the native listener > never silently mislabels which classifier produced a probability, even across classifier types 1ms
+   ✓ startCapture — call-signature and telemetry contract (documented, not native-harness-tested) > keeps App.tsx's existing single-argument call valid (options is optional) 15ms
+ ✓ apps/mobile/src/presence/StimulationController.test.ts (4 tests) 38ms
+ ✓ apps/mobile/src/presence/AudioGraph.test.ts (10 tests) 48ms
+ ✓ apps/mobile/src/router/ConversationControl.test.ts (41 tests) 1154ms
+   ✓ conversation control (the owner’s verbatim phrasings) > routes "let's create something together" to converse, not task  303ms
+   ✓ the unclassifiable-script gap is explicit, not silent > keeps non-Latin intake on the prior task path rather than silently taking the new default  501ms
+ ✓ apps/mobile/src/voice/RelayAudioPlayer.test.ts (14 tests) 737ms
+   ✓ RelayAudioPlayer > reports one playback summary and keeps the mic guard active through scheduled audio  447ms
+ ✓ backend/gateway-sidecar/__tests__/preflight.test.ts (18 tests) 1331ms
+   ✓ DEFAULT_SDK_LOADERS — the real table, actually invoked > anthropic resolves and yields a module namespace  907ms
+ ✓ backend/voice-provider-sidecar/__tests__/session-audio-buffer.test.ts (4 tests) 15ms
+ ✓ apps/mobile/src/runtime/AtomizerPort.test.ts (4 tests) 7ms
+ ✓ apps/mobile/src/presence/PresenceEventQueue.test.ts (5 tests) 8ms
+stdout | apps/mobile/src/router/IntentClassifier.test.ts > classifyIntakeUtterance — ORB-ACCEPTANCE-CONTRACT Track B (B1-B3) > B2 (aggregate, published denominator): >= N-1 of 13 open-domain first utterances route to conversation
+[B2] open-domain routing: 13 of 13 routed to conversation. Misses: none
+
+stdout | apps/mobile/src/router/IntentClassifier.test.ts > classifyIntakeUtterance — ORB-ACCEPTANCE-CONTRACT Track B (B1-B3) > B3 (aggregate, published denominator): all 10 task utterances still classify as task — zero tolerance
+[B3] task-regression: 10 of 10 still atomize. Misses: none
+
+ ✓ apps/mobile/src/router/IntentClassifier.test.ts (50 tests) 425ms
+ ✓ backend/voice-provider-sidecar/__tests__/sarvam-speaker.test.ts (5 tests) 8ms
+stderr | backend/voice-provider-sidecar/__tests__/config.test.ts > provider selection fails closed with no explicit config (no silent fake fallback) > an explicit ORB_STT_PROVIDER=fake / ORB_TTS_PROVIDER=fake still opts in to the fake backend
+voice-provider-sidecar: ORB_STT_PROVIDER=fake selected — transcripts are SYNTHETIC, not real STT.
+voice-provider-sidecar: ORB_TTS_PROVIDER=fake selected — audio produced is SYNTHETIC, not real speech.
+
+ ✓ apps/mobile/src/build/lld-v1.test.ts (5 tests) 626ms
+   ✓ lld.v1 schema > U1-T5 canonicalJson is stable across 100 shuffles  610ms
+ ✓ backend/voice-provider-sidecar/__tests__/config.test.ts (13 tests) 671ms
+   ✓ provider selection fails closed with no explicit config (no silent fake fallback) > an explicit ORB_STT_PROVIDER=fake / ORB_TTS_PROVIDER=fake still opts in to the fake backend  302ms
+ ❯ apps/mobile/src/presence/NoiseEngine.test.ts (20 tests | 2 failed) 47469ms
+   ✓ seededRandom / generateWhiteNoise > is deterministic for a given seed 7ms
+   ✓ seededRandom / generateWhiteNoise > produces different sequences for different seeds 0ms
+   ✓ seededRandom / generateWhiteNoise > stays within [-1, 1]  2993ms
+   × brownNoise > never exceeds the [-1, 1] clamp (§1 formula) 21654ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ✓ brownNoise > is smoother (lower sample-to-sample variance) than the white noise feeding it 8ms
+   ✓ pinkNoise > is deterministic and finite for a fixed input  1928ms
+   ✓ pinkNoise > matches the first published Paul Kellett coefficient step from a zero state 37ms
+   ✓ crossfadeLoop > makes the brown wrap indistinguishable from an ordinary sample transition 21ms
+   ✓ crossfadeLoop > makes the pink wrap indistinguishable from an ordinary sample transition 7ms
+   ✓ crossfadeLoop > holds brown bed level flat through the crossfade window (no periodic dip) 4ms
+   ✓ crossfadeLoop > holds pink bed level flat through the crossfade window (no periodic dip) 4ms
+   ✓ crossfadeLoop > returns only the output length, discarding the generator overhang 0ms
+   ✓ crossfadeLoop > is a no-op when crossfadeSamples is 0 0ms
+   ✓ crossfadeLoop > leaves everything after the crossfade window untouched  510ms
+   ✓ buildNoiseBuffer > builds a buffer of the requested duration and sample rate 14ms
+   × buildNoiseBuffer > loops without an audible seam for both colours, at the real 30s/48kHz size 14310ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ✓ buildNoiseBuffer > keeps every brown sample inside the [-1,1] buffer domain  2112ms
+   ✓ buildNoiseBuffer > keeps every pink sample inside the [-1,1] buffer domain  1761ms
+   ✓ buildNoiseBuffer > gives brown strictly less high-frequency energy than pink (the colours are real)  1607ms
+   ✓ buildNoiseBuffer > is deterministic for a fixed seed  431ms
+ ✓ apps/mobile/src/presence/InterruptionHandler.test.ts (14 tests) 4ms
+ ✓ apps/mobile/src/voice/RelaySocket.test.ts (9 tests) 343ms
+ ✓ apps/mobile/src/presence/ColorMorph.test.ts (7 tests) 150ms
+ ✓ apps/mobile/src/lld/lld.test.ts (15 tests) 82ms
+ ✓ apps/mobile/src/session/StateMachine.test.ts (48 tests) 18ms
+ ✓ apps/mobile/src/AppModel.test.ts (12 tests) 411ms
+ ✓ apps/mobile/src/presence/PresenceLifecycle.test.ts (2 tests) 6ms
+ ✓ apps/mobile/src/voice/voice.test.ts (38 tests) 658ms
+stderr | apps/mobile/src/orb/AuroraMist.test.tsx > AuroraMist reduced-motion contract > renders a completely static image when speed=0 and breathDepth=0
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | apps/mobile/src/orb/AuroraMist.test.tsx > AuroraMist reduced-motion contract > positive control: the same harness DOES detect motion when speed/breathDepth are non-zero
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ✓ apps/mobile/src/orb/AuroraMist.test.tsx (2 tests) 912ms
+   ✓ AuroraMist reduced-motion contract > renders a completely static image when speed=0 and breathDepth=0  721ms
+ ✓ apps/mobile/src/cognitive/cognitive.test.ts (37 tests) 169ms
+ ✓ apps/mobile/src/voice/SpeechAudio.test.ts (6 tests) 105ms
+ ✓ apps/mobile/src/cognitive/CrisisDetector.test.ts (12 tests) 53ms
+ ✓ apps/mobile/src/voice/PauseClock.test.ts (9 tests) 27ms
+ ✓ backend/gateway-sidecar/__tests__/devlog-safe-name.test.ts (6 tests) 53ms
+stderr | apps/mobile/src/AppController.test.ts > FocusOrb launch/real-turn contract > speaks a backend failure and still opens the listening loop when warmup fails
+focus-orb:warmup-failed relay unavailable
+
+ ✓ apps/mobile/src/AppController.test.ts (4 tests) 545ms
+   ✓ FocusOrb launch/real-turn contract > speaks a backend failure and still opens the listening loop when warmup fails  339ms
+ ✓ apps/mobile/src/runtime/ConversationPort.test.ts (4 tests) 517ms
+   ✓ ConversationPort > sends the final transcript to relay-py and preserves Fish markup  310ms
+ ✓ apps/mobile/src/voice/FishSpeech.test.ts (2 tests) 267ms
+ ✓ apps/mobile/src/session/CheckInTimer.test.ts (5 tests) 30ms
+ ✓ apps/mobile/src/App.test.ts (2 tests) 7ms
+ ✓ apps/mobile/src/session/CostReservation.test.ts (12 tests) 51ms
+ ✓ apps/mobile/src/router/Router.test.ts (9 tests) 141ms
+ ✓ apps/mobile/src/lld/ProsodyDirector.test.ts (8 tests) 290ms
+ ✓ backend/gateway-sidecar/__tests__/adapterEvidence.test.ts (10 tests) 3ms
+ ✓ backend/gateway-sidecar/__tests__/speech-markup.test.ts (11 tests) 122ms
+ ✓ apps/mobile/src/voice/Utf8.test.ts (1 test) 13ms
+ ✓ apps/mobile/src/voice/SemanticEndpointer.test.ts (19 tests) 57ms
+ ✓ apps/mobile/src/session/StepGate.test.ts (10 tests) 53ms
+ ✓ apps/mobile/src/presence/DuckingMixer.test.ts (5 tests) 72ms
+ ✓ apps/mobile/src/orb/motion.test.ts (13 tests) 6ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts [ backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts ]
+Error: Cannot find module '@pe/llm-gateway/adapters/memory' imported from '/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b4-silent-auto-resume/backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ backend/gateway-sidecar/__tests__/adapterTelemetry.test.ts:3:1
+      1| import { describe, expect, it, afterEach } from 'vitest';
+      2| import type { Server } from 'node:http';
+      3| import { createMemoryGateway } from '@pe/llm-gateway/adapters/memory';
+       | ^
+      4| import type { LlmGatewayPort } from '@pe/llm-gateway';
+      5| import { createGatewayServer } from '../src/index';
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  backend/gateway-sidecar/__tests__/complete.test.ts [ backend/gateway-sidecar/__tests__/complete.test.ts ]
+Error: Cannot find module '@pe/llm-gateway/adapters/memory' imported from '/Users/rachitsrivastava/youtube/Principal Engineering/company/products/adhd-focus-orb-worktrees/b4-silent-auto-resume/backend/gateway-sidecar/__tests__/complete.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ backend/gateway-sidecar/__tests__/complete.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { createMemoryGateway } from '@pe/llm-gateway/adapters/memory';
+       | ^
+      3| import { MissingTenantError, type LlmGatewayPort, type UsageEvent } fr…
+      4| import { createGatewayFromEnv, createGatewayServer, gatewayAdapterFrom…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/mobile/src/presence/NoiseEngine.test.ts > brownNoise > never exceeds the [-1, 1] clamp (§1 formula)
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ apps/mobile/src/presence/NoiseEngine.test.ts:35:3
+     33| 
+     34| describe('brownNoise', () => {
+     35|   it('never exceeds the [-1, 1] clamp (§1 formula)', () => {
+       |   ^
+     36|     const white = generateWhiteNoise(50_000, 3);
+     37|     const brown = brownNoise(white);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  apps/mobile/src/presence/NoiseEngine.test.ts > buildNoiseBuffer > loops without an audible seam for both colours, at the real 30s/48kHz size
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ apps/mobile/src/presence/NoiseEngine.test.ts:175:3
+    173|   });
+    174| 
+    175|   it('loops without an audible seam for both colours, at the real 30s/…
+       |   ^
+    176|     for (const color of ['brown', 'pink'] as const) {
+    177|       const withFade = buildNoiseBuffer(color, 21); // contract defaul…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  apps/mobile/src/voice/NativeMicPort.test.ts > classifyMultiFeature — old RMS heuristic vs the new multi-feature classifier > bounds analysis cost on a huge frame (adversarial input)
+AssertionError: expected 100.93279100000109 to be less than 50
+ ❯ apps/mobile/src/voice/NativeMicPort.test.ts:299:23
+    297|     const elapsedMs = performance.now() - start;
+    298|     expect(Number.isFinite(result.speech_probability)).toBe(true);
+    299|     expect(elapsedMs).toBeLessThan(50);
+       |                       ^
+    300|   });
+    301| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  4 failed | 53 passed (57)
+      Tests  3 failed | 702 passed (705)
+   Start at  23:14:51
+   Duration  95.87s (transform 28.67s, setup 0ms, collect 94.95s, tests 76.44s, environment 324ms, prepare 101.30s)
+
