@@ -22,6 +22,7 @@ const STATES: &[&str] = &[
     "Verified",
     "Attested",
     "Accepted",
+    "Proposed",
     "Observed",
     "Refused",
 ];

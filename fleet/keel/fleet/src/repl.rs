@@ -451,7 +451,7 @@ fn build_plan(intent: crate::intent::Intent, prompt: &str) -> Result<(PendingPla
                 ("designer", "Intake -> Specified -> Reviewed"),
                 ("builder", "Intake -> Specified -> Reviewed -> Decomposed -> Contracted -> Briefed -> Leased -> Building -> Built"),
                 ("verifier", "Intake -> Specified -> Reviewed -> Decomposed -> Contracted -> Briefed -> Leased -> Building -> Built -> Verifying -> Verified"),
-                ("meter", "Intake -> Specified -> Reviewed -> Decomposed -> Contracted -> Briefed -> Leased -> Building -> Built -> Verifying -> Verified -> Attested -> Accepted -> Observed"),
+                ("meter", "Intake -> Specified -> Reviewed -> Decomposed -> Contracted -> Briefed -> Leased -> Building -> Built -> Verifying -> Verified -> Attested -> Accepted -> Proposed -> Observed"),
             ];
             agents = lifecycle
                 .iter()
