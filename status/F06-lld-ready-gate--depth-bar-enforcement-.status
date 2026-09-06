@@ -1,7 +1,7 @@
 ID=F06
 FEATURE=lld-ready gate (depth-bar enforcement)
 REPO=fleet
-STATUS=contract
-AGENT=lead-architect (dispatched)
-SINCE=2026-09-07 05:12 IST
-NOTE=
+STATUS=building
+AGENT=mid-engineer (dispatched)
+SINCE=2026-09-07 05:27 IST
+NOTE=Contract done: docs/lane-contracts/F06-lld-ready-gate.md. C1=extract(C2)+bounded build-new (port LldReadyGate.ts's 14 checks, reuse lld.rs's 3 predicates pub(crate), no regex crate). 5 killed alts grounded in code: no trait Gate exists in keel, graph.rs impact() does SQLite+registry/ is empty so blast-radius conjunct killed, no ratio threshold (FEATURES.md divergence named). 2 defects found in merged TS gate: LldReadyGate.ts:220 MEASURED_NOTHING branch is unreachable dead code and U3-T6 does not drive it; U3-T3 is a sample sold as a census (8 of 14 ids, .toContain not equality, denominator from the sample). Fleet-only, 1 session, mid-engineer. Ready for build.
