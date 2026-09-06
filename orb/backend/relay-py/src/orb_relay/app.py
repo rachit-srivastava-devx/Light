@@ -16,6 +16,7 @@ from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
+from .build.build_session import BUILD_OPENING, build_turn_state, derive_turn_evidence
 from .cost.meter import Rates, ReservationExceededError, SessionMeter
 from .eval.gates import aggregate_local_corpus, all_passed, evaluate_metrics
 from .observability.devlog import DEV_LOGGING, dev_log, truncate
@@ -31,8 +32,9 @@ from .proxy.conversation_guard import (
 from .proxy.gateway_client import GatewayClient, GatewayError, HttpGatewayClient
 from .proxy.phrasers import check_in_phrase, conversational_response
 from .proxy.prompts import load_agent_prompt
-from .proxy.schemas import AtomizerOutput, Beat, ResponseMode
+from .proxy.schemas import AtomizerOutput, Beat, BuildTurnState, ResponseMode
 from .proxy.teach import build_beats, decide_teach_ceiling
+from .store.build_session_store import BuildSessionStore
 from .store.context_store import ContextStore
 from .store.conversation_store import ConversationStore, ConversationTurn
 
@@ -75,6 +77,11 @@ _context_store = ContextStore(os.environ.get("ORB_CONTEXT_DB_PATH", str(_DEFAULT
 _conversation_store = ConversationStore(
     os.environ.get("ORB_CONTEXT_DB_PATH", str(_DEFAULT_CONTEXT_DB_PATH))
 )
+# F04: same db file, a new append-only table (store/build_session_store.py's own docstring). Holds
+# no cross-table foreign key, so sharing the file with ContextStore/ConversationStore is safe.
+_build_session_store = BuildSessionStore(
+    os.environ.get("ORB_CONTEXT_DB_PATH", str(_DEFAULT_CONTEXT_DB_PATH))
+)
 
 _MAX_CONVERSATION_TURN_CHARS = 700
 _MAX_CONVERSATION_PROMPT_CHARS = 8_000
@@ -101,7 +108,20 @@ _MODE_PROMPT_NAMES: dict[ResponseMode, str] = {
     ResponseMode.FOCUS: "focus-companion.v1",
     ResponseMode.CONVERSE: "converse.v1",
     ResponseMode.TEACH: "teach.v1",
+    ResponseMode.BUILD: "build.v1",  # F04
 }
+
+# Make the class of defect that shipped `ResponseMode.BUILD` with no handler unrepresentable: a
+# dict keyed by an enum that is missing a member is a 500 waiting to happen (it happened -- see
+# docs/lane-contracts/F04-server-side-build-mode.md §0.1). The next person who adds a new
+# ResponseMode member gets an import-time crash naming exactly what is missing, not a 500 in
+# production three weeks later.
+_MISSING_MODE_PROMPTS = set(ResponseMode) - set(_MODE_PROMPT_NAMES)
+if _MISSING_MODE_PROMPTS:
+    raise RuntimeError(
+        "every ResponseMode needs a domain prompt; missing: "
+        f"{sorted(m.value for m in _MISSING_MODE_PROMPTS)}"
+    )
 
 
 def _conversation_messages(turns: list[ConversationTurn]) -> list[dict[str, str]]:
@@ -340,12 +360,18 @@ class ConversationResponse(BaseModel):
     latency_ms: int
     # Wire-visible proof that a wait turn was emitted, suppressed by user interruption, or closed.
     wait: WaitOutcome | None = None
+    # F04: advisory depth-completeness registers. Non-null iff mode is BUILD (§3.6c).
+    build: BuildTurnState | None = None
 
 
 class WarmupRequest(BaseModel):
     tenant_id: Annotated[str, Field(min_length=1)]
     user_id: Annotated[str, Field(min_length=1)]
     session_id: Annotated[str, Field(min_length=1)]
+    # F04: defaulting to FOCUS keeps every existing caller byte-compatible apart from one added
+    # `null` field on the response -- the same backward-compatibility reasoning
+    # ConversationRequest.mode already documents above.
+    mode: Annotated[ResponseMode, Field(default=ResponseMode.FOCUS)] = ResponseMode.FOCUS
 
 
 class WarmupResponse(BaseModel):
@@ -355,6 +381,9 @@ class WarmupResponse(BaseModel):
     embeddings: list[list[int]]
     open_session: dict[str, str] | None
     phrase_manifest: dict[str, str]
+    # F04: non-null iff `mode` was BUILD (BUILD_OPENING); None for every other mode, including the
+    # default, so an existing caller that never sends `mode` sees exactly one new `null` field.
+    opening: str | None = None
 
 
 class CachePrimeRequest(BaseModel):
@@ -760,6 +789,24 @@ async def respond_to_user(
         text=text,
         created_at=now + 0.000001,
     )
+
+    # F04: build mode's depth-completeness registers. Advisory only (blueprint 02 §4.1's
+    # firewall) -- populated from THIS TURN's user text (Tier-0, deterministic, no model call),
+    # independent of whatever the guarded completion above returned, then folded from the
+    # session's full append-only evidence log (store/build_session_store.py).
+    build_state: BuildTurnState | None = None
+    if body.mode is ResponseMode.BUILD:
+        _build_session_store.append_evidence(
+            tenant_id=body.tenant_id,
+            user_id=body.user_id,
+            session_id=body.session_id,
+            entry=derive_turn_evidence(body.text),
+        )
+        registers = _build_session_store.registers(
+            tenant_id=body.tenant_id, user_id=body.user_id, session_id=body.session_id
+        )
+        build_state = build_turn_state(registers)
+
     return ConversationResponse(
         tenant_id=body.tenant_id,
         session_id=body.session_id,
@@ -773,6 +820,7 @@ async def respond_to_user(
         spent_paise=meter.spent_paise,
         latency_ms=latency_ms,
         wait=result.wait,
+        build=build_state,
     )
 
 
@@ -802,6 +850,9 @@ def session_warmup(body: WarmupRequest) -> WarmupResponse:
             "conversation.fallback.v1": conversational_response("").text,
             "check_in.current_step.v1": check_in_phrase(0, "the current step").text,
         },
+        # F04: BUILD_OPENING is deliberately NOT added to phrase_manifest and carries no phrase_id
+        # (see build_session.py's docstring -- F01's greeting-array trap, one layer over).
+        opening=BUILD_OPENING if body.mode is ResponseMode.BUILD else None,
     )
 
 

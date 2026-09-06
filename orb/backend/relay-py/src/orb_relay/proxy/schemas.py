@@ -103,6 +103,31 @@ class ResponseMode(str, Enum):
     BUILD = "build"
 
 
+class RegisterReading(BaseModel):
+    """One depth-completeness belief register's current wire reading (F04).
+
+    `register` is slot-qualified for the Coverage vector (e.g. `"Coverage[interface]"`) and bare
+    for the five scalar registers (e.g. `"Ambiguity"`) -- see
+    `orb_relay.build.build_session.render_registers`, the one call site that builds this list.
+    """
+
+    register: str
+    value: float
+    confidence: float
+
+
+class BuildTurnState(BaseModel):
+    """Advisory only. Blueprint `Speed-of-Thought-L8-Deep-Dive/02-DIALOGUE-PLANE-BUILD-MODE.md`
+    §4.1's firewall: beliefs steer the conversation, they never freeze anything. Nothing in this
+    object is ever an input to any gate -- the freeze verdict is a pure function of `ModuleBrief`
+    fields (F05's surface), never of a register value.
+    """
+
+    registers: list[RegisterReading]
+    next_slot: str | None  # which slot the orb intends to ask about next; None once all are covered
+    contradiction_blocking: bool  # Contradiction register above threshold -- F05 consumes; advisory here
+
+
 class BeatKind(str, Enum):
     """What a speakable beat is doing. EXPLAIN delivers content; CHECK checks understanding or
     offers the next beat (contract C5 — teach mode must not dump information in one block).

@@ -6,6 +6,12 @@ build/
 # Un-ignore it explicitly rather than narrowing the repo-wide rule.
 !apps/mobile/src/build/
 !apps/mobile/src/build/**
+# Same collision, one lane later: F04's server-side build-mode session package
+# (backend/relay-py/src/orb_relay/build/) hits the identical bare `build/` rule above -- found via
+# `git check-ignore -v`, not assumed (FLEET-LEARNINGS' sot-lld-ready-gate entry hit this once
+# already for the apps/mobile path; this is the same landmine at a different path).
+!backend/relay-py/src/orb_relay/build/
+!backend/relay-py/src/orb_relay/build/**
 ios/build/
 ios/Pods/
 ios/.xcode.env.local
