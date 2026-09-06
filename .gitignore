@@ -26,3 +26,6 @@ coverage/
 
 # OS
 .DS_Store
+
+# git worktree checkouts — never track these from the main checkout
+.worktrees/
