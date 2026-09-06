@@ -1,0 +1,7 @@
+ID=F30
+FEATURE=Extract keel-kernel service
+REPO=registry
+STATUS=pending
+AGENT=unassigned
+SINCE=2026-09-07 01:19 IST
+NOTE=

@@ -1,7 +1,7 @@
 ID=S2
 FEATURE=Step 2 — write Light/FEATURES.md (atomic list, ordered by time-to-visible-output)
 REPO=Light (all)
-STATUS=pending
+STATUS=building
 AGENT=main session
-SINCE=2026-09-07 01:14 IST
-NOTE=starts once S1 copy is verified
+SINCE=2026-09-07 01:17 IST
+NOTE=drafting the atomic feature list now

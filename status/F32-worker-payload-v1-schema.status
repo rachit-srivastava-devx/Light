@@ -1,0 +1,7 @@
+ID=F32
+FEATURE=worker-payload.v1 schema
+REPO=registry+fleet
+STATUS=pending
+AGENT=unassigned
+SINCE=2026-09-07 01:19 IST
+NOTE=

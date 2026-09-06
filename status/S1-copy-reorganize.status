@@ -1,7 +1,7 @@
 ID=S1
 FEATURE=Step 1 — copy adhd-focus-orb+fleet-rs+OrbMac into Light/, reorganize
 REPO=Light (all)
-STATUS=building
+STATUS=done
 AGENT=main session
-SINCE=2026-09-07 01:14 IST
-NOTE=bearings done; executing rsync copy now
+SINCE=2026-09-07 01:17 IST
+NOTE=1545 files, single fresh git history, commit 8f86440

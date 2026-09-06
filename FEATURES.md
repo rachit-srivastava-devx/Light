@@ -1,0 +1,125 @@
+# FEATURES — the atomic build list, ordered by time-to-visible-output
+
+Derived from `blueprints/Speed-of-Thought-L8-Deep-Dive/` — the artifact LLD
+(`https://claude.ai/code/artifact/8c76a74c-dc76-415c-8ff5-25aa6142ac47`), `ORB-AND-FLEET-DELTA.md`
+(capabilities C1–C11), `PHASES-TO-USABLE.md` (P0–P4), and decisions D1–D15.
+
+**The ordering principle (PHASES-TO-USABLE §0, applied one level more atomically):** not
+foundations-first — whichever atomic feature produces something *you can see working* soonest goes
+first. Within a phase, items are further ordered by dependency (an item cannot precede what it needs)
+and, among independents, by which is smaller/faster. Phases P0→P4 are themselves already ordered this
+way in the source docs; this file decomposes each phase into buildable, one-lane-sized units.
+
+**One feature builds at a time per repo** (four repos: `orb`, `fleet`, `apps/macos`, `registry`) — so
+up to 4 lanes can be active concurrently, one per repo, each working its own queue below in order.
+Cross-repo integration features (tagged `orb+fleet` etc.) wait for every repo they touch to reach that
+point in its own queue.
+
+**Status legend:** ☐ pending · ◐ in progress (see `STATUS.md` for live detail) · ☑ done (verified
+independently + manually driven). This file is the plan; `STATUS.md` (generated from `status/*.status`)
+is the live tracker — update the checkbox here only when a feature is genuinely ☑.
+
+**Realism note, stated up front (L8 rule: numbers, not adjectives):** at historical per-unit pace from
+this same build's prior session (`FLEET-LEARNINGS.md`: 30 min–3+ hr per unit with real gotchas,
+independent-verify included), and 2 initial concurrent lanes (`orb`, `fleet`), this session will likely
+land somewhere in the P0–P1 range before the 10AM IST stop, not the full P0–P4 list. The full list is
+here because the user asked for the whole atomic roadmap in one file, not because all of it will land
+tonight. Say so honestly at each check-in rather than padding the done column.
+
+---
+
+## Prerequisite (done, not a fanned-out feature)
+
+| # | What | Repo | Status |
+|---|---|---|---|
+| S1 | Copy `adhd-focus-orb`+`fleet-rs`+`OrbMac`+`fleet/registry` into `Light/`, reorganize to the D15 shape, fresh git history | Light (all) | ☑ |
+| S0 | **Baseline gate check** — before any new feature lands, confirm each copied repo's *own, pre-existing* verify gate still passes unchanged in its new location (or fails identically to the original — a copy must not silently break or silently fix anything) | orb, fleet, apps/macos | ☐ — first thing F01/F0F's lead-architect briefs must include |
+
+---
+
+## P0 — talk it, watch it build one thing (target: 1 module, spoken → frozen → attested → PR, no hand-written spec)
+
+| # | Feature | Repo | Depends on | Branch (C1) | Acceptance (one line) | Status |
+|---|---|---|---|---|---|---|
+| F01 | **Orb build-mode toggle** — a second conversation mode on the existing `ConversationPort`+FSM+gateway, distinguishable from focus mode (different greeting/system-prompt, a `mode` field threaded through the envelope) | orb | S0 | install (reuse FSM/gateway) | Launching in build-mode produces a build-mode-specific greeting; focus-mode's existing test suite is unchanged and still green | ☐ |
+| F02 | **`lld.v1` contract** — schema (purpose, interface, acceptance_line, deps[], killed_alternatives[] ≥2, owner; gate-stamped: frozen_at, c1_verdict, depth_score) + TS mirror (orb) + Rust/Python mirrors (fleet), all validated against shared fixtures (learn from the prior session's U1 unit: SHA-256 canonical-JSON, the numeric-encoding trap between `JSON.stringify`/`json.dumps`) | fleet (schema owner) + orb (consumer) | S0 | build-new | Same fixture round-trips through all 3 language mirrors byte-identical; a fixture missing a required field fails validation in all 3 | ☐ |
+| F03 | **Module-brief atomizer** — repoint the existing atomizer's output type from physical ADHD-task steps to module briefs (interface/data-owned/acceptance/deps/non-goals), keeping the structured-decode→validate→repair-once→fail-closed pipeline shape | orb | F02 | extend | A spoken module idea produces a schema-valid module-brief object (not a physical-step list) via the existing pipeline; the old focus-mode atomizer path is untouched | ☐ |
+| F04 | **Depth-completeness belief registers** — re-aim `BeliefModel`'s log-odds update math at spec-completeness / ambiguity / coverage instead of attention/energy/etc., same κ/decay math, new register names | orb | S0 | extend (reuse the math) | A scripted sequence of evidence events moves the completeness register predictably (same update law as the existing focus registers, different names); existing focus-mode belief tests untouched | ☐ |
+| F05 | **Freeze protocol** — propose→pushback→❄ conversational format; new slot set (interface/data-owned/acceptance/deps/non-goals); converge bounded by information gain, not the old fixed `MAX_CLARIFY_QUESTIONS=2` | orb | F02, F03, F04 | build-new (new bound; keep rule-driven-no-LLM-decides-the-slot design) | A scripted conversation with all 5 slots answered reaches a ❄ freeze in a bounded, provably-terminating number of turns; one with a slot deliberately never answered does **not** freeze and does not loop forever | ☐ |
+| F06 | **`lld-ready` gate** — deterministic (0 LLM), Rust: refuses a freeze with any open question, no owner, no acceptance line, or a `depth_score` below a threshold calibrated against a labeled corpus (the depth-bar feedback: under-depth is a gate failure, not a judgment call) | fleet | F02 | build-new | A frozen module missing `killed_alternatives` is refused, naming that field; one meeting the bar passes; the threshold is tuned against ≥1 real deep-dive as calibration, not picked by feel | ☐ |
+| F07 | **Fleet SOW-intake extension** — `fleet sow` accepts an `lld.v1` node as input, not only a CLI string | fleet | F02, F06 | extend | Feeding a valid `lld.v1` fixture through the extended intake produces the same `SOW_READY_AWAITING_REVIEW` exit fleet's CLI path already produces | ☐ |
+| F08 | **PR emit step** — new `Accepted → PR` lifecycle edge (currently ABSENT — DELTA C6); `gh pr create`, contracts/migrations/money stay human-merge, no self-approve | fleet | S0 | build-new | An `Accepted`-state task transitions to a real open PR with a real diff; the lifecycle machine refuses the edge if attestation is incomplete | ☐ |
+| F09 | **Orb→Fleet handoff wiring** — the ❄ freeze event actually calls fleet's extended intake (F07); no more "stop at a frozen `lld.v1` artifact" (the prior session's Track B boundary) | orb+fleet | F05, F07 | build-new (the seam) | Freezing a real module in a live orb build-mode session results in a real fleet SOW being created, observably (not just a documented intent) | ☐ |
+| F10 | **P0 capstone: one module, spoken → frozen → built → attested → PR, no hand-written spec** — integration proof of F01–F09 together, on the reused fleet-rs kernel (`run_with_evidence`, unchanged) | orb+fleet | F01–F09 | reuse (kernel) + integrate | Drive one real, small module through the full path and watch a real PR appear with a real attestation attached — this is the P0 exit trigger, measured wall-clock freeze→attested-PR | ☐ |
+| F11 | **Thin status echo** — "building… tested… attested, PR #N" spoken/shown back in the conversation (full graph is P2) | orb | F10 | build-new (minimal) | After F10's freeze, the conversation surfaces a real status line that changes as the lane progresses, sourced from the ledger (not a canned string) | ☐ |
+| F12 | **L1 working memory: freeze ledger as a session object** — mostly INHERITED (`conversation_store` already exists); the delta is making the freeze ledger a first-class part of it | orb | F05 | extend (small) | A session's freeze ledger survives a reconnect within the same session; existing `conversation_store` tests untouched | ☐ |
+
+## P1 — trust the verdict (make "fleet says done" mean done)
+
+| # | Feature | Repo | Depends on | Branch | Acceptance | Status |
+|---|---|---|---|---|---|---|
+| F13 | **Model routing wired into the actual run** — re-verify current state first (artifact flags this STALE/in-flux as of 2026-09-06: `route::for_plan_with_builder` exists and `run_model_agent` takes a `model` param now, but whether every real call site populates it from a real routing decision is unconfirmed); close whatever gap remains | fleet | S0 | re-verify → extend or close | A dispatch through the real build path (not just `plan`/`route`) resolves a real, non-empty model per the task-type→tier table; `MODEL_NOT_EXPLICIT` fires on an unresolved one | ☐ |
+| F14 | **Verifier≠builder enforcement, confirmed airtight** — `SELF_VERIFIED` refusal path, end to end | fleet | S0 | verify existing | A same-agent verify attempt is refused outright with a named reason, driven for real (not read from source) | ☐ |
+| F15 | **Mutation adequacy non-optional on the lane gate** (currently opt-in) | fleet | S0 | extend | A lane with mutation kill-rate below the floor fails the gate by default, no flag needed | ☐ |
+| F16 | **Review narration surface** — "here's exactly what changed, what it was tested against (REQ-IDs), what the verifier found, the one judgment call for you" | orb or apps/macos (whichever has a renderable surface first) | F10, F13 | build-new | A real completed lane's review narration is generated from its actual evidence bundle, not a template with blanks | ☐ |
+| F17 | **Depth-bar tightening** — the `lld-ready` rubric gains eval/threshold checks (a freeze claiming a rate must carry sample-size math) | orb+fleet | F06 | extend | A freeze claiming "95% accuracy" with no `n` is refused by the gate, naming the missing derivation | ☐ |
+
+## P2 — real-time voice + the live graph
+
+| # | Feature | Repo | Depends on | Branch | Acceptance | Status |
+|---|---|---|---|---|---|---|
+| F18 | Streaming STT partials (replace buffer-until-`end_of_turn`) | orb | S0 | extend | Partial transcripts arrive before end-of-turn, measured | ☐ |
+| F19 | Streaming TTS first-audio (replace buffer-then-chunk) | orb | S0 | extend | First audio byte arrives before full synthesis completes, measured | ☐ |
+| F20 | `stream-live` gate — refuse the fake/batch provider on the real build path | orb | F18, F19 | build-new | A build-mode session configured with the fake provider is refused, naming why | ☐ |
+| F21 | `design-graph.v1` contract + `lane-status.v1` **push** transport (D14 — today pull/refresh only) | fleet | S0 | build-new (new WS/SSE layer; contract itself `lane-status.v1` already ships) | A lane state change is pushed to a connected subscriber within budget, no polling | ☐ |
+| F22 | Live graph render — one embedded `WKWebView` pane in `apps/macos`, hosting keel-console's existing SVG unchanged | apps/macos | F21 | reuse render pipeline + new pane | A real freeze→lane-state change renders a node update in the pane, sourced from the ledger (render-gate: no node without a resolving ledger source) | ☐ |
+| F23 | Barge-in during design dialogue (reuse existing VAD/barge-in mechanism) | orb | F18, F19 | reuse | Speaking over the Orb mid-freeze cancels/redirects cleanly, no dead-air | ☐ |
+
+## P3 — parallel lanes + reuse
+
+| # | Feature | Repo | Depends on | Branch | Acceptance | Status |
+|---|---|---|---|---|---|---|
+| F24 | Real concurrent worktree lanes — `swarm dispatch` actually spawns N isolated lanes (today: sequential bookkeeping), capped `min(16,cores−2)` | fleet | S0 | build-new | 3+ modules build concurrently in isolated worktrees, observed via `ps`/lane logs, not claimed | ☐ |
+| F25 | Registry `install/extract/build-new` gate — real C1 verdict per module node | fleet+registry | F24 | build-new | A build-new that duplicates an existing `Light/registry/` capability is refused, naming it | ☐ |
+| F26 | Knowledge-map-before-build (tree-sitter symbol graph + dep resolution) | fleet | F24 | extend (single-repo engine already specified) | A lane refuses to guess against a stale map rather than building blind | ☐ |
+| F27 | `planner` role (D8) — 6th fleet role, optional per module | fleet | F06 | build-new | An ambiguous module routes to the planner role and comes back with a named missing field, same convention as the other roles | ☐ |
+| F28 | Extract `voice-io` service (relay + STT/TTS sidecars) → `Light/registry/services/voice-io` | registry (from orb) | F18–F20 | extract (2nd consumer: apps/macos) | `orb` and `apps/macos` both install the same service; no drift between the two | ☐ |
+| F29 | Extract `dialogue-engine` feature (clarify-to-LLD, belief model, spec-decomposer) → `Light/registry/features/dialogue-engine` | registry (from orb) | F03–F05 | extract (2nd consumer: apps/macos) | Same as F28, for the dialogue engine | ☐ |
+| F30 | Extract `keel-kernel` service → `Light/registry/services/keel-kernel` | registry (from fleet) | F10 | extract (2nd consumer: apps/macos, via the codegen boundary) | `fleet` and `apps/macos` both consume the same kernel; no forked copy | ☐ |
+| F31 | Build `delivery-lane` feature → `Light/registry/features/delivery-lane` | registry (from fleet) | F24 | extract+build-new | The concurrent-lane executor is installable, not hand-copied | ☐ |
+| F32 | `worker-payload.v1` schema (contract only — the enforcing gate is F34) | registry+fleet | S0 | build-new | Schema round-trips a fixture; no enforcement yet (that's F34) | ☐ |
+| F33 | D10 trigger mechanism — explicit-freeze-or-fleet-decides, a confidence-score proposer + deterministic threshold gate (not a free-floating auto-trigger) | fleet | F06 | build-new | A musing-level utterance does not auto-trigger a lane; an unambiguous frozen module does, via the same propose→gate law as everywhere else in this system | ☐ |
+
+## P4 — it injects itself + learns (hardest, highest-value; time-gated)
+
+| # | Feature | Repo | Depends on | Branch | Acceptance | Status |
+|---|---|---|---|---|---|---|
+| F34 | **`no-ambient` injection gate** — a spawned worker carries bundled skills + `--mcp-config` (pointing at `fleet mcp`) + `--append-system-prompt`, stamped by the launcher; refuses a worker that would read the operator's ambient `~/.claude` | fleet | F32 | build-new — **the single biggest named risk in the whole system** (DELTA §7): may only reach the weak "pin-and-verify" form if the model CLI can't be fully isolated — prove the strong form or declare the fallback, do not silently assume it | A worker spawned through the launcher has zero ambient config in its env, verified by inspecting the actual spawned process, not by reading the launcher's intent | ☐ |
+| F35 | Contract-codegen pipeline — keel JSON-Schema → Swift `Codable`, CI-gated against staleness (greenfield on all sides, not an existing pattern — see `18-THE-LIGHT-APP-AND-UI.md` §3.4's own correction) | apps/macos+fleet | F02 | build-new | A schema change without a regenerated Swift type fails CI; a fixture round-trips Rust-encode→Swift-decode | ☐ |
+| F36 | AEC/VPIO wiring (CoreAudio Voice-Processing I/O) — currently zero hits for `voiceProcessing`/`VoiceProcessingIO` in the real source | apps/macos | S0 | build-new | Barge-in yield measured ≤ 100ms with AEC active, on real hardware, not simulated | ☐ |
+| F37 | Two-pane chat UI shell — native SwiftUI left pane (real conversation turns, not a mock), app shell + orb visual state already built | apps/macos | F01, F09 | extend (app shell exists; wire real data) | The real orb conversation (not the demo mock) renders live in the left pane while build-mode runs | ☐ |
+| F38 | L3 procedural memory / learning loop — `capture → signature → keel-gate::recur` | fleet | S0 | build-new | A caught defect's signature refuses a repeat of the same pattern, fleet-wide, naming the lesson id | ☐ |
+| F39 | Retro loop — failures become lints/gates/scaffolds on a cadence | fleet | F38 | build-new | A retro run produces at least one new enforced check from a real prior failure, not prose | ☐ |
+| F40 | Local cost dashboard (D12) — small aggregation view over orb+fleet's existing in-path meters | apps/macos | F30 | build-new (small) | Both engines' real spend for one session render side by side, sourced from their existing meters, no new storage location | ☐ |
+
+**Out of scope for this file (explicitly, per D11/the estate diagram):** the org-wide knowledge DB is
+a 5th repo, entirely outside `Light/`, not started, not part of "every repo (orb, apps/macos, fleet,
+registry)" the user scoped this list to.
+
+---
+
+## Known landmines to brief every lane on (don't rediscover these — they're already paid for)
+
+- **`git stash` is a shared stack across every worktree of one repo — never use it for baseline
+  isolation here.** Use a disposable `git worktree add --detach <tmp> <ref>` instead. (`FLEET-LEARNINGS.md`, hit 3 times last session.)
+- **A bare `build/` gitignore rule swallows `orb/apps/mobile/src/build/`** — already fixed in this
+  copy's `.gitignore` (negation added); don't remove it.
+- **Worktree depth breaks `file:` deps and TS path aliases sized for the old checkout depth.** Verify
+  fresh in `Light/` rather than assuming the old worktree gotchas still apply at the new depth —
+  they may not (this is a different tree shape now), but check, don't assume either way.
+- **A subagent cannot receive its own background children's completion notifications** — only the
+  top-level session can. Never brief a lane to background a slow command and then wait; foreground it
+  or use `timeout N <cmd>`.
+- **Concurrent agents on shared files race.** `STATUS.md`/`status/*.status` is designed around this
+  (one file per feature) — don't hand-edit `STATUS.md`, and don't have two agents touch one feature's
+  status file.
