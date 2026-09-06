@@ -1,7 +1,8 @@
 ID=F04
 FEATURE=Server-side build-mode session + depth-completeness belief registers (relay-py) - closes F01 reachability gap
 REPO=orb
-STATUS=building
-AGENT=mid-engineer (building)
-SINCE=2026-09-07 02:41 IST
-NOTE=contract excellent - found mode=build crashes (500), apps/macos dials nothing yet (F04b follow-up flagged)
+STATUS=verified
+AGENT=verifier (independent)
+SINCE=2026-09-07 03:22 IST
+UPDATED=2026-09-07 03:22 IST
+NOTE=Independently re-derived in a separate worktree: fresh venv+423 passed x2 (no flake), belief math hand-verified against the code (kappa=0.4, lambda=0.6, tier2 clamp 0.8, no wall-clock decay), untouched-list diff clean, M6 mutation reproduced myself (breaks A1.2 not A1.3, builder's self-disclosed discrepancy confirmed accurate), manual E2E driven on 2 self-started live processes incl. self-triggered kill+restart persistence and live tenant-isolation probe; no discrepancies found - PASS

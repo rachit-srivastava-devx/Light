@@ -1,13 +1,13 @@
 # Light/ build status
 
-_Regenerated 2026-09-07 03:06 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
+_Regenerated 2026-09-07 03:23 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
 
 | # | Feature | Repo | Status | Agent | Since | Note |
 |---|---|---|---|---|---|---|
 | F01 | Orb build-mode toggle | orb | done | verifier (independent) | 2026-09-07 02:25 IST | client-side only, apps/macos cannot reach it (Swift can't import TS) - gap closed by redefined F04, server-side |
 | F02 | lld.v1 contract (schema+TS+Rust+Python mirrors) | fleet+orb | contract | lead-architect (F02) - contract done, BLOCKED on lane | 2026-09-07 01:50 IST | needs both orb+fleet, both occupied by F01/F08; found 4 real defects in copied U1 artifacts + corrected 2 FEATURES.md errors (C1 verdict, Py-mirror repo). Start F02a in fleet once free. |
 | F03 | Module-brief atomizer | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
-| F04 | Server-side build-mode session + depth-completeness belief registers (relay-py) - closes F01 reachability gap | orb | building | mid-engineer (building) | 2026-09-07 02:41 IST | contract excellent - found mode=build crashes (500), apps/macos dials nothing yet (F04b follow-up flagged) |
+| F04 | Server-side build-mode session + depth-completeness belief registers (relay-py) - closes F01 reachability gap | orb | verified | verifier (independent) | 2026-09-07 03:22 IST | Independently re-derived in a separate worktree: fresh venv+423 passed x2 (no flake), belief math hand-verified against the code (kappa=0.4, lambda=0.6, tier2 clamp 0.8, no wall-clock decay), untouched-list diff clean, M6 mutation reproduced myself (breaks A1.2 not A1.3, builder's self-disclosed discrepancy confirmed accurate), manual E2E driven on 2 self-started live processes incl. self-triggered kill+restart persistence and live tenant-isolation probe; no discrepancies found - PASS |
 | F05 | Freeze protocol (propose->pushback->freeze) | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F06 | lld-ready gate (depth-bar enforcement) | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F07 | Fleet SOW-intake extension | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
