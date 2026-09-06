@@ -30,6 +30,7 @@ import {
   createT0FocusSession,
   type T0FocusSessionRuntime,
 } from './runtime/T0FocusSession';
+import { resolveLaunchMode, type LaunchMode } from './runtime/LaunchMode';
 import { createRelayAtomizerPort, createStaticAtomizerPort } from './runtime/AtomizerPort';
 import { createRelayConversationPort, createStaticConversationPort } from './runtime/ConversationPort';
 import { classifyConversationControl } from './router/IntentClassifier';
@@ -100,6 +101,7 @@ function relayWsUrl(): string {
 export interface FocusOrbAppProps {
   readonly envelope?: ResponseEnvelope;
   readonly runtime?: T0FocusSessionRuntime;
+  readonly launchMode?: LaunchMode;
   readonly createAudioContext?: () => PresenceAudioContext;
   readonly speaker?: SpeechPort;
   readonly autoStart?: boolean;
@@ -110,6 +112,7 @@ export interface FocusOrbAppProps {
 export default function FocusOrbApp({
   envelope = IDLE_ENVELOPE,
   runtime,
+  launchMode,
   createAudioContext,
   speaker,
   autoStart = true,
@@ -148,8 +151,13 @@ export default function FocusOrbApp({
         baseUrl: relayHttpUrl(),
         fallback: createStaticConversationPort(),
         devLogger,
-      })),
-    [runtime, devLogger, sessionId],
+      }), {
+        sessionMode: resolveLaunchMode(
+          launchMode,
+          typeof process !== 'undefined' ? process.env.ORB_LAUNCH_MODE : undefined,
+        ),
+      }),
+    [runtime, devLogger, sessionId, launchMode],
   );
   const [localEnvelope, setLocalEnvelope] = useState(envelope);
   const currentEnvelope = envelope === IDLE_ENVELOPE ? localEnvelope : envelope;
