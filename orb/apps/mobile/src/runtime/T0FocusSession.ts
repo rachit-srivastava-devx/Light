@@ -36,6 +36,7 @@ import {
   type AtomizerPortResult,
 } from './AtomizerPort';
 import { createStaticConversationPort, type ConversationPort } from './ConversationPort';
+import type { LaunchMode } from './LaunchMode';
 import chatResponses from '../shared/chat-responses.v1.json';
 
 export interface T0FocusSessionInput {
@@ -93,6 +94,17 @@ const GREETINGS: readonly { readonly text: string; readonly phrase_id: string }[
   { text: "Let's go. Tell me what you're working on.", phrase_id: 'presence.here.v4' },
 ];
 
+/**
+ * Build-mode launch opening. Deliberately a separate constant from GREETINGS: that array is indexed
+ * by `greetingIndex % GREETINGS.length` for focus launches, so appending here would leak build copy
+ * into ordinary focus sessions (see lane contract F01 §2.4).
+ *
+ * No `phrase_id`: no recording of this line exists, so it resolves to `{ mode: 'novel' }` through
+ * `cachedPhrase()` and costs a real TTS call. Claiming a cached phrase_id for an unrecorded line
+ * would be a fabricated cache hit (CLAUDE.md anti-slop rules).
+ */
+export const BUILD_GREETING = 'Build mode. What are we making?';
+
 const CHAT_RESPONSES = chatResponses.responses as Readonly<{
   readonly greeting: readonly string[];
   readonly presence: readonly string[];
@@ -106,16 +118,25 @@ const CRISIS_RESPONSE_TEXT =
   "I'm not able to help with this, but you don't have to go through it alone. Tele-MANAS is " +
   "India's free, 24/7 mental health helpline — call or message 14416, any time.";
 
+export interface T0SessionOptions {
+  /** Named `sessionMode`, not `mode`: this file already has two unrelated `mode` fields — the
+   *  envelope's OrbMode and SpeechAudio's 'cached'|'novel' discriminant (see the warning at
+   *  T0FocusSession.ts:719-721). A third bare `mode` here would be actively confusing. */
+  readonly sessionMode?: LaunchMode;
+}
+
 export function createT0FocusSession(
   input: T0FocusSessionInput,
   atomizer: AtomizerPort = createStaticAtomizerPort(),
   greetingIndex = 0,
   conversation: ConversationPort = createStaticConversationPort(),
+  options: T0SessionOptions = {},
 ): T0FocusSessionRuntime {
   const greeting = GREETINGS[((greetingIndex % GREETINGS.length) + GREETINGS.length) % GREETINGS.length] as {
     readonly text: string;
     readonly phrase_id: string;
   };
+  const sessionMode: LaunchMode = options.sessionMode ?? 'focus';
   let seq = 0;
   let state: SessionState = 'IDLE_PRESENT';
   let gate: StepGate | null = null;
@@ -343,7 +364,18 @@ export function createT0FocusSession(
     async start() {
       seq += 1;
       state = dispatch(state, 'tap');
-      return makeEnvelope(input, seq, state, gate, greeting.text, 'reuse', 0, 0, interruptionKind, 'focus');
+      return makeEnvelope(
+        input,
+        seq,
+        state,
+        gate,
+        sessionMode === 'build' ? BUILD_GREETING : greeting.text,
+        'reuse',
+        0,
+        0,
+        interruptionKind,
+        sessionMode,
+      );
     },
     async acceptAudio(bytes: Uint8Array) {
       // B5 — a native-bridge/JSON boundary can hand this a null/undefined value at runtime even
