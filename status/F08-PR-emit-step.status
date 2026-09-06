@@ -1,7 +1,7 @@
 ID=F08
 FEATURE=PR emit step
 REPO=fleet
-STATUS=verifying
-AGENT=verifier (dispatched)
-SINCE=2026-09-07 02:35 IST
-NOTE=cargo test -p fleet green (--test-threads=1); default-parallel run flakes on tests/f08_pr_emit.rs's own git-init race, not my code -- see report
+STATUS=verified
+AGENT=verifier
+SINCE=2026-09-07T03:05:45+05:30
+NOTE=Re-derived everything + real CLI/repo/PR e2e drive; fixed the diagnosed git-init race (0/16 after); a separate unique_dir() collision still flakes cargo test -p fleet at default parallelism, see FLEET-LEARNINGS.md

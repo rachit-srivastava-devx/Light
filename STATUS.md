@@ -1,6 +1,6 @@
 # Light/ build status
 
-_Regenerated 2026-09-07 02:53 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
+_Regenerated 2026-09-07 03:06 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
 
 | # | Feature | Repo | Status | Agent | Since | Note |
 |---|---|---|---|---|---|---|
@@ -11,7 +11,7 @@ _Regenerated 2026-09-07 02:53 IST from `status/*.status` — do not hand-edit th
 | F05 | Freeze protocol (propose->pushback->freeze) | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F06 | lld-ready gate (depth-bar enforcement) | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F07 | Fleet SOW-intake extension | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
-| F08 | PR emit step | fleet | verifying | verifier (dispatched) | 2026-09-07 02:35 IST | cargo test -p fleet green (--test-threads=1); default-parallel run flakes on tests/f08_pr_emit.rs's own git-init race, not my code -- see report |
+| F08 | PR emit step | fleet | verified | verifier | 2026-09-07T03:05:45+05:30 | Re-derived everything + real CLI/repo/PR e2e drive; fixed the diagnosed git-init race (0/16 after); a separate unique_dir() collision still flakes cargo test -p fleet at default parallelism, see FLEET-LEARNINGS.md |
 | F09 | Orb->Fleet handoff wiring | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F10 | P0 capstone: one module spoken->frozen->built->attested->PR | orb+fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F11 | Thin status echo | orb | pending | unassigned | 2026-09-07 01:19 IST |  |
