@@ -131,8 +131,11 @@ function checkR19Absolute(b: ModuleBrief): boolean {
 }
 
 function checkR21Alts(b: ModuleBrief): boolean {
-  const floor = b.grain === 'leaf' ? 1 : 2;
-  if (b.alternatives.length < floor) return false;
+  // F02 §3.4/§10.1#4: the floor is flat 2, with NO grain='leaf' exemption. `grain` is a
+  // proposer-authored field; letting it lower a depth floor was a one-word self-service exemption
+  // from R21 (closed in the schema at the same time -- module-brief.v1.json's `alternatives` now
+  // carries a flat `minItems: 2`, and lld-v1.ts's validator matches).
+  if (b.alternatives.length < 2) return false;
   const alts: readonly KilledAlt[] = b.alternatives;
   const allFieldsPresent = alts.every(
     (a) => trimLen(a.option) !== 0 && trimLen(a.why_killed) !== 0 && trimLen(a.revive_trigger) !== 0,

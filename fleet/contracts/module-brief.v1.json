@@ -1,10 +1,10 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://adhd-focus-orb.internal/contracts/lld.v1.json",
-  "title": "lld.v1",
-  "description": "Canonical definition of the Speed-of-Thought P0 lld.v1 artifact (docs/SPEED-OF-THOUGHT-P0-CONTRACT.md §2). This file is the single source of truth for field names/types; apps/mobile/src/build/lld-v1.ts and backend/relay-py/src/orb_relay/proxy/lld_schemas.py are hand-mirrored from it (no codegen step exists in this repo's build — see the 'generate the Python validator' killed alternative in fixtures/complete_module.json). Drift between the two mirrors is caught by the conformance tests (lld-v1.test.ts U1-T1/T2, test_lld_schema_conformance.py U1-T6), not by this file being machine-executed.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fleet.local/contracts/module-brief.v1.json",
+  "title": "module-brief.v1 — the proposer-authored half (F02 lane contract §5.1; blueprint 02 §2.2)",
+  "description": "AUTHORED. Ported from orb/contracts/lld.v1.json (schema ownership moved fleet-ward, F02 lane contract §3.1: the lld-ready gate is fleet's, so the schema the gate refuses against must not live with the proposer). Everything on moduleBrief is content; none of it is authority — content_hash/freeze_id/depth_evidence/stamped_by/state/version are absent by design, not merely optional, and additionalProperties:false makes their presence a schema violation, not a silently-ignored extra key. INVARIANT (hashing): no property of moduleBrief or any of its $defs may be type 'number' or 'integer'. content_hash is computed over canonical_json(module_brief); the canonicalizer REFUSES numbers (freeze.v1 §hashing) because JSON number encoding diverges across languages -- JSON.stringify(1.0)==='1' in JS, json.dumps(1.0)=='1.0' in Python, serde_json 1.0f64 -> '1.0' in Rust. Adding a numeric field here silently splits the hash three ways. If one is ever required, see the RFC 8785 revive trigger in the F02 lane contract §3.6.",
   "$defs": {
-    "grain": { "enum": ["module", "leaf"] },
+    "grain": { "enum": ["module", "leaf"], "description": "Descriptive metadata only, no authority -- it must never lower the alternatives floor (F02 §3.4). A proposer-authored field is never allowed to self-exempt from a depth requirement." },
     "registryVerdict": {
       "oneOf": [
         {
@@ -112,7 +112,7 @@
       }
     },
     "acceptanceLine": {
-      "description": "artifact must start with owner_path, and `then` must contain the artifact substring (§3 C3-ACC-GROUND) — cross-field, checked by the validator, not by this file alone.",
+      "description": "artifact must start with owner_path, and `then` must contain the artifact substring (C3-ACC-GROUND) — cross-field, checked by the validator/gate, not by this file alone.",
       "type": "object",
       "additionalProperties": false,
       "required": ["given", "when", "then", "oracle_kind", "artifact"],
@@ -125,15 +125,16 @@
       }
     },
     "moduleBrief": {
-      "description": "The proposer-authored half. Everything here is content; none of it is authority (§2.1) — content_hash/freeze_id/depth_score/stamped_by/state/version are absent by design, not merely optional.",
+      "description": "The proposer-authored half (AUTHORED). owner/acceptance.artifact are kept from the orb's copy (02 §2.2 lists neither, but 03 §4.1's freeze.owner/accepts_when.artifact must source from somewhere on the brief — do not \"fix\" this back out).",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "node_id", "grain", "purpose", "owner", "owner_path", "interface", "data_owned",
-        "deps", "registry", "acceptance", "non_goals", "open_questions", "guarantees",
+        "schema_version", "node_id", "grain", "purpose", "owner", "owner_path", "interface",
+        "data_owned", "deps", "registry", "acceptance", "non_goals", "open_questions", "guarantees",
         "alternatives", "failure_story"
       ],
       "properties": {
+        "schema_version": { "const": "1.0" },
         "node_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$" },
         "grain": { "$ref": "#/$defs/grain" },
         "purpose": { "type": "string", "minLength": 1, "maxLength": 200 },
@@ -150,44 +151,10 @@
         "alternatives": {
           "type": "array",
           "items": { "$ref": "#/$defs/killedAlt" },
-          "description": "minItems 2 at grain='module', 1 at grain='leaf' — cross-field with `grain`, enforced by the validator, not expressible as a single JSON-Schema minItems."
+          "minItems": 2,
+          "description": "minItems:2 FLAT — no grain='leaf' exemption (F02 §3.4/§4.2: a proposer-authored field must never lower the R21 floor; the floor is in the schema, not a lint)."
         },
         "failure_story": { "$ref": "#/$defs/failureStory" }
-      }
-    },
-    "depthScore": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["checks_total", "checks_passed", "ratio", "failed_check_ids"],
-      "properties": {
-        "checks_total": { "type": "integer", "minimum": 0 },
-        "checks_passed": { "type": "integer", "minimum": 0 },
-        "ratio": { "type": "number", "minimum": 0, "maximum": 1 },
-        "failed_check_ids": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "freezeRecord": {
-      "description": "The gate-authored half. No proposer-emittable form exists (§2.1) — this type is never constructed from user/model input, only stamped by the lld-ready gate.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version", "freeze_id", "version", "node_id", "content_hash", "decision", "why",
-        "killed_alternatives", "acceptance_test", "owner", "depth_score", "supersedes", "stamped_by"
-      ],
-      "properties": {
-        "schema_version": { "const": "1.0" },
-        "freeze_id": { "type": "string", "pattern": "^fz-[0-9a-f]{16}$" },
-        "version": { "type": "integer", "minimum": 1 },
-        "node_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$" },
-        "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "decision": { "type": "string", "minLength": 1 },
-        "why": { "type": "string", "minLength": 1 },
-        "killed_alternatives": { "type": "array", "items": { "$ref": "#/$defs/killedAlt" } },
-        "acceptance_test": { "$ref": "#/$defs/acceptanceLine" },
-        "owner": { "type": "string", "minLength": 1 },
-        "depth_score": { "$ref": "#/$defs/depthScore" },
-        "supersedes": { "type": ["string", "null"], "pattern": "^fz-[0-9a-f]{16}$" },
-        "stamped_by": { "const": "orb:lld-ready" }
       }
     }
   },

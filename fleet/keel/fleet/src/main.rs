@@ -12,6 +12,7 @@ mod swarm;
 mod worktree;
 use fleet::agent;
 use fleet::lifecycle;
+use fleet::lld;
 use fs2::FileExt;
 use libc::{c_int, c_void};
 use serde_json::{json, Map, Value};
@@ -3443,8 +3444,43 @@ fn contract_command(args: &[String]) -> Result<(), i32> {
     if args == ["lane-status", "validate"] || args == ["lane_status", "validate"] {
         return contract_lane_status_validate();
     }
+    if let [first, second, path] = args {
+        if first == "lld" && second == "validate" {
+            return contract_lld_validate(path);
+        }
+    }
     eprintln!("usage: fleet contract lane-status validate   # validate every lane_status projection in the ledger");
+    eprintln!(
+        "       fleet contract lld validate <file>    # validate an lld.v1 wrapper JSON file (F02)"
+    );
     Err(EXIT_REFUSAL)
+}
+
+// F02: the shape-check half of intake, ahead of F06/F07's gate/business-rule logic landing on
+// top of it. Reads a candidate `lld.v1` wrapper file and runs `fleet::lld::validate_lld_v1`
+// against it -- the same hand-mirrored shape check the TS/Python mirrors run, proven to agree
+// with them by `fleet/tests/acceptance/lld-crosslang.sh`. This is also this lane's real,
+// dispatched caller into the `lld` module (graph.rs's `every_shipped_module_is_reachable_from_
+// dispatch` requires one; F06/F07 will add the business-rule caller on top of this later).
+fn contract_lld_validate(path: &str) -> Result<(), i32> {
+    let text = fs::read_to_string(path).map_err(|error| {
+        eprintln!("fleet: contract lld validate: could not read {path}: {error}");
+        EXIT_ENV
+    })?;
+    let value: Value = serde_json::from_str(&text).map_err(|error| {
+        eprintln!("fleet: contract lld validate: {path} is not valid JSON: {error}");
+        EXIT_ENV
+    })?;
+    let violations = lld::validate_lld_v1(&value);
+    if violations.is_empty() {
+        println!("lld: valid ({path})");
+        return Ok(());
+    }
+    for violation in &violations {
+        eprintln!("lld: {}: {}", violation.path, violation.message);
+    }
+    println!("lld: INVALID ({path}, {} violation(s))", violations.len());
+    Err(EXIT_MISMATCH)
 }
 
 fn contract_lane_status_validate() -> Result<(), i32> {

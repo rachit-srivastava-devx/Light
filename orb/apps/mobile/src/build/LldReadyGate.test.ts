@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { lldReady, GATE_CHECK_IDS } from './LldReadyGate';
 
-const load = (n: string) => JSON.parse(readFileSync(`${__dirname}/fixtures/${n}.json`, 'utf8'));
+// F02: fixtures moved fleet-ward (schema ownership moved with them -- fleet/contracts/fixtures/lld/).
+const FIX = `${__dirname}/../../../../../fleet/contracts/fixtures/lld`;
+const load = (n: string) => JSON.parse(readFileSync(`${FIX}/${n}.json`, 'utf8'));
 const REFS = {
   owners: ['rachit@devxlabs.ai'],
   registry_paths: ['registry/services/llm-gateway', 'registry/features/cost-control-plane'],

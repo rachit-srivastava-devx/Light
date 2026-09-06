@@ -59,6 +59,10 @@ stage "secrets"        required gitleaks      "gitleaks unavailable" gitleaks de
 export FLEET_BIN="${CARGO_TARGET_DIR:-$ROOT/keel/target}/debug/fleet"
 export B3ORACLE_BIN="${B3ORACLE_TARGET_DIR:-${CARGO_TARGET_DIR:-$ROOT/tests/tools/b3oracle/target}}/debug/b3oracle"
 stage "acceptance"     required bash         "bash unavailable" bash tests/acceptance/p0.sh
+# F02: three lld.v1 mirrors (TS/orb, Python/orb, Rust/fleet), one shared fixture corpus, one
+# comparator -- proves the three hand-mirrored validators actually agree (F02 lane contract §7.4).
+# Needs orb's node_modules + relay-py .venv established (see FLEET-LEARNINGS.md's S0 entries).
+stage "lld-crosslang"  required bash         "bash unavailable" bash tests/acceptance/lld-crosslang.sh
 # The swarm contract is RED on purpose. Blueprint 06 (per-agent strict SDLC) and requirements 4/8
 # are the product; everything green above them is the substrate they would run on. A green wall over
 # a missing product is exactly the failure this repo exists to catch, so the gap is a failing stage

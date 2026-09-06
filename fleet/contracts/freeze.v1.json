@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fleet.local/contracts/freeze.v1.json",
+  "title": "freeze.v1 — the gate-authored half (F02 lane contract §5.2; blueprint 03 §4.1)",
+  "description": "STAMPED, in full. No proposer-emittable form of this object exists: it is never constructed from user/model input, only stamped by the lld-ready gate (F06, fleet). Every property here is gate output, not proposer content -- contrast module-brief.v1.json, which is entirely proposer content and entirely non-authoritative. Named divergences from blueprint 03 §4.1, each individually justified in the F02 lane contract: freeze_id is patterned (03's `id` is not, and collides with sow.rs's own `id`); content_hash is prefixed `sha256:` (03's bare hex pattern already produced one wrong alg/digest mapping, F02 §4.4); killed_alternatives carries the missing minItems:2 floor (F02 §4.2); supersedes is required-and-nullable, not optional (a tightening); stamped_by is `keel:lld-ready`, not `orb:lld-ready` (F02 §4.1 -- the gate is fleet's, so the const naming \"only the gate can satisfy this\" must not name the proposer).",
+  "$defs": {
+    "predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["given", "when", "then", "oracle_kind"],
+      "properties": {
+        "given": { "type": "string", "minLength": 3 },
+        "when": { "type": "string", "minLength": 3 },
+        "then": { "type": "string", "minLength": 3 },
+        "oracle_kind": { "enum": ["test", "property", "metric"] }
+      }
+    },
+    "acceptsWhen": {
+      "description": "03 §4.1's `accepts_when` -- reverts the orb's `acceptance_test` name back to the blueprint's. 03 §6 maps accepts_when.{predicate,artifact} by name into the blind-suite seed (F07 reads it) -- the field name is load-bearing, not cosmetic.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["predicate", "artifact"],
+      "properties": {
+        "predicate": { "$ref": "#/$defs/predicate" },
+        "artifact": { "type": "string", "minLength": 1 }
+      }
+    },
+    "depthScore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks_total", "checks_passed", "ratio", "failed_check_ids"],
+      "properties": {
+        "checks_total": { "type": "integer", "minimum": 0 },
+        "checks_passed": { "type": "integer", "minimum": 0 },
+        "ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "failed_check_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "depthEvidence": {
+      "description": "03 §4.1's name (\"the R17-R21 block the gate validated\"). REPORTED, NEVER THE PASS CRITERION -- a gate never treats depth_evidence.score.ratio as a threshold (see LldReadyGate.ts). The only place a JSON number lives in this whole contract; this is why the freeze itself is never hashed (F02 §6.3).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "checked_check_ids"],
+      "properties": {
+        "score": { "$ref": "#/$defs/depthScore" },
+        "checked_check_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "freeze_id", "version", "node_id", "content_hash", "decision", "why",
+    "killed_alternatives", "accepts_when", "owner", "depth_evidence", "supersedes", "stamped_by"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "freeze_id": { "type": "string", "pattern": "^fz-[0-9a-f]{16}$", "description": "STAMPED." },
+    "version": { "type": "integer", "minimum": 1, "description": "STAMPED. Monotonic per node_id." },
+    "node_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$", "description": "AUTHORED (copied). Must equal the enclosing module_brief.node_id -- cross-field, checked by the lld.v1 wrapper validator, not by this file alone." },
+    "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "STAMPED. sha256(canonical_json(module_brief)), hex, prefixed with the algorithm name (F02 §4.4 -- the estate runs two 256-bit hex hashes; an unlabelled pattern already produced one wrong alg/digest mapping in blueprint 03 §6)." },
+    "decision": { "type": "string", "minLength": 1 },
+    "why": { "type": "string", "minLength": 1 },
+    "killed_alternatives": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "module-brief.v1.json#/$defs/killedAlt" },
+      "description": "STAMPED. Blueprint 03 §4.1's `rejected`, renamed to FEATURES.md's own wording, with the missing R21 floor restored (F02 §4.2 -- this floor did not exist anywhere before F02, not in the schema and not in either mirror)."
+    },
+    "accepts_when": { "$ref": "#/$defs/acceptsWhen", "description": "STAMPED." },
+    "owner": { "type": "string", "minLength": 1, "description": "STAMPED. Resolves in owners.v1.json." },
+    "depth_evidence": { "$ref": "#/$defs/depthEvidence", "description": "STAMPED." },
+    "supersedes": {
+      "type": ["string", "null"],
+      "pattern": "^fz-[0-9a-f]{16}$",
+      "description": "STAMPED. Required-and-nullable (03 §4.1 has it merely optional) -- a tightening: null for v1, the prior freeze_id otherwise. You cannot forget to consider it."
+    },
+    "stamped_by": {
+      "const": "keel:lld-ready",
+      "description": "STAMPED. The one field a proposer would love to forge, pinned to a const only the gate can satisfy -- there is no proposer path that writes this string (F02 §4.1). kills (structural) a hand-authored freeze."
+    }
+  }
+}

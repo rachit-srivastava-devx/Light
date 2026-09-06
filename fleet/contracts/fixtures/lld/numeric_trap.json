@@ -1,7 +1,8 @@
 {
+  "schema_version": "1.0",
   "node_id": "lld-v1-schema",
   "grain": "module",
-  "purpose": "Defines the frozen lld.v1 ModuleBrief/FreezeRecord shape and hand-mirrored TS+Python validators shared by U2-U5.",
+  "purpose": "Defines the frozen lld.v1 ModuleBrief/FreezeRecord shape and hand-mirrored TS+Python+Rust validators shared by downstream features.",
   "owner": "rachit@devxlabs.ai",
   "owner_path": "apps/mobile/src/build/",
   "interface": [
@@ -17,14 +18,14 @@
   },
   "acceptance": {
     "given": "a ModuleBrief fixture on disk",
-    "when": "validateModuleBrief and validate_module_brief both parse it",
-    "then": "apps/mobile/src/build/lld-v1.ts's validator agrees with the Python mirror on the same verdict",
+    "when": "validateModuleBrief and validate_module_brief and validate_module_brief (rust) all parse it",
+    "then": "apps/mobile/src/build/lld-v1.ts's validator agrees with the Python and Rust mirrors on the same verdict",
     "oracle_kind": "test",
     "artifact": "apps/mobile/src/build/lld-v1.ts"
   },
   "non_goals": [
     "Does not implement an ajv or JSON-Schema-runtime validator",
-    "Does not implement the lld-ready gate's business-rule checks (that is U3)"
+    "Does not implement the lld-ready gate's business-rule checks (that is a separate unit)"
   ],
   "open_questions": [],
   "guarantees": [
@@ -32,7 +33,7 @@
       "claim": "the schema never lets a proposer author an authority field",
       "derivation": {
         "kind": "structural",
-        "invariant": "ModuleBrief has no content_hash/freeze_id/depth_score/stamped_by/state/version field",
+        "invariant": "ModuleBrief has no content_hash/freeze_id/depth_evidence/stamped_by/state/version field",
         "enforced_by": "apps/mobile/src/build/lld-v1.ts"
       },
       "label": "kills_structural"
@@ -54,14 +55,18 @@
       "revive_trigger": "a second consumer needs full draft-07 keyword support beyond hand-written field checks"
     },
     {
-      "option": "generate the Python validator from the JSON Schema at build time",
-      "why_killed": "no codegen step exists in this repo's build; a hand-mirror plus the conformance test is the smaller diff",
-      "revive_trigger": "a third language needs the same schema"
+      "option": "generate the Python/Rust validators from the JSON Schema at build time",
+      "why_killed": "no codegen step exists in this repo's build; a hand-mirror plus the cross-language comparator is the smaller diff",
+      "revive_trigger": "F35 (contract-codegen pipeline) lands"
     }
   ],
   "failure_story": {
-    "trigger": "the Python and TypeScript validators drift after an edit lands in only one of them",
-    "blast_radius": "the client accepts a brief the relay silently rejects, or vice versa, and a freeze attempt fails opaquely deep in the pipeline",
-    "fail_safe": "test_lld_schema_conformance.py runs both validators against the same fixtures on every CI run and fails loud on any mismatch"
+    "trigger": "the Python, TypeScript, and Rust validators drift after an edit lands in only one of them",
+    "blast_radius": "the client accepts a brief the relay or fleet silently rejects, or vice versa, and a freeze attempt fails opaquely deep in the pipeline",
+    "fail_safe": "lld-crosslang.sh runs all three validators against the same fixture corpus on every verify and exits 6 loud on any mismatch"
+  },
+  "depth_evidence": {
+    "score": { "checks_total": 14, "checks_passed": 14, "ratio": 1.0, "failed_check_ids": [] },
+    "checked_check_ids": ["C1-OPEN"]
   }
 }

@@ -1,0 +1,5 @@
+{
+  "schema_version": "1.0",
+  "description": "Resolvable owner identities for module-brief.v1.json's ModuleBrief.owner (C2-OWNER). A brief whose owner is not one of these strings ('me', 'team', or a bare name) is refused by the lld-ready gate, not by this file's shape. Moved from orb/contracts/owners.v1.json (F02: schema ownership moved fleet-ward, F02 lane contract §3.1/§5.5) -- content unchanged.",
+  "owners": ["rachit@devxlabs.ai"]
+}

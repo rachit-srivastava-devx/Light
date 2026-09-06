@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fleet.local/contracts/lld.v1.json",
+  "title": "lld.v1 - the ONLY thing that crosses the orb->fleet seam (03 §6)",
+  "description": "F02 lane contract §4.3: `lld.v1` used to denote four different shapes across the two blueprints and the code. It now denotes exactly one: this hand-off wrapper. `module_brief` is added beyond blueprint 03 §6's literal {freeze, sow_seed} pair (a named divergence, F02 §5.3) -- freeze.content_hash is the hash of the brief, and a consumer that receives only the freeze can never verify that hash; a self-verifying message is worth one extra field.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "module_brief", "freeze", "sow_seed"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "module_brief": { "$ref": "https://fleet.local/contracts/module-brief.v1.json" },
+    "freeze": { "$ref": "https://fleet.local/contracts/freeze.v1.json" },
+    "sow_seed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["restatement", "blind_suite_seed", "blast_radius", "owner", "registry_verdict"],
+      "properties": {
+        "restatement": { "type": "string", "minLength": 1 },
+        "blind_suite_seed": { "$ref": "https://fleet.local/contracts/freeze.v1.json#/$defs/acceptsWhen" },
+        "blast_radius": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "registry_verdict": { "$ref": "https://fleet.local/contracts/module-brief.v1.json#/$defs/registryVerdict" }
+      }
+    }
+  }
+}
