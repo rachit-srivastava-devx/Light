@@ -26,6 +26,23 @@ land somewhere in the P0–P1 range before the 10AM IST stop, not the full P0–
 here because the user asked for the whole atomic roadmap in one file, not because all of it will land
 tonight. Say so honestly at each check-in rather than padding the done column.
 
+**Found after this file was first written (2026-09-07 01:25 IST) — `fleet/.claude/skills/
+speed-of-thought-fleet-rules/SKILL.md` (copied into `Light/fleet/` along with everything else, only
+discovered by a system prompt after the copy).** This is the owner's own standing-rules index for this
+exact initiative, captured 2026-08-28. Every fleet-touching lane's lead-architect should read it. Two
+things in it change this file:
+- **§3: "Never lock to one provider — support multiple, ideally every installed harness/CLI"** (owner,
+  2026-08-30) — **NOT BUILT**, tracked upstream as backlog item S5, deliberately not started because a
+  concurrently-running worker was mid-edit on the exact same routing code at the time. `route.rs`'s
+  adapter enum is hardcoded to exactly `claude`+`codex` today. Added as **F41** below (P1) — this was a
+  real gap in the original derivation, not a duplicate of F13 (F13 is *which model tier*; F41 is *which
+  CLI/harness executes the dispatch at all*).
+- **A specific, already-flagged possibly-still-red test**: `illegal_lifecycle_transitions_do_not_compile`
+  (a `trybuild` compile-fail test in `keel`) was one of 2 real failures in a 16-stage `verify.sh` run on
+  2026-08-28 (13 passed / 2 failed / 1 skipped) — flagged then as needing "a real look, not a re-run,"
+  because either the type-state guarantee regressed or the fixture's expected compiler text drifted.
+  Re-checked here as part of S0 (see below) since F08's lead-architect is reading this exact file.
+
 ---
 
 ## Prerequisite (done, not a fanned-out feature)
@@ -33,7 +50,7 @@ tonight. Say so honestly at each check-in rather than padding the done column.
 | # | What | Repo | Status |
 |---|---|---|---|
 | S1 | Copy `adhd-focus-orb`+`fleet-rs`+`OrbMac`+`fleet/registry` into `Light/`, reorganize to the D15 shape, fresh git history | Light (all) | ☑ |
-| S0 | **Baseline gate check** — before any new feature lands, confirm each copied repo's *own, pre-existing* verify gate still passes unchanged in its new location (or fails identically to the original — a copy must not silently break or silently fix anything) | orb, fleet, apps/macos | ☐ — first thing F01/F0F's lead-architect briefs must include |
+| S0 | **Baseline gate check** — before any new feature lands, confirm each copied repo's *own, pre-existing* verify gate still passes unchanged in its new location (or fails identically to the original — a copy must not silently break or silently fix anything). Specifically re-check `illegal_lifecycle_transitions_do_not_compile` in `fleet/keel` (flagged possibly-red 2026-08-28, see note above) — in progress, `/tmp/f8-lifecycle-check.log` | orb, fleet, apps/macos | ◐ |
 
 ---
 
@@ -63,6 +80,7 @@ tonight. Say so honestly at each check-in rather than padding the done column.
 | F15 | **Mutation adequacy non-optional on the lane gate** (currently opt-in) | fleet | S0 | extend | A lane with mutation kill-rate below the floor fails the gate by default, no flag needed | ☐ |
 | F16 | **Review narration surface** — "here's exactly what changed, what it was tested against (REQ-IDs), what the verifier found, the one judgment call for you" | orb or apps/macos (whichever has a renderable surface first) | F10, F13 | build-new | A real completed lane's review narration is generated from its actual evidence bundle, not a template with blanks | ☐ |
 | F17 | **Depth-bar tightening** — the `lld-ready` rubric gains eval/threshold checks (a freeze claiming a rate must carry sample-size math) | orb+fleet | F06 | extend | A freeze claiming "95% accuracy" with no `n` is refused by the gate, naming the missing derivation | ☐ |
+| F41 | **Multi-harness dispatch** — generalize `route.rs`'s worker adapter from a hardcoded `claude`+`codex` pair to a discoverable, plugin-style adapter registry covering every installed CLI/harness (owner's explicit standing rule, `speed-of-thought-fleet-rules` skill §3; upstream backlog S5) | fleet | F13 | build-new (S5 was blocked upstream on a since-resolved routing-code collision — re-check that collision is actually clear before starting) | Fleet detects ≥2 installed CLIs at startup without a hardcoded list, and can dispatch a real task through either | ☐ |
 
 ## P2 — real-time voice + the live graph
 

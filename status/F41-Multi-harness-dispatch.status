@@ -1,0 +1,7 @@
+ID=F41
+FEATURE=Multi-harness dispatch (generalize claude+codex adapter pair)
+REPO=fleet
+STATUS=pending
+AGENT=unassigned
+SINCE=2026-09-07 01:25 IST
+NOTE=owner's explicit standing rule, found via speed-of-thought-fleet-rules skill; upstream backlog S5

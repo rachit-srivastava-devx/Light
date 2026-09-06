@@ -1,6 +1,6 @@
 # Light/ build status
 
-_Regenerated 2026-09-07 01:23 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
+_Regenerated 2026-09-07 01:25 IST from `status/*.status` — do not hand-edit this file; edit your feature's own status file and re-run `bash status/render.sh`._
 
 | # | Feature | Repo | Status | Agent | Since | Note |
 |---|---|---|---|---|---|---|
@@ -44,5 +44,7 @@ _Regenerated 2026-09-07 01:23 IST from `status/*.status` — do not hand-edit th
 | F38 | L3 procedural memory / learning loop | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F39 | Retro loop | fleet | pending | unassigned | 2026-09-07 01:19 IST |  |
 | F40 | Local cost dashboard (D12) | apps/macos | pending | unassigned | 2026-09-07 01:19 IST |  |
+| F41 | Multi-harness dispatch (generalize claude+codex adapter pair) | fleet | pending | unassigned | 2026-09-07 01:25 IST | owner's explicit standing rule, found via speed-of-thought-fleet-rules skill; upstream backlog S5 |
+| S0 | Baseline gate check (each repo's own pre-existing verify gate, unchanged) | orb+fleet+apps/macos | building | main session | 2026-09-07 01:25 IST | re-checking illegal_lifecycle_transitions_do_not_compile per speed-of-thought-fleet-rules skill |
 | S1 | Step 1 — copy adhd-focus-orb+fleet-rs+OrbMac into Light/, reorganize | Light (all) | done | main session | 2026-09-07 01:17 IST | 1545 files, single fresh git history, commit 8f86440 |
 | S2 | Step 2 — write Light/FEATURES.md (atomic list, ordered by time-to-visible-output) | Light (all) | done | main session | 2026-09-07 01:23 IST | 40 features, P0-P4, committed |
