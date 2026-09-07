@@ -261,13 +261,18 @@ fn sow_command(args: &[String]) -> Result<(), i32> {
             return create_sow(task);
         }
     }
+    if let [flag, path] = args {
+        if flag == "--lld" {
+            return create_sow_from_lld(path);
+        }
+    }
     if let [command, flag, id] = args {
         if command == "accept" && flag == "--id" {
             return accept_sow(id);
         }
     }
     let _ = state_dir()?;
-    eprintln!("fleet sow --task <T>  |  fleet sow accept --id <ID>");
+    eprintln!("fleet sow --task <T>  |  fleet sow --lld <PATH>  |  fleet sow accept --id <ID>");
     refusal_with_receipt(
         json!({"reason":"INVALID_SOW_ARGS","args":args}),
         EXIT_REFUSAL,
@@ -345,6 +350,258 @@ fn create_sow(task: &str) -> Result<(), i32> {
     eprintln!("SOW_READY_AWAITING_REVIEW id={id}");
     eprintln!("Accept with: fleet sow accept --id {id}");
     Err(EXIT_SOW_READY)
+}
+
+/// F07: a second intake for the SAME `state/sows/` machinery -- a gate-passed `lld.v1` wrapper
+/// on disk, compiled into the exact task text `create_sow` already consumes (lane contract §5.2,
+/// nine steps, step 9 verbatim). Every guard below runs to completion BEFORE `create_sow` is
+/// ever called, so no refusal path leaves a `state/sows/` file behind (§8: "ordering is
+/// load-bearing").
+fn create_sow_from_lld(path: &str) -> Result<(), i32> {
+    let state = state_dir()?;
+
+    // Step 1: read + parse. No receipt (§8) -- mirrors `contract_lld_validate`'s own style.
+    let text = fs::read_to_string(path).map_err(|error| {
+        eprintln!("fleet: sow --lld: could not read {path}: {error}");
+        EXIT_ENV
+    })?;
+    let wrapper: Value = serde_json::from_str(&text).map_err(|error| {
+        eprintln!("fleet: sow --lld: {path} is not valid JSON: {error}");
+        EXIT_ENV
+    })?;
+
+    // Step 2: shape (F02's validator, reused verbatim). No receipt (§8).
+    let violations = lld::validate_lld_v1(&wrapper);
+    if !violations.is_empty() {
+        for violation in &violations {
+            eprintln!("lld: {}: {}", violation.path, violation.message);
+        }
+        println!(
+            "sow --lld: INVALID ({path}, {} violation(s))",
+            violations.len()
+        );
+        return Err(EXIT_MISMATCH);
+    }
+
+    let module_brief = wrapper["module_brief"].clone();
+    let freeze = wrapper["freeze"].clone();
+    let sow_seed = wrapper["sow_seed"].clone();
+    let node_id = freeze["node_id"].as_str().unwrap_or("").to_string();
+
+    // Step 3: freeze binds to brief -- the real security fix this lane closes (F07 contract
+    // §2.1): nothing before this lane ever recomputed `content_hash` to check a freeze's claimed
+    // hash against its own content.
+    let stored_hash = freeze["content_hash"].as_str().unwrap_or("").to_string();
+    let computed_hash = match lld::content_hash(&module_brief) {
+        Err(_) => {
+            eprintln!(
+                "fleet: sow --lld: module_brief contains a numeric leaf and cannot be hashed (F02 §6.3)"
+            );
+            return sow_lld_refuse(
+                json!({"reason":"FREEZE_UNHASHABLE","node_id":node_id,"path":path}),
+                EXIT_REFUSAL,
+            );
+        }
+        Ok(hash) => hash,
+    };
+    if computed_hash != stored_hash {
+        eprintln!(
+            "fleet: sow --lld: freeze.content_hash does not match the recomputed hash of module_brief\n  stored:   {stored_hash}\n  computed: {computed_hash}"
+        );
+        return sow_lld_refuse(
+            json!({
+                "reason":"FREEZE_HASH_MISMATCH",
+                "node_id":node_id,
+                "stored":stored_hash,
+                "computed":computed_hash
+            }),
+            EXIT_REFUSAL,
+        );
+    }
+
+    // Step 4: provenance agrees across the three copies (NEW guard, F07 contract §5.2 step 4).
+    let brief_owner = module_brief["owner"].as_str().unwrap_or("").to_string();
+    let freeze_owner = freeze["owner"].as_str().unwrap_or("").to_string();
+    let seed_owner = sow_seed["owner"].as_str().unwrap_or("").to_string();
+    if !(brief_owner == freeze_owner && freeze_owner == seed_owner) {
+        eprintln!(
+            "fleet: sow --lld: owner disagrees across module_brief/freeze/sow_seed: {brief_owner:?} / {freeze_owner:?} / {seed_owner:?}"
+        );
+        return sow_lld_refuse(
+            json!({
+                "reason":"OWNER_SPLIT",
+                "node_id":node_id,
+                "module_brief_owner":brief_owner,
+                "freeze_owner":freeze_owner,
+                "sow_seed_owner":seed_owner
+            }),
+            EXIT_REFUSAL,
+        );
+    }
+    if module_brief["registry"] != sow_seed["registry_verdict"] {
+        eprintln!(
+            "fleet: sow --lld: module_brief.registry disagrees with sow_seed.registry_verdict"
+        );
+        return sow_lld_refuse(
+            json!({
+                "reason":"REGISTRY_VERDICT_SPLIT",
+                "node_id":node_id,
+                "module_brief_registry":module_brief["registry"],
+                "sow_seed_registry_verdict":sow_seed["registry_verdict"]
+            }),
+            EXIT_REFUSAL,
+        );
+    }
+
+    // Steps 5-6: readiness gate (F06's gate, reused verbatim; note `check_and_evaluate` takes
+    // the bare brief, not the wrapper). `print_gate_verdict` is F06's own existing function --
+    // reused here so a NotReady/MeasuredNothing verdict prints and exits IDENTICALLY to `fleet
+    // gate lld-ready <file>` (F07 contract §8: "the same condition must not report two different
+    // codes depending on which command the operator typed").
+    let refs = load_gate_refs()?;
+    let verdict = match lld_ready::check_and_evaluate(&module_brief, &refs) {
+        lld_ready::EntryOutcome::ShapeInvalid(violations) => {
+            // Defensive only: step 2 already shape-validated this exact module_brief via the
+            // same underlying validator, so this arm should be unreachable in practice. Kept
+            // for exhaustiveness rather than an `unreachable!()`, matching this codebase's
+            // "every check total, never panics" convention (lld_ready.rs's own doc comment).
+            for violation in &violations {
+                eprintln!("lld: {}: {}", violation.path, violation.message);
+            }
+            return Err(EXIT_MISMATCH);
+        }
+        lld_ready::EntryOutcome::Gate(verdict) => verdict,
+    };
+    if let Err(code) = print_gate_verdict(path, &verdict) {
+        let body = if verdict.outcome == lld_ready::Outcome::MeasuredNothing {
+            json!({"reason":"MEASURED_NOTHING","node_id":node_id})
+        } else {
+            let reasons: Vec<Value> = verdict
+                .reasons
+                .iter()
+                .map(|reason| json!({"check_id": reason.check_id, "detail": reason.detail}))
+                .collect();
+            json!({"reason":"GATE_NOT_READY","node_id":node_id,"reasons":reasons})
+        };
+        return sow_lld_refuse(body, code);
+    }
+
+    // Step 7: registry branch (NEW guard, blueprint 03 §6: a reuse verdict never reaches build).
+    let registry_kind = sow_seed["registry_verdict"]["kind"]
+        .as_str()
+        .unwrap_or("")
+        .to_string();
+    if registry_kind == "install" || registry_kind == "extract" {
+        let matched_path = sow_seed["registry_verdict"]["matched_path"]
+            .as_str()
+            .unwrap_or("")
+            .to_string();
+        eprintln!(
+            "fleet: sow --lld: registry_verdict is {registry_kind} (matched {matched_path}); nothing to build"
+        );
+        return sow_lld_refuse(
+            json!({
+                "reason":"REGISTRY_REUSE",
+                "kind":registry_kind,
+                "matched_path":matched_path,
+                "node_id":node_id
+            }),
+            EXIT_REFUSAL,
+        );
+    }
+
+    // Step 8: compile -- the one genuinely new piece of logic this lane adds (F07 contract §3).
+    let task_text = match sow::compile_task_text(&wrapper) {
+        Ok(text) => text,
+        Err(error) => {
+            eprintln!("fleet: sow --lld: refused: {error}");
+            return sow_lld_refuse(
+                json!({"reason":error.reason(),"field":error.field()}),
+                EXIT_REFUSAL,
+            );
+        }
+    };
+
+    // Step 9: hand off. `create_sow(&task_text)` is called VERBATIM -- exit 9, the accept path,
+    // and `id_for_task` are all untouched by this lane (F07 contract §5.2 step 9). Provenance is
+    // attached AFTER the fact, via the sibling constructor (§5.3), never by changing `create_sow`
+    // or `ready_record` themselves.
+    eprintln!("SOW_LLD_TASK_BEGIN");
+    eprintln!("{task_text}");
+    eprintln!("SOW_LLD_TASK_END");
+    let result = create_sow(&task_text);
+    if result == Err(EXIT_SOW_READY) {
+        let id = sow::id_for_task(&task_text);
+        let _guard = FileLock::acquire(&state.join("sows/.lock"))?;
+        if let Some(existing) = sow::load(&state, &id)? {
+            let sow_value = existing.get("sow").cloned().unwrap_or(Value::Null);
+            let created_at = existing
+                .get("created_at")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+            let checked_check_ids: Vec<Value> = lld_ready::GATE_CHECK_IDS
+                .iter()
+                .map(|id| Value::String((*id).to_string()))
+                .collect();
+            let (checks_passed, checks_total) = verdict
+                .score
+                .as_ref()
+                .map(|score| (score.checks_passed, score.checks_total))
+                .unwrap_or((0, 0));
+            let provenance = json!({
+                "node_id": node_id,
+                "freeze_id": freeze["freeze_id"],
+                "freeze_version": freeze["version"],
+                "content_hash": stored_hash,
+                "blast_radius": sow_seed["blast_radius"],
+                "owner": brief_owner,
+                "registry_verdict": sow_seed["registry_verdict"],
+                "gate": {
+                    "checks_passed": checks_passed,
+                    "checks_total": checks_total,
+                    "checked_check_ids": checked_check_ids
+                }
+            });
+            let patched = sow::ready_record_with_provenance(
+                &id,
+                &task_text,
+                sow_value,
+                &created_at,
+                provenance,
+            );
+            sow::write_atomic(&state, &id, &patched)?;
+        }
+    }
+    result
+}
+
+/// A structured, greppable refusal line on stdout (mirroring `pr_emit_refuse`'s convention,
+/// `main.rs:4933`) plus the normal ledger receipt. `body` must already carry a `"reason"` field;
+/// every OTHER field in `body` is echoed too, so a test can assert on any of them without this
+/// function needing to know their names in advance.
+fn sow_lld_refuse(body: Value, code: i32) -> Result<(), i32> {
+    let reason = body
+        .get("reason")
+        .and_then(Value::as_str)
+        .unwrap_or("UNKNOWN")
+        .to_string();
+    print!("sow_lld_refused: reason={reason}");
+    if let Some(map) = body.as_object() {
+        for (key, value) in map {
+            if key == "reason" {
+                continue;
+            }
+            let rendered = match value {
+                Value::String(s) => s.clone(),
+                Value::Null => "null".to_string(),
+                other => other.to_string(),
+            };
+            print!(" {key}={rendered}");
+        }
+    }
+    println!();
+    refusal_with_receipt(body, code)
 }
 
 fn accept_sow(id: &str) -> Result<(), i32> {
@@ -4524,6 +4781,7 @@ USAGE
 
 COMMANDS
   sow --task <T>        Build a complete SOW with crew.sow; exit 9 awaiting human review.
+  sow --lld <PATH>      Compile a gate-passed lld.v1 into a SOW; same exit 9 as --task.
   sow accept --id <ID> Record who accepted the exact task-bound SOW and when.
   swarm dispatch --task <T> --repo <P> [--agent <A> | --role <R>]
                         Allocate role work; build with stub by default; verify and score.

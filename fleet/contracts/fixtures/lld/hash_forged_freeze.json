@@ -1,0 +1,129 @@
+{
+  "schema_version": "1.0",
+  "module_brief": {
+    "schema_version": "1.0",
+    "node_id": "lld-v1-schema",
+    "grain": "module",
+    "purpose": "Defines the frozen lld.v1 ModuleBrief/FreezeRecord shape and hand-mirrored TS+Python+Rust validators shared by downstream features.",
+    "owner": "rachit@devxlabs.ai",
+    "owner_path": "apps/mobile/src/build/",
+    "interface": [
+      { "name": "validateModuleBrief", "signature": "(input: unknown) => ValidationResult" },
+      { "name": "canonicalJson", "signature": "(value: unknown) => string" },
+      { "name": "contentHash", "signature": "(value: unknown) => string" }
+    ],
+    "data_owned": [],
+    "deps": ["orb-freeze-ledger"],
+    "registry": {
+      "kind": "build_new",
+      "searched": ["registry/services/llm-gateway", "registry/features/cost-control-plane"]
+    },
+    "acceptance": {
+      "given": "a ModuleBrief fixture on disk",
+      "when": "validateModuleBrief and validate_module_brief and validate_module_brief (rust) all parse it",
+      "then": "apps/mobile/src/build/lld-v1.ts's validator agrees with the Python and Rust mirrors on the same verdict",
+      "oracle_kind": "test",
+      "artifact": "apps/mobile/src/build/lld-v1.ts"
+    },
+    "non_goals": [
+      "Does not implement an ajv or JSON-Schema-runtime validator",
+      "Does not implement the lld-ready gate's business-rule checks (that is a separate unit)"
+    ],
+    "open_questions": [],
+    "guarantees": [
+      {
+        "claim": "the schema never lets a proposer author an authority field",
+        "derivation": {
+          "kind": "structural",
+          "invariant": "ModuleBrief has no content_hash/freeze_id/depth_evidence/stamped_by/state/version field",
+          "enforced_by": "apps/mobile/src/build/lld-v1.ts"
+        },
+        "label": "kills_structural"
+      },
+      {
+        "claim": "content_hash is stable across field reordering",
+        "derivation": {
+          "kind": "number",
+          "value": "100",
+          "calc": "100 key-order shuffles produced 1 distinct hash = 100/100 stable"
+        },
+        "label": "kills_mechanical"
+      }
+    ],
+    "alternatives": [
+      {
+        "option": "adopt ajv for JSON-Schema-backed runtime validation",
+        "why_killed": "adds a runtime dependency no package.json here lists and no other Orb module uses yet",
+        "revive_trigger": "a second consumer needs full draft-07 keyword support beyond hand-written field checks"
+      },
+      {
+        "option": "generate the Python/Rust validators from the JSON Schema at build time",
+        "why_killed": "no codegen step exists in this repo's build; a hand-mirror plus the cross-language comparator is the smaller diff",
+        "revive_trigger": "F35 (contract-codegen pipeline) lands"
+      }
+    ],
+    "failure_story": {
+      "trigger": "the Python, TypeScript, and Rust validators drift after an edit lands in only one of them",
+      "blast_radius": "the client accepts a brief the relay or fleet silently rejects, or vice versa, and a freeze attempt fails opaquely deep in the pipeline",
+      "fail_safe": "lld-crosslang.sh runs all three validators against the same fixture corpus on every verify and exits 6 loud on any mismatch"
+    }
+  },
+  "freeze": {
+    "schema_version": "1.0",
+    "freeze_id": "fz-0123456789abcdef",
+    "version": 1,
+    "node_id": "lld-v1-schema",
+    "content_hash": "sha256:5bb140c42bf9185de210414be1e47f1b86fa4a1ca52ceac793fd792aaa255b22",
+    "decision": "Ship module-brief.v1 + freeze.v1 + lld.v1 as three separate fleet-owned schemas, replacing the single overloaded orb lld.v1.json.",
+    "why": "Six downstream features read this shape; a single ambiguous name and a missing R21 floor would propagate into all of them.",
+    "killed_alternatives": [
+      {
+        "option": "keep orb/contracts/lld.v1.json as the canonical schema; fleet just reads it",
+        "why_killed": "the lld-ready gate is fleet's; the schema the gate refuses against must not live with the proposer it refuses",
+        "revive_trigger": "fleet is ever removed from the loop and the orb both proposes and freezes"
+      },
+      {
+        "option": "three independently-maintained type definitions, no shared schema",
+        "why_killed": "review-based sync already produced a live drift between fleet's own receipt.v1.json and crew/schema.py; a fourth runtime does not scale that further",
+        "revive_trigger": "never at this mirror count"
+      }
+    ],
+    "accepts_when": {
+      "predicate": {
+        "given": "the fixture corpus in fleet/contracts/fixtures/lld/",
+        "when": "all three mirrors validate and hash it",
+        "then": "lld-crosslang.sh reports 3 mirrors agree on >= 6 fixtures",
+        "oracle_kind": "test"
+      },
+      "artifact": "fleet/tests/acceptance/lld-crosslang.sh"
+    },
+    "owner": "rachit@devxlabs.ai",
+    "depth_evidence": {
+      "score": { "checks_total": 14, "checks_passed": 14, "ratio": 1.0, "failed_check_ids": [] },
+      "checked_check_ids": [
+        "C1-OPEN", "C2-OWNER", "C3-ACC-PARSE", "C3-ACC-GROUND", "C3-ACC-NONTAUT", "R17-DERIV",
+        "R19-ABSOLUTE", "R21-ALTS", "R21-FAIL", "C12-STORE", "C12-DEPS", "REG-VERDICT", "IFACE", "SHAPE"
+      ]
+    },
+    "supersedes": null,
+    "stamped_by": "keel:lld-ready"
+  },
+  "sow_seed": {
+    "restatement": "Split the overloaded lld.v1 schema into module-brief.v1/freeze.v1/lld.v1, fix the four carried-across defects, add the Rust mirror, and build the cross-language comparator nothing has run before.",
+    "blind_suite_seed": {
+      "predicate": {
+        "given": "the fixture corpus in fleet/contracts/fixtures/lld/",
+        "when": "all three mirrors validate and hash it",
+        "then": "lld-crosslang.sh reports 3 mirrors agree on >= 6 fixtures",
+        "oracle_kind": "test"
+      },
+      "artifact": "fleet/tests/acceptance/lld-crosslang.sh"
+    },
+    "blast_radius": "F03, F05, F06, F07, F09, F35 all read this shape; a silent drift here propagates into every one of them.",
+    "owner": "rachit@devxlabs.ai",
+    "registry_verdict": {
+      "kind": "build_new",
+      "searched": ["registry/services/llm-gateway", "registry/features/cost-control-plane"]
+    }
+  }
+}

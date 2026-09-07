@@ -68,6 +68,11 @@ stage "lld-crosslang"  required bash         "bash unavailable" bash tests/accep
 # comparator (a second, independent proof beyond F06's own unit tests -- F06 lane contract §2.3).
 stage "lld-ready-selftest"  required bash    "bash unavailable" bash tests/acceptance/lld-ready-selftest.sh
 stage "lld-ready-crosslang" required bash    "bash unavailable" bash tests/acceptance/lld-ready-crosslang.sh
+# F07: `fleet sow --lld <PATH>` end-to-end against the real binary -- exit 9, round-trip identity
+# via `--task`, accept, and `fleet run` past the SOW gate (lane contract §10.5's done-definition).
+# The 14-test contract suite (keel/fleet/tests/f07_sow_intake.rs) runs under the "unit tests"
+# stage above; this is the separate real-binary smoke drive, same split as F02/F06.
+stage "sow-lld-intake"      required bash    "bash unavailable" bash tests/acceptance/sow-lld-intake.sh
 # The swarm contract is RED on purpose. Blueprint 06 (per-agent strict SDLC) and requirements 4/8
 # are the product; everything green above them is the substrate they would run on. A green wall over
 # a missing product is exactly the failure this repo exists to catch, so the gap is a failing stage
