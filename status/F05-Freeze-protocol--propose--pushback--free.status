@@ -1,7 +1,7 @@
 ID=F05
 FEATURE=Freeze protocol (propose->pushback->freeze)
 REPO=orb
-STATUS=contract
-AGENT=lead-architect (dispatched)
-SINCE=2026-09-07 06:50 IST
-NOTE=
+STATUS=verifying
+AGENT=verifier (dispatched)
+SINCE=2026-09-07 08:19 IST
+NOTE=All T1-T7.9 acceptance tests green (492 passed, zero regressions vs 444 baseline); 11 T9 mutations applied and confirmed, 2 test-isolation bugs found+fixed, 1 new witness test (T7.9) added for an M9 coverage gap. fleet/verify.sh's pre-existing FAILs (fmt/clippy/lifecycle.rs+main.rs, f08_pr_emit.rs:167, lld-crosslang TS mirror, semgrep on registry-reference/) traced disjoint from F05's orb/-only files. Orb emits FreezeProposal only, never a stamped Freeze (2.1) - no keel producer exists, flagged to F07/F09 per contract.
