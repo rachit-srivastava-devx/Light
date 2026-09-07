@@ -53,6 +53,23 @@ _WORKTREE_ROOT = _RELAY_PY_ROOT.parents[2]
 _WEIGHT = 1.2  # F04's own _TURN_EVIDENCE_WEIGHT
 _RELIABILITY = 1.0
 
+# The five of lane contract §3.2, HARDCODED rather than read from `freeze_protocol.REQUIRED_SLOTS`.
+# Several tests below construct a register state by applying evidence to "the required slots" and
+# separately assert something that depends on which slots are required -- if BOTH sides read the
+# same (mutable) implementation constant, a mutation to that constant silently changes the state
+# under test right along with the expectation, and the test stays green for the wrong reason (found
+# directly: T9's M7 -- widening `REQUIRED_SLOTS` to all six -- left `test_t2_5...` passing, because
+# its own state-construction loop ALSO started giving `non_goals` evidence). Fixed here by never
+# deriving the input from the symbol under test; `test_t1_9` below separately pins that
+# `freeze_protocol.REQUIRED_SLOTS` actually equals this tuple.
+_THE_FIVE_REQUIRED_SLOTS: tuple[CoverageSlot, ...] = (
+    CoverageSlot.INTERFACE,
+    CoverageSlot.DATA_OWNED,
+    CoverageSlot.ACCEPTANCE,
+    CoverageSlot.DEPS,
+    CoverageSlot.REGISTRY_VERDICT,
+)
+
 
 def _apply_n(registers, slot: CoverageSlot, n: int, *, weight: float = _WEIGHT):
     for i in range(n):
@@ -177,6 +194,17 @@ def test_t1_8_slot_uncertainty_edge_cases_and_a_named_value() -> None:
     assert slot_uncertainty(0.973403006423134) == pytest.approx(0.17702772704896477, abs=1e-12)
 
 
+def test_t1_9_required_slots_is_exactly_the_five_named_in_the_contract() -> None:
+    """The cross-check `_THE_FIVE_REQUIRED_SLOTS`'s own module comment promises: every OTHER test
+    in this file constructs its states from the hardcoded tuple (deliberately, so a mutation to
+    `REQUIRED_SLOTS` cannot silently move both the input and the expectation together -- T9's M7).
+    This is the one test that actually pins `REQUIRED_SLOTS` itself against that same tuple, order
+    included (CoverageSlot declaration order, minus NON_GOALS).
+    """
+    assert freeze_protocol.REQUIRED_SLOTS == _THE_FIVE_REQUIRED_SLOTS
+    assert CoverageSlot.NON_GOALS not in freeze_protocol.REQUIRED_SLOTS
+
+
 # -------------------------------------------------------------------------------------------
 # T2 -- convergence: the freeze branch
 # -------------------------------------------------------------------------------------------
@@ -208,7 +236,7 @@ def test_t2_1_the_trajectory_oracle_itself() -> None:
 
 
 def test_t2_2_the_exact_freeze_point_at_two_applications() -> None:
-    registers = _state({slot: 2 for slot in freeze_protocol.REQUIRED_SLOTS})
+    registers = _state({slot: 2 for slot in _THE_FIVE_REQUIRED_SLOTS})
     assert residual_ambiguity(registers) == pytest.approx(0.12851956992238264, abs=1e-12)
     assert residual_ambiguity(registers) <= freeze_protocol.THETA_AMB
     assert coverage_ok(registers) is True  # every required c_s == 0.8, exactly on the >= boundary
@@ -237,7 +265,7 @@ def test_t2_2_the_exact_freeze_point_at_two_applications() -> None:
 
 
 def test_t2_3_three_evidences_residual_ambiguity_is_the_pure_non_goals_floor() -> None:
-    registers = _state({slot: 3 for slot in freeze_protocol.REQUIRED_SLOTS})
+    registers = _state({slot: 3 for slot in _THE_FIVE_REQUIRED_SLOTS})
     assert residual_ambiguity(registers) == 0.05
     assert best_question(registers, escalated=False).eig == pytest.approx(0.04000000000000001, abs=1e-12)
 
@@ -252,9 +280,9 @@ def test_t2_4_the_non_goals_floor_is_structural_not_a_literal() -> None:
 
     for counts in (
         {},
-        {slot: 1 for slot in freeze_protocol.REQUIRED_SLOTS},
-        {slot: 2 for slot in freeze_protocol.REQUIRED_SLOTS},
-        {slot: 3 for slot in freeze_protocol.REQUIRED_SLOTS},
+        {slot: 1 for slot in _THE_FIVE_REQUIRED_SLOTS},
+        {slot: 2 for slot in _THE_FIVE_REQUIRED_SLOTS},
+        {slot: 3 for slot in _THE_FIVE_REQUIRED_SLOTS},
     ):
         registers = _state(counts)
         assert residual_ambiguity(registers) >= expected_floor
@@ -263,7 +291,7 @@ def test_t2_4_the_non_goals_floor_is_structural_not_a_literal() -> None:
 
 
 def test_t2_5_non_goals_never_blocks_a_freeze() -> None:
-    registers = _state({slot: 3 for slot in freeze_protocol.REQUIRED_SLOTS})
+    registers = _state({slot: 3 for slot in _THE_FIVE_REQUIRED_SLOTS})
     assert freeze_eligible(registers, depth_pass=True).eligible is True
 
 
@@ -415,8 +443,8 @@ def test_t4_6_coverage_is_a_hard_conjunct_at_the_079_080_boundary() -> None:
     """0.79 vs 0.80: an implementation that used `>` instead of `>=` for the OTHER boundary (T2.2)
     would not be caught here, but one that inverted the comparison direction entirely would be.
     """
-    registers = _state({slot: 2 for slot in freeze_protocol.REQUIRED_SLOTS})
-    one_slot = freeze_protocol.REQUIRED_SLOTS[0]
+    registers = _state({slot: 2 for slot in _THE_FIVE_REQUIRED_SLOTS})
+    one_slot = _THE_FIVE_REQUIRED_SLOTS[0]
     state = registers[(Register.COVERAGE, one_slot)]
     assert state.confidence == 0.8
     lowered = dict(registers)
@@ -446,7 +474,7 @@ def test_t6_1_min_slot_value_guard_is_reachable_by_negative_evidence() -> None:
 def test_t6_2_contradiction_is_hard_and_reachable() -> None:
     from orb_relay.build.build_session import is_contradiction_blocking
 
-    before = _state({slot: 2 for slot in freeze_protocol.REQUIRED_SLOTS})
+    before = _state({slot: 2 for slot in _THE_FIVE_REQUIRED_SLOTS})
     assert freeze_eligible(before, depth_pass=True).eligible is True  # T2.2's eligible state
 
     after = apply_evidence(
