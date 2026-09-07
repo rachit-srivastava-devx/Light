@@ -61,7 +61,7 @@ fn is_string_array(x: Option<&Value>) -> bool {
 /// adding one would be exactly the "adopt a dependency to avoid a dozen lines of hand code" this
 /// contract's own killed alternatives push back on elsewhere (see `main.rs`'s `valid_hash` /
 /// `valid_artifact_id` for the same style precedent).
-fn valid_node_id(s: &str) -> bool {
+pub(crate) fn valid_node_id(s: &str) -> bool {
     let b = s.as_bytes();
     // `{2,63}` after the head character means total length is in [1+2, 1+63] = [3, 64] --
     // NOT `b.len() >= 1`. A one-character id like "x" must be REJECTED; an early Rust draft of
@@ -97,13 +97,13 @@ fn valid_content_hash(s: &str) -> bool {
             .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
 }
 
-fn number_calc_ok(calc: &str) -> bool {
+pub(crate) fn number_calc_ok(calc: &str) -> bool {
     let has_digit = calc.bytes().any(|b| b.is_ascii_digit());
     let has_operator = calc.contains(['+', '-', '*', '/', '÷', '×', '=', '≈', '%']);
     !calc.trim().is_empty() && has_digit && has_operator
 }
 
-fn structural_enforced_by_ok(s: &str) -> bool {
+pub(crate) fn structural_enforced_by_ok(s: &str) -> bool {
     if s.trim().is_empty() {
         return false;
     }
