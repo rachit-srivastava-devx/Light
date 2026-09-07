@@ -21,7 +21,7 @@ from enum import Enum
 from ..cost.meter import UsageDelta
 from ..observability.devlog import dev_log, truncate
 from .gateway_client import GatewayClient
-from .lld_schemas import ModuleBrief, validate_module_brief
+from .lld_schemas import ModuleBrief, validate_module_brief, validate_module_brief_detailed
 
 # Same cap rationale as atomizer.py: this is filler-covered (contract §4.1's DECOMPOSE state),
 # but still a metered model call.
@@ -29,6 +29,18 @@ DECOMPOSER_MAX_TOKENS = 768
 
 # §1.2: exactly one bounded re-ask, same discipline as the atomizer.
 MAX_REPAIR_ATTEMPTS = 1
+
+# F03 §3.1(2): a brief failing many checks must not push the repair prompt past
+# DECOMPOSER_MAX_TOKENS' useful input budget. Named constant, not an inline literal, so the
+# tradeoff (more named violations vs. prompt budget) is visible and adjustable in one place.
+MAX_REJECTION_DETAIL_CHARS = 400
+
+# The pre-F03 constant message, kept as the fallback for the one case a per-error render cannot
+# cover: `validate_module_brief` (pydantic) rejected the payload but
+# `validate_module_brief_detailed` (the hand-written mirror) found no error to name -- a genuine
+# disagreement between the two validators, not something the repair prompt should render as an
+# empty string.
+_GENERIC_VALIDATION_FAILURE = "module brief failed lld.v1 schema validation"
 
 SYSTEM_PROMPT = """You turn one build goal into a single ModuleBrief.
 
@@ -117,6 +129,24 @@ def _strip_markdown_fence(text: str) -> str:
     return "\n".join(lines)
 
 
+def _rejection_detail_from_errors(parsed: dict) -> str:
+    """§0.2/§3.1: render the DETAILED validator's full error list, not one constant string, so the
+    repair prompt names the actual violation(s) (`"<path>: <message>"`, joined, in the validator's
+    own declared order) instead of a blind re-ask. Capped at `MAX_REJECTION_DETAIL_CHARS` so a
+    brief failing many checks cannot push the repair prompt past `DECOMPOSER_MAX_TOKENS`' useful
+    input budget.
+    """
+    result = validate_module_brief_detailed(parsed)
+    if not result.errors:
+        # The two validators disagree (pydantic rejected it, the hand-written mirror found
+        # nothing to name) -- fall back rather than hand the model an empty detail string.
+        return _GENERIC_VALIDATION_FAILURE
+    detail = "; ".join(f"{error.path}: {error.message}" for error in result.errors)
+    if len(detail) > MAX_REJECTION_DETAIL_CHARS:
+        detail = detail[:MAX_REJECTION_DETAIL_CHARS]
+    return detail
+
+
 def _parse_and_validate(raw_text: str) -> ModuleBrief | DecomposeRejection:
     try:
         parsed = json.loads(_strip_markdown_fence(raw_text))
@@ -125,9 +155,11 @@ def _parse_and_validate(raw_text: str) -> ModuleBrief | DecomposeRejection:
     if not isinstance(parsed, dict):
         return DecomposeRejection(detail=f"expected object, got {type(parsed).__name__}")
 
+    # Success path stays on the pydantic validator (typed object, not re-derived from the
+    # hand-written mirror's error list) -- only the FAILURE path's message changes (§3.1(1)).
     brief = validate_module_brief(parsed)
     if brief is None:
-        return DecomposeRejection(detail="module brief failed lld.v1 schema validation")
+        return DecomposeRejection(detail=_rejection_detail_from_errors(parsed))
     return brief
 
 

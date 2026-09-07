@@ -7,16 +7,21 @@ from __future__ import annotations
 
 import os
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, TypeVar
 
 import httpx
 from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
-from .build.build_session import BUILD_OPENING, build_turn_state, derive_turn_evidence
+from .build.build_session import (
+    BUILD_OPENING,
+    build_turn_state,
+    derive_brief_evidence,
+    derive_turn_evidence,
+)
 from .cost.meter import Rates, ReservationExceededError, SessionMeter
 from .eval.gates import aggregate_local_corpus, all_passed, evaluate_metrics
 from .observability.devlog import DEV_LOGGING, dev_log, truncate
@@ -30,9 +35,10 @@ from .proxy.conversation_guard import (
     complete_guarded_conversation,
 )
 from .proxy.gateway_client import GatewayClient, GatewayError, HttpGatewayClient
+from .proxy.lld_decomposer import DecomposeKind, decompose
 from .proxy.phrasers import check_in_phrase, conversational_response
 from .proxy.prompts import load_agent_prompt
-from .proxy.schemas import AtomizerOutput, Beat, BuildTurnState, ResponseMode
+from .proxy.schemas import AtomizerOutput, Beat, BuildTurnState, DecomposeOutcome, ResponseMode
 from .proxy.teach import build_beats, decide_teach_ceiling
 from .store.build_session_store import BuildSessionStore
 from .store.context_store import ContextStore
@@ -278,6 +284,33 @@ _rates = rates_from_env()
 _atomizer_latency = HopHistogram()
 _eval_canary = SentinelCanary(expected_interval_ms=60_000)
 
+_HasUsage = TypeVar("_HasUsage")
+
+
+async def _reserve_run_settle(
+    meter: SessionMeter, reservation: int, line: str, awaitable: Awaitable[_HasUsage]
+) -> _HasUsage:
+    """INV5's one reserve -> run -> settle-on-success / release-on-failure envelope (F03 §3.4),
+    extracted from what was three duplicated copies of this exact shape (`/v1/atomize`,
+    `/v1/respond`'s guarded completion, and now the decompose call below).
+
+    `reservation` must already be held via a prior `meter.reserve_remaining()` call -- this
+    function does not call it, so each call site keeps its own admission-refusal (402) handling
+    exactly as it was before the extraction (T5a/§3.4's own rule: the pre-existing `/v1/atomize`
+    cases must pass with zero test edits). On ANY exception from `awaitable` (not just
+    `GatewayError` -- also `WaitSilenceBudgetExceeded`/`WaitCompanionPoolExhausted`, and anything
+    else, so a hold can never be silently leaked by a call site catching only the exceptions it
+    expected today), the hold is released and the exception re-raised unchanged; each call site
+    translates it into an HTTP response exactly as it did before this extraction existed.
+    """
+    try:
+        result = await awaitable
+    except BaseException:
+        meter.release(reservation)
+        raise
+    meter.settle(line, reservation, result.usage, _rates)
+    return result
+
 
 async def get_gateway() -> AsyncIterator[GatewayClient]:
     """FastAPI dependency so tests inject a fake without a running sidecar."""
@@ -362,6 +395,10 @@ class ConversationResponse(BaseModel):
     wait: WaitOutcome | None = None
     # F04: advisory depth-completeness registers. Non-null iff mode is BUILD (§3.6c).
     build: BuildTurnState | None = None
+    # F03: this turn's decompose outcome. Non-null iff mode is BUILD (§3.6). Additive-only field --
+    # an existing caller that never sends `mode` (defaults to FOCUS) sees exactly one new `null`
+    # field, same compatibility bar `build` above already holds itself to.
+    decompose: DecomposeOutcome | None = None
 
 
 class WarmupRequest(BaseModel):
@@ -470,9 +507,13 @@ async def atomize_task(
         )
         raise HTTPException(status_code=402, detail=str(err)) from err
     try:
-        result = await atomize(body.task, gateway=gateway, tenant_id=body.tenant_id)
+        # F03 §3.4: reserve -> call -> settle-on-success/release-on-failure, the one envelope
+        # every paid call site shares (attributes the exact gateway usage, including any repair
+        # attempt, against the hold).
+        result = await _reserve_run_settle(
+            meter, reservation, "llm", atomize(body.task, gateway=gateway, tenant_id=body.tenant_id)
+        )
     except GatewayError as err:
-        meter.release(reservation)
         dev_log(
             "atomize.gateway_error",
             level="error",
@@ -482,10 +523,6 @@ async def atomize_task(
             code=err.code,
         )
         raise HTTPException(status_code=err.status, detail=err.code) from err
-
-    try:
-        # Attribute the exact gateway usage, including any repair attempt, against the hold.
-        meter.settle("llm", reservation, result.usage, _rates)
     except ReservationExceededError as err:
         raise HTTPException(status_code=402, detail=str(err)) from err
 
@@ -673,23 +710,31 @@ async def respond_to_user(
         # healthy text — which in the voice path is JSON read aloud to someone in distress. The
         # guard itself was built and unit-tested (8/8 distress cases) BEFORE it had a caller: a
         # module with no production call site is a scaffold, not a feature.
-        result = await complete_guarded_conversation(
-            gateway=gateway,
-            tenant_id=body.tenant_id,
-            user_id=body.user_id,
-            session_id=body.session_id,
-            system=system_prompt,
-            user_text=body.text,
-            max_tokens=max_tokens,
-            history=messages,
-            # Gates the converse-only egress control (no unsolicited task-step language). Focus mode
-            # MUST keep offering exactly one next step — that is its purpose — so this is passed
-            # rather than assumed.
-            mode=body.mode.value,
-            wait=body.wait,
+        # F03 §3.4: same reserve -> call -> settle/release envelope as /v1/atomize (see
+        # `_reserve_run_settle`'s docstring) -- this call site is the reason the release-on-ANY-
+        # exception generalization matters, since it must release on `WaitSilenceBudgetExceeded`/
+        # `WaitCompanionPoolExhausted` too, not only `GatewayError`.
+        result = await _reserve_run_settle(
+            meter,
+            reservation,
+            "llm",
+            complete_guarded_conversation(
+                gateway=gateway,
+                tenant_id=body.tenant_id,
+                user_id=body.user_id,
+                session_id=body.session_id,
+                system=system_prompt,
+                user_text=body.text,
+                max_tokens=max_tokens,
+                history=messages,
+                # Gates the converse-only egress control (no unsolicited task-step language). Focus
+                # mode MUST keep offering exactly one next step — that is its purpose — so this is
+                # passed rather than assumed.
+                mode=body.mode.value,
+                wait=body.wait,
+            ),
         )
     except (WaitSilenceBudgetExceeded, WaitCompanionPoolExhausted) as err:
-        meter.release(reservation)
         dev_log(
             "conversation.wait_failed",
             level="error",
@@ -706,7 +751,6 @@ async def respond_to_user(
             detail.update(elapsed_ms=err.elapsed_ms, budget_ms=err.budget_ms)
         raise HTTPException(status_code=503, detail=detail) from err
     except GatewayError as err:
-        meter.release(reservation)
         dev_log(
             "conversation.gateway_error",
             level="error",
@@ -717,9 +761,6 @@ async def respond_to_user(
             code=err.code,
         )
         raise HTTPException(status_code=err.status, detail=err.code) from err
-
-    try:
-        meter.settle("llm", reservation, result.usage, _rates)
     except ReservationExceededError as err:
         raise HTTPException(status_code=402, detail=str(err)) from err
 
@@ -794,7 +835,13 @@ async def respond_to_user(
     # firewall) -- populated from THIS TURN's user text (Tier-0, deterministic, no model call),
     # independent of whatever the guarded completion above returned, then folded from the
     # session's full append-only evidence log (store/build_session_store.py).
+    #
+    # F03: composes the existing decomposer into this SAME branch (never a new route -- F04 §2.4
+    # already killed a second `/v1/build/...` endpoint family). `derive_turn_evidence` above is
+    # UNCHANGED and always fires; decompose is additive and, on a validated brief, contributes its
+    # own evidence via `derive_brief_evidence` -- the two coexist (§3.3 constraint 1).
     build_state: BuildTurnState | None = None
+    decompose_outcome: DecomposeOutcome | None = None
     if body.mode is ResponseMode.BUILD:
         _build_session_store.append_evidence(
             tenant_id=body.tenant_id,
@@ -802,6 +849,76 @@ async def respond_to_user(
             session_id=body.session_id,
             entry=derive_turn_evidence(body.text),
         )
+
+        # §2.5: decompose the session's ACCUMULATED user turns, never just this turn's few words
+        # ("across sessions", "yes, Postgres" cannot become a ModuleBrief alone). This turn's
+        # user+assistant pair was already appended to `_conversation_store` above, so re-deriving
+        # the turn list through the SAME `_conversation_messages` helper used for the gateway
+        # prompt is the one source of truth for "what the session has said" -- not a second,
+        # hand-rolled accumulation.
+        build_turns = _conversation_store.recent(
+            tenant_id=body.tenant_id,
+            user_id=body.user_id,
+            session_id=body.session_id,
+            now=time.time(),
+        )
+        goal_text = "\n".join(
+            message["content"]
+            for message in _conversation_messages(build_turns)
+            if message["role"] == "user"
+        )
+
+        decompose_result = None
+        try:
+            build_reservation = meter.reserve_remaining()
+        except ReservationExceededError as err:
+            dev_log(
+                "build.decompose_reservation_exceeded",
+                level="warn",
+                tenant_id=body.tenant_id,
+                session_id=body.session_id,
+                error=str(err),
+            )
+            raise HTTPException(status_code=402, detail=str(err)) from err
+        try:
+            decompose_result = await _reserve_run_settle(
+                meter,
+                build_reservation,
+                "llm",
+                decompose(goal_text, gateway=gateway, tenant_id=body.tenant_id),
+            )
+        except GatewayError as err:
+            # §3.2's disclosed judgment call: the spoken reply above has already landed, so a
+            # decompose failure degrades this turn's build data rather than failing the turn.
+            dev_log(
+                "build.decompose_gateway_error",
+                level="warn",
+                tenant_id=body.tenant_id,
+                session_id=body.session_id,
+                status=err.status,
+                code=err.code,
+            )
+        except ReservationExceededError as err:
+            raise HTTPException(status_code=402, detail=str(err)) from err
+
+        if decompose_result is not None:
+            if decompose_result.kind == DecomposeKind.BRIEF.value and decompose_result.brief is not None:
+                # §3.3 constraint 3: ONLY a validated brief may ever reach `derive_brief_evidence` --
+                # a `clarify_request` must launder no coverage (§6.7b).
+                for evidence in derive_brief_evidence(decompose_result.brief):
+                    _build_session_store.append_evidence(
+                        tenant_id=body.tenant_id,
+                        user_id=body.user_id,
+                        session_id=body.session_id,
+                        entry=evidence,
+                    )
+            decompose_outcome = DecomposeOutcome(
+                kind=decompose_result.kind,
+                brief=decompose_result.brief,
+                missing=list(decompose_result.missing),
+                rejections=[r.detail for r in decompose_result.rejections],
+            )
+
         registers = _build_session_store.registers(
             tenant_id=body.tenant_id, user_id=body.user_id, session_id=body.session_id
         )
@@ -821,6 +938,7 @@ async def respond_to_user(
         latency_ms=latency_ms,
         wait=result.wait,
         build=build_state,
+        decompose=decompose_outcome,
     )
 
 
