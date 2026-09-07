@@ -388,7 +388,7 @@ def test_t7_5_the_stall_escapes_over_the_wire(stub_gateway, real_relay) -> None:
 _EXPECTED_RESPONSE_KEYS = {
     "tenant_id", "session_id", "text", "mode", "beats", "degraded", "degrade_reason",
     "token_ceiling", "source", "spent_paise", "latency_ms", "wait", "build", "decompose",
-    "proposal", "freeze",
+    "proposal", "freeze", "handoff",
 }
 
 
