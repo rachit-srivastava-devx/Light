@@ -13,6 +13,7 @@ mod worktree;
 use fleet::agent;
 use fleet::lifecycle;
 use fleet::lld;
+use fleet::lld_ready;
 use fs2::FileExt;
 use libc::{c_int, c_void};
 use serde_json::{json, Map, Value};
@@ -162,6 +163,7 @@ fn dispatch(args: Vec<String>) -> Result<(), i32> {
         Some("rollback") => rollback_command(&args[1..]),
         Some("ledger") => ledger_command(&args[1..]),
         Some("contract") => contract_command(&args[1..]),
+        Some("gate") => gate_command(&args[1..]),
         Some("__agent") => agent_command(&args[1..]),
         // Test-only probe for S3's concurrent, worktree-isolated role lanes. Not a user-facing
         // command (no entry in CMDS/help). It exists because `spawn_agent_with_args` re-execs
@@ -3481,6 +3483,179 @@ fn contract_lld_validate(path: &str) -> Result<(), i32> {
     }
     println!("lld: INVALID ({path}, {} violation(s))", violations.len());
     Err(EXIT_MISMATCH)
+}
+
+// F06: `fleet gate lld-ready` -- shape first (F02's validator, reused, not re-derived: §5.4),
+// then readiness (`lld_ready::evaluate`). This is this lane's real, dispatched caller into the
+// `lld_ready` module (graph.rs's `every_shipped_module_is_reachable_from_dispatch` requires one,
+// the same reason `contract_lld_validate` exists at all -- see its own comment above).
+fn gate_command(args: &[String]) -> Result<(), i32> {
+    match args {
+        [sub, flag] if sub == "lld-ready" && flag == "--selftest" => gate_lld_ready_selftest(),
+        [sub, path] if sub == "lld-ready" => gate_lld_ready_file(path),
+        _ => {
+            eprintln!("usage: fleet gate lld-ready <file>        # run the lld-ready gate on a module-brief JSON file");
+            eprintln!("       fleet gate lld-ready --selftest    # prove the gate refuses a known-bad fixture and accepts the control fixture (F06)");
+            Err(EXIT_REFUSAL)
+        }
+    }
+}
+
+// Reads `owners.v1.json` + `gate-refs.v1.json` off disk -- the CLI is the I/O layer; the gate
+// itself never reads its own reference data (F06 lane contract §3.5).
+fn load_gate_refs() -> Result<lld_ready::GateRefs, i32> {
+    let contracts_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contracts");
+
+    let owners_text =
+        fs::read_to_string(contracts_dir.join("owners.v1.json")).map_err(|error| {
+            eprintln!("fleet: gate lld-ready: could not read owners.v1.json: {error}");
+            EXIT_ENV
+        })?;
+    let owners_value: Value = serde_json::from_str(&owners_text).map_err(|error| {
+        eprintln!("fleet: gate lld-ready: owners.v1.json is not valid JSON: {error}");
+        EXIT_ENV
+    })?;
+    let owners = string_array_field(&owners_value, "owners");
+
+    let refs_text =
+        fs::read_to_string(contracts_dir.join("gate-refs.v1.json")).map_err(|error| {
+            eprintln!("fleet: gate lld-ready: could not read gate-refs.v1.json: {error}");
+            EXIT_ENV
+        })?;
+    let refs_value: Value = serde_json::from_str(&refs_text).map_err(|error| {
+        eprintln!("fleet: gate lld-ready: gate-refs.v1.json is not valid JSON: {error}");
+        EXIT_ENV
+    })?;
+    let registry_paths = string_array_field(&refs_value, "registry_paths");
+    let known_node_ids = string_array_field(&refs_value, "known_node_ids");
+
+    Ok(lld_ready::GateRefs {
+        owners,
+        registry_paths,
+        known_node_ids,
+    })
+}
+
+fn string_array_field(value: &Value, field: &str) -> Vec<String> {
+    value
+        .get(field)
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|item| item.as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn gate_lld_ready_file(path: &str) -> Result<(), i32> {
+    let text = fs::read_to_string(path).map_err(|error| {
+        eprintln!("fleet: gate lld-ready: could not read {path}: {error}");
+        EXIT_ENV
+    })?;
+    let value: Value = serde_json::from_str(&text).map_err(|error| {
+        eprintln!("fleet: gate lld-ready: {path} is not valid JSON: {error}");
+        EXIT_ENV
+    })?;
+    let refs = load_gate_refs()?;
+    match lld_ready::check_and_evaluate(&value, &refs) {
+        lld_ready::EntryOutcome::ShapeInvalid(violations) => {
+            for violation in &violations {
+                eprintln!("lld: {}: {}", violation.path, violation.message);
+            }
+            println!(
+                "gate lld-ready: SHAPE INVALID ({path}, {} violation(s)) -- the gate was not reached",
+                violations.len()
+            );
+            Err(EXIT_MISMATCH)
+        }
+        lld_ready::EntryOutcome::Gate(verdict) => print_gate_verdict(path, &verdict),
+    }
+}
+
+fn print_gate_verdict(path: &str, verdict: &lld_ready::Verdict) -> Result<(), i32> {
+    match verdict.outcome {
+        lld_ready::Outcome::Ready => {
+            let (passed, total) = verdict
+                .score
+                .as_ref()
+                .map(|s| (s.checks_passed, s.checks_total))
+                .unwrap_or((0, 0));
+            println!("gate lld-ready: READY ({path}) -- {passed}/{total} checks passed");
+            Ok(())
+        }
+        lld_ready::Outcome::NotReady => {
+            for reason in &verdict.reasons {
+                eprintln!("gate: {}: {}", reason.check_id, reason.detail);
+            }
+            println!(
+                "gate lld-ready: NOT_READY ({path}, {} of {} checks failed)",
+                verdict.reasons.len(),
+                verdict.checked
+            );
+            Err(EXIT_INVARIANT)
+        }
+        lld_ready::Outcome::MeasuredNothing => {
+            eprintln!(
+                "gate lld-ready: MEASURED_NOTHING ({path}) -- refusing on principle, not a pass"
+            );
+            Err(EXIT_INVARIANT)
+        }
+    }
+}
+
+// The gate's own guard (blueprint 03 §2.4: "a gate that passes its bad fixture is disabled at
+// startup with a banner, not silently trusted"). Calls `lld_ready::evaluate` DIRECTLY on both
+// fixtures -- bypassing the shape layer on purpose, so this proves the GATE's own refusal, not
+// just that shape validation would have filtered the bad fixture first (F06 lane contract §5.4).
+fn gate_lld_ready_selftest() -> Result<(), i32> {
+    let refs = load_gate_refs()?;
+    let fixtures_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contracts/fixtures/lld");
+
+    let bad_text =
+        fs::read_to_string(fixtures_dir.join("one_line_freeze.json")).map_err(|error| {
+            eprintln!("fleet: gate lld-ready --selftest: could not read the bad fixture: {error}");
+            EXIT_ENV
+        })?;
+    let bad_value: Value = serde_json::from_str(&bad_text).map_err(|error| {
+        eprintln!("fleet: gate lld-ready --selftest: bad fixture is not valid JSON: {error}");
+        EXIT_ENV
+    })?;
+    let bad_refused = lld_ready::evaluate(&bad_value, &refs).outcome != lld_ready::Outcome::Ready;
+
+    let good_text =
+        fs::read_to_string(fixtures_dir.join("complete_module.json")).map_err(|error| {
+            eprintln!(
+                "fleet: gate lld-ready --selftest: could not read the control fixture: {error}"
+            );
+            EXIT_ENV
+        })?;
+    let good_value: Value = serde_json::from_str(&good_text).map_err(|error| {
+        eprintln!("fleet: gate lld-ready --selftest: control fixture is not valid JSON: {error}");
+        EXIT_ENV
+    })?;
+    let good_accepted =
+        lld_ready::evaluate(&good_value, &refs).outcome == lld_ready::Outcome::Ready;
+
+    println!(
+        "gate lld-ready --selftest: bad fixture {} | control fixture {}",
+        if bad_refused {
+            "REFUSED (ok)"
+        } else {
+            "ACCEPTED (FAIL)"
+        },
+        if good_accepted {
+            "ACCEPTED (ok)"
+        } else {
+            "REFUSED (FAIL)"
+        }
+    );
+    if bad_refused && good_accepted {
+        Ok(())
+    } else {
+        Err(EXIT_INVARIANT)
+    }
 }
 
 fn contract_lane_status_validate() -> Result<(), i32> {

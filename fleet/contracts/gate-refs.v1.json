@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0",
+  "description": "Reference sets for the lld-ready gate (F06). HONEST LIMIT: registry_paths is a checked-in list, NOT a scan of Light/registry/ -- those three directories are empty as of F06. known_node_ids likewise anticipates the freeze ledger (03 §4.3) that F12 builds. Both degrade this gate's C12-DEPS and REG-VERDICT checks from 'resolves in a live registry' to 'appears in a maintained list': mitigates, not kills. Revisit when registry/ holds >=1 real module.",
+  "registry_paths": ["registry/services/llm-gateway", "registry/features/cost-control-plane"],
+  "known_node_ids": ["orb-freeze-ledger"]
+}

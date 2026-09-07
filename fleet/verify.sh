@@ -63,6 +63,11 @@ stage "acceptance"     required bash         "bash unavailable" bash tests/accep
 # comparator -- proves the three hand-mirrored validators actually agree (F02 lane contract §7.4).
 # Needs orb's node_modules + relay-py .venv established (see FLEET-LEARNINGS.md's S0 entries).
 stage "lld-crosslang"  required bash         "bash unavailable" bash tests/acceptance/lld-crosslang.sh
+# F06: the lld-ready gate's own guard (both directions: bad fixture refused, control accepted --
+# 03 §2.4's "disabled at startup with a banner, not silently trusted") and its Rust<->TS
+# comparator (a second, independent proof beyond F06's own unit tests -- F06 lane contract §2.3).
+stage "lld-ready-selftest"  required bash    "bash unavailable" bash tests/acceptance/lld-ready-selftest.sh
+stage "lld-ready-crosslang" required bash    "bash unavailable" bash tests/acceptance/lld-ready-crosslang.sh
 # The swarm contract is RED on purpose. Blueprint 06 (per-agent strict SDLC) and requirements 4/8
 # are the product; everything green above them is the substrate they would run on. A green wall over
 # a missing product is exactly the failure this repo exists to catch, so the gap is a failing stage
