@@ -13,6 +13,16 @@ pattern) -- they are about mode/prompt wiring and the guard, not about the real-
 pin A1 exists for.
 
 The builder may not edit this file (lane contract, front matter). If a case looks wrong, escalate.
+
+PROVENANCE NOTE (F03 verification pass, dated in FLEET-LEARNINGS.md): `test_a1_2`, `test_a7_1`,
+and `test_a7_2` were edited here -- not by the F03 builder, who correctly escalated instead of
+touching this file -- by F03's INDEPENDENT VERIFIER, after confirming the root cause was these
+three cases' own finite/positional assumptions (exactly one gateway call per BUILD turn; "the last
+recorded request is the conversational one") colliding with F03's own accepted contract §2.4
+(decompose() fires on every BUILD turn, unconditionally, a second real gateway call this file
+predates). Each fix locates/covers the added call rather than weakening what the case asserts --
+see each case's own docstring/comment for the specific reasoning. No other case in this file was
+touched.
 """
 
 from __future__ import annotations
@@ -42,6 +52,16 @@ from tests.test_conversation_guard import _DISTRESS_HARM_REGRESSION_CASES
 _RELAY_PY_ROOT = Path(__file__).resolve().parents[1]  # orb/backend/relay-py
 _DOMAIN_AGENTS_DIR = _RELAY_PY_ROOT.parents[1] / "domain" / "agents"
 _STUB_GATEWAY_SCRIPT = Path(__file__).resolve().parent / "manual" / "stub_gateway.py"
+
+# F03 (accepted contract §2.4, merged after this file was frozen): a BUILD turn now fires a SECOND
+# real gateway call -- decompose() -- on every turn, unconditionally, alongside the conversational
+# call this file's A1/A7 cases were written against when exactly one call per turn was true. The
+# fixture below is REUSED (lane contract §5's own reuse table), never hand-authored, so A7's
+# ScriptedGateway queues can hand decompose a brief that validates on its first attempt (no
+# repair, so the extra call count this adds is exactly one and deterministic) rather than crash
+# with "pop from empty list" when its unscripted call finds nothing queued.
+_FIXTURES_DIR = _RELAY_PY_ROOT.parents[2] / "fleet" / "contracts" / "fixtures" / "lld"
+_COMPLETE_MODULE_REPLY = (_FIXTURES_DIR / "complete_module.json").read_text(encoding="utf-8")
 
 
 # -------------------------------------------------------------------------------------------
@@ -149,16 +169,40 @@ def test_a1_2_system_prompt_byte_matches_build_v1_md_at_the_gateway_boundary(rea
     """Test the wire, not the component: byte equality against the file on disk, not "contains the
     word build". A first turn in a fresh session has no grounding note and is not a duplicate, so
     the sent system prompt equals the loaded prompt exactly (no suffix).
+
+    F03 (accepted contract §2.4) makes this same BUILD turn also fire decompose()'s own real
+    gateway call(s) against this SAME stub-gateway subprocess and its one accumulating record
+    file, so the conversational request is no longer reliably "the last" one recorded -- not even
+    the last one THIS test's own turn produced, since decompose's fail-closed repair (the stub
+    always replies with fixed non-JSON text, so decompose retries once) adds a further call after
+    it. Isolate the requests this turn actually caused (a before/after slice of the accumulating
+    log, since the fixture is module-scoped and earlier A1 tests already wrote to it), then find
+    the one(s) BY CONTENT rather than by position -- the byte-match property itself is unchanged.
+
+    Not asserting an exact count of matches: this fixture's tenant_id/user_id ("t-a1"/"u-a1") is
+    shared with every other A1 test, and the stub always replies with the SAME fixed string
+    (`_STUB_REPLY_TEXT`) -- so a later A1 turn can see its own prior assistant reply verbatim in
+    its own history and trip `conversation_guard.py`'s own pre-existing verbatim-repeat repair,
+    giving the conversational leg itself two calls (both, correctly, carrying the identical build
+    system prompt). That is a real, pre-F03 mechanism this test was never pinning either way --
+    what this test owns is that build.v1.md's exact bytes DID reach the gateway boundary at least
+    once this turn, which `>= 1` states without also asserting something about an orthogonal guard
+    behavior this case was never written to cover.
     """
+    requests_before = len(real_relay.gateway_requests())
     response = httpx.post(
         f"{real_relay.relay_url}/v1/respond",
         json={"tenant_id": "t-a1", "user_id": "u-a1", "session_id": "s-a1-2", "text": "I want a rate limiter", "mode": "build"},
         timeout=10.0,
     )
     assert response.status_code == 200
-    sent_system = real_relay.last_gateway_request()["system"]
     disk_prompt = (_DOMAIN_AGENTS_DIR / "build.v1.md").read_text(encoding="utf-8").strip()
-    assert sent_system == disk_prompt
+    this_turns_requests = real_relay.gateway_requests()[requests_before:]
+    matching = [r for r in this_turns_requests if r.get("system") == disk_prompt]
+    assert len(matching) >= 1, (
+        f"expected at least one gateway request from this turn whose system prompt byte-matches "
+        f"build.v1.md; found none among {len(this_turns_requests)} requests this turn made"
+    )
 
 
 def test_a1_3_focus_prompt_is_a_different_string_than_build(real_relay: _RealRelay) -> None:
@@ -312,7 +356,13 @@ def test_a7_1_build_mode_permits_a_clarify_question_that_converse_would_veto() -
     """The contrast IS the assertion -- A7.1 alone would pass on a guard that vetoes nothing."""
     clarify_text = "Which storage do you want -- Postgres or SQLite?"
 
-    build_gateway = ScriptedGateway(clarify_text)
+    # F03 (accepted contract §2.4): a BUILD turn also fires decompose()'s own gateway call,
+    # unconditionally, after the conversational leg above. Queue it a brief that validates on the
+    # first attempt (the shared fixture, per lane contract §5 -- never hand-authored) so it needs
+    # no repair of its own, keeping the total call count exactly 2 and fully deterministic; a
+    # regression that makes BUILD's guard start vetoing/repairing the conversational leg would
+    # still push this past 2, so the count keeps its original regression-catching power.
+    build_gateway = ScriptedGateway(clarify_text, _COMPLETE_MODULE_REPLY)
     build_client = client_with(build_gateway)
     build_response = build_client.post(
         "/v1/respond",
@@ -322,7 +372,11 @@ def test_a7_1_build_mode_permits_a_clarify_question_that_converse_would_veto() -
     build_body = build_response.json()
     assert build_body["text"] == clarify_text
     assert build_body["degraded"] is False
-    assert build_gateway.calls == 1  # unvetoed -- the guard never spent its one repair call
+    # 1 conversational (unvetoed -- the guard never spent its one repair call) + 1 decompose
+    # (F03 §2.4 fires every build turn; scripted to validate first-try, so it never spends ITS
+    # one repair either) -- not 1, and not 3+, which is what unvetoed-but-decompose-repairing or
+    # vetoed-conversational would each look like.
+    assert build_gateway.calls == 2
 
     converse_gateway = ScriptedGateway(clarify_text, "Let's go with SQLite to start; you can swap it later.")
     converse_client = client_with(converse_gateway)
@@ -344,7 +398,11 @@ def test_a7_2_build_mode_still_vetoes_shame_adjacent_output() -> None:
     prompt, responses = _DISTRESS_HARM_REGRESSION_CASES[5]
     assert "maggot" in responses[0]  # pins which case this is, so an upstream reorder fails loudly
 
-    gateway = ScriptedGateway(*responses)
+    # F03 (accepted contract §2.4): append one further reply for decompose's own, separate,
+    # unconditional gateway call on this same BUILD turn -- a first-try-valid brief (the shared
+    # fixture, per lane contract §5) so it needs no repair of its own. `responses` itself (the
+    # shared test_conversation_guard.py corpus) is untouched; this only extends the local queue.
+    gateway = ScriptedGateway(*responses, _COMPLETE_MODULE_REPLY)
     client = client_with(gateway)
     response = client.post(
         "/v1/respond",
