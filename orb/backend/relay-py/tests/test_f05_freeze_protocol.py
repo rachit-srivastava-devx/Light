@@ -458,17 +458,38 @@ def test_t4_6_coverage_is_a_hard_conjunct_at_the_079_080_boundary() -> None:
 
 
 def test_t6_1_min_slot_value_guard_is_reachable_by_negative_evidence() -> None:
-    log = [
+    """Isolates §4.1a's guard from ordinary undercoverage: every OTHER required slot is
+    independently driven to c_s == 0.8 by POSITIVE evidence (so coverage would pass on the
+    confidence term alone), while `interface` is driven to the SAME c_s == 0.8 by NEGATIVE
+    evidence -- confident the slot is NOT filled. If the state construction instead left the other
+    four required slots at their prior (uncovered for the ordinary reason), `coverage_ok` would
+    already be False without the guard ever being exercised, and this case would prove nothing
+    (found directly: an earlier draft did exactly this and stayed green under T9's M10 mutation,
+    which drops the `value_s >= MIN_SLOT_VALUE` term entirely).
+    """
+    log: list[Evidence] = [
         Evidence(register=Register.COVERAGE, slot=CoverageSlot.INTERFACE, weight=-1.2, reliability=1.0, tier=EvidenceTier.TIER0),
         Evidence(register=Register.COVERAGE, slot=CoverageSlot.INTERFACE, weight=-1.2, reliability=1.0, tier=EvidenceTier.TIER0),
     ]
+    for slot in _THE_FIVE_REQUIRED_SLOTS:
+        if slot is CoverageSlot.INTERFACE:
+            continue
+        log.append(Evidence(register=Register.COVERAGE, slot=slot, weight=_WEIGHT, reliability=_RELIABILITY, tier=EvidenceTier.TIER0))
+        log.append(Evidence(register=Register.COVERAGE, slot=slot, weight=_WEIGHT, reliability=_RELIABILITY, tier=EvidenceTier.TIER0))
     registers = fold(log)
-    state = registers[(Register.COVERAGE, CoverageSlot.INTERFACE)]
-    assert state.value == pytest.approx(0.08317269649392238, abs=1e-12)
-    assert state.confidence == 0.8
 
-    assert coverage_ok(registers) is False  # c_s >= theta_cov but value_s < MIN_SLOT_VALUE
-    assert "COVERAGE:interface" in freeze_eligible(registers, depth_pass=True).blocking
+    interface_state = registers[(Register.COVERAGE, CoverageSlot.INTERFACE)]
+    assert interface_state.value == pytest.approx(0.08317269649392238, abs=1e-12)
+    assert interface_state.confidence == 0.8
+    for slot in _THE_FIVE_REQUIRED_SLOTS:
+        if slot is CoverageSlot.INTERFACE:
+            continue
+        assert registers[(Register.COVERAGE, slot)].confidence == 0.8  # independently covered
+
+    assert coverage_ok(registers) is False  # c_s >= theta_cov for ALL five, but interface's value_s < MIN_SLOT_VALUE
+    verdict = freeze_eligible(registers, depth_pass=True)
+    assert verdict.eligible is False
+    assert verdict.blocking == ("COVERAGE:interface",)  # the ONLY unmet conjunct is this guard
 
 
 def test_t6_2_contradiction_is_hard_and_reachable() -> None:
