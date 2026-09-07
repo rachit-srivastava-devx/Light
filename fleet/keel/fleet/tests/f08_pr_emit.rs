@@ -7,6 +7,7 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 fn fleet_bin() -> &'static str {
     env!("CARGO_BIN_EXE_fleet")
@@ -67,14 +68,25 @@ fn run_git_init(repo: &Path, args: &[&str]) {
     );
 }
 
+/// This file's 4 tests run as threads inside one `cargo test` process, so `std::process::id()`
+/// is constant across all of them, and this clock's resolution is coarse enough that two threads
+/// calling `unique_dir` in the same tick can compute identical nanos too -- observed directly: a
+/// failing run's panic messages showed two different test threads both citing the byte-identical
+/// path `fleet-f08-repo-59515-1788729836773281000`, racing inside the same "unique" directory.
+/// Same fix as `worktree.rs::unique_name` for the identical race: fold in a monotonic in-process
+/// counter so two threads can never produce the same path.
+static NEXT_SEQ: AtomicU64 = AtomicU64::new(0);
+
 fn unique_dir(tag: &str) -> PathBuf {
+    let seq = NEXT_SEQ.fetch_add(1, Ordering::Relaxed);
     let dir = std::env::temp_dir().join(format!(
-        "fleet-f08-{tag}-{}-{}",
+        "fleet-f08-{tag}-{}-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_nanos()
+            .as_nanos(),
+        seq
     ));
     std::fs::create_dir_all(&dir).expect("create fixture dir");
     dir
