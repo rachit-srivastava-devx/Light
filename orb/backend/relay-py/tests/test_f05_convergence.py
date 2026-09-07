@@ -259,6 +259,45 @@ def test_t7_1_and_t7_2_and_t7_3_the_freeze_branch(stub_gateway, real_relay) -> N
 
 
 # -------------------------------------------------------------------------------------------
+# Beyond the contract's own T7.1-T7.8: depth is a REAL, consulted conjunct over the wire, not a
+# name that happens to always agree with coverage. Added after T9's own M9 mutation (hardcode
+# depth_pass=True in app.py) passed clean against every T7 case above -- none of them separates
+# "coverage+ambiguity satisfied" from "keel actually said READY", because every scripted brief in
+# T7.1-T7.3 genuinely passes keel. This case does not.
+# -------------------------------------------------------------------------------------------
+
+
+def test_t7_9_depth_pass_is_really_consulted_not_assumed(stub_gateway, real_relay) -> None:
+    """A brief that is schema-VALID (so decompose accepts it and coverage/ambiguity converge
+    exactly as in T7.1) but keel-INVALID (an owner absent from owners.v1.json, same construction as
+    T5.2) must never freeze, no matter how many turns accumulate -- the M9 witness T7.1-T7.8 lack.
+    """
+    _, state = stub_gateway
+    bad_owner_brief = {**_COMPLETE_MODULE, "owner": "nobody-at-all"}
+    state.set_brief(bad_owner_brief)
+
+    session_id = "s-t79-bad-owner"
+    body = None
+    for turn in range(1, 9):  # well past T7.1's <=6-turn freeze point, if depth were ignored
+        response = _post(
+            real_relay,
+            tenant_id="t-t79",
+            user_id="u-t79",
+            session_id=session_id,
+            text=f"turn {turn}: we need a database for storage of the module's state",
+            mode="build",
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["freeze"] is None, f"turn {turn}: froze on a brief keel must reject (bad owner)"
+
+    assert body is not None
+    # By turn 8, coverage+ambiguity are satisfied (same arithmetic as T7.1) -- the ONLY remaining
+    # blocker must be DEPTH, proving this is a real refusal, not a coincidence of never converging.
+    assert any(entry.startswith("DEPTH") for entry in body["build"]["protocol"]["blocking"])
+
+
+# -------------------------------------------------------------------------------------------
 # T7.4 -- the never-answered branch
 # -------------------------------------------------------------------------------------------
 
