@@ -18,10 +18,14 @@ from pydantic import BaseModel, Field, field_validator
 
 from .build.build_session import (
     BUILD_OPENING,
+    build_slot_dependencies,
     build_turn_state,
     derive_brief_evidence,
     derive_turn_evidence,
 )
+from .build.freeze_protocol import SPLIT_TRIGGER_TURNS, Move, freeze_eligible, next_move
+from .build.readiness import ReadinessGate, SubprocessReadinessGate, UnavailableReadinessGate
+from .cognitive.belief import CoverageSlot, Evidence, EvidenceTier, PremiseRevised, Register
 from .cost.meter import Rates, ReservationExceededError, SessionMeter
 from .eval.gates import aggregate_local_corpus, all_passed, evaluate_metrics
 from .observability.devlog import DEV_LOGGING, dev_log, truncate
@@ -36,13 +40,25 @@ from .proxy.conversation_guard import (
 )
 from .proxy.gateway_client import GatewayClient, GatewayError, HttpGatewayClient
 from .proxy.lld_decomposer import DecomposeKind, decompose
+from .proxy.lld_schemas import content_hash
 from .proxy.phrasers import check_in_phrase, conversational_response
 from .proxy.prompts import load_agent_prompt
-from .proxy.schemas import AtomizerOutput, Beat, BuildTurnState, DecomposeOutcome, ResponseMode
+from .proxy.schemas import (
+    AskKindWire,
+    AtomizerOutput,
+    Beat,
+    BuildTurnState,
+    DecomposeOutcome,
+    FreezeProposal,
+    FreezeProtocolState,
+    ProposalTurn,
+    ReadinessVerdictWire,
+    ResponseMode,
+)
 from .proxy.teach import build_beats, decide_teach_ceiling
 from .store.build_session_store import BuildSessionStore
 from .store.context_store import ContextStore
-from .store.conversation_store import ConversationStore, ConversationTurn
+from .store.conversation_store import MAX_CONVERSATION_TURNS, ConversationStore, ConversationTurn
 
 app = FastAPI(title="orb-relay", version="0.1.0")
 
@@ -87,6 +103,15 @@ _conversation_store = ConversationStore(
 # no cross-table foreign key, so sharing the file with ContextStore/ConversationStore is safe.
 _build_session_store = BuildSessionStore(
     os.environ.get("ORB_CONTEXT_DB_PATH", str(_DEFAULT_CONTEXT_DB_PATH))
+)
+
+# F05: the keel seam (build/readiness.py). Resolved ONCE at import, same lifetime as the stores
+# above. A missing/unset FLEET_BIN fails closed to UnavailableReadinessGate -- never a silent
+# "assume ready" -- so an operator who forgets to set it gets a dialogue that never freezes,
+# not one that freezes on bad data (lane contract §4.2 rule 3).
+_FLEET_BIN = os.environ.get("FLEET_BIN")
+_readiness_gate: ReadinessGate = (
+    SubprocessReadinessGate(_FLEET_BIN) if _FLEET_BIN else UnavailableReadinessGate()
 )
 
 _MAX_CONVERSATION_TURN_CHARS = 700
@@ -243,6 +268,24 @@ def _is_consecutive_duplicate(prior_turns: list[ConversationTurn], text: str) ->
     return bool(normalized_new) and normalized_new == normalized_last
 
 
+# F05 §4.5: the ONE Tier-0 contradiction rule this lane ships -- the blueprint's own named example
+# (its §8 trace), and nothing more. Mutually-exclusive keyword pairs about storage/persistence
+# semantics over the session's ACCUMULATED user text (never just this turn's few words, same
+# reasoning the decompose call above already uses `goal_text` for). Same disclosed-stand-in class
+# as `build_session.py`'s own `_SLOT_KEYWORDS`: no model call, no NLU claim, and explicitly not a
+# real contradiction detector -- it exists only to make `FREEZE_ELIGIBLE`'s hard Contradiction
+# conjunct reachable (F04 shipped it permanently unreachable; see build_session.py's own docstring).
+_CONTRADICTION_STATELESS_PHRASES = ("stateless", "no storage", "in-memory only")
+_CONTRADICTION_PERSISTENT_PHRASES = ("persist", "database", "survives restart", "across sessions")
+
+
+def _tier0_storage_contradiction_fires(accumulated_user_text: str) -> bool:
+    lowered = accumulated_user_text.lower()
+    return any(phrase in lowered for phrase in _CONTRADICTION_STATELESS_PHRASES) and any(
+        phrase in lowered for phrase in _CONTRADICTION_PERSISTENT_PHRASES
+    )
+
+
 def rates_from_env(env: dict[str, str] | None = None) -> Rates:
     """Resolve runtime pricing from deployment config.
 
@@ -316,6 +359,14 @@ async def get_gateway() -> AsyncIterator[GatewayClient]:
     """FastAPI dependency so tests inject a fake without a running sidecar."""
     async with httpx.AsyncClient(timeout=20.0) as client:
         yield HttpGatewayClient(GATEWAY_BASE_URL, client)
+
+
+def get_readiness_gate() -> ReadinessGate:
+    """FastAPI dependency so tests inject a fake keel gate (or point `FLEET_BIN` at a wrapper
+    script) without needing the real binary present -- same seam-per-dependency shape as
+    `get_gateway` above.
+    """
+    return _readiness_gate
 
 
 class AtomizeRequest(BaseModel):
@@ -399,6 +450,16 @@ class ConversationResponse(BaseModel):
     # an existing caller that never sends `mode` (defaults to FOCUS) sees exactly one new `null`
     # field, same compatibility bar `build` above already holds itself to.
     decompose: DecomposeOutcome | None = None
+    # F05: a mid-dialogue design PROPOSAL turn (blueprint §5.1's no-naked-proposal type). This lane
+    # wires the freeze-protocol STOPPING RULE only (`build.protocol`/`freeze` below); nothing in
+    # this lane's app.py integration constructs a `ProposalTurn` yet, so this field is always None
+    # today -- shipped now, additively, because `proxy.schemas.ProposalTurn` is otherwise a shipped
+    # type with no wire slot at all. Reserved for a later lane (flagged, not silently absorbed).
+    proposal: ProposalTurn | None = None
+    # F05: the ❄ event -- a FreezeProposal (NOT a stamped lld.v1 Freeze, §2.1), non-null exactly on
+    # the turn `build.freeze_protocol.next_move` returns `Move.Freeze()`. Additive-only, same
+    # compatibility bar as `build`/`decompose` above.
+    freeze: FreezeProposal | None = None
 
 
 class WarmupRequest(BaseModel):
@@ -567,6 +628,7 @@ async def atomize_task(
 async def respond_to_user(
     body: ConversationRequest,
     gateway: Annotated[GatewayClient, Depends(get_gateway)],
+    readiness_gate: Annotated[ReadinessGate, Depends(get_readiness_gate)],
 ) -> ConversationResponse:
     """Generate one bounded spoken response for a non-task user turn.
 
@@ -842,6 +904,7 @@ async def respond_to_user(
     # own evidence via `derive_brief_evidence` -- the two coexist (§3.3 constraint 1).
     build_state: BuildTurnState | None = None
     decompose_outcome: DecomposeOutcome | None = None
+    freeze_proposal: FreezeProposal | None = None
     if body.mode is ResponseMode.BUILD:
         _build_session_store.append_evidence(
             tenant_id=body.tenant_id,
@@ -924,6 +987,120 @@ async def respond_to_user(
         )
         build_state = build_turn_state(registers)
 
+        # F05 lane contract §4.4(a): the one Tier-0 contradiction rule (§4.5), over the SAME
+        # accumulated `goal_text` decompose already used. If it fires, append the hard
+        # Contradiction register's evidence AND invalidate the one slot this stand-in rule is
+        # about (data_owned -- a storage-semantics contradiction), then re-read registers so the
+        # rest of this turn's freeze decision sees it.
+        if _tier0_storage_contradiction_fires(goal_text):
+            _build_session_store.append_evidence(
+                tenant_id=body.tenant_id,
+                user_id=body.user_id,
+                session_id=body.session_id,
+                entry=Evidence(
+                    register=Register.CONTRADICTION, slot=None, weight=2.0, reliability=1.0, tier=EvidenceTier.TIER0
+                ),
+            )
+            _build_session_store.append_evidence(
+                tenant_id=body.tenant_id,
+                user_id=body.user_id,
+                session_id=body.session_id,
+                entry=PremiseRevised(
+                    premise=CoverageSlot.DATA_OWNED,
+                    dependents=build_slot_dependencies().get(CoverageSlot.DATA_OWNED, ()),
+                ),
+            )
+            registers = _build_session_store.registers(
+                tenant_id=body.tenant_id, user_id=body.user_id, session_id=body.session_id
+            )
+            build_state = build_turn_state(registers)
+
+        # F05 §4.4(b): clarify_turns, derived from the PERSISTED conversation history -- never a
+        # new in-process counter (F04 §2.2). `build_turns` already includes this turn's own user
+        # message (appended to `_conversation_store` earlier this request), so counting user-role
+        # turns and subtracting one gives the 0-indexed CLARIFY-turn count -- UNLESS this session
+        # has reached `_conversation_store`'s own retention cap (`MAX_CONVERSATION_TURNS` messages):
+        # that store PHYSICALLY DELETES rows beyond it on every `.append()` (not merely a query
+        # limit), so past the cap the true count is UNRECOVERABLE, not merely unavailable this
+        # query. Left uncorrected, the counted value would freeze at
+        # `MAX_CONVERSATION_TURNS/2 - 1` forever -- the exact unbounded-loop shape this lane exists
+        # to rule out (found by this lane's own T7.4 wire test going red past turn 12). So: below
+        # the cap the count is exact; AT the cap, report `SPLIT_TRIGGER_TURNS` itself -- a safe,
+        # proven LOWER bound (reaching the cap requires >= MAX_CONVERSATION_TURNS/2 turns, and that
+        # equals SPLIT_TRIGGER_TURNS exactly today; the assertion below makes the coupling explicit
+        # rather than a silent numeric coincidence). The one disclosed cost: a real session that
+        # hits the cap exactly at its 12th turn is reported as already AT the split ceiling instead
+        # of one turn later -- a turn of precision traded for a hard guarantee against ever
+        # under-counting past it. `next_move`'s own pure-function contract (T4.4) is unaffected;
+        # only this wiring-level approximation is.
+        assert MAX_CONVERSATION_TURNS >= 2 * SPLIT_TRIGGER_TURNS, (
+            "clarify_turns's cap-reached fallback assumes MAX_CONVERSATION_TURNS covers at least "
+            "2 * SPLIT_TRIGGER_TURNS messages -- re-derive both together if either constant moves"
+        )
+        user_turns_seen = sum(1 for message in _conversation_messages(build_turns) if message["role"] == "user")
+        if len(build_turns) >= MAX_CONVERSATION_TURNS:
+            clarify_turns = SPLIT_TRIGGER_TURNS
+        else:
+            clarify_turns = max(0, user_turns_seen - 1)
+
+        # F05 §4.4(c): depth_pass. The gate is only ever consulted when a brief exists THIS turn --
+        # no brief => no gate call => no subprocess (T7.8's own pin).
+        readiness_verdict = None
+        if decompose_outcome is not None and decompose_outcome.brief is not None:
+            readiness_verdict = readiness_gate.evaluate(decompose_outcome.brief)
+        depth_pass = readiness_verdict.is_pass() if readiness_verdict is not None else False
+
+        # F05 §4.4(d): the one entry point the stopping rule exposes.
+        move = next_move(registers, depth_pass=depth_pass, clarify_turns=clarify_turns, ambiguity_history=())
+        eligibility = freeze_eligible(registers, depth_pass=depth_pass)
+
+        best_question_slot: str | None = None
+        best_question_kind: AskKindWire | None = None
+        best_question_eig = 0.0
+        escalated = False
+        if isinstance(move, Move.Ask):
+            best_question_slot = move.question.slot.value
+            best_question_kind = AskKindWire(move.question.kind.value)
+            best_question_eig = move.question.eig
+            escalated = move.escalated
+
+        move_name = "freeze" if isinstance(move, Move.Freeze) else "split" if isinstance(move, Move.Split) else "ask"
+        build_state = build_state.model_copy(
+            update={
+                "protocol": FreezeProtocolState(
+                    move=move_name,
+                    residual_ambiguity=eligibility.residual_ambiguity,
+                    best_question_slot=best_question_slot,
+                    best_question_kind=best_question_kind,
+                    best_question_eig=best_question_eig,
+                    escalated=escalated,
+                    clarify_turns=clarify_turns,
+                    blocking=list(eligibility.blocking),
+                )
+            }
+        )
+
+        # F05 §4.4(e)/§2.1: a FreezeProposal, NEVER a stamped Freeze (no producer of one exists
+        # anywhere in this tree -- lane contract §2.1/§9). Only on the turn the move is Freeze,
+        # which can only happen when a brief and a READY readiness_verdict both exist this turn.
+        if isinstance(move, Move.Freeze):
+            assert decompose_outcome is not None and decompose_outcome.brief is not None and readiness_verdict is not None
+            brief = decompose_outcome.brief
+            freeze_proposal = FreezeProposal(
+                proposed_by="orb:dialogue",
+                node_id=brief.node_id,
+                content_hash=content_hash(brief.model_dump(mode="json")),
+                brief=brief,
+                readiness=ReadinessVerdictWire(
+                    outcome=readiness_verdict.outcome.value,
+                    exit_code=readiness_verdict.exit_code,
+                    detail=(readiness_verdict.stdout + "\n" + readiness_verdict.stderr).strip(),
+                ),
+                clarify_turns_used=clarify_turns,
+                residual_ambiguity=eligibility.residual_ambiguity,
+                coverage=build_state.registers,
+            )
+
     return ConversationResponse(
         tenant_id=body.tenant_id,
         session_id=body.session_id,
@@ -939,6 +1116,8 @@ async def respond_to_user(
         wait=result.wait,
         build=build_state,
         decompose=decompose_outcome,
+        proposal=None,
+        freeze=freeze_proposal,
     )
 
 
