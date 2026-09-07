@@ -1,7 +1,7 @@
 ID=F10
 FEATURE=P0 capstone: one module spoken->frozen->built->attested->PR
 REPO=orb+fleet
-STATUS=pending
-AGENT=unassigned
-SINCE=2026-09-07 01:19 IST
-NOTE=
+STATUS=contract
+AGENT=lead-architect (Opus 5) -> handing to mid-engineer (lane: F10-capstone)
+SINCE=2026-09-07 (now)
+NOTE=Contract at docs/lane-contracts/F10-p0-capstone-integration.md. Ground truth measured: 4 of 7 hops already automatic in merged code, SOW-accept manual BY LAW (A15, main.rs:665-722), only H5 (accepted SOW -> run_with_evidence) and H7 (Accepted -> pr emit) unwired - nothing drives them. Build-new scope = one ~120-line shell driver over two existing CLI commands; zero Rust, zero Python (gated). Two tiers: Tier A (--agent stub, in verify.sh) proves the chain is wired; Tier B (real gateway + real agent + real gh) IS the P0 exit trigger - Tier A green alone does not close F10.

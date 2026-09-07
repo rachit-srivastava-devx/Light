@@ -1,7 +1,7 @@
 ID=F37
-FEATURE=Two-pane chat UI shell
+FEATURE=Two-pane chat UI shell (native SwiftUI left pane, real turns)
 REPO=apps/macos
-STATUS=pending
-AGENT=unassigned
-SINCE=2026-09-07 01:19 IST
-NOTE=
+STATUS=contract
+AGENT=lead-architect (contract written); builder unassigned - route to mid-engineer, NOT opencode
+SINCE=2026-09-07T11:20:00+05:30
+NOTE=Contract written. C1: 4 installs (Foundation URLSessionWebSocketTask, RelaySocket lifecycle, WireProtocol codec, stub_gateway.py) + 2 build-new (Swift HTTP client for /v1/respond, the chat pane itself). Row said extend - FALSE: no app shell and no demo mock exist in Light/apps/macos, ContentView is 33 lines rendering one orb. Pixel bar proven runnable in-process (external capture blocked: ScreenCaptureKit TCC -3801, AX -25211, CGWindowListCreateImage unavailable on macOS 26.6.1): NSHostingView+cacheDisplay+Vision OCR needs zero permissions; negative control 1px/0 lines vs 130px/2 lines. Worktree lane/F37-chat-ui ready at 9efba27.
