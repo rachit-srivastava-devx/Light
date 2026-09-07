@@ -12,9 +12,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from .lld_schemas import ModuleBrief
+from .lld_schemas import KilledAlt, ModuleBrief
 
 # BUILD-DIGEST §2: "steps: [{step_text: string(<=120 chars), est_min: int(1..15), done_signal}],
 # steps_total: int(1..12)".
@@ -133,6 +133,98 @@ class DecomposeOutcome(BaseModel):
     rejections: list[str]
 
 
+class AskKindWire(str, Enum):
+    """F05 (blueprint `02-DIALOGUE-PLANE-BUILD-MODE.md` §5.1) -- the wire mirror of
+    `build.freeze_protocol.AskKind`. A separate enum, not a re-export: this one is part of the
+    frozen wire contract (`proxy.schemas`), the other is this lane's pure decision logic
+    (`build.freeze_protocol`) -- the two are kept from drifting apart by
+    `tests/test_f05_freeze_protocol.py`'s and `test_f05_convergence.py`'s own assertions, not by a
+    shared identity.
+    """
+
+    CONFIRM = "confirm"
+    CHOOSE = "choose"
+    ANSWER = "answer"
+
+
+class Ask(BaseModel):
+    """blueprint §5.1 -- one clarifying question, wire-shaped."""
+
+    kind: AskKindWire
+    question: Annotated[str, Field(min_length=1)]
+    options: list[str] = []  # non-empty iff kind is CHOOSE
+    slot: str | None = None  # the CoverageSlot this targets, or None for a depth/contradiction ask
+
+    @model_validator(mode="after")
+    def _options_non_empty_iff_choose(self) -> Ask:
+        if self.kind is AskKindWire.CHOOSE and not self.options:
+            raise ValueError('Ask.options must be non-empty when kind is "choose"')
+        if self.kind is not AskKindWire.CHOOSE and self.options:
+            raise ValueError('Ask.options must be empty unless kind is "choose"')
+        return self
+
+
+class ProposalTurn(BaseModel):
+    """blueprint §5.1 -- the no-naked-proposal type: a PROPOSE turn MUST show at least one
+    tradeoff (`cons`) and at least two killed alternatives, structurally, not by convention
+    (`tests/test_f05_freeze_protocol.py`'s T6.3 asserts both floors raise `ValidationError`).
+    """
+
+    kind: Literal["PROPOSE"]
+    target: Annotated[str, Field(min_length=1)]  # node_id
+    proposal: Annotated[str, Field(min_length=1)]
+    why: Annotated[str, Field(min_length=1)]
+    achieves: list[str]
+    pros: list[str]
+    cons: Annotated[list[str], Field(min_length=1)]
+    killed: Annotated[list[KilledAlt], Field(min_length=2)]
+    ask: Ask
+
+
+class ReadinessVerdictWire(BaseModel):
+    """The wire mirror of `build.readiness.ReadinessVerdict` -- `detail` is `stdout` and `stderr`
+    joined for a human to read, never parsed by any caller (the same "carried as evidence, never
+    data" rule `readiness.py` itself holds server-side)."""
+
+    outcome: Literal["ready", "not_ready", "unavailable"]
+    exit_code: int | None
+    detail: str
+
+
+class FreezeProposal(BaseModel):
+    """The (freeze) event (F05, lane contract §4.3/§2.1). Deliberately NOT an `lld.v1` `Freeze`:
+    `proposed_by` is a DIFFERENT const from `Freeze.stamped_by` so no coercion between the two
+    types can typecheck, and no field here is named `stamped_by` -- `tests/test_f05_convergence
+    .py`'s T7.2 asserts that string is not a key anywhere in the response body containing this.
+    """
+
+    proposed_by: Literal["orb:dialogue"]
+    node_id: Annotated[str, Field(min_length=1)]
+    content_hash: Annotated[str, Field(pattern=r"^sha256:[0-9a-f]{64}$")]  # of the ModuleBrief only
+    brief: ModuleBrief
+    readiness: ReadinessVerdictWire
+    clarify_turns_used: int
+    residual_ambiguity: float
+    coverage: list[RegisterReading]
+
+
+class FreezeProtocolState(BaseModel):
+    """Additive on `BuildTurnState` (F05). Advisory-shaped like the rest of `BuildTurnState`, but
+    `move` is the one field a client actually branches on: "ask" (show `best_question_*` as the
+    next clarifying question), "freeze" (a `FreezeProposal` is present on this same turn), or
+    "split" (the module should be broken up -- lane contract §3.4/§9's SPLIT_TRIGGER_TURNS ceiling).
+    """
+
+    move: Literal["ask", "freeze", "split"]
+    residual_ambiguity: float
+    best_question_slot: str | None
+    best_question_kind: AskKindWire | None
+    best_question_eig: float
+    escalated: bool
+    clarify_turns: int
+    blocking: list[str]
+
+
 class BuildTurnState(BaseModel):
     """Advisory only. Blueprint `Speed-of-Thought-L8-Deep-Dive/02-DIALOGUE-PLANE-BUILD-MODE.md`
     §4.1's firewall: beliefs steer the conversation, they never freeze anything. Nothing in this
@@ -143,6 +235,10 @@ class BuildTurnState(BaseModel):
     registers: list[RegisterReading]
     next_slot: str | None  # which slot the orb intends to ask about next; None once all are covered
     contradiction_blocking: bool  # Contradiction register above threshold -- F05 consumes; advisory here
+    # F05: the freeze-protocol move for this turn. None only for a pre-F05 caller that never sent
+    # a build turn through the new code path -- see ConversationResponse.build's own compatibility
+    # note; every real BUILD turn populates this.
+    protocol: FreezeProtocolState | None = None
 
 
 class BeatKind(str, Enum):
