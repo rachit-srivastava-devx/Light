@@ -322,13 +322,17 @@ def next_move(
 ) -> MoveT:
     """The one entry point app.py calls. Checks FREEZE first (so an eligible state freezes on the
     turn it becomes eligible, even if `clarify_turns` has also reached the split ceiling on the
-    same turn), then SPLIT, then falls through to ASK -- total over every reachable input (lane
-    contract T4.5).
+    same turn), then routes the remaining case through `continue_dialogue` -- SPLIT when it says
+    stop, ASK when it says continue -- total over every reachable input (lane contract T4.5).
+    Deliberately routed through `continue_dialogue` rather than re-inlining its condition: the two
+    would be logically identical here (`freeze_eligible` is already known False at this point), but
+    only the former makes this function's SPLIT/ASK choice actually depend on `continue_dialogue`'s
+    own definition, which is the property lane contract T9's M5 mutation checks for.
     """
     verdict = freeze_eligible(registers, depth_pass=depth_pass)
     if verdict.eligible:
         return Move.Freeze()
-    if clarify_turns >= SPLIT_TRIGGER_TURNS:
+    if not continue_dialogue(registers, depth_pass=depth_pass, clarify_turns=clarify_turns):
         return Move.Split(reason=f"clarify_turns={clarify_turns} >= SPLIT_TRIGGER_TURNS={SPLIT_TRIGGER_TURNS}")
     escalated = escalation_armed(registers, depth_pass=depth_pass, clarify_turns=clarify_turns, ambiguity_history=ambiguity_history)
     candidate = best_question(registers, escalated=escalated)
