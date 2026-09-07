@@ -10,9 +10,11 @@ language-agnostic schema fires at Tier 5 (ContextPack.ts/ClarifyProtocol.ts), un
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
+
+from .lld_schemas import ModuleBrief
 
 # BUILD-DIGEST §2: "steps: [{step_text: string(<=120 chars), est_min: int(1..15), done_signal}],
 # steps_total: int(1..12)".
@@ -114,6 +116,21 @@ class RegisterReading(BaseModel):
     register: str
     value: float
     confidence: float
+
+
+class DecomposeOutcome(BaseModel):
+    """F03 §3.6: the wire mirror of `lld_decomposer.DecomposeResult`, minus `usage` (internal cost
+    accounting -- not a client concern, same reasoning `AtomizeResponse` already applies by only
+    surfacing `spent_paise`/`remaining_paise`, never a raw token count).
+
+    Non-null on `ConversationResponse.decompose` iff `mode` is BUILD -- the same "non-null iff
+    BUILD" idiom `BuildTurnState` below already established (`app.py:363`'s own words).
+    """
+
+    kind: Literal["brief", "clarify_request"]
+    brief: ModuleBrief | None
+    missing: list[str]
+    rejections: list[str]
 
 
 class BuildTurnState(BaseModel):

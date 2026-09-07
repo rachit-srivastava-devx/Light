@@ -17,6 +17,11 @@ Pure: no store, no HTTP. Bridges `cognitive/belief.py`'s registers to the wire s
   wholesale, and nothing here should be read as a substitute for it.
 - `next_slot_to_ask` / `is_contradiction_blocking` / `build_turn_state` — advisory-only renderers
   (blueprint §4.1's firewall: nothing here ever gates a freeze).
+- `derive_brief_evidence` — F03 §3.3: the brief -> evidence deriver. A field read on an already
+  schema-validated `ModuleBrief` (no model call, no NLU), fired once per successfully decomposed
+  brief, alongside (never instead of) `derive_turn_evidence`'s per-turn text-keyword evidence. This
+  module (unlike `cognitive/belief.py`) is not firewalled against importing `lld_schemas` -- the
+  firewall (`tests/test_f04_belief_registers.py`'s A5) is an AST check on `belief.py` specifically.
 """
 
 from __future__ import annotations
@@ -24,6 +29,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ..cognitive.belief import CoverageSlot, Evidence, EvidenceTier, Register, Registers
+from ..proxy.lld_schemas import ModuleBrief
 from ..proxy.schemas import BuildTurnState, RegisterReading
 
 # Ported from T0FocusSession.ts:106's BUILD_GREETING -- same string, deliberately, so the two
@@ -102,6 +108,64 @@ def derive_turn_evidence(user_text: str) -> Evidence:
         reliability=_TURN_EVIDENCE_RELIABILITY,
         tier=EvidenceTier.TIER0,
     )
+
+
+def derive_brief_evidence(brief: ModuleBrief) -> list[Evidence]:
+    """F03 §3.3: a VALIDATED `ModuleBrief` -> Tier-0 `Evidence` entries.
+
+    A field read on an object `validate_module_brief` has already accepted -- no model call, no
+    similarity, no clamp needed, so every entry is `EvidenceTier.TIER0` at the same
+    `_TURN_EVIDENCE_WEIGHT`/`_TURN_EVIDENCE_RELIABILITY` scale `derive_turn_evidence` uses (one
+    scale, not two, per the lane contract).
+
+    Three hard constraints (contract §3.3), preserved here structurally:
+      1. This does not replace or modify `derive_turn_evidence` -- it is a sibling the caller
+         appends alongside it, only when a decompose call actually produced a brief.
+      2. Never emits `Contradiction` evidence -- that is F05's, and a single decode cannot
+         contradict itself (the schema's own cross-field validators already refuse that shape).
+      3. The caller (not this function) is what must never call this on a `clarify_request` --
+         see the lane contract §6.7b's laundering-guard case. This function has no branch that
+         could emit nothing-from-a-brief, because it is never handed anything but one.
+    """
+    evidence: list[Evidence] = []
+
+    def coverage(slot: CoverageSlot) -> None:
+        evidence.append(
+            Evidence(
+                register=Register.COVERAGE,
+                slot=slot,
+                weight=_TURN_EVIDENCE_WEIGHT,
+                reliability=_TURN_EVIDENCE_RELIABILITY,
+                tier=EvidenceTier.TIER0,
+            )
+        )
+
+    def scalar(register: Register) -> None:
+        evidence.append(
+            Evidence(
+                register=register,
+                slot=None,
+                weight=_TURN_EVIDENCE_WEIGHT,
+                reliability=_TURN_EVIDENCE_RELIABILITY,
+                tier=EvidenceTier.TIER0,
+            )
+        )
+
+    if brief.interface:
+        coverage(CoverageSlot.INTERFACE)
+    if brief.data_owned:
+        coverage(CoverageSlot.DATA_OWNED)
+    coverage(CoverageSlot.ACCEPTANCE)  # always -- schema-required, non-optional field
+    if brief.deps:
+        coverage(CoverageSlot.DEPS)
+    if brief.non_goals:
+        coverage(CoverageSlot.NON_GOALS)
+    coverage(CoverageSlot.REGISTRY_VERDICT)  # always -- schema-required, non-optional field
+
+    scalar(Register.ALTERNATIVES)  # always -- schema floor is >=2 entries
+    scalar(Register.DEPTH)  # always -- schema floor is >=1 guarantee
+
+    return evidence
 
 
 def next_slot_to_ask(registers: Registers) -> CoverageSlot | None:
