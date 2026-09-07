@@ -24,6 +24,7 @@ from .build.build_session import (
     derive_turn_evidence,
 )
 from .build.freeze_protocol import SPLIT_TRIGGER_TURNS, Move, freeze_eligible, next_move
+from .build.handoff import FleetHandoff, Handoff, UnavailableHandoff
 from .build.readiness import ReadinessGate, SubprocessReadinessGate, UnavailableReadinessGate
 from .cognitive.belief import CoverageSlot, Evidence, EvidenceTier, PremiseRevised, Register
 from .cost.meter import Rates, ReservationExceededError, SessionMeter
@@ -51,9 +52,11 @@ from .proxy.schemas import (
     DecomposeOutcome,
     FreezeProposal,
     FreezeProtocolState,
+    HandoffOutcomeWire,
     ProposalTurn,
     ReadinessVerdictWire,
     ResponseMode,
+    SowHandoff,
 )
 from .proxy.teach import build_beats, decide_teach_ceiling
 from .store.build_session_store import BuildSessionStore
@@ -112,6 +115,16 @@ _build_session_store = BuildSessionStore(
 _FLEET_BIN = os.environ.get("FLEET_BIN")
 _readiness_gate: ReadinessGate = (
     SubprocessReadinessGate(_FLEET_BIN) if _FLEET_BIN else UnavailableReadinessGate()
+)
+
+# F09: the freeze -> SOW handoff (build/handoff.py). Reuses `_FLEET_BIN`; resolved once at import,
+# the same fail-closed shape as `_readiness_gate` immediately above -- a missing/unset FLEET_BIN
+# fails closed to UnavailableHandoff, never a silent "assume stamped" (lane contract §5.3 rule 3).
+# `FLEET_HANDOFF_TIMEOUT_S` lets a test force a real subprocess timeout over the wire (F09-T18)
+# without touching `readiness.py`'s own separate, hardcoded budget.
+_HANDOFF_TIMEOUT_S = float(os.environ.get("FLEET_HANDOFF_TIMEOUT_S", "10.0"))
+_handoff: Handoff = (
+    FleetHandoff(_FLEET_BIN, timeout_s=_HANDOFF_TIMEOUT_S) if _FLEET_BIN else UnavailableHandoff()
 )
 
 _MAX_CONVERSATION_TURN_CHARS = 700
@@ -369,6 +382,11 @@ def get_readiness_gate() -> ReadinessGate:
     return _readiness_gate
 
 
+def get_handoff() -> Handoff:
+    """F09: same seam-per-dependency shape as `get_readiness_gate` immediately above."""
+    return _handoff
+
+
 class AtomizeRequest(BaseModel):
     session_id: Annotated[str, Field(min_length=1)]
     tenant_id: Annotated[str, Field(min_length=1)]
@@ -460,6 +478,9 @@ class ConversationResponse(BaseModel):
     # the turn `build.freeze_protocol.next_move` returns `Move.Freeze()`. Additive-only, same
     # compatibility bar as `build`/`decompose` above.
     freeze: FreezeProposal | None = None
+    # F09: the freeze -> SOW handoff outcome, non-null exactly on the turn `freeze` above is
+    # non-null. Additive-only, same compatibility bar as every other optional field on this model.
+    handoff: SowHandoff | None = None
 
 
 class WarmupRequest(BaseModel):
@@ -629,6 +650,7 @@ async def respond_to_user(
     body: ConversationRequest,
     gateway: Annotated[GatewayClient, Depends(get_gateway)],
     readiness_gate: Annotated[ReadinessGate, Depends(get_readiness_gate)],
+    handoff: Annotated[Handoff, Depends(get_handoff)],
 ) -> ConversationResponse:
     """Generate one bounded spoken response for a non-task user turn.
 
@@ -905,6 +927,7 @@ async def respond_to_user(
     build_state: BuildTurnState | None = None
     decompose_outcome: DecomposeOutcome | None = None
     freeze_proposal: FreezeProposal | None = None
+    handoff_result: SowHandoff | None = None
     if body.mode is ResponseMode.BUILD:
         _build_session_store.append_evidence(
             tenant_id=body.tenant_id,
@@ -1101,6 +1124,39 @@ async def respond_to_user(
                 coverage=build_state.registers,
             )
 
+            # F09 lane contract §5.3: the handoff can NEVER delay or swallow the freeze --
+            # `freeze_proposal` above is already built regardless of what follows. Every failure
+            # path here still yields HTTP 200 with `freeze` non-null and `handoff_result.outcome`
+            # naming the failure; an exception inside the handoff is caught, mapped to an outcome,
+            # and logged -- never propagated.
+            try:
+                handoff_outcome = handoff.hand_off(brief)
+            except Exception as exc:  # noqa: BLE001 - deliberate: a handoff fault must never 500
+                dev_log(
+                    "handoff.exception",
+                    tenant_id=body.tenant_id,
+                    session_id=body.session_id,
+                    node_id=brief.node_id,
+                    error=str(exc),
+                )
+                handoff_result = SowHandoff(
+                    outcome=HandoffOutcomeWire.UNAVAILABLE,
+                    sow_id=None,
+                    freeze_id=None,
+                    node_id=brief.node_id,
+                    freeze_version=None,
+                    detail=f"handoff raised {type(exc).__name__}: {exc}",
+                )
+            else:
+                handoff_result = SowHandoff(
+                    outcome=HandoffOutcomeWire(handoff_outcome.outcome.value),
+                    sow_id=handoff_outcome.sow_id,
+                    freeze_id=handoff_outcome.freeze_id,
+                    node_id=handoff_outcome.node_id,
+                    freeze_version=handoff_outcome.freeze_version,
+                    detail=handoff_outcome.detail,
+                )
+
     return ConversationResponse(
         tenant_id=body.tenant_id,
         session_id=body.session_id,
@@ -1118,6 +1174,7 @@ async def respond_to_user(
         decompose=decompose_outcome,
         proposal=None,
         freeze=freeze_proposal,
+        handoff=handoff_result,
     )
 
 

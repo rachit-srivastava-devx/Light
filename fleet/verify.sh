@@ -73,6 +73,12 @@ stage "lld-ready-crosslang" required bash    "bash unavailable" bash tests/accep
 # The 14-test contract suite (keel/fleet/tests/f07_sow_intake.rs) runs under the "unit tests"
 # stage above; this is the separate real-binary smoke drive, same split as F02/F06.
 stage "sow-lld-intake"      required bash    "bash unavailable" bash tests/acceptance/sow-lld-intake.sh
+# F09: the freeze -> SOW handoff, driven for real -- a live orb build-mode session (real uvicorn
+# relay + a disposable stub gateway) freezes, `fleet freeze stamp` stamps it, `fleet sow --lld`
+# accepts it, and the resulting SOW is observed four independent ways (lane contract
+# docs/lane-contracts/F09-orb-fleet-handoff.md §7.3/§10.2). Needs orb's node_modules + relay-py
+# .venv established (same S0 precondition as lld-crosslang above).
+stage "orb-freeze-to-sow"  required bash    "bash unavailable" bash tests/acceptance/orb-freeze-to-sow.sh
 # The swarm contract is RED on purpose. Blueprint 06 (per-agent strict SDLC) and requirements 4/8
 # are the product; everything green above them is the substrate they would run on. A green wall over
 # a missing product is exactly the failure this repo exists to catch, so the gap is a failing stage

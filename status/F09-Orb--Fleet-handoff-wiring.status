@@ -1,7 +1,7 @@
 ID=F09
 FEATURE=Orb->Fleet handoff wiring
 REPO=orb+fleet
-STATUS=pending
-AGENT=unassigned
-SINCE=2026-09-07 01:19 IST
-NOTE=
+STATUS=verifying
+AGENT=mid-engineer (builder)
+SINCE=2026-09-07 10:15 IST
+NOTE=freeze.rs (keel producer) + handoff.py (orb) built; 14 keel + 8 orb tests green; 9/9 mutations proven red-then-reverted; orb-freeze-to-sow.sh acceptance drive green x2; verify.sh 18/26 green, all 7 fails traced pre-existing by exact line-shift/fingerprint arithmetic; 1 real gap found+fixed (freeze missing from --help, corpus M7); 1 pre-existing test_f05_convergence.py break disclosed (exact-key-set assertion predates the additive `handoff` field)
