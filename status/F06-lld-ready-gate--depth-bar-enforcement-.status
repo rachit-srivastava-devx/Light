@@ -1,7 +1,7 @@
 ID=F06
 FEATURE=lld-ready gate (depth-bar enforcement)
 REPO=fleet
-STATUS=building
+STATUS=verifying
 AGENT=mid-engineer (dispatched)
-SINCE=2026-09-07 05:27 IST
-NOTE=Contract done: docs/lane-contracts/F06-lld-ready-gate.md. C1=extract(C2)+bounded build-new (port LldReadyGate.ts's 14 checks, reuse lld.rs's 3 predicates pub(crate), no regex crate). 5 killed alts grounded in code: no trait Gate exists in keel, graph.rs impact() does SQLite+registry/ is empty so blast-radius conjunct killed, no ratio threshold (FEATURES.md divergence named). 2 defects found in merged TS gate: LldReadyGate.ts:220 MEASURED_NOTHING branch is unreachable dead code and U3-T6 does not drive it; U3-T3 is a sample sold as a census (8 of 14 ids, .toContain not equality, denominator from the sample). Fleet-only, 1 session, mid-engineer. Ready for build.
+SINCE=2026-09-07 06:16 IST
+NOTE=Built and self-verified. fleet::lld_ready (new) ships GATE_CHECK_IDS/GateRefs/Verdict/evaluate/evaluate_with/depth_evidence/check_and_evaluate/STAMPED_BY; lld.rs's valid_node_id/number_calc_ok/structural_enforced_by_ok made pub(crate), zero logic change (lld-crosslang.sh still ok 3/6). fleet gate lld-ready <file>|--selftest wired in main.rs, reachable from dispatch. cargo test --test f06_lld_ready: 10/10 green. lld-ready-selftest.sh + lld-ready-crosslang.sh (new, TS side is a fleet-owned Node script using native TS support, zero orb edits): both ok. orb vitest lld-v1/LldReadyGate: 18/18 unchanged. All 3 mandatory mutations (M1 MeasuredNothing guard, M2 ratio threshold, M3 grain=leaf floor) independently proven red-then-green, M3 confirmed via both F06-T3 and an isolated T10 report diff. Full verify.sh: 16 passed/7 failed/1 skipped of 24 -- all 7 failures independently confirmed pre-existing (fmt/clippy/unit-tests in F08's lifecycle.rs/f08_pr_emit.rs, reproduced on a clean detached worktree at the same commit; secrets/semgrep/corpus in unrelated pre-existing files; coverage cascades from the same f08_pr_emit race) -- zero new failures. Committed to lane/F06-lld-ready-gate; PR not opened (builder scope ends at commit).

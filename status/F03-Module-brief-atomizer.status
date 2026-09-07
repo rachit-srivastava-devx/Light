@@ -1,7 +1,7 @@
 ID=F03
 FEATURE=Module-brief atomizer
 REPO=orb
-STATUS=building
-AGENT=mid-engineer (dispatched)
-SINCE=2026-09-07 05:23 IST
-NOTE=Contract written to docs/lane-contracts/F03-module-brief-atomizer.md. C1 verdict = install (NOT build-new): lld_decomposer.py already emits ModuleBrief with the clarify fail-closed -- the repoint is done, but it has ZERO production callers (grep + drive-the-runtime both confirm app.py imports atomize, never decompose), so F03 is a WIRING lane. Seam = /v1/respond mode=build (F04 2.4 killed a new /v1/build/* route family; binding). 2nd defect found: the one bounded repair is spent blind (validate_module_brief collapses every violation to a constant string) -- fixed via F02's validate_module_brief_detailed. 9-case suite T1-T8 + 8-row mutation table specified; red/green-on-arrival stated per case. Fixture mechanism executed not assumed. Human-merge (touches proxy/schemas.py).
+STATUS=verified
+AGENT=verifier (independent)
+SINCE=2026-09-07 06:17 IST
+NOTE=Independently re-derived: fresh venv, full suite matched builder's claim exactly (3 failed/441 passed) before fix, F03's 14/14 acceptance suite matched, real diff confirms blind-repair fix uses validate_module_brief_detailed and BUILD branch calls decompose() never atomize(). Reproduced M2 and M7 mutations myself with matching failure text. Fixed the disclosed F04 conflict (root cause confirmed genuinely F03 contract 2.4, not a builder bug): test_f04_build_mode_wire.py's a1_2/a7_1/a7_2 updated to find-by-content instead of assume-last-call and to cover decompose's mandatory extra call, without weakening the byte-match or veto assertions - commit 1c1e8d8 on lane/F03-atomizer. Full suite now 444 passed/0 failed, confirmed on 2 fresh runs plus 3 repeats of the fixed file alone. Live 2-process E2E drive + adversarial battery (empty text/missing field/bad mode/malformed JSON all clean 422s, SIGKILL mid-op + restart recovers persisted state, duplicate identical requests don't crash) - no server-side errors logged. Not merged (touches proxy/schemas.py, human-merge A15/D4) - ship to PR.
