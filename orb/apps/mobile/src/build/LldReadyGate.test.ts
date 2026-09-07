@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { lldReady, GATE_CHECK_IDS } from './LldReadyGate';
+import { lldReady, lldReadyWith, GATE_CHECK_IDS } from './LldReadyGate';
 
 // F02: fixtures moved fleet-ward (schema ownership moved with them -- fleet/contracts/fixtures/lld/).
 const FIX = `${__dirname}/../../../../../fleet/contracts/fixtures/lld`;
@@ -25,25 +25,45 @@ describe('lld-ready gate', () => {
     expect(v.score.checks_passed).toBe(v.score.checks_total);
   });
 
-  it('U3-T3 every check id can be failed in isolation from the control fixture', () => {
-    // Each mutation below must trip exactly its own check and no other.
+  it('U3-T3 every check id can be failed in isolation from the control fixture (a census, not a sample)', () => {
+    // Each mutation below must trip EXACTLY its own check and no other -- verified by set
+    // equality, not `.toContain`. The census bound is GATE_CHECK_IDS.length, never a literal, so
+    // a 15th check id added without a matching isolation case fails this test loudly instead of
+    // silently shrinking coverage (the estate's `gate-census-not-sample` scar).
     const base = load('complete_module');
     const mutations: Record<string, (b: any) => any> = {
       'C1-OPEN':        (b) => ({ ...b, open_questions: ['what store?'] }),
       'C2-OWNER':       (b) => ({ ...b, owner: 'me' }),
-      'C3-ACC-NONTAUT': (b) => ({ ...b, acceptance: { ...b.acceptance, then: 'it works' } }),
-      'R17-DERIV':      (b) => ({ ...b, guarantees: [{ ...b.guarantees[0],
-                                   derivation: { kind: 'number', value: 'fast', calc: '' } }] }),
+      'C3-ACC-PARSE':   (b) => ({ ...b, acceptance: { ...b.acceptance, oracle_kind: 'invalid' } }),
+      'C3-ACC-GROUND':  (b) => ({ ...b, acceptance: { ...b.acceptance, artifact: 'unrelated/path.ts' } }),
+      // `then` must keep containing `artifact` as a substring (else C3-ACC-GROUND also trips) --
+      // built from the fixture's own artifact rather than a literal, so it holds by construction.
+      'C3-ACC-NONTAUT': (b) => ({ ...b, acceptance: { ...b.acceptance, then: `should work, see ${b.acceptance.artifact}` } }),
+      // Mutates guarantees[1] (the non-absolute claim), not guarantees[0]: guarantees[0]'s claim
+      // contains "never", so R19-ABSOLUTE requires its derivation to stay `structural` -- touching
+      // it here would trip R19-ABSOLUTE too.
+      'R17-DERIV':      (b) => ({ ...b, guarantees: [b.guarantees[0], { ...b.guarantees[1],
+                                   derivation: { ...b.guarantees[1].derivation, calc: '' } }] }),
       'R19-ABSOLUTE':   (b) => ({ ...b, guarantees: [{ claim: 'zero data loss', label: 'mitigates',
                                    derivation: { kind: 'number', value: '0', calc: '0 = 0' } }] }),
       'R21-ALTS':       (b) => ({ ...b, alternatives: b.alternatives.slice(0, 1) }),
       'R21-FAIL':       (b) => ({ ...b, failure_story: { ...b.failure_story, blast_radius: '' } }),
       'C12-STORE':      (b) => ({ ...b, data_owned: [{ store: 'x', owned_by_node: 'someone-else' }] }),
+      'C12-DEPS':       (b) => ({ ...b, deps: ['some-unknown-node'] }),
+      'REG-VERDICT':    (b) => ({ ...b, registry: { ...b.registry, searched: ['registry/services/does-not-exist'] } }),
+      'IFACE':          (b) => ({ ...b, interface: [{ name: 'x', signature: 'not-a-signature' }] }),
+      // via `purpose`, NOT `owner_path` (cascades into C3-ACC-GROUND) or `node_id` (can cascade
+      // into C12-DEPS/C12-STORE) -- purpose is otherwise unread by every other check.
+      'SHAPE':          (b) => ({ ...b, purpose: '' }),
     };
-    for (const [id, mutate] of Object.entries(mutations)) {
+
+    expect(Object.keys(mutations).sort()).toEqual([...GATE_CHECK_IDS].sort());
+
+    for (const id of GATE_CHECK_IDS) {
+      const mutate = mutations[id]!;
       const v: any = lldReady(mutate(base), REFS);
       expect(v.outcome, id).toBe('NOT_READY');
-      expect(v.reasons.map((r: any) => r.check_id), id).toContain(id);
+      expect(v.reasons.map((r: any) => r.check_id).sort(), id).toEqual([id]);
     }
   });
 
@@ -67,7 +87,16 @@ describe('lld-ready gate', () => {
   });
 
   it('U3-T6 an empty check set is MEASURED_NOTHING, never READY', () => {
-    const v = lldReady(load('complete_module'), { owners: [], registry_paths: [], known_node_ids: [] });
-    expect(v.outcome).not.toBe('READY');   // owners is empty ⇒ C2 cannot pass; never a vacuous green
+    const brief = load('complete_module');
+
+    // Positive control: with the real check list, this exact brief is READY 14/14 (U3-T2 already
+    // proves this; re-asserted here so U3-T6 cannot pass merely because the input is bad).
+    expect(lldReady(brief, REFS).outcome).toBe('READY');
+
+    // The actual refusal: the same otherwise-perfect brief, over an empty check slice. Drives the
+    // branch `LldReadyGate.ts:220-222` compiled but no test ever executed -- until now.
+    const v = lldReadyWith(brief, REFS, []);
+    expect(v.outcome).toBe('MEASURED_NOTHING');
+    expect(v.checked).toBe(0);
   });
 });

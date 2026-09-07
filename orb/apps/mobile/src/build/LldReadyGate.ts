@@ -216,13 +216,25 @@ const CHECKS: ReadonlyArray<{
 ];
 
 export function lldReady(brief: ModuleBrief, refs: GateRefs): GateVerdict {
-  const checked = CHECKS.length;
+  return lldReadyWith(brief, refs, CHECKS);
+}
+
+/**
+ * The same evaluator over an explicit check slice. Exported so that an empty slice is reachable
+ * from a test: the `MEASURED_NOTHING` refusal (03 Operator's-scar #1 — "the gate that passed
+ * while measuring nothing") is the one branch that must be proven to execute, and a branch no
+ * test can reach is indistinguishable from a branch that does not exist. Passing an empty slice
+ * is safe by construction: it yields a refusal, never a pass. Mirrors F06's Rust
+ * `evaluate`/`evaluate_with` split (see F06-lld-ready-gate.md §4.2).
+ */
+export function lldReadyWith(brief: ModuleBrief, refs: GateRefs, checks: typeof CHECKS): GateVerdict {
+  const checked = checks.length;
   if (checked === 0) {
     return { outcome: 'MEASURED_NOTHING', checked: 0 };
   }
 
   const reasons: GateReason[] = [];
-  for (const check of CHECKS) {
+  for (const check of checks) {
     let passed: boolean;
     try {
       passed = check.run(brief, refs);
