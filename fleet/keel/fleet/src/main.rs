@@ -11,6 +11,7 @@ mod status;
 mod swarm;
 mod worktree;
 use fleet::agent;
+use fleet::freeze;
 use fleet::lifecycle;
 use fleet::lld;
 use fleet::lld_ready;
@@ -164,6 +165,7 @@ fn dispatch(args: Vec<String>) -> Result<(), i32> {
         Some("ledger") => ledger_command(&args[1..]),
         Some("contract") => contract_command(&args[1..]),
         Some("gate") => gate_command(&args[1..]),
+        Some("freeze") => freeze_command(&args[1..]),
         Some("__agent") => agent_command(&args[1..]),
         // Test-only probe for S3's concurrent, worktree-isolated role lanes. Not a user-facing
         // command (no entry in CMDS/help). It exists because `spawn_agent_with_args` re-execs
@@ -3915,6 +3917,216 @@ fn gate_lld_ready_selftest() -> Result<(), i32> {
     }
 }
 
+// ---------------------------------------------------------------------------------------
+// F09: `fleet freeze stamp <brief.json> --out <lld.json>` -- the stamped-Freeze producer F05
+// flagged as absent (lane contract docs/lane-contracts/F09-orb-fleet-handoff.md §1/§5.1). Shape,
+// readiness and content_hash are reused verbatim from `lld`/`lld_ready` (the exact same calls
+// `gate_lld_ready_file` above makes); `fleet::freeze` supplies the two pieces that did not exist
+// anywhere: the nested authority-key scan and the module_brief -> freeze/sow_seed projection. This
+// function performs every write (ledger entry + `--out`), matching this crate's existing split
+// where `main.rs` is the I/O layer and library modules stay (mostly) pure.
+// ---------------------------------------------------------------------------------------
+
+const FREEZE_STAMP_USAGE: &str = "usage: fleet freeze stamp <brief.json> --out <lld.json>";
+
+fn freeze_command(args: &[String]) -> Result<(), i32> {
+    match args {
+        [sub, brief_path, flag, out_path] if sub == "stamp" && flag == "--out" => {
+            freeze_stamp_file(brief_path, out_path)
+        }
+        _ => {
+            eprintln!("{FREEZE_STAMP_USAGE}");
+            Err(EXIT_REFUSAL)
+        }
+    }
+}
+
+/// A structured, greppable refusal line on stdout plus the normal ledger receipt -- byte-for-byte
+/// the same shape as `sow_lld_refuse` (`main.rs:583`), reused here as a pattern (not a call: that
+/// function is `sow --lld`'s own, and this lane's files must not edit `sow.rs`'s surface) so a
+/// test can assert on any echoed field without this function needing to know their names.
+fn freeze_stamp_refuse(body: Value, code: i32) -> Result<(), i32> {
+    let reason = body
+        .get("reason")
+        .and_then(Value::as_str)
+        .unwrap_or("UNKNOWN")
+        .to_string();
+    print!("freeze_stamp_refused: reason={reason}");
+    if let Some(map) = body.as_object() {
+        for (key, value) in map {
+            if key == "reason" {
+                continue;
+            }
+            let rendered = match value {
+                Value::String(s) => s.clone(),
+                Value::Null => "null".to_string(),
+                other => other.to_string(),
+            };
+            print!(" {key}={rendered}");
+        }
+    }
+    println!();
+    refusal_with_receipt(body, code)
+}
+
+fn freeze_stamp_file(brief_path: &str, out_path: &str) -> Result<(), i32> {
+    let state = state_dir()?;
+
+    // Step 1: read + parse (lane contract §5.1 step 1). Same wording/exit as `gate_lld_ready_file`
+    // (§5.1's exit table: every condition `gate lld-ready` reports must report the same code here).
+    let text = fs::read_to_string(brief_path).map_err(|error| {
+        eprintln!("fleet: freeze stamp: could not read {brief_path}: {error}");
+        EXIT_ENV
+    })?;
+    let brief: Value = serde_json::from_str(&text).map_err(|error| {
+        eprintln!("fleet: freeze stamp: {brief_path} is not valid JSON: {error}");
+        EXIT_ENV
+    })?;
+
+    // Step 2: recursive authority-key scan (§5.2), BEFORE shape/readiness -- a proposer sneaking
+    // an authority-shaped key into a brief must be refused before anything downstream runs.
+    if let Some(key_path) = freeze::find_forbidden_key(&brief) {
+        eprintln!(
+            "fleet: freeze stamp: refusing: authority-shaped key at {key_path} is present in the brief (only the gate may write it)"
+        );
+        return freeze_stamp_refuse(
+            json!({"reason":"STAMP_KEY_PRESENT","path":key_path}),
+            EXIT_REFUSAL,
+        );
+    }
+
+    // Steps 3-4: shape then readiness -- the SAME `check_and_evaluate` call `create_sow_from_lld`
+    // makes, and `print_gate_verdict` reused verbatim so a NotReady/MeasuredNothing verdict prints
+    // and exits IDENTICALLY to `fleet gate lld-ready <file>` (§5.1: "print_gate_verdict's exact
+    // output, unmodified"). No extra decoration on this branch -- unlike the REFUSAL-class
+    // branches below, this row promises the passthrough is exact.
+    let refs = load_gate_refs()?;
+    let verdict = match lld_ready::check_and_evaluate(&brief, &refs) {
+        lld_ready::EntryOutcome::ShapeInvalid(violations) => {
+            for violation in &violations {
+                eprintln!("lld: {}: {}", violation.path, violation.message);
+            }
+            println!(
+                "freeze stamp: SHAPE INVALID ({brief_path}, {} violation(s)) -- the gate was not reached",
+                violations.len()
+            );
+            return Err(EXIT_MISMATCH);
+        }
+        lld_ready::EntryOutcome::Gate(verdict) => verdict,
+    };
+    print_gate_verdict(brief_path, &verdict)?;
+
+    // Step 5: content_hash -- the real F02 hasher, never re-derived (lane contract §2's C1
+    // verdict). A numeric leaf anywhere in the brief (not just the top level -- F07's own finding
+    // that `guarantees[].derivation` is never type-checked applies here too) refuses here, never a
+    // panic.
+    let content_hash = match lld::content_hash(&brief) {
+        Err(_) => {
+            eprintln!(
+                "fleet: freeze stamp: module_brief contains a numeric leaf and cannot be hashed (F02 §6.3)"
+            );
+            return freeze_stamp_refuse(
+                json!({
+                    "reason":"FREEZE_UNHASHABLE",
+                    "node_id": brief.get("node_id").cloned().unwrap_or(Value::Null)
+                }),
+                EXIT_REFUSAL,
+            );
+        }
+        Ok(hash) => hash,
+    };
+
+    // Step 6: resolve version/supersedes/idempotency from the on-disk ledger (§5.4). Read-only in
+    // `fleet::freeze`; the actual ledger write happens below, after step 8's self-check.
+    let node_id = brief
+        .get("node_id")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let resolution = freeze::resolve_ledger(&state, &node_id, &content_hash).map_err(|error| {
+        eprintln!("fleet: freeze stamp: could not read the freeze ledger: {error}");
+        EXIT_ENV
+    })?;
+
+    let wrapper = if let Some(existing) = resolution.idempotent_existing {
+        // Idempotent re-stamp (§5.4): same content_hash as the latest entry for this node_id ->
+        // return it unchanged. No new ledger entry, no receipt -- there is nothing new to record.
+        existing
+    } else {
+        let freeze_id = freeze::freeze_id_for(&content_hash, resolution.version);
+        // Step 7: project. `Ready` is guaranteed here (both other outcomes already returned
+        // above), so `None` would be a producer bug, not a reachable user-facing condition.
+        let wrapper = freeze::project_freeze(
+            &brief,
+            &verdict,
+            &content_hash,
+            &freeze_id,
+            resolution.version,
+            resolution.supersedes.as_deref(),
+        )
+        .ok_or(EXIT_INVARIANT)?;
+
+        // Step 8: producer self-check -- the emitted document must validate against the SAME
+        // validator its consumer (`fleet sow --lld`) runs. If this ever fires it is a projection
+        // bug and must refuse loudly, not write a file its own consumer would reject.
+        let violations = lld::validate_lld_v1(&wrapper);
+        if !violations.is_empty() {
+            for violation in &violations {
+                eprintln!(
+                    "fleet: freeze stamp: producer self-check failed: {}: {}",
+                    violation.path, violation.message
+                );
+            }
+            return Err(EXIT_INVARIANT);
+        }
+
+        // Step 9 (part 1): append the ledger entry -- atomic temp+rename, same convention as
+        // every other on-disk write in this crate (`write_json_atomic`, `sow::write_atomic`).
+        let ledger_dir = state.join("freezes").join(&node_id);
+        fs::create_dir_all(&ledger_dir).map_err(|error| {
+            eprintln!(
+                "fleet: freeze stamp: could not create {}: {error}",
+                ledger_dir.display()
+            );
+            EXIT_ENV
+        })?;
+        write_json_atomic(
+            &ledger_dir.join(format!("{}.json", resolution.version)),
+            &wrapper,
+        )?;
+
+        append_receipt(
+            "note",
+            json!({
+                "kind": "FREEZE_STAMPED",
+                "freeze_id": freeze_id,
+                "node_id": node_id,
+                "version": resolution.version,
+                "content_hash": content_hash,
+            }),
+            "fleet-freeze",
+            None,
+            None,
+        )?;
+
+        wrapper
+    };
+
+    // Step 9 (part 2): write `--out` atomically. Always performed, even on an idempotent
+    // re-stamp -- the command's job is "stamp <brief> into <out>", regardless of whether a new
+    // ledger entry was allocated.
+    write_json_atomic(Path::new(out_path), &wrapper)?;
+
+    println!(
+        "FREEZE_STAMPED freeze_id={} node_id={} version={} content_hash={} out={out_path}",
+        wrapper["freeze"]["freeze_id"].as_str().unwrap_or(""),
+        wrapper["freeze"]["node_id"].as_str().unwrap_or(""),
+        wrapper["freeze"]["version"],
+        wrapper["freeze"]["content_hash"].as_str().unwrap_or(""),
+    );
+    Ok(())
+}
+
 fn contract_lane_status_validate() -> Result<(), i32> {
     let rows = ledger_rows(false)?;
     validate_lane_status_rows(&rows)
@@ -4780,6 +4992,8 @@ USAGE
   fleet <command> [options]
 
 COMMANDS
+  freeze stamp <brief.json> --out <lld.json>
+                        Stamp a gate-passed ModuleBrief into a keel-authored lld.v1 freeze.
   sow --task <T>        Build a complete SOW with crew.sow; exit 9 awaiting human review.
   sow --lld <PATH>      Compile a gate-passed lld.v1 into a SOW; same exit 9 as --task.
   sow accept --id <ID> Record who accepted the exact task-bound SOW and when.
@@ -4946,6 +5160,7 @@ fn print_completions(shell: &str) {
         "oracle",
         "adjudicate",
         "attest",
+        "freeze",
         "rollback",
         "ledger",
         "roles",

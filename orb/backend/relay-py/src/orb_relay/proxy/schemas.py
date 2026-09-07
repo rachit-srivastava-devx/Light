@@ -208,6 +208,34 @@ class FreezeProposal(BaseModel):
     coverage: list[RegisterReading]
 
 
+class HandoffOutcomeWire(str, Enum):
+    """F09 -- the wire mirror of `build.handoff.HandoffOutcome`. A separate enum, not a re-export,
+    the same idiom `AskKindWire` above already established: this one is part of the frozen wire
+    contract (`proxy.schemas`), the other is the pure subprocess-driving logic (`build.handoff`).
+    """
+
+    SOW_READY = "sow_ready"
+    NOT_STAMPED = "not_stamped"
+    NOT_ACCEPTED = "not_accepted"
+    UNAVAILABLE = "unavailable"
+    TIMEOUT = "timeout"
+
+
+class SowHandoff(BaseModel):
+    """F09 (lane contract §5.3) -- the freeze->SOW handoff outcome for this turn. Non-null exactly
+    on the turn `ConversationResponse.freeze` is non-null (same additive-field discipline
+    `FreezeProposal` above already holds). Carries only ids/paths to echo -- no `freeze` object and
+    no `lld.v1` sub-document, because the orb never holds a stamp (lane contract §1/§4.1).
+    """
+
+    outcome: HandoffOutcomeWire
+    sow_id: str | None
+    freeze_id: str | None
+    node_id: str
+    freeze_version: int | None
+    detail: str
+
+
 class FreezeProtocolState(BaseModel):
     """Additive on `BuildTurnState` (F05). Advisory-shaped like the rest of `BuildTurnState`, but
     `move` is the one field a client actually branches on: "ask" (show `best_question_*` as the
