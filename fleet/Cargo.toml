@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/fleet-types",
+    "crates/fleet-lifecycle",
+    "crates/fleet-store",
+    "crates/fleet-events",
+    "crates/fleet-router",
+    "crates/fleet-scan",
+    "crates/fleet-plan",
+    "crates/fleet-context",
+    "crates/fleet-verify",
+    "crates/fleet-merge",
+    "crates/fleet-memory",
+    "crates/fleet-govern",
+    "crates/fleet-stream",
+    "crates/fleet-worker",
+    "src",
+]
+exclude = ["keel", "registry-reference", "tests", "crew", "crates/fleet-crew"]

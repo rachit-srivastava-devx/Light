@@ -1,0 +1,35 @@
+[package]
+name = "fleet-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "fleet"
+path = "main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
+figment = { version = "0.10", features = ["env"] }
+tokio = { version = "1", features = ["io-std", "macros", "rt", "rt-multi-thread", "sync"] }
+rayon = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+fleet-types = { path = "../crates/fleet-types" }
+fleet-lifecycle = { path = "../crates/fleet-lifecycle" }
+fleet-store = { path = "../crates/fleet-store" }
+fleet-events = { path = "../crates/fleet-events" }
+fleet-router = { path = "../crates/fleet-router" }
+fleet-scan = { path = "../crates/fleet-scan" }
+fleet-plan = { path = "../crates/fleet-plan" }
+fleet-context = { path = "../crates/fleet-context" }
+fleet-verify = { path = "../crates/fleet-verify" }
+fleet-merge = { path = "../crates/fleet-merge" }
+fleet-memory = { path = "../crates/fleet-memory" }
+fleet-govern = { path = "../crates/fleet-govern" }
+fleet-stream = { path = "../crates/fleet-stream" }
+fleet-worker = { path = "../crates/fleet-worker" }
+
+[dev-dependencies]
+tempfile = "3"

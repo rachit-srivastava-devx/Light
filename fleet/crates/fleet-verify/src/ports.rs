@@ -1,0 +1,23 @@
+//! Injected IO boundaries: `ToolProbe` and `ProcessRunner`. This crate never calls
+//! `std::process::Command` or `command -v` itself -- both are supplied by the caller.
+
+use crate::requirement::ProbeTool;
+
+/// Injected IO boundary #1: "is this tool usable on this machine right now."
+pub trait ToolProbe {
+    fn available(&self, tool: ProbeTool) -> bool;
+}
+
+/// The raw result of running one gate's command line. `exit_code` is the wrapped script's own
+/// process exit status -- this crate does not normalize it, it only asks "was it zero."
+#[derive(Clone, Debug)]
+pub struct ProcessOutput {
+    pub exit_code: i32,
+    pub stdout: String,
+    pub stderr: String,
+}
+
+/// Injected IO boundary #2: actually run a gate's argv.
+pub trait ProcessRunner {
+    fn run(&self, command: &[&str]) -> ProcessOutput;
+}

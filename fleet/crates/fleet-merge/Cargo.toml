@@ -1,0 +1,11 @@
+[package]
+name = "fleet-merge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+thiserror = "2.0.20"
+fleet-types = { path = "../fleet-types" }
+
+[dev-dependencies]
+tempfile = "3.27.0"

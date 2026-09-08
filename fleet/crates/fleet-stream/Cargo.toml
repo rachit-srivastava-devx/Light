@@ -1,0 +1,22 @@
+[package]
+name = "fleet-stream"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fleet-types = { path = "../fleet-types" }
+tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "time", "sync", "process"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+thiserror = "2.0.20"
+axum = { version = "0.8.1", features = ["ws"] }
+tokio-tungstenite = "0.24.0"
+reqwest = { version = "0.12.9", features = ["json", "blocking"] }
+# Not in the brief's dependency list; added because axum's Sse<S> needs a Stream to bridge a
+# tokio::sync::broadcast::Receiver, and this is the minimal glue crate for that -- flagged as a
+# deviation in the crate's return summary.
+tokio-stream = { version = "0.1", features = ["sync"] }
+
+[dev-dependencies]
+tokio = { version = "1.53.1", features = ["test-util"] }
+tempfile = "3"

@@ -29,3 +29,6 @@ coverage/
 
 # git worktree checkouts — never track these from the main checkout
 .worktrees/
+
+# fleet migration workspace build artifacts
+fleet/target/

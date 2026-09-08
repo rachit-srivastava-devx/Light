@@ -1,0 +1,13 @@
+[package]
+name = "fleet-plan"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fleet-types = { path = "../fleet-types" }
+serde_json = "1.0.151"
+sha2 = "0.10.9"
+thiserror = "2.0.20"
+
+[dev-dependencies]
+serde_json = "1.0.151"

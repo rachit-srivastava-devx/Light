@@ -1,0 +1,24 @@
+[package]
+name = "fleet-worker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fleet-types = { path = "../fleet-types" }
+fleet-merge = { path = "../fleet-merge" }
+libc = "0.2.189"
+nix = { version = "0.29", features = ["process", "resource", "signal"] }
+thiserror = "2.0.20"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0.151"
+fs2 = "0.4.3"
+toml = "0.8"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[[bin]]
+name = "fw-fixture-agent"
+path = "tests/fixtures/fixture_agent.rs"
+test = false
+doc = false

@@ -1,0 +1,15 @@
+error[E0382]: use of moved value: `task`
+ --> tests/compile_fail/reuse_consumed.rs:7:18
+  |
+5 |     let task: Task<Intake> = Task::new(TaskId::new("moved").unwrap());
+  |         ---- move occurs because `task` has type `Task<fleet_lifecycle::Intake>`, which does not implement the `Copy` trait
+6 |     let _specified = task.specify("first transition", &NoLedger).unwrap();
+  |                           -------------------------------------- `task` moved due to this method call
+7 |     let _again = task.specify("second transition", &NoLedger);
+  |                  ^^^^ value used here after move
+  |
+note: `fleet_lifecycle::edges_intake::<impl Task<fleet_lifecycle::Intake>>::specify` takes ownership of the receiver `self`, which moves `task`
+ --> src/edges_intake.rs
+  |
+  |         self,
+  |         ^^^^

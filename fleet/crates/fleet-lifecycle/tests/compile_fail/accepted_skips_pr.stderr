@@ -1,0 +1,17 @@
+warning: unreachable statement
+ --> tests/compile_fail/accepted_skips_pr.rs:8:5
+  |
+7 |     let task: Task<fleet_lifecycle::Accepted> = unreachable!();
+  |                                                 -------------- any code following this expression is unreachable
+8 |     let _ = task.observe("skipped the pull request", &NoLedger);
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unreachable statement
+  |
+  = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
+
+error[E0599]: no method named `observe` found for struct `Task<fleet_lifecycle::Accepted>` in the current scope
+ --> tests/compile_fail/accepted_skips_pr.rs:8:18
+  |
+8 |     let _ = task.observe("skipped the pull request", &NoLedger);
+  |                  ^^^^^^^ method not found in `Task<fleet_lifecycle::Accepted>`
+  |
+  = note: the method was found for `Task<fleet_lifecycle::Proposed>`
