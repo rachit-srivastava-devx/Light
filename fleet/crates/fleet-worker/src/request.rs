@@ -34,6 +34,11 @@ pub struct LaneHandle {
     pub(crate) parent_fd: std::os::unix::io::RawFd,
     pub(crate) repo: PathBuf,
     pub(crate) worktree: fleet_merge::Worktree,
+    /// `HEAD` inside the worktree the moment `spawn` finished creating it -- the fixed point
+    /// `join`'s honesty check (`change_detect`) compares the finished lane against to decide
+    /// "did this lane's tree change", independent of whether the worker left uncommitted edits,
+    /// committed, or committed-then-reset.
+    pub(crate) base_commit: String,
     pub(crate) sandbox_root: PathBuf,
     pub(crate) deadline: Duration,
 }
@@ -47,6 +52,12 @@ pub enum SpawnError {
     CliNotOnPath(CliAdapter, &'static str),
     #[error("worktree creation failed after retries (git worktree add exit fault)")]
     WorktreeCreateFailed,
+    /// `git rev-parse HEAD` inside the just-created worktree failed or produced no sha.
+    /// Structurally should not happen (`fleet_merge::create` already required `HEAD` to resolve
+    /// to get this far), but a silently wrong/empty base commit would make every later
+    /// change-detection comparison lie, so this is a hard error, not a best-effort default.
+    #[error("could not read HEAD inside the new worktree: {0}")]
+    BaseCommitUnreadable(String),
     #[error("hermetic sandbox provisioning failed: {0}")]
     SandboxProvisionFailed(String),
     #[error("socketpair() failed to establish the fd-3 channel")]

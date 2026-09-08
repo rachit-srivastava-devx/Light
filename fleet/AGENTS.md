@@ -1,13 +1,16 @@
 # AGENTS.md — operating rules for anything working in this repo
 
-Blueprint: `../blueprints/Fleet-L8-Deep-Dive/`. Where code and blueprint disagree, **record the
-disagreement in `docs/DELTA.md`** — the blueprint may be wrong and implementation is evidence.
+Blueprints: the per-crate build specs are `docs/blueprints/<crate>/BLUEPRINT.md`; the wider design
+deep-dive is `../../blueprints/Fleet-L8-Deep-Dive/` (outside this repo, read-only). Where code and
+blueprint disagree, **record the disagreement in `docs/DELTA.md`** — the blueprint may be wrong and
+implementation is evidence.
 
 ## Hard rules (violating one is a rejected change)
 
-1. **NEVER edit `tests/acceptance/*`.** The lead authored it before implementation. Making it pass by
-   changing it is the failure this whole system exists to prevent.
-2. **NEVER edit `contracts/*.json`** without an ADR in `docs/adr/`.
+1. **NEVER edit a pre-authored acceptance test to make it pass.** The lead authors the suite before
+   implementation; changing it to go green is the failure this whole system exists to prevent. The
+   suites live with their crates (`crates/*/tests/`) and with the composition root (`src/tests/`).
+2. **NEVER edit `crates/fleet-types/contracts/*.json`** without an ADR in `docs/adr/`.
 3. **`$?` after a pipe reads the WRONG command.** Do not do it. (Violated 6× in the predecessor,
    twice more in zsh where `PIPESTATUS` silently expands empty.)
 4. **`mktemp -d` for any path later `rm -rf`'d** — never derive it from a content digest.
@@ -25,8 +28,20 @@ disagreement in `docs/DELTA.md`** — the blueprint may be wrong and implementat
 10. **Publish the denominator.** A verdict carries `{checked,total}`; `checked==0` is a failure.
 
 ## Verify before claiming
-Run `bash tests/acceptance/p0.sh` and paste the real output including failures. A claim with no
-reproducing command is not a measurement.
+Run all four and paste the real output including failures — a claim with no reproducing command is
+not a measurement:
+
+```
+cargo test --workspace --no-fail-fast
+cargo clippy --workspace --all-targets -- -D warnings
+find src crates -name '*.rs' | xargs wc -l | awk '$1>80 && $2!="total"'   # must print nothing
+./target/debug/fleet gate --id <id>                                       # a real gate, real exit code
+```
+
+Unit tests are the floor, never the bar. For anything a human runs, drive the **real binary** —
+`env!("CARGO_BIN_EXE_fleet")` in tests, never a substituted fake. 351 tests once passed green while
+`fleet __agent` did not exist as a subcommand, because every test swapped in a fake child through
+`FLEET_WORKER_TEST_CHILD_EXE`. A proxy is not the property.
 
 ## Worktrees live inside this repo — never beside it
 

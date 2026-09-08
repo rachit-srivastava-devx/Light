@@ -53,7 +53,7 @@ pub fn policy(stdout: &str, _stderr: &str) -> D {
     }
 }
 
-/// `tests/corpus/run.sh` -- `"DENOMINATOR checked=%d total=%d ... caught=%d ..."`.
+/// `gates/corpus/run.sh` -- `"DENOMINATOR checked=%d total=%d ... caught=%d ..."`.
 pub fn corpus(stdout: &str, _stderr: &str) -> D {
     let fields = after(stdout, "checked=")
         .zip(after(stdout, "total="))

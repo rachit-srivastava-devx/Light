@@ -9,6 +9,7 @@
 mod classify;
 mod denominator;
 mod digits;
+mod gates;
 mod orchestrate;
 mod parsers;
 mod ports;
@@ -19,10 +20,11 @@ mod spec;
 mod verdict;
 
 pub use denominator::{Denominator, DenominatorResult, ZeroDenominator};
+pub use gates::{GateAssetError, GatesRoot};
 pub use orchestrate::{run_all, run_gate};
 pub use ports::{ProcessOutput, ProcessRunner, ToolProbe};
 pub use registry::GATES;
 pub use report::Report;
 pub use requirement::{ProbeTool, Requirement};
-pub use spec::GateSpec;
+pub use spec::{GateCommand, GateSpec};
 pub use verdict::{FailReason, GateResult, Verdict};

@@ -49,7 +49,7 @@ fn wrong_predicate_type_fails_to_deserialize() {
     let attestation = sample_attestation();
     let serialized = serde_json::to_string(&attestation).unwrap();
     let bad = serialized.replace(
-        "https://fleet.dev/attestation/Delivery/v1",
+        "https://fleet.local/DeliveryAttestation/v1",
         "https://example.com/other",
     );
     assert!(serde_json::from_str::<Attestation>(&bad).is_err());

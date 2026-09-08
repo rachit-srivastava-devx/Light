@@ -7,12 +7,13 @@ use redb::{Database, ReadableTable, TableDefinition};
 use super::types::KvError;
 
 pub struct KvStore {
-    db: Database,
+    pub(crate) db: Database,
+    pub(crate) db_path: std::path::PathBuf,
 }
 
 impl KvStore {
     pub fn open(path: &Path) -> Result<Self, KvError> {
-        Ok(Self { db: Database::create(path)? })
+        Ok(Self { db: Database::create(path)?, db_path: path.to_path_buf() })
     }
 
     pub fn get(&self, table: &str, key: &[u8]) -> Result<Option<Vec<u8>>, KvError> {

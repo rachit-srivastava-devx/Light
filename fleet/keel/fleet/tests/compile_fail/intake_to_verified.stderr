@@ -1,7 +1,0 @@
-error[E0599]: no method named `verify` found for struct `Task<Intake>` in the current scope
- --> tests/compile_fail/intake_to_verified.rs:5:18
-  |
-5 |     let _ = task.verify("skipped every gate", &NoLedger);
-  |                  ^^^^^^ method not found in `Task<Intake>`
-  |
-  = note: the method was found for `Task<Verifying>`

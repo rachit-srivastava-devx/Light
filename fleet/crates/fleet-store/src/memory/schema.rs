@@ -63,6 +63,6 @@ impl MemoryStore {
             &format!("CREATE VIRTUAL TABLE IF NOT EXISTS memory_vectors USING vec0(embedding float[{vector_dimensions}])"),
             [],
         )?;
-        Ok(Self { conn, vector_dimensions })
+        Ok(Self { conn, vector_dimensions, db_path: path.to_path_buf() })
     }
 }

@@ -37,15 +37,6 @@ fn create_twice_with_same_name_fails_on_retry_exhaustion() {
 }
 
 #[test]
-fn remove_is_idempotent_on_an_already_removed_worktree() {
-    let (_guard, repo) = init_repo();
-    let name = unique_name("idem");
-    let wt = create(&repo, &name).expect("create");
-    remove(&repo, &wt).expect("first remove");
-    remove(&repo, &wt).expect("second remove is a no-op success");
-}
-
-#[test]
 fn two_concurrent_names_never_collide() {
     let a = unique_name("role");
     let b = unique_name("role");
@@ -67,7 +58,14 @@ fn remove_reports_leak_when_directory_survives_forced_remove() {
     perms.set_mode(0o555);
     std::fs::set_permissions(&wt.path, perms).unwrap();
     let err = remove(&repo, &wt).expect_err("leaked directory must be reported");
-    assert!(matches!(err, WorktreeError::RemoveLeaked { .. }));
+    // `RemoveFailed` (carrying the real OS reason, e.g. "Permission denied") is the expected
+    // answer since the containment fix stopped swallowing the fallback error with `let _ =`.
+    // `RemoveLeaked` stays reachable for the stranger case: `remove_dir_all` returns Ok yet the
+    // directory is still on disk. Either is a correct refusal; a silent Ok never was.
+    assert!(
+        matches!(err, WorktreeError::RemoveFailed { .. } | WorktreeError::RemoveLeaked { .. }),
+        "unremovable directory must be reported, got {err:?}"
+    );
     let mut perms = std::fs::metadata(&wt.path).unwrap().permissions();
     perms.set_mode(0o755);
     std::fs::set_permissions(&wt.path, perms).unwrap();

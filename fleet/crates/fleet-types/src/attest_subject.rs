@@ -1,4 +1,4 @@
-//! Attestation subject/digest types. `fleet/contracts/attestation.v1.json:10-20,28`.
+//! Attestation subject/digest types. `contracts/attestation.v1.json:10-20,28`.
 
 use serde::{Deserialize, Serialize};
 

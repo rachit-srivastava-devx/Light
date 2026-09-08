@@ -1,8 +1,0 @@
-[package]
-name = "b3oracle"
-version = "0.1.0"
-edition = "2021"
-# The acceptance suite's INDEPENDENT hash oracle. It must depend on the real crate so that a
-# hand-rolled reimplementation in the product cannot be cross-checked against itself.
-[dependencies]
-blake3 = "1"

@@ -18,4 +18,6 @@ pub enum ContextError {
         "budget of {budget} tokens cannot fit even the single smallest candidate ({smallest} tokens)"
     )]
     BudgetTooSmall { budget: u64, smallest: u64 },
+    #[error("working directory {work_dir:?} is not under repo root {root:?}")]
+    WorkDirOutsideRoot { root: String, work_dir: String },
 }

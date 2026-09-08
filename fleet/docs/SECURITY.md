@@ -36,9 +36,9 @@ Found by sweeping every backticked `fleet …` command in every document against
 20 of 23 existed. Detector `M6` now fails when a documented command does not, so this class cannot
 recur silently.
 
-What IS true today: `verify.sh` treats `cargo-audit` as a required stage, and `cargo-deny` and
-`gitleaks` are required stages alongside it. Supply-chain attestation of the fleet binary itself
-remains unbuilt.
+What IS true today: `fleet gate` runs the required gate set (`unit tests`, `mutants`, `semgrep`,
+`trivy`, `recur`, `detectors`, `policy`, `corpus` — see `crates/fleet-verify/src/registry.rs` for
+the current list). Supply-chain attestation of the fleet binary itself remains unbuilt.
 
 ## Stronger property
 

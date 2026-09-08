@@ -1,4 +1,4 @@
-//! `DeliveryPredicate` and its `elements`. `fleet/contracts/attestation.v1.json:23-47`.
+//! `DeliveryPredicate` and its `elements`. `contracts/attestation.v1.json:23-47`.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

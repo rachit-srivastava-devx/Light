@@ -9,17 +9,20 @@ use serde_json::Value;
 
 use super::canon::canonical_bytes;
 use super::clock::now_rfc3339;
-use super::read::read_rows;
+use super::tail::read_tail;
 use super::types::LedgerError;
-use super::verify::verify_rows;
 use super::Ledger;
 use crate::io_fault::IoFault;
 use crate::lock::FileLock;
 
 impl Ledger {
-    /// Append one receipt. Verifies the existing chain first, refuses if it's already broken
-    /// rather than extending a corrupt chain. Stamps `seq`/`prev_hash`/`ts_wall`/`hash` itself --
-    /// the caller supplies only the fields a worker is allowed to author.
+    /// Append one receipt. O(1) amortised in chain length: reads only the current on-disk tip
+    /// (not the whole chain) to learn `seq`/`prev_hash`, and refuses rather than extending a tip
+    /// that is unreadable or whose hash does not recompute. The file lock is held across that
+    /// read and the write below, so a concurrent process's append is never raced onto a stale
+    /// tip. Full-chain corruption elsewhere is still caught -- just by `verify()`, not by every
+    /// `append()`. Stamps `seq`/`prev_hash`/`ts_wall`/`hash` itself -- the caller supplies only
+    /// the fields a worker is allowed to author.
     pub fn append(
         &self,
         event: ReceiptEvent,
@@ -29,12 +32,9 @@ impl Ledger {
         exit_code: Option<ExitCode>,
     ) -> Result<Receipt, LedgerError> {
         let _guard = FileLock::acquire(&self.paths.lock)?;
-        let rows = read_rows(&self.paths.chain)?;
-        if !rows.is_empty() {
-            verify_rows(&rows)?;
-        }
-        let seq = rows.len() as u64;
-        let prev_hash = match rows.last() {
+        let tip = read_tail(&self.paths.chain)?;
+        let seq = tip.as_ref().map_or(0, |r| r.seq + 1);
+        let prev_hash = match &tip {
             Some(last) => PrevHash::Hash(last.hash.clone()),
             None => PrevHash::Genesis,
         };

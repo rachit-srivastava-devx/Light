@@ -1,15 +1,16 @@
 //! The 8-stage sequential wiring. **Restate deferred**: BLUEPRINT §3/§4 specifies an
 //! `async fn run_pipeline(ctx: restate_sdk::Context, ..)` registered as a
 //! `#[restate_sdk::service]`, journaling each stage via `ctx.run(..)`. Pulling in `restate-sdk`
-//! (an external durable-execution server + its client SDK) could not be wired cleanly in one
-//! pass; per the task brief's explicit fallback, this uses `pipeline::step_log::StepLog` as a
-//! simpler resumable-step-log shim instead. Swapping in the real SDK later means replacing this
-//! file's body with `ctx.run(..)` closures around the same `stages::*` calls -- the stage
-//! functions themselves (and `dispatch_table::run_one`'s match) do not change.
+//! could not be wired cleanly in one pass; per the task brief's explicit fallback, this uses
+//! `pipeline::step_log::StepLog` as a simpler resumable-step-log shim instead. Swapping in the
+//! real SDK later means replacing this file's body with `ctx.run(..)` closures around the same
+//! `stages::*` calls -- the stage functions themselves do not change.
 
+use super::ctx::StageCtx;
 use super::dispatch_table::run_one;
-use super::event::{PipelineError, PipelineOutcome};
+use super::event::{PipelineError, PipelineOutcome, StageOutput};
 use super::stage::PipelineStage;
+use super::stage_report;
 use super::stages;
 use super::step_log::StepLog;
 use fleet_types::{NodeId, Role, TaskId};
@@ -19,28 +20,33 @@ use std::path::Path;
 /// already marked done (crash-resume) and always running `Teach` last regardless of outcome.
 pub fn run_pipeline(
     state_dir: &Path,
+    repo: &Path,
     task: TaskId,
     runtime: &fleet_router::RuntimeState,
+    verify_gates: &[fleet_verify::GateSpec],
 ) -> PipelineOutcome {
     let log = StepLog::open(state_dir, task.as_str());
+    let ctx = StageCtx { state_dir, repo, task: &task, runtime, verify_gates };
     let mut final_stage = PipelineStage::Event;
-    let result = run_through_merge(&log, runtime, &task, &mut final_stage);
+    let mut classification = None;
+    let result = run_through_merge(&log, &ctx, &mut final_stage, &mut classification);
 
     if !log.is_done(PipelineStage::Teach) {
         let node = NodeId::parse("pipeline-run").expect("literal matches NodeId pattern");
-        stages::teach(node, Role::Builder);
+        let failure = result.as_ref().err().map(|e| (final_stage, e));
+        stages::teach(node, Role::Builder, failure);
         let _ = log.mark_done(PipelineStage::Teach);
     }
     final_stage = PipelineStage::Teach;
 
-    PipelineOutcome { task, final_stage, result }
+    PipelineOutcome { task, final_stage, result, classification }
 }
 
 fn run_through_merge(
     log: &StepLog,
-    runtime: &fleet_router::RuntimeState,
-    task: &TaskId,
+    ctx: &StageCtx,
     final_stage: &mut PipelineStage,
+    classification: &mut Option<Box<fleet_router::Decision>>,
 ) -> Result<(), PipelineError> {
     for stage in PipelineStage::ALL {
         if stage == PipelineStage::Teach {
@@ -50,14 +56,22 @@ fn run_through_merge(
         if log.is_done(stage) {
             continue;
         }
-        if let Err(e) = run_one(stage, runtime, task) {
-            // Invariant from BLUEPRINT §4: every stage's only failure successor is `Teach`.
-            debug_assert!(stage.allowed_successors().contains(&PipelineStage::Teach));
-            return Err(e);
+        // Structured start/finish events, grouped per stage (S1: `fleet run` used to hang with
+        // zero output; this also tells slow-but-alive apart from hung).
+        let started = stage_report::started(stage);
+        let result = run_one(stage, ctx);
+        stage_report::finished(stage, started, result.is_ok());
+        match result {
+            Ok(StageOutput::Classified(decision)) => *classification = Some(decision),
+            Ok(StageOutput::None) => {}
+            Err(e) => {
+                // Invariant from BLUEPRINT §4: every stage's only failure successor is `Teach`.
+                debug_assert!(stage.allowed_successors().contains(&PipelineStage::Teach));
+                return Err(e);
+            }
         }
         let _ = log.mark_done(stage);
-        // `next()` is the single source of truth for stage order; used here (not just asserted
-        // in tests) so a future stage insertion cannot silently desync the loop from the graph.
+        // `next()` is the single source of truth for stage order (also asserted in tests).
         if let Some(next) = stage.next() {
             *final_stage = next;
         }

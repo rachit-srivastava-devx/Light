@@ -13,22 +13,30 @@ pub struct MeterArgs {
     pub cost_est: u64,
     #[arg(long)]
     pub settle: bool,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Args, Debug)]
 pub struct RouteArgs {
     #[arg(long)]
     pub role: Option<String>,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Args, Debug)]
 pub struct SwarmArgs {
     #[arg(long)]
     pub repo: String,
+    /// The lane's task id, and (unless `--prompt` is also given) the free-text instructions
+    /// sent to the worker. Passing `--task` alone is enough to run a lane.
     #[arg(long)]
     pub task: String,
     #[arg(long)]
     pub role: String,
+    /// Optional: free-text worker instructions, overriding `--task`'s text for that purpose
+    /// only (the task id stays `--task`'s value either way). Defaults to `--task`'s value.
     #[arg(long, default_value = "")]
     pub prompt: String,
 }
@@ -51,6 +59,8 @@ pub struct PlanArgs {
 pub struct RoleCheckArgs {
     #[arg(long)]
     pub role: String,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Args, Debug)]
@@ -59,4 +69,6 @@ pub struct AgentsArgs {
     pub repo: String,
     #[arg(long)]
     pub agent_id: String,
+    #[arg(long)]
+    pub json: bool,
 }

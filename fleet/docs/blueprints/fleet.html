@@ -1,0 +1,211 @@
+<title>Fleet — Build Report</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --panel:#fffdfa; --ink:#1c1a17; --ink-dim:#5c5750; --ink-faint:#8b8378;
+    --line:#e4e0d8; --accent:#b5642c; --accent-soft:#f0e3d6;
+    --ok:#2f7d4f; --okbg:#e7f2ea; --warn:#9a6a15; --warnbg:#f6edda; --risk:#a33; --riskbg:#f6e5e5;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#16140f; --panel:#201d17; --ink:#efe9df; --ink-dim:#b3aa9c; --ink-faint:#7d7568;
+    --line:#332e26; --accent:#e0894f; --accent-soft:#2e2114;
+    --ok:#7fc79a; --okbg:#16281c; --warn:#e0b866; --warnbg:#2a2110; --risk:#e08f8f; --riskbg:#2a1616;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#16140f; --panel:#201d17; --ink:#efe9df; --ink-dim:#b3aa9c; --ink-faint:#7d7568;
+    --line:#332e26; --accent:#e0894f; --accent-soft:#2e2114;
+    --ok:#7fc79a; --okbg:#16281c; --warn:#e0b866; --warnbg:#2a2110; --risk:#e08f8f; --riskbg:#2a1616;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;margin:0;font-size:15px}
+  .wrap{max-width:1000px;margin:0 auto;padding:48px 24px 96px}
+  header.mast{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:8px}
+  .kick{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+  h1{font-size:44px;line-height:1.02;margin:0 0 10px;letter-spacing:-.02em;text-wrap:balance}
+  h1 .dim{color:var(--ink-faint);font-weight:400}
+  .lede{color:var(--ink-dim);font-size:17px;max-width:70ch;margin:0}
+  .counts{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 0}
+  .pill{font-family:var(--mono);font-size:12px;padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--panel)}
+  .pill b{color:var(--accent)}
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin:52px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h2 .n{color:var(--accent);margin-right:10px}
+  p{max-width:74ch}
+  a{color:var(--accent)}
+  code{font-family:var(--mono);font-size:.88em;background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
+  .card.big{border-left:3px solid var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);background:var(--panel);position:sticky;top:0}
+  tr:last-child td{border-bottom:none}
+  td code{background:none;padding:0;color:var(--accent)}
+  .st{font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+  .st.done{color:var(--ok);background:var(--okbg)} .st.open{color:var(--warn);background:var(--warnbg)}
+  .num{font-family:var(--mono);color:var(--ink-dim);white-space:nowrap}
+  figure{margin:18px 0}
+  figcaption{font-size:12.5px;color:var(--ink-faint);margin-top:8px;text-align:center}
+  svg{max-width:100%;height:auto;display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .tenet b{color:var(--accent);font-family:var(--mono);font-size:12px}
+  .flag{border-left:3px solid var(--warn);background:var(--warnbg)}
+  .flag.risk{border-left-color:var(--risk);background:var(--riskbg)}
+  ul{max-width:74ch;padding-left:20px} li{margin:5px 0}
+  .foot{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);color:var(--ink-faint);font-size:12.5px;font-family:var(--mono)}
+  .swatch{font-family:var(--mono);font-size:11px}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <p class="kick">Build Report · migration complete · updated 2026-09-08</p>
+  <h1>Fleet <span class="dim">— a keyless, local, multi-agent coding kernel</span></h1>
+  <p class="lede">A from-scratch <code>fleet-*</code> Rust workspace, migrated by extracting the proven parts of the
+  existing fleet system and building only what was genuinely absent. Sixteen independent packages behind a
+  one-directional dependency DAG, each blueprinted to be hand-codeable, built by Sonnet agents, and reviewed
+  adversarially — distrusting the tests. The migration is now complete: the workspace is green, and two bugs
+  found after the original "16/16 DONE" milestone have since been fixed (§06).</p>
+  <div class="counts">
+    <span class="pill"><b>16 / 16</b> crates complete</span>
+    <span class="pill"><b>15</b> Rust + <b>1</b> Python</span>
+    <span class="pill"><b>≤80</b> lines / source file</span>
+    <span class="pill"><b>380</b> tests passing · <b>0</b> failing</span>
+    <span class="pill"><b>keyless</b> · no API keys</span>
+  </div>
+</header>
+
+<h2><span class="n">01</span>The decision — iterate, don't rebuild</h2>
+<div class="card big">
+<p>Three parallel audits established that the existing fleet system already <b>builds and passes</b>, with the
+hard, risky parts coded <em>and adversarially tested</em>: an fd-3 worker protocol, a blake3 hash-chained tamper-verified
+ledger, worktree isolation, keyless CLI-driving, a type-state lifecycle with compile-fail tests, and a
+mutation-gated quality ratchet. Fleet's target design is the <b>same doctrine redrawn</b> with cleaner crate
+boundaries — a refactor target, not a new system. So: <b>extract</b> the working modules into clean ≤80-line
+crates, and <b>build fresh</b> only the crates fleet lacked (ingress, ambiguity-scan, hybrid code-context,
+unified egress, the memory bandit).</p>
+</div>
+
+<h2><span class="n">02</span>The dependency DAG</h2>
+<figure>
+<svg viewBox="0 0 960 380" role="img" aria-label="One-directional dependency DAG: fleet-types at the base; fleet-lifecycle and fleet-store depend on it; twelve sibling crates depend on those; src/fleet-cli at the top depends on all. fleet-crew is a runtime subprocess dependency of fleet-worker.">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+  <style>
+    .b{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+    .base{stroke:var(--accent);stroke-width:2}
+    .t{fill:var(--ink);font-family:var(--mono);font-size:12px;font-weight:700}
+    .s{fill:var(--ink-faint);font-family:var(--mono);font-size:9.5px}
+    .e{stroke:var(--ink-faint);stroke-width:1.2;fill:none;opacity:.55}
+  </style>
+  <!-- edges (drawn first) -->
+  <g class="e" marker-end="url(#a)">
+    <line x1="480" y1="330" x2="360" y2="286"/><line x1="480" y1="330" x2="600" y2="286"/>
+    <line x1="360" y1="256" x2="220" y2="150"/><line x1="360" y1="256" x2="480" y2="150"/>
+    <line x1="600" y1="256" x2="740" y2="150"/><line x1="600" y1="256" x2="480" y2="150"/>
+    <line x1="220" y1="120" x2="470" y2="70"/><line x1="480" y1="120" x2="480" y2="70"/><line x1="740" y1="120" x2="490" y2="70"/>
+  </g>
+  <!-- base -->
+  <rect class="b base" x="400" y="330" width="160" height="40" rx="8"/><text class="t" x="480" y="350" text-anchor="middle">fleet-types</text><text class="s" x="480" y="363" text-anchor="middle">shared vocabulary · pure</text>
+  <!-- layer 1 -->
+  <rect class="b base" x="285" y="256" width="150" height="40" rx="8"/><text class="t" x="360" y="276" text-anchor="middle">fleet-lifecycle</text><text class="s" x="360" y="289" text-anchor="middle">type-state Task&lt;S&gt;</text>
+  <rect class="b base" x="525" y="256" width="150" height="40" rx="8"/><text class="t" x="600" y="276" text-anchor="middle">fleet-store</text><text class="s" x="600" y="289" text-anchor="middle">ledger · graph · vec · kv</text>
+  <!-- siblings -->
+  <rect class="b" x="120" y="120" width="200" height="32" rx="7"/><text class="s" x="220" y="140" text-anchor="middle">events · router · scan · plan</text>
+  <rect class="b" x="380" y="120" width="200" height="32" rx="7"/><text class="s" x="480" y="140" text-anchor="middle">context · verify · merge</text>
+  <rect class="b" x="640" y="120" width="200" height="32" rx="7"/><text class="s" x="740" y="140" text-anchor="middle">memory · govern · stream · worker</text>
+  <!-- top -->
+  <rect class="b base" x="390" y="30" width="180" height="40" rx="8"/><text class="t" x="480" y="50" text-anchor="middle">src / fleet-cli</text><text class="s" x="480" y="63" text-anchor="middle">composition root · pipeline</text>
+</svg>
+<figcaption><code>types → {lifecycle, store} → {12 siblings} → src/</code>. Siblings connect only through caller-supplied
+<b>port traits</b> (dependency inversion), wired in <code>src/</code> — the one hard compile edge is <code>worker → merge</code>.
+<code>fleet-crew</code> (Python) is a runtime subprocess dependency of <code>fleet-worker</code>, not a compile edge.</figcaption>
+</figure>
+
+<h2><span class="n">03</span>Per-crate status &amp; verification</h2>
+<p>Every crate: green tests, clippy <code>-D warnings</code> clean, no source file over 80 lines. Test counts below
+are real <code>cargo test -p &lt;crate&gt;</code> / <code>pytest</code> runs as of this update (workspace total:
+<b>380 passed, 0 failed</b>). Verification column records <em>how</em> each crate was originally checked — Opus
+hand-mutation, an independent Sonnet verifier, or the workspace floor (ws); two crates (<code>fleet-worker</code>,
+<code>src/fleet-cli</code>) have since had a real bug found and fixed post-review (§06).</p>
+<div class="scroll"><table>
+<tr><th>Crate</th><th>Branch</th><th>Tests</th><th>Verified</th><th>Notes</th></tr>
+<tr><td><code>fleet-types</code></td><td>refactor</td><td class="num">33/33</td><td><span class="st done">Opus mut✓</span></td><td>shared vocab; wrapping-add mutant killed by hand</td></tr>
+<tr><td><code>fleet-lifecycle</code></td><td>refactor</td><td class="num">23/23</td><td><span class="st done">Opus mut✓</span></td><td>type-state; illegal transitions fail to compile (trybuild)</td></tr>
+<tr><td><code>fleet-store</code></td><td>refactor</td><td class="num">28/28</td><td><span class="st done">Opus mut✓</span></td><td>ledger tamper-mutant killed; retention/prune added since original review</td></tr>
+<tr><td><code>fleet-events</code></td><td>build-new</td><td class="num">15/15</td><td><span class="st done">Opus✓ ws</span></td><td>ingress pollers; <code>guard()</code> payload-blind</td></tr>
+<tr><td><code>fleet-router</code></td><td>extract</td><td class="num">11/11</td><td><span class="st done">Opus mut✓</span></td><td>pure decision core; IO-free; role→tier mutant killed</td></tr>
+<tr><td><code>fleet-scan</code></td><td>build-new</td><td class="num">22/22</td><td><span class="st done">verifier✓</span></td><td>ambiguity prober (≠ security scan)</td></tr>
+<tr><td><code>fleet-plan</code></td><td>refactor</td><td class="num">54/54</td><td><span class="st done">ws✓</span></td><td>LLD gate lifted; +walkthrough &amp; pr_walkthrough (asks #6/#19) since original review</td></tr>
+<tr><td><code>fleet-context</code></td><td>partial</td><td class="num">31/31</td><td><span class="st done">Opus✓ ws</span></td><td>BM25+tree-sitter; embeddings still deferred behind port; +AGENTS.md/CLAUDE.md/PR-template discovery (ask #10) since original review</td></tr>
+<tr><td><code>fleet-verify</code></td><td>extract</td><td class="num">32/32</td><td><span class="st done">Opus mut✓</span></td><td>gate wall; zero-denominator mutant killed</td></tr>
+<tr><td><code>fleet-merge</code></td><td>extract</td><td class="num">17/17</td><td><span class="st done">Opus mut✓</span></td><td>worktree + merge-back; head-moved mutant killed</td></tr>
+<tr><td><code>fleet-memory</code></td><td>partial</td><td class="num">17/17</td><td><span class="st done">ws✓</span></td><td>hand-rolled Thompson bandit (no <code>rand</code>)</td></tr>
+<tr><td><code>fleet-govern</code></td><td>refactor</td><td class="num">18/18</td><td><span class="st done">Opus mut✓</span></td><td>real fs4 lock; +multi-day autonomous loop/failover (ask #20) since original review</td></tr>
+<tr><td><code>fleet-stream</code></td><td>partial</td><td class="num">14/14</td><td><span class="st done">verifier✓</span></td><td>egress Sink + 6 sinks, each ≤80</td></tr>
+<tr><td><code>fleet-worker</code></td><td>refactor</td><td class="num">29/29</td><td><span class="st done">Opus✓</span></td><td>hermetic isolation; freelane restored + proven live against a real keyless endpoint (§06)</td></tr>
+<tr><td><code>fleet-crew</code></td><td>package</td><td class="num">55/55 (py)</td><td><span class="st done">Opus mut✓</span></td><td>keyless adapters (claude+codex); 2 latent bugs fixed</td></tr>
+<tr><td><code>src / fleet-cli</code></td><td>refactor</td><td class="num">36/36</td><td><span class="st done">Opus✓ ws</span></td><td>wires all 15 crates; 8-stage pipeline + plan-ahead build overlap (ask #7)</td></tr>
+</table></div>
+
+<h2><span class="n">04</span>The doctrine it holds</h2>
+<div class="grid2">
+  <div class="card tenet"><b>T1 · two planes</b><p>A deterministic Rust control plane decides everything and never calls an LLM; CLI workers only propose, over fd 3.</p></div>
+  <div class="card tenet"><b>T2 · re-run every check</b><p>The kernel re-derives; a proxy is not the property. Denominators refuse an empty measurement.</p></div>
+  <div class="card tenet"><b>T3 · one event log</b><p>Everything is an append-only, blake3 hash-chained event; tamper is detected on the chain walk.</p></div>
+  <div class="card tenet"><b>T4 · no daemon</b><p>Spawn-on-demand, exit-when-done. Ingress polls; the dashboard is a per-run localhost server or a zero-server file tail.</p></div>
+  <div class="card tenet"><b>T5 · keyless</b><p>No API keys. Cost = estimated tokens + rate-limit-window %, metered on real tokenizer counts, never a dollar bill.</p></div>
+  <div class="card tenet"><b>hermetic</b><p>A worker gets its skills / MCP / prompt from the repo <code>.fleet/</code>, with <code>env_clear()</code> + HOME/XDG overridden — never the user's <code>~/.claude</code>.</p></div>
+</div>
+
+<h2><span class="n">05</span>Open — needs human judgment, not tests</h2>
+<div class="card flag risk"><p><b>The keyless thesis itself.</b> <code>fleet-worker::probe_no_ambient</code> is implemented and unit-tested,
+but whether <code>claude</code>/<code>codex</code> genuinely run keyless-isolated — or leak ambient credentials (keychain,
+a background daemon socket) that <code>env_clear()</code>+tempdir can't block — <b>still cannot be settled by a test</b>
+(the doc comment on <code>probe.rs</code> says so explicitly). It needs a human call. <em>Separately</em>, the freelane
+(fleet's own keyless fallback network lane) has since been restored after a cleanup pass deleted it, and is now
+proven live: <code>crates/fleet-worker/tests/freelane_live.rs</code> drives the real embedded <code>freelane.sh</code>
+against a real keyless endpoint and asserts a genuine, non-empty reply — that specific lane is no longer an open
+question, even though the broader ambient-credential question above still is.</p></div>
+<div class="card flag"><p><b>Lifecycle state mapping.</b> <code>fleet-plan</code>'s map from the historical <code>review.sh</code> states to
+<code>fleet_types::LifecycleState</code> is a best-fit guess; confirm it when wiring the composition root, or
+<code>submission_eligible</code>/<code>verdict_decision</code> may gate at the wrong points.</p></div>
+<div class="card flag"><p><b>Deferred, on purpose.</b> Code-context embeddings (behind the <code>VectorIndex</code> port — <code>ort</code> never
+stabilised); <code>fleet-store</code>'s vec0 vector path (unverified until a <code>vec0</code> extension is installed); Restate
+(replaced by an on-disk step-log with the same crash-resume property); and several <code>fleet-cli</code> aux subcommands
+(Console/Freeze/Contract/Pr/Attest/Adjudicate/Skills) plus MCP mounting that parse but still return a typed
+<code>NotYetImplemented</code> (<code>src/dispatch/ops_cmd.rs</code>, <code>src/dispatch/worker_cmd.rs::mcp()</code>).</p></div>
+<div class="card flag"><p><b>Dependency watch.</b> <code>fleet-events</code>'s <code>imap</code> pulls <code>imap-proto</code>, which emits a
+future-incompat warning; and <code>rank-fusion</code> was dead (yanked) so RRF is hand-rolled. Neither blocks today.</p></div>
+
+<h2><span class="n">06</span>What the adversarial review earned — and two bugs found afterward</h2>
+<p>Reviewing by <em>distrusting the tests</em> — reproducing each crate and killing a mutant by hand — caught what green
+suites hid, both during the original per-crate review and in a later pass over the composition root:</p>
+<ul>
+  <li><b>A production corruption path in <code>fleet-govern</code>:</b> the <code>settle</code> id-check was under-tested (the
+  existing test left the reservation list empty, so the comparison never ran). Neutering it passed all 14 tests. A pinning
+  test now kills that mutant.</li>
+  <li><b>A proxy-not-property test in <code>fleet-worker</code>:</b> the hermetic test first checked HOME's <em>value</em> —
+  which <code>.env("HOME")</code> sets regardless of <code>env_clear()</code>. The real property is that a non-allowlisted
+  sentinel var never reaches the child. Fixed and re-confirmed.</li>
+  <li><b>Two latent bugs in <code>fleet-crew</code></b> (a negative log-floor trivially passing; a non-UTF-8 transcript byte
+  crashing metadata read) — fixed with named tests before they shipped.</li>
+  <li><b>A dead crate and a never-stabilised one</b> routed around before they became load-bearing.</li>
+  <li><b>Found after "16/16 DONE" — a missing entry point hidden by a test seam:</b> 351 tests passed while
+  <code>fleet __agent</code> did not exist as a real subcommand, because every spawn-path test substituted a fake child
+  via <code>FLEET_WORKER_TEST_CHILD_EXE</code>. Fixed by driving the real <code>env!("CARGO_BIN_EXE_fleet")</code> binary
+  in at least one test per spawn path.</li>
+  <li><b>Found after "16/16 DONE" — a proxy check on the fd-3 receipt channel:</b> <code>fcntl(3, F_GETFD)</code> passed
+  spuriously because tokio's own kqueue reactor can independently land on fd 3. Fixed by checking the real property —
+  <code>getsockopt(3, SOL_SOCKET, SO_TYPE)</code> — instead.</li>
+  <li><b>Cleanup deleted a load-bearing script:</b> <code>fleet/bin/freelane.sh</code> (the keyless lane) was removed
+  during a dev-scripts cleanup because no crate's build manifest named it as owned. Restored to
+  <code>crates/fleet-worker/assets/freelane.sh</code> and now proven live against a real keyless endpoint
+  (<code>freelane_live.rs</code>).</li>
+</ul>
+<p>Every lesson is recorded in <code>blueprints/MIGRATION-PLAN.md</code> §7 so fleet doesn't repeat them.</p>
+
+<div class="foot">
+  Fleet · <code>Light/fleet/</code> · 16 crates · one-directional DAG · ≤80 lines/file · keyless.<br>
+  Blueprints, template, playbook (AI-native SDLC), and the living plan are in <code>fleet/docs/blueprints/</code>.
+  Build: Sonnet + opencode · Review: Opus (adversarial). Migration complete; workspace green at 380/380 tests.
+</div>
+</div>

@@ -9,15 +9,32 @@ use fleet_govern::FileMeterStore;
 use fleet_types::{LaneId, Tokens};
 use std::path::Path;
 
+#[derive(serde::Serialize)]
+struct MeterReport {
+    reservation: String,
+    settled: bool,
+}
+
 pub fn meter(state_dir: &Path, args: MeterArgs) -> Result<(), DispatchError> {
     let store = FileMeterStore::new(state_dir.join("meter.json"));
     let lane = LaneId::parse(args.lane.clone()).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let reservation = fleet_govern::admit(&store, &lane, Tokens::new(args.cost_est))?;
-    human::line("reservation", reservation.id.get());
+    let reservation_id = reservation.id.get().to_string();
 
-    if args.settle {
+    let settled = if args.settle {
         fleet_govern::settle(&store, reservation, Tokens::new(args.cost_est))?;
-        human::ok("settled");
+        true
+    } else {
+        false
+    };
+
+    if args.json {
+        crate::print::json::print_pretty(&MeterReport { reservation: reservation_id, settled });
+    } else {
+        human::line("reservation", &reservation_id);
+        if settled {
+            human::ok("settled");
+        }
     }
     Ok(())
 }

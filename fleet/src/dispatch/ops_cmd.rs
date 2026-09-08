@@ -11,22 +11,43 @@ use crate::runtime::ConcurrencyCap;
 use clap::CommandFactory;
 use clap_complete::{generate, Shell};
 
-pub fn status(json: bool) -> Result<(), DispatchError> {
-    let cap = ConcurrencyCap::from_env(usize::MAX, 3);
+/// `status`'s payload as an actual object -- previously `--json` serialized the bare `usize`
+/// from `cap.get()`, so `fleet status --json` emitted the scalar `3` instead of JSON with a
+/// field name, unparseable by any caller expecting an object (D3 in the E2E findings).
+#[derive(serde::Serialize)]
+struct StatusReport {
+    concurrency_cap: usize,
+}
+
+/// Takes the cap `main.rs` already computed from a REAL measurement. It used to recompute its own
+/// with `ConcurrencyCap::from_env(usize::MAX, 3)` -- `usize::MAX` meaning "ignore RAM entirely" --
+/// so `status` reported 3 while the measured preflight cap was 2. Reporting an unmeasured number
+/// next to a measured gate is how a check becomes cosmetic; the cap is now passed in, never re-derived.
+pub fn status(json: bool, cap: ConcurrencyCap) -> Result<(), DispatchError> {
+    let report = StatusReport { concurrency_cap: cap.get() };
     if json {
-        crate::print::json::print_pretty(&cap.get());
+        crate::print::json::print_pretty(&report);
     } else {
-        human::line("concurrency_cap", cap.get());
+        human::line("concurrency_cap", report.concurrency_cap);
     }
     Ok(())
 }
 
-pub fn doctor() -> Result<(), DispatchError> {
-    for tool in ["cargo", "git"] {
-        let ok = std::process::Command::new("which").arg(tool).output().map(|o| o.status.success()).unwrap_or(false);
-        human::line(tool, if ok { "found" } else { "missing" });
+fn which(tool: &str) -> bool {
+    std::process::Command::new("which").arg(tool).output().map(|o| o.status.success()).unwrap_or(false)
+}
+
+/// "no crashing again": folds the capacity preflight into `doctor`. `--json` builds the same
+/// facts as a `DoctorReport` object (`doctor_json.rs`) instead of printing human lines.
+pub fn doctor(json: bool) -> Result<(), DispatchError> {
+    let (cargo, git) = (which("cargo"), which("git"));
+    if json {
+        crate::print::json::print_pretty(&super::doctor_json::build(cargo, git));
+        return Ok(());
     }
-    Ok(())
+    human::line("cargo", if cargo { "found" } else { "missing" });
+    human::line("git", if git { "found" } else { "missing" });
+    crate::dispatch::capacity_probe_cmd::report(3, None)
 }
 
 pub fn version() -> Result<(), DispatchError> {
@@ -51,7 +72,6 @@ pub fn not_yet_implemented(command: &Commands) -> DispatchError {
         Commands::Contract(_) => "no crate in the roster names Contract ownership yet",
         Commands::Pr(_) => "fleet-merge has no pr-emit fn exposed yet (worktree/merge only)",
         Commands::Attest(_) => "fleet-types has the wire shape only, no builder-flow fn yet",
-        Commands::Adjudicate { .. } => "fleet-verify has no adjudication-table fn exposed yet",
         Commands::Skills { .. } => "fleet-worker's skills_registry module is private",
         _ => "not wired in this pass",
     };

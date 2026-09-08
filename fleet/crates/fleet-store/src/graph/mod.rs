@@ -2,6 +2,7 @@
 
 mod batch;
 mod dependents;
+mod prune;
 mod read;
 mod schema;
 mod types;
@@ -12,4 +13,5 @@ pub use types::{AliasRecord, EdgeRecord, FileRecord, GraphError, ProjectRecord, 
 
 pub struct GraphStore {
     pub(crate) conn: rusqlite::Connection,
+    pub(crate) db_path: std::path::PathBuf,
 }

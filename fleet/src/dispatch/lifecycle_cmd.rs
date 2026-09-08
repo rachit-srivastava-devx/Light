@@ -26,11 +26,21 @@ impl ReceiptLedger for FileReceiptLedger {
     }
 }
 
+#[derive(serde::Serialize)]
+struct LifecycleReport {
+    advanced_to: String,
+}
+
 pub fn lifecycle(state_dir: &Path, args: LifecycleArgs) -> Result<(), DispatchError> {
     let ledger = FileReceiptLedger(state_dir.join("lifecycle-receipts.log"));
     let id = TaskId::new(args.task_id).map_err(DispatchError::Lifecycle)?;
     let any = resume("Intake", id, 0).map_err(DispatchError::Lifecycle)?;
     let advanced = advance_any(any, args.evidence, &ledger).map_err(DispatchError::Lifecycle)?;
-    human::line("advanced_to", format!("{advanced:?}"));
+    let advanced_to = format!("{advanced:?}");
+    if args.json {
+        crate::print::json::print_pretty(&LifecycleReport { advanced_to });
+    } else {
+        human::line("advanced_to", advanced_to);
+    }
     Ok(())
 }

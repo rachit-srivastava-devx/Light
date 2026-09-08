@@ -3,12 +3,22 @@
 
 use clap::Args;
 
+/// Shared by the bare, arg-less subcommands (`roles`, `doctor`) that only need `--json`, so
+/// adding it costs `root.rs` a `(JsonOnly)` on one existing line, not a whole struct body.
+#[derive(Args, Debug)]
+pub struct JsonOnly {
+    #[arg(long)]
+    pub json: bool,
+}
+
 #[derive(Args, Debug)]
 pub struct LifecycleArgs {
     #[arg(long)]
     pub task_id: String,
     #[arg(long)]
     pub evidence: String,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Args, Debug)]
@@ -17,6 +27,17 @@ pub struct RunArgs {
     pub repo: String,
     #[arg(long)]
     pub task: String,
+    /// Emit the machine-readable `PipelineOutcome` JSON on stdout instead of the human
+    /// structured summary on stderr. Byte-identical to the pre-existing always-JSON behaviour.
+    #[arg(long)]
+    pub json: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct AdjudicateArgs {
+    pub artifact: String,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Args, Debug)]
@@ -45,4 +66,6 @@ pub struct RollbackArgs {
 pub struct LedgerArgs {
     #[arg(long)]
     pub verify: bool,
+    #[arg(long)]
+    pub json: bool,
 }

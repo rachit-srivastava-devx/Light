@@ -1,12 +1,14 @@
 //! Committed skill registry + resolution against one agent's declared capabilities. Ported near-
-//! verbatim from `skills.rs`'s resolution logic, loading from `.fleet/skills.toml` instead of the
-//! repo-root file (the HERMETIC requirement: the sandbox seed comes only from `.fleet/`).
+//! verbatim from `skills.rs`'s resolution logic, loading from `.fleet/skills.toml` (the target
+//! repo's own copy wins; this crate's embedded template is the fallback default) -- the HERMETIC
+//! requirement is that the sandbox seed comes only from `.fleet/` or this crate's own binary.
 
 use crate::sandbox::agent_registry::AgentFacts;
+use crate::sandbox::config_source::read_with_fallback;
+use crate::sandbox::templates::SKILLS_TOML;
 use crate::ProvisionError;
 use serde::Deserialize;
 use std::collections::BTreeSet;
-use std::fs;
 use std::path::Path;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -27,9 +29,7 @@ pub fn resolve_skills(
     repo: &Path,
     agent: &AgentFacts,
 ) -> Result<BTreeSet<String>, ProvisionError> {
-    let path = repo.join(".fleet").join("skills.toml");
-    let text =
-        fs::read_to_string(&path).map_err(|_| ProvisionError::MissingFleetFile("skills.toml"))?;
+    let (text, _source) = read_with_fallback(repo, "skills.toml", SKILLS_TOML)?;
     let parsed: RegistryFile =
         toml::from_str(&text).map_err(|_| ProvisionError::MissingFleetFile("skills.toml"))?;
     let mut resolved = BTreeSet::new();

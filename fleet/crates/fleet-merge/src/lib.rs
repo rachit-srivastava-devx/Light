@@ -22,7 +22,9 @@ mod error;
 mod git_exec;
 mod invariant;
 mod merge;
+mod merge_refusal;
 mod worktree;
+mod worktree_guard;
 
 pub use cache::invalidate_build_cache;
 pub use error::{MergeRefusal, WorktreeError};

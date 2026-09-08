@@ -1,8 +1,0 @@
-{
-  "schema_version": "1",
-  "scope": {"change": "regression-r1", "metrics": ["mutation_kill_rate"]},
-  "expires_at": "2020-01-01T00:00:00Z",
-  "reason": "expired test exception",
-  "signed_by": "test",
-  "signature": "blake3:0000000000000000000000000000000000000000000000000000000000000000"
-}

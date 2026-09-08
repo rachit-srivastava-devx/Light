@@ -4,7 +4,7 @@
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 
-use fleet_verify::{ProbeTool, ProcessOutput, ProcessRunner, ToolProbe};
+use fleet_verify::{GatesRoot, ProbeTool, ProcessOutput, ProcessRunner, ToolProbe};
 
 pub struct FakeProbe {
     pub available: BTreeSet<ProbeTool>,
@@ -46,6 +46,12 @@ impl ProcessRunner for FakeRunner {
         }
         self.scripted.borrow_mut().remove(0)
     }
+}
+
+/// A `GatesRoot` for tests that only exercise `GateCommand::OnPath` gates -- its content never
+/// gets read (`GatesRoot::require` is never called), it just needs to exist.
+pub fn dummy_gates() -> GatesRoot {
+    GatesRoot::from_override(std::env::temp_dir()).expect("temp dir always exists")
 }
 
 pub fn out(exit_code: i32, stdout: &str) -> ProcessOutput {

@@ -8,8 +8,10 @@ BIN_PATH="${BIN_DIR}/fleet"
 # build artifacts don't blow past the corpus suite's file-count cap). If that's exported here, the
 # release build below lands there instead of the in-repo default -- compute the real build output
 # path from it, don't hardcode the in-repo path, same pattern already used by verify.sh/FLEET_BIN.
-BUILT_BIN="${CARGO_TARGET_DIR:-$ROOT_DIR/keel/target}/release/fleet"
-STATE_DIR="${FLEET_STATE:-${HOME}/.local/state/fleet}"
+BUILT_BIN="${CARGO_TARGET_DIR:-$ROOT_DIR/target}/release/fleet"
+# NOTE: the env var is FLEET_STATE_DIR, not FLEET_STATE -- figment reads `state_dir` under the
+# `FLEET_` prefix (src/runtime/config.rs). The old name here silently did nothing.
+STATE_DIR="${FLEET_STATE_DIR:-${HOME}/.local/state/fleet}"
 ZFUNC_DIR="${HOME}/.zfunc"
 ZFUNC_FILE="${ZFUNC_DIR}/_fleet"
 
@@ -93,10 +95,11 @@ describe_foreign() {
 
 if [[ "$MODE" == "check" ]]; then
     printf 'CHECK no files changed\n'
-    printf 'WOULD build: cargo build --release --manifest-path %s/keel/Cargo.toml\n' "$ROOT_DIR"
+    printf 'WOULD build: cargo build --release --manifest-path %s/Cargo.toml\n' "$ROOT_DIR"
     if foreign_bin; then
-        printf 'WOULD REFUSE: %s is %s -- not installed by this repo.\n' "$BIN_PATH" "$(describe_foreign)"
-        printf '  Installing would destroy it. Move it aside, or install elsewhere:\n'
+        printf 'WOULD displace: %s is %s -- not installed by this repo.\n' "$BIN_PATH" "$(describe_foreign)"
+        printf '  It will be moved to %s.displaced-by-fleet-rs (kept, never clobbered),\n' "$BIN_PATH"
+        printf '  because `fleet` on PATH must always be this CLI. Install elsewhere with:\n'
         printf '    FLEET_BIN_DIR=~/.local/bin/fleet-rs ./install.sh\n'
     else
         printf 'WOULD install: %s\n' "$BIN_PATH"
@@ -128,19 +131,30 @@ if [[ "$MODE" == "uninstall" ]]; then
     exit 0
 fi
 
-printf 'CHANGE build: cargo build --release --manifest-path %s/keel/Cargo.toml\n' "$ROOT_DIR"
-cargo build --release --manifest-path "$ROOT_DIR/keel/Cargo.toml"
+printf 'CHANGE build: cargo build --release --manifest-path %s/Cargo.toml\n' "$ROOT_DIR"
+cargo build --release --manifest-path "$ROOT_DIR/Cargo.toml" --bin fleet
 if [[ ! -x "$BUILT_BIN" ]]; then
     fail_env "release build produced no executable at $BUILT_BIN"
 fi
 
 mkdir -p "$BIN_DIR"
+# Owner decision (2026-09-09): `fleet` on PATH must ALWAYS be this CLI. Every build replaces
+# whatever is there. Previously this refused and exited 7, which is how a stale symlink to the
+# predecessor repo (`Principal Engineering/fleet/fleet`, dated Aug 24) kept shadowing this binary --
+# so `fleet` in a shell ran the old project no matter how many times this repo was built.
+# The displaced file is preserved ONCE at <path>.displaced-by-fleet-rs so nothing is lost; repeat
+# installs will not clobber that backup with our own binary.
 if foreign_bin; then
-    printf 'fleet install refused: %s is %s.\n' "$BIN_PATH" "$(describe_foreign)" >&2
-    printf '  This repo did not put it there and will not overwrite it.\n' >&2
-    printf '  Move it aside, or choose another directory:\n' >&2
-    printf '    FLEET_BIN_DIR="$HOME/.local/bin/fleet-rs" ./install.sh\n' >&2
-    exit 7
+    BACKUP="${BIN_PATH}.displaced-by-fleet-rs"
+    FOREIGN_DESC="$(describe_foreign)"   # probe BEFORE moving, or it describes a path that is gone
+    if [[ ! -e "$BACKUP" ]]; then
+        mv "$BIN_PATH" "$BACKUP"
+        printf 'CHANGE displaced %s (%s) -> %s\n' "$BIN_PATH" "$FOREIGN_DESC" "$BACKUP"
+    else
+        rm -f "$BIN_PATH"
+        printf 'CHANGE removed %s (%s); existing backup kept at %s\n' \
+            "$BIN_PATH" "$FOREIGN_DESC" "$BACKUP"
+    fi
 fi
 
 if [[ ! -e "$BIN_PATH" ]] || ! cmp -s "$BUILT_BIN" "$BIN_PATH"; then

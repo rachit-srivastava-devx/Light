@@ -11,8 +11,22 @@ pub struct GateSpec {
     pub id: &'static str,
     pub requirement: Requirement,
     pub probe: ProbeTool,
-    pub command: &'static [&'static str],
+    pub command: GateCommand,
     /// Extracts this gate's published denominator from its own stdout/stderr. A fn pointer (not
     /// a closure) so `GateSpec` stays `Copy`.
     pub parse_denominator: fn(stdout: &str, stderr: &str) -> DenominatorResult,
+}
+
+/// How a gate's argv is built. Split from a single `&'static [&'static str]` (the old shape) so a
+/// script gate's path can be resolved against a `GatesRoot` at run time instead of being a
+/// `bin/...`-relative literal that only works when the process's cwd is a fleet checkout.
+#[derive(Clone, Copy)]
+pub enum GateCommand {
+    /// Run directly via `$PATH` -- no gates-root resolution needed (e.g. `cargo test`).
+    OnPath(&'static [&'static str]),
+    /// Run a gate script resolved against a `GatesRoot`, plus any extra argv after it.
+    Script {
+        relative: &'static str,
+        args: &'static [&'static str],
+    },
 }

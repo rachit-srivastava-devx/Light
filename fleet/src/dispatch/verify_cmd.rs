@@ -1,63 +1,40 @@
 //! `fleet oracle|gate`: parse -> `fleet_verify::{run_all,GATES}` against real, injected
-//! `ToolProbe`/`ProcessRunner` ports (which-on-PATH + `std::process::Command`) -> print. The
-//! gate table and pass/fail classification are entirely `fleet-verify`'s; this only supplies
-//! the two IO ports that crate declares and does not implement itself (BLUEPRINT §2/§7).
+//! `ToolProbe`/`ProcessRunner` ports (`verify_ports.rs`) -> print -> map the aggregate
+//! `Report::exit_code()` to `Ok`/`Err` so the process's own exit code reflects the verdict
+//! (BLUEPRINT §2/§7). Previously this unconditionally returned `Ok(())` after printing, so a
+//! failing report still exited 0 -- the defect this file exists to not regress.
 
+use super::verify_ports::{resolve_gates_root, RealRunner, WhichProbe};
 use crate::cli::args_ctx::GateArgs;
 use crate::dispatch::error::DispatchError;
-use crate::print::human;
-use fleet_verify::{ProcessOutput, ProcessRunner, ProbeTool, Report, ToolProbe, Verdict};
-use std::process::Command;
+use crate::print::verify_report::render as print_report;
+use fleet_types::ExitCode;
+use fleet_verify::Report;
 
-struct WhichProbe;
-impl ToolProbe for WhichProbe {
-    fn available(&self, tool: ProbeTool) -> bool {
-        let name = match tool {
-            ProbeTool::Cargo => "cargo",
-            ProbeTool::CargoMutants => "cargo-mutants",
-            ProbeTool::CargoFmt => "cargo-fmt",
-            ProbeTool::CargoClippy => "cargo-clippy",
-            ProbeTool::CargoDeny => "cargo-deny",
-            ProbeTool::CargoAudit => "cargo-audit",
-            ProbeTool::CargoLlvmCov => "cargo-llvm-cov",
-            ProbeTool::Named(n) => n,
-        };
-        Command::new("which").arg(name).output().map(|o| o.status.success()).unwrap_or(false)
-    }
-}
+#[cfg(test)]
+#[path = "verify_cmd_tests.rs"]
+mod tests;
 
-struct RealRunner;
-impl ProcessRunner for RealRunner {
-    fn run(&self, command: &[&str]) -> ProcessOutput {
-        let Some((bin, rest)) = command.split_first() else {
-            return ProcessOutput { exit_code: -1, stdout: String::new(), stderr: "empty command".into() };
-        };
-        match Command::new(bin).args(rest).output() {
-            Ok(out) => ProcessOutput {
-                exit_code: out.status.code().unwrap_or(-1),
-                stdout: String::from_utf8_lossy(&out.stdout).into_owned(),
-                stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
-            },
-            Err(e) => ProcessOutput { exit_code: -1, stdout: String::new(), stderr: e.to_string() },
-        }
-    }
-}
-
-fn print_report(report: &Report) {
-    for r in &report.results {
-        let verdict = match &r.verdict {
-            Verdict::Pass(_) => "pass".to_string(),
-            Verdict::Fail { reason, .. } => format!("fail: {reason:?}"),
-            Verdict::Skip { reason, .. } => format!("skip: {reason}"),
-        };
-        human::line(r.id, verdict);
+/// Turns a `Report`'s own `exit_code()` into `Ok`/`Err` -- the seam that used to be missing:
+/// `oracle`/`gate` printed the report and then unconditionally returned `Ok(())`, so a caller
+/// doing `fleet gate || exit 1` could never observe a failing gate.
+fn to_result(report: Report) -> Result<(), DispatchError> {
+    match report.exit_code() {
+        ExitCode::Ok => Ok(()),
+        code => Err(DispatchError::VerifyFailed {
+            failed: report.failed(),
+            skipped: report.skipped(),
+            total: report.results.len(),
+            code,
+        }),
     }
 }
 
 pub fn oracle() -> Result<(), DispatchError> {
-    let report = fleet_verify::run_all(fleet_verify::GATES, &WhichProbe, &RealRunner);
+    let gates = resolve_gates_root()?;
+    let report = fleet_verify::run_all(fleet_verify::GATES, &WhichProbe, &RealRunner::new(), &gates);
     print_report(&report);
-    Ok(())
+    to_result(report)
 }
 
 pub fn gate(args: GateArgs) -> Result<(), DispatchError> {
@@ -66,7 +43,13 @@ pub fn gate(args: GateArgs) -> Result<(), DispatchError> {
         .filter(|g| args.id.as_deref().map(|id| id == g.id).unwrap_or(true))
         .copied()
         .collect();
-    let report = fleet_verify::run_all(&specs, &WhichProbe, &RealRunner);
+    if let Some(id) = &args.id {
+        if specs.is_empty() {
+            return Err(DispatchError::UnknownGate(id.clone()));
+        }
+    }
+    let gates = resolve_gates_root()?;
+    let report = fleet_verify::run_all(&specs, &WhichProbe, &RealRunner::new(), &gates);
     print_report(&report);
-    Ok(())
+    to_result(report)
 }

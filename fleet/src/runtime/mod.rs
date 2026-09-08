@@ -1,5 +1,7 @@
-//! Runtime wiring: config load, `ConcurrencyCap`, and the tokio/rayon runtimes built from it.
+//! Runtime wiring: config load, `ConcurrencyCap`, the capacity preflight, and the tokio/rayon
+//! runtimes built from it.
 
+pub mod capacity;
 pub mod concurrency_cap;
 pub mod config;
 pub mod rayon_pool;

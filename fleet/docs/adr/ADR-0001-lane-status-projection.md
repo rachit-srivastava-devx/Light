@@ -2,15 +2,15 @@
 
 - **Status:** Accepted (2026-09-02)
 - **Deciders:** Owner + Independent verifier (adversarial review lane)
-- **Supersedes:** the original `contracts/lane-status.v1.json` authors-clause reading of
+- **Supersedes:** the original `crates/fleet-types/contracts/lane-status.v1.json` authors-clause reading of
   `ledger_ref` (which was unreachable to the emitter)
-- **Replaces/enables:** `contracts/lane-status.v1.json` rewritten to a projection contract,
-  plus a `lane_status` receipt event documented in `contracts/receipt.v1.json`.
+- **Replaces/enables:** `crates/fleet-types/contracts/lane-status.v1.json` rewritten to a projection contract,
+  plus a `lane_status` receipt event documented in `crates/fleet-types/contracts/receipt.v1.json`.
 
 ## Context
 
 `fleet console` (S2) renders a live `LANES` view that is meant to tail the activity ledger in
-real time. The schema `contracts/lane-status.v1.json` declared `ledger_ref` as a **required**
+real time. The schema `crates/fleet-types/contracts/lane-status.v1.json` declared `ledger_ref` as a **required**
 field of the `lane_status` receipt body. But the emitter could never fill it: `append_receipt`
 hashes the body before the envelope hash exists, and the lane record knows its own seq/hash only
 after the receipt has been appended. An independent adversarial reviewer found **0 of 7** emitted
@@ -47,7 +47,7 @@ reproduction.
    and re-renders the LANES header live — the reviewer's reproduction now shows
    `LANES · 0 tracked` → `LANES · 1 tracked` while the console stays open.
 
-4. **`contracts/receipt.v1.json`** already enumerated `lane_status` in its event enum; no change
+4. **`crates/fleet-types/contracts/receipt.v1.json`** already enumerated `lane_status` in its event enum; no change
    needed there. `fleet contract lane-status validate` enforces the projection against that
    event's receipts.
 
@@ -62,5 +62,5 @@ reproduction.
 - **Risk.** The console tail treats a rewritten/truncated ledger by resetting its read offset; a
   ledger replaced mid-session re-reads from byte 0 (covered by a regression test). Gaps in the
   ledger sequence still show as absence, never as fabricated rows, per the no-fabrication rule.
-- **Regain.** This ADR satisfies the contracts governance rule ("never edit `contracts/*.json`
+- **Regain.** This ADR satisfies the contracts governance rule ("never edit `crates/fleet-types/contracts/*.json`
   without an ADR"), which previously blocked any fix.

@@ -11,7 +11,7 @@ path = "main.rs"
 clap = { version = "4", features = ["derive"] }
 clap_complete = "4"
 figment = { version = "0.10", features = ["env"] }
-tokio = { version = "1", features = ["io-std", "macros", "rt", "rt-multi-thread", "sync"] }
+tokio = { version = "1", features = ["io-std", "macros", "rt", "rt-multi-thread", "sync", "time"] }
 rayon = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -30,6 +30,13 @@ fleet-memory = { path = "../crates/fleet-memory" }
 fleet-govern = { path = "../crates/fleet-govern" }
 fleet-stream = { path = "../crates/fleet-stream" }
 fleet-worker = { path = "../crates/fleet-worker" }
+fleet-judge = { path = "../crates/fleet-judge" }
+
+[features]
+# Passthrough to `fleet-judge`'s own `llm7` feature (real keyless HTTP adapter). OFF by
+# default: `fleet adjudicate` with this feature off fails with a typed "no judge model
+# configured" error rather than silently defaulting to a fake or network-backed judge.
+llm7 = ["fleet-judge/llm7"]
 
 [dev-dependencies]
 tempfile = "3"

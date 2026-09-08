@@ -1,4 +1,4 @@
-use fleet_verify::GATES;
+use fleet_verify::{GateCommand, GATES};
 
 #[test]
 fn gate_ids_are_pairwise_distinct() {
@@ -12,7 +12,11 @@ fn gate_ids_are_pairwise_distinct() {
 #[test]
 fn every_gate_has_a_non_empty_command() {
     for gate in GATES {
-        assert!(!gate.command.is_empty(), "gate {} has an empty command", gate.id);
+        let non_empty = match gate.command {
+            GateCommand::OnPath(args) => !args.is_empty(),
+            GateCommand::Script { relative, .. } => !relative.is_empty(),
+        };
+        assert!(non_empty, "gate {} has an empty command", gate.id);
     }
 }
 

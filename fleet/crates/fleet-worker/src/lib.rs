@@ -9,6 +9,7 @@
 //! or redirected into a throwaway per-lane directory this crate owns and deletes.
 
 mod adapter;
+pub mod freelane;
 mod outcome;
 mod probe;
 mod request;
@@ -17,12 +18,15 @@ mod scorecard;
 mod scorecard_io;
 mod spawn;
 
-pub use adapter::CliAdapter;
+pub use adapter::{CliAdapter, UnknownAgentKind};
 pub use fleet_types::Role;
 pub use outcome::{LaneOutcome, NoAmbientProbeResult};
 pub use probe::probe_no_ambient;
 pub use request::{JoinError, LaneHandle, SpawnError, SpawnRequest};
-pub use sandbox::{resolve_hermetic_provision, HermeticProvision, ProvisionError};
+pub use sandbox::{
+    resolve_hermetic_provision, scaffold::scaffold_fleet_dir, scaffold::ScaffoldError,
+    HermeticProvision, ProvisionError,
+};
 pub use scorecard::{Scorecard, ScorecardOutcome};
 pub use scorecard_io::{scorecard_path, record_scorecard_outcome};
-pub use spawn::{join, spawn};
+pub use spawn::{fd3, join, spawn};

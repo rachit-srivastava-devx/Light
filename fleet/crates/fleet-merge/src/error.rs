@@ -1,7 +1,10 @@
 //! Typed errors, mapping to fleet's `ExitCode` taxonomy instead of a 15th redeclaration of it.
+//! `MergeRefusal` lives in `merge_refusal.rs` -- kept separate so this file stays small.
 
 use fleet_types::ExitCode;
 use std::path::PathBuf;
+
+pub use crate::merge_refusal::MergeRefusal;
 
 /// Why `create` or `remove` failed. Mirrors `worktree.rs`'s `EXIT_ENV`/`EXIT_INVARIANT` split.
 #[derive(Debug, thiserror::Error)]
@@ -18,9 +21,24 @@ pub enum WorktreeError {
     /// `git worktree remove --force` and the filesystem fallback both left the dir present.
     #[error("worktree at {path} could not be removed -- it still exists on disk")]
     RemoveLeaked { path: PathBuf },
+    /// `remove` was asked to remove a worktree whose directory does not exist on disk. Distinct
+    /// from a successful removal: the caller asked for something that was never there, and must
+    /// not be told `ok` as if their request took effect.
+    #[error("no worktree exists at {path} -- nothing to remove")]
+    NotFound { path: PathBuf },
     /// The `git` process itself could not be spawned (binary missing, permissions).
     #[error("could not spawn git: {0}")]
     Spawn(String),
+    /// `remove` was handed a path that is NOT inside `<repo>/.worktrees/`. Refusing is the whole
+    /// point: `remove`'s fs fallback is a recursive delete, so before this guard existed
+    /// `fleet rollback --repo <any repo> --worktree /any/path` destroyed that path and printed
+    /// "ok: worktree removed" with exit 0. Proven against a scratch dir, 2026-09-08.
+    #[error("refusing to remove {path}: not inside {root} -- fleet only removes worktrees it owns")]
+    OutsideWorktreeRoot { path: PathBuf, root: PathBuf },
+    /// The recursive fallback delete itself failed. Previously `let _ = remove_dir_all(..)`, so a
+    /// partial delete was silently ignored.
+    #[error("removing {path} failed: {source_msg}")]
+    RemoveFailed { path: PathBuf, source_msg: String },
 }
 
 impl WorktreeError {
@@ -30,46 +48,12 @@ impl WorktreeError {
             WorktreeError::EmptyName
             | WorktreeError::MissingAfterCreate { .. }
             | WorktreeError::RemoveLeaked { .. } => ExitCode::Invariant,
-            WorktreeError::CreateFailed { .. } | WorktreeError::Spawn(_) => ExitCode::Env,
-        }
-    }
-}
-
-/// Why `merge_lane` refused. Each variant is one of `merge-lane.sh`'s already-shipped refusals.
-#[derive(Debug, thiserror::Error)]
-pub enum MergeRefusal {
-    /// `merge-lane.sh:9`. No directory at the given worktree path.
-    #[error("no worktree at {0}")]
-    NoWorktree(PathBuf),
-    /// `merge-lane.sh:10`. `git add -A` itself failed (not "staged nothing" -- errored).
-    #[error("git add failed in {0}")]
-    StageFailed(PathBuf),
-    /// `merge-lane.sh:12-14`, the D31 fix itself: staged exactly 0 files.
-    #[error("lane {branch} staged 0 files -- it produced nothing")]
-    EmptyStage { branch: String },
-    /// `merge-lane.sh:15-16`. The lane's own commit failed.
-    #[error("commit failed for lane {branch}")]
-    CommitFailed { branch: String },
-    /// `merge-lane.sh:18`. `git merge` reported a conflict.
-    #[error("conflict merging lane {branch}")]
-    Conflict { branch: String },
-    /// `merge-lane.sh:20`. `git merge` exited 0 but `HEAD` is byte-identical before/after.
-    #[error("merging lane {branch} moved HEAD nowhere -- nothing was integrated")]
-    HeadUnmoved { branch: String },
-    /// `merge-lane.sh:22`. `HEAD` moved but the diff between before/after touches 0 files.
-    #[error("merging lane {branch} changed 0 files")]
-    NoFilesChanged { branch: String },
-    /// The `git` process itself could not be spawned.
-    #[error("could not spawn git: {0}")]
-    Spawn(String),
-}
-
-impl MergeRefusal {
-    /// `NoWorktree` is `exit 3` (`ExitCode::Env`); every other refusal is `exit 6` (`Invariant`).
-    pub fn exit_code(&self) -> ExitCode {
-        match self {
-            MergeRefusal::NoWorktree(_) => ExitCode::Env,
-            _ => ExitCode::Invariant,
+            WorktreeError::CreateFailed { .. }
+            | WorktreeError::Spawn(_)
+            | WorktreeError::NotFound { .. } => ExitCode::Env,
+            // A deliberate "no": the caller asked fleet to delete something outside its sandbox.
+            WorktreeError::OutsideWorktreeRoot { .. } => ExitCode::Refusal,
+            WorktreeError::RemoveFailed { .. } => ExitCode::Invariant,
         }
     }
 }

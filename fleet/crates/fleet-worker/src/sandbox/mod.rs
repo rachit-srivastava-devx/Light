@@ -2,9 +2,12 @@
 //! the repo's committed `.fleet/` tree, and build the per-lane `HOME`/`XDG_*` env.
 
 pub mod agent_registry;
+mod config_source;
 pub mod hermetic_env;
 pub mod manifest;
+pub mod scaffold;
 mod skills_registry;
+mod templates;
 
 use std::collections::BTreeSet;
 use std::path::Path;

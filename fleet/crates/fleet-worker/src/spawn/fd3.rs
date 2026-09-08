@@ -11,6 +11,10 @@ use std::process::Command;
 mod fd3_recv;
 pub use fd3_recv::{recv, validate_submission};
 
+#[path = "fd3_send.rs"]
+mod fd3_send;
+pub use fd3_send::{child_channel_open, send_done, send_refuse};
+
 /// One megabyte of address space headroom is generous for a CLI wrapper process; a runaway
 /// lane is bounded rather than left to exhaust the host. New supervision beyond what `main.rs`
 /// does today (BLUEPRINT.md §7's `nix` rationale).

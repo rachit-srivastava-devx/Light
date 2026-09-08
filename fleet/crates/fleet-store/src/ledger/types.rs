@@ -26,8 +26,12 @@ pub enum LedgerError {
     Fork { seq: u64 },
     #[error("row {seq} hash does not match its recomputed content hash -- tampered after write")]
     Tampered { seq: u64 },
+    #[error("the ledger's tail row is corrupt: {reason} -- refusing to append onto it")]
+    CorruptTail { reason: String },
     #[error("the ledger is empty")]
     Empty,
+    #[error("ledger pruning is refused: the chain is append-only and hash-chained; deleting rows would break verifiability")]
+    LedgerRefused,
 }
 
 /// The outcome of a full chain walk. `checked == total` always holds when `Ok` is returned.

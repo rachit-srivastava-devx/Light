@@ -22,12 +22,17 @@ impl ConcurrencyCap {
         Self(NonZeroUsize::new(cap).expect("max(1) guarantees nonzero"))
     }
 
-    /// Reads the real environment: `std::thread::available_parallelism()` (falls back to 1 on
-    /// error) for cores, and the caller-supplied `ram_lanes`/`review_cap`. This is the one call
-    /// site allowed to touch `available_parallelism` -- everywhere else takes the cap as data.
-    pub fn from_env(ram_lanes: usize, review_cap: usize) -> Self {
-        let cores = std::thread::available_parallelism().map(NonZeroUsize::get).unwrap_or(1);
-        Self::compute(cores, ram_lanes, review_cap)
+    // `from_env(ram_lanes, review_cap)` was DELETED on purpose. It read cores from
+    // `available_parallelism()` but took `ram_lanes` as a caller-supplied guess, and every caller
+    // passed `usize::MAX` ("ignore RAM entirely") -- so it produced a cap that had never measured
+    // memory or load. `runtime::capacity::preflight` is now the only way to obtain a cap: it
+    // measures, and it can REFUSE. Do not reintroduce an unmeasured constructor; a cap derived
+    // from a guess is the kind of check that cannot fail, which this repo keeps paying for.
+
+    /// One lane: the floor for commands that are not capacity-gated (introspection). They must
+    /// answer under any load, and they need no parallelism to do it.
+    pub fn minimum() -> Self {
+        Self(NonZeroUsize::new(1).expect("1 is nonzero"))
     }
 
     pub fn get(self) -> usize {

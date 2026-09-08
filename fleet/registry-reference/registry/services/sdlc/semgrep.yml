@@ -1,8 +1,0 @@
-rules:
-  - id: hardcoded-credential-assignment
-    languages: [generic]
-    message: hardcoded credential-like value
-    severity: ERROR
-    patterns:
-      - pattern-regex: |
-          (?i)(password|passwd|secret|api[_-]?key|token)\s*[:=]\s*["'][^"']{8,}["']

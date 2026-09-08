@@ -15,6 +15,7 @@ members = [
     "crates/fleet-govern",
     "crates/fleet-stream",
     "crates/fleet-worker",
+    "crates/fleet-judge",
     "src",
 ]
 exclude = ["keel", "registry-reference", "tests", "crew", "crates/fleet-crew"]

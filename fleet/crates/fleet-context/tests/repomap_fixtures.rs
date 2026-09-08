@@ -1,12 +1,13 @@
-//! Reuses `fleet/keel/tests/graph-fixtures/*` verbatim (§9 of the blueprint): the tree-sitter
-//! extraction ported from `graph.rs` must behave identically on these fixtures.
+//! Reuses fixtures originally ported from `fleet/keel/tests/graph-fixtures/*` (§9 of the
+//! blueprint): the tree-sitter extraction ported from `graph.rs` must behave identically on
+//! these fixtures. The fixtures now live in-crate under `tests/fixtures/`.
 
 use fleet_context::{build_repo_map, Language, SourceFile};
 
-const FIXTURES: &str = "../../keel/tests/graph-fixtures";
-
 fn read(name: &str) -> String {
-    std::fs::read_to_string(format!("{FIXTURES}/{name}")).expect("fixture file present")
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/").to_string() + name;
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("required fixture missing at {path}: {e}"))
 }
 
 #[test]

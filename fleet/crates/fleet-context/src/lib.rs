@@ -10,6 +10,7 @@
 mod bm25;
 mod bm25_search;
 mod compact;
+mod conventions;
 mod embed;
 mod error;
 mod fuse;
@@ -23,6 +24,10 @@ mod tokens;
 mod types;
 
 pub use bm25::{IndexDoc, IndexLocation, TantivyIndex};
+pub use conventions::{
+    discover_conventions, fold_conventions, ConventionDoc, ConventionFold, ConventionFs,
+    ConventionSet, DocKind, PlacedConventionDoc, StdConventionFs, TrimmedConventionDoc,
+};
 pub use compact::{compact_to_budget, Summarizer};
 pub use embed::{NoVectorIndex, VectorIndex};
 pub use error::ContextError;

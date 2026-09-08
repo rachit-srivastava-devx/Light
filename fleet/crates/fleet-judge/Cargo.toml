@@ -1,0 +1,19 @@
+[package]
+name = "fleet-judge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+thiserror = "2.0.20"
+
+# Adapter-only deps, pulled in solely by the `llm7` feature so the pure core
+# (`Verdict`, `judge`, `JudgeModel`) stays dependency-light and network-free.
+reqwest = { version = "0.12.28", features = ["blocking", "json"], optional = true }
+serde = { version = "1.0.229", features = ["derive"], optional = true }
+serde_json = { version = "1.0.151", optional = true }
+
+[features]
+llm7 = ["dep:reqwest", "dep:serde", "dep:serde_json"]
+
+[dev-dependencies]
+serde_json = "1.0.151"

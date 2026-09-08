@@ -4,9 +4,11 @@
 
 pub mod intake;
 pub mod lld_draft;
+pub mod pr_walkthrough;
 pub mod ready_gate;
 pub mod review;
 pub mod teach;
+pub mod walkthrough;
 
 pub use intake::{
     derive_questions, intake_gate, open_questions, validate_atomic_rows, validate_challenge_rows,
@@ -25,3 +27,11 @@ pub use review::{
     RoleContract, SubmissionRefusal, VerdictDecision, VerdictName, VerdictRefusal,
 };
 pub use teach::{derive_lesson, Lesson, LessonSource, TaughtOutcome};
+pub use pr_walkthrough::{
+    build_pr_walkthrough, AcceptanceResult, AttestationSummary, DiffSummary, FileChange,
+    PrWalkthrough, PrWalkthroughError, VerifiedItem,
+};
+pub use walkthrough::{
+    build_walkthrough, AcceptancePreviewItem, BuildItem, DecisionItem, RiskItem, Walkthrough,
+    WalkthroughError, WorkOrderItem,
+};

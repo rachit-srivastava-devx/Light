@@ -38,8 +38,10 @@ impl DedupThreshold {
 pub enum WriteDecision {
     /// No existing item is within `tau` — insert `candidate` as a brand-new row.
     Insert(MemoryItem),
-    /// An existing item at `into` is within `tau` — merge instead of appending.
-    Merge { into: MemoryId, similarity: CosineSimilarity, new_importance: Importance, new_confirmed_count: u32 },
+    /// Existing item at `into` is within `tau` — merge, don't append. `observed_*` describe THIS
+    /// observation, never the merged result (the port exposes only `(id, similarity)`): the caller
+    /// folds them in as `importance.max(observed_importance)` and `count + observation_count`.
+    Merge { into: MemoryId, similarity: CosineSimilarity, observed_importance: Importance, observation_count: u32 },
 }
 
 /// Pure and total. Looks up `existing.nearest(&candidate.embedding)`; `sim >= tau` merges,
@@ -60,8 +62,8 @@ pub fn write(
             return Ok(WriteDecision::Merge {
                 into,
                 similarity,
-                new_importance: candidate.importance,
-                new_confirmed_count: 1,
+                observed_importance: candidate.importance,
+                observation_count: 1,
             });
         }
     }

@@ -1,6 +1,9 @@
 //! `join`: wait for the process, drain fd-3, tear down the worktree + sandbox unconditionally,
-//! and record the scorecard outcome.
+//! and record the scorecard outcome. A claimed `Done` is downgraded to `Refused` here (see
+//! `change_detect`) if the worktree shows no real change -- this is the ONLY point in the
+//! process where the real diff still exists on disk, so the honesty check cannot move later.
 
+use super::change_detect::enforce_change_honesty;
 use super::interpret::interpret_fd3;
 use super::process_group::{wait_with_deadline, WaitOutcome};
 use crate::outcome::LaneOutcome;
@@ -10,7 +13,7 @@ use crate::{scorecard_io, ScorecardOutcome};
 pub fn join(mut handle: LaneHandle) -> Result<LaneOutcome, JoinError> {
     let agent_id = lane_agent_id(&handle.worktree.name);
 
-    let outcome = match wait_with_deadline(&mut handle.child, handle.deadline) {
+    let raw_outcome = match wait_with_deadline(&mut handle.child, handle.deadline) {
         WaitOutcome::TimedOut => {
             unsafe { libc::close(handle.parent_fd) };
             LaneOutcome::EnvironmentFault {
@@ -20,6 +23,11 @@ pub fn join(mut handle: LaneHandle) -> Result<LaneOutcome, JoinError> {
         WaitOutcome::Exited => interpret_fd3(handle.parent_fd),
     };
 
+    // `.fleet-sandbox/` is this crate's own scaffolding, not the worker's work -- removed
+    // BEFORE the honesty check so it never needs excluding from `git status` by name.
+    let _ = std::fs::remove_dir_all(&handle.sandbox_root);
+    let outcome = enforce_change_honesty(raw_outcome, &handle.worktree.path, &handle.base_commit);
+
     let score_outcome = match &outcome {
         LaneOutcome::Done { .. } => ScorecardOutcome::Credited,
         _ => ScorecardOutcome::Unknown,
@@ -27,7 +35,6 @@ pub fn join(mut handle: LaneHandle) -> Result<LaneOutcome, JoinError> {
     let state_dir = handle.repo.join(".fleet").join("state");
     let _ = scorecard_io::record_scorecard_outcome(&state_dir, &agent_id, score_outcome);
 
-    let _ = std::fs::remove_dir_all(&handle.sandbox_root);
     fleet_merge::remove(&handle.repo, &handle.worktree)
         .map_err(|e| JoinError::TeardownFailed(e.to_string()))?;
     Ok(outcome)

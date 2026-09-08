@@ -1,4 +1,4 @@
-//! The full in-toto `Attestation` statement. `fleet/contracts/attestation.v1.json:9,22`.
+//! The full in-toto `Attestation` statement. `contracts/attestation.v1.json:9,22`.
 
 use serde::{Deserialize, Serialize};
 
@@ -35,14 +35,14 @@ pub struct DeliveryAttestationV1;
 
 impl Serialize for DeliveryAttestationV1 {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str("https://fleet.dev/attestation/Delivery/v1")
+        serializer.serialize_str("https://fleet.local/DeliveryAttestation/v1")
     }
 }
 
 impl<'de> Deserialize<'de> for DeliveryAttestationV1 {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = String::deserialize(deserializer)?;
-        if value == "https://fleet.dev/attestation/Delivery/v1" {
+        if value == "https://fleet.local/DeliveryAttestation/v1" {
             Ok(DeliveryAttestationV1)
         } else {
             Err(serde::de::Error::custom(format!("unexpected predicateType {value:?}")))

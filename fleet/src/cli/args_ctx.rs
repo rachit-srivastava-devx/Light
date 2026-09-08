@@ -25,16 +25,38 @@ pub struct FreezeArgs {
 pub struct GraphArgs {
     #[arg(long)]
     pub repo: String,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Args, Debug)]
 pub struct ImpactArgs {
+    /// Defaults to the process's cwd. Before this existed, `--repo` was REJECTED (clap exit 2)
+    /// while the command silently analysed the cwd -- answering about a different repo than the
+    /// user named. Every sibling command takes `--repo`; this one now does too.
+    #[arg(long, default_value = ".")]
+    pub repo: String,
     #[arg(long)]
     pub symbol: String,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Args, Debug)]
 pub struct McpArgs {
     #[arg(long)]
     pub lease: String,
+}
+
+/// `fleet __planahead_probe`: drives `pipeline::planahead::run_plan_ahead` end to end through
+/// the real binary, same shape as `__pipeline_probe`. `units` is comma-separated; `queue_capacity`
+/// defaults to 2 so a probe with >=3 units observably exercises the backpressure bound.
+#[derive(Args, Debug)]
+pub struct PlanAheadProbeArgs {
+    #[arg(long)]
+    pub run_id: String,
+    #[arg(long, value_delimiter = ',')]
+    pub units: Vec<String>,
+    #[arg(long, default_value_t = 2)]
+    pub queue_capacity: usize,
 }

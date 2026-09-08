@@ -4,7 +4,9 @@ mod append;
 mod canon;
 mod clock;
 mod read;
+mod tail;
 mod types;
+mod usage;
 mod verify;
 
 pub use types::{LedgerError, LedgerPaths, VerifiedChain};

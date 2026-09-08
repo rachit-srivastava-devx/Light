@@ -1,12 +1,14 @@
-//! Minimal agent-identity lookup against the repo-committed `.fleet/agents.toml` tree.
+//! Minimal agent-identity lookup against `.fleet/agents.toml`: the target repo's own copy wins,
+//! this crate's embedded template (`templates::AGENTS_TOML`) is the fallback default.
 //!
 //! This is deliberately NOT `agent.rs`'s full `Registry`/`Assignment<S>` machinery (BLUEPRINT.md
 //! flags `Assignment<S>` as out of scope, belonging to `fleet-lifecycle`) -- `fleet-worker` only
 //! needs one agent's declared `capabilities`/`skills` to resolve its hermetic provision.
 
+use crate::sandbox::config_source::read_with_fallback;
+use crate::sandbox::templates::AGENTS_TOML;
 use crate::ProvisionError;
 use serde::Deserialize;
-use std::fs;
 use std::path::Path;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -28,12 +30,12 @@ pub struct AgentFacts {
     pub skills: Vec<String>,
 }
 
-/// Load `.fleet/agents.toml` under `repo` and find `agent_id`. Never reads any path outside
-/// `repo` -- every input is repo-committed (PLAYBOOK.md rule 8).
+/// Load `.fleet/agents.toml` under `repo` and find `agent_id`, falling back to this crate's
+/// embedded template when `repo` has no `.fleet/agents.toml` of its own. Never reads any path
+/// outside `repo` (or this crate's own compiled-in template) -- every input is repo-committed or
+/// hermetic (PLAYBOOK.md rule 8).
 pub fn load_agent(repo: &Path, agent_id: &str) -> Result<AgentFacts, ProvisionError> {
-    let path = repo.join(".fleet").join("agents.toml");
-    let text = fs::read_to_string(&path)
-        .map_err(|_| ProvisionError::MissingFleetFile("agents.toml"))?;
+    let (text, _source) = read_with_fallback(repo, "agents.toml", AGENTS_TOML)?;
     let parsed: RegistryFile =
         toml::from_str(&text).map_err(|_| ProvisionError::MissingFleetFile("agents.toml"))?;
     let agent = parsed

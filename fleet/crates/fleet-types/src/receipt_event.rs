@@ -1,4 +1,4 @@
-//! `ReceiptEvent`, `SchemaV1`, and the `Receipt` wire record. `fleet/contracts/receipt.v1.json`.
+//! `ReceiptEvent`, `SchemaV1`, and the `Receipt` wire record. `contracts/receipt.v1.json`.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -46,7 +46,7 @@ impl<'de> Deserialize<'de> for SchemaV1 {
     }
 }
 
-/// One append-only ledger row, matching `fleet/contracts/receipt.v1.json` field-for-field.
+/// One append-only ledger row, matching `contracts/receipt.v1.json` field-for-field.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Receipt {
     pub schema_version: SchemaV1,

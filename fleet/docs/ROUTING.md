@@ -13,7 +13,7 @@ authenticated local CLIs, and its decisive inputs are known facts:
 2. the selected CLI must be installed, authenticated, operational, and have enough quota for the
    dispatch; and
 3. a verifier's **resolved** model must differ from the builder's resolved model. The kernel already
-   refuses `SELF_VERIFIED` in [`keel/fleet/src/roles.rs`](../keel/fleet/src/roles.rs).
+   refuses `SELF_VERIFIED` in [`crates/fleet-router/src/role_check.rs`](../crates/fleet-router/src/role_check.rs).
 
 A prompt classifier cannot improve those facts. At best it re-derives an explicit role from prose;
 at worst it makes a safety or quota decision probabilistic. Hosted routers also replace the user's
@@ -22,8 +22,9 @@ existing CLI subscriptions with a new account, API key, model gateway, and usage
 The evidence says to keep this investment small. The Coding-Agent-OS honesty ledger isolated model
 routing at **₹6.4 of ₹197.1 saved per merged task, or 3.2%**; context discipline produced the other
 96.8%. Its reported routing multiple was only **1.09×**, versus **3.55×** for context discipline
-([honesty calculation](../../blueprints/Coding-Agent-OS/COST-CONTROL-PLANE.md#5-lever-decomposition--and-the-number-that-hurts),
-[operating rule](../../blueprints/Coding-Agent-OS/AGENTS.md#the-two-numbers-that-hurt-r5)). Those
+(honesty calculation and operating rule, from the Coding-Agent-OS blueprint's cost-control-plane
+and honesty-ledger sections — that blueprint tree has since been restructured and these sections
+no longer resolve to a stable path here). Those
 numbers describe a different, API-priced system, so they are not a direct estimate of fleet's CLI
 subscriptions. They are nevertheless the only repository measurement offered for the value of
 model routing, and they say plainly that **routing is low-value**. Fleet should build the minimum
@@ -42,7 +43,7 @@ The resolver should apply constraints in this order:
 | 5 | verifier independence | Remove the builder's **resolved model**, not merely its requested alias or CLI name. If no independent verifier remains, refuse rather than silently self-verify. |
 | 6 | deterministic preference | Pick the first eligible entry in a checked-in order. Record the candidate set, exclusions, selected adapter, resolved model, and reason. |
 
-[`crew/crew/adapters/capability.py`](../crew/crew/adapters/capability.py) is the right seam and the
+[`crates/fleet-crew/crew/adapters/capability_probe.py`](../crates/fleet-crew/crew/adapters/capability_probe.py) is the right seam and the
 do-nothing baseline, but it is not yet the whole resolver. Today it checks adapter method shape,
 resolved-model readback, a usage-record method, and `operator_credentials()`. The Claude and Codex
 adapters currently return `True` for operator credentials, and the probe does not itself test
@@ -51,9 +52,9 @@ recommendation is **complete the existing deterministic design**, not claim that
 quota routing already work.
 
 The intended policy already appears in the fleet blueprint as a table, including the different-model
-verifier invariant and a single pre-dispatch exhaustion check
-([routing policy](../../blueprints/Fleet-L8-Deep-Dive/12-KEYLESS-TOKENOMICS-AND-ROUTING.md#5-the-routing-policy),
-[quota scheduling](../../blueprints/Fleet-L8-Deep-Dive/12-KEYLESS-TOKENOMICS-AND-ROUTING.md#7-scheduling-around-exhaustion)).
+verifier invariant and a single pre-dispatch exhaustion check (routing policy and quota scheduling,
+from the Fleet-L8-Deep-Dive blueprint's keyless-tokenomics-and-routing section — that blueprint tree
+has since been restructured per-crate and this section no longer resolves to a stable path here).
 
 ## Candidate assessment
 

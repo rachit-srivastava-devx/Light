@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use fleet_types::{PrevHash, Receipt};
 
-use super::canon::canonical_bytes;
+use super::canon::recompute_hash;
 use super::types::{LedgerError, VerifiedChain};
 use super::Ledger;
 
@@ -47,20 +47,7 @@ pub(super) fn verify_rows(rows: &[Receipt]) -> Result<(), LedgerError> {
         if !seen_prev.insert(receipt.prev_hash.as_str().to_string()) {
             return Err(LedgerError::Fork { seq: expected_seq });
         }
-        let canonical = canonical_bytes(
-            &receipt.schema_version,
-            receipt.seq,
-            &receipt.prev_hash,
-            &receipt.ts_wall,
-            &receipt.event,
-            &receipt.actor,
-            &receipt.resolved_model,
-            &receipt.exit_code,
-            &receipt.body,
-        );
-        let mut input = receipt.prev_hash.as_str().as_bytes().to_vec();
-        input.extend_from_slice(&canonical);
-        let expected_hash = format!("blake3:{}", blake3::hash(&input).to_hex());
+        let expected_hash = recompute_hash(receipt);
         if receipt.hash.as_str() != expected_hash {
             return Err(LedgerError::Tampered { seq: expected_seq });
         }

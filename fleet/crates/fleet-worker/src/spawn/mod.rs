@@ -1,16 +1,18 @@
-//! `spawn`/`join` -- the fd-3 protocol's parent side, wired to worktree creation and hermetic
-//! provisioning.
+//! `spawn`/`join` -- the fd-3 protocol's parent side, wired to worktree creation and hermetic provisioning.
 
+mod base_commit;
+mod change_detect;
 mod child_command;
 pub mod fd3;
 mod interpret;
 mod join_impl;
+mod prepare;
 pub mod process_group;
 mod util;
 
 use crate::request::{LaneHandle, SpawnError, SpawnRequest};
-use crate::sandbox::{hermetic_env, resolve_hermetic_provision};
 use fleet_types::LaneId;
+use prepare::prepare;
 use util::{which_on_path, CHILD_EXE_OVERRIDE};
 
 pub use join_impl::join;
@@ -24,19 +26,10 @@ pub fn spawn(request: SpawnRequest) -> Result<LaneHandle, SpawnError> {
             return Err(SpawnError::CliNotOnPath(request.adapter, binary));
         }
     }
-    let name = fleet_merge::unique_name(request.role.name());
-    let worktree = fleet_merge::create(&request.repo, &name)
-        .map_err(|_| SpawnError::WorktreeCreateFailed)?;
-
-    if let Err(err) = resolve_hermetic_provision(&request.repo, request.role.name()) {
-        let _ = fleet_merge::remove(&request.repo, &worktree);
-        return Err(SpawnError::SandboxProvisionFailed(err.to_string()));
-    }
-
-    let sandbox_root = worktree.path.join(".fleet-sandbox");
-    let hermetic = hermetic_env::build(&sandbox_root);
-    let lane_id =
-        LaneId::parse(name.clone()).map_err(|e| SpawnError::ProcessSpawnFailed(e.to_string()))?;
+    let prepare::Prepared { worktree, base_commit, sandbox_root, hermetic } =
+        prepare(&request.repo, request.role.name())?;
+    let lane_id = LaneId::parse(worktree.name.clone())
+        .map_err(|e| SpawnError::ProcessSpawnFailed(e.to_string()))?;
 
     let mut command = match child_command::build(&request, &worktree.path, &hermetic) {
         Ok(command) => command,
@@ -74,6 +67,7 @@ pub fn spawn(request: SpawnRequest) -> Result<LaneHandle, SpawnError> {
         parent_fd: channel.parent_fd,
         repo: request.repo,
         worktree,
+        base_commit,
         sandbox_root,
         deadline: request.deadline,
     })

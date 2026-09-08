@@ -10,8 +10,12 @@ use std::collections::HashMap;
 
 #[test]
 fn retrieve_pipeline_end_to_end() {
-    let source = std::fs::read_to_string("../../keel/tests/graph-fixtures/known-callers.rs")
-        .expect("fixture present");
+    let fixture_path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/fixtures/known-callers.rs"
+    );
+    let source = std::fs::read_to_string(fixture_path)
+        .unwrap_or_else(|e| panic!("required fixture missing at {fixture_path}: {e}"));
     let files = [SourceFile {
         path: "known-callers.rs".into(),
         language: Language::Rust,

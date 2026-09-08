@@ -7,8 +7,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 static NEXT_SEQ: AtomicU64 = AtomicU64::new(0);
 
-/// A live, isolated worktree. Removal is the caller's job (`remove`) -- no `Drop`-based cleanup:
-/// a swallowed `Drop` failure is the proxy this codebase rejects.
+/// A live, isolated worktree. Removal is the caller's job (`remove`) -- no `Drop` cleanup, since a
+/// swallowed `Drop` failure is the proxy this codebase rejects.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Worktree {
     pub path: PathBuf,
@@ -23,8 +23,7 @@ pub fn unique_name(label: &str) -> String {
     format!("{}-{}-{}", label, std::process::id(), seq)
 }
 
-/// `git worktree add -b fleet/<name> .worktrees/<name> HEAD`, 8 jittered retries against git's
-/// transient `.git/index.lock`. Verbatim port of `worktree.rs:52-116`.
+/// `git worktree add -b fleet/<name> .worktrees/<name> HEAD`, 8 jittered retries against git's transient `.git/index.lock` (port of `worktree.rs:52-116`).
 pub fn create(repo: &Path, name: &str) -> Result<Worktree, WorktreeError> {
     if name.trim().is_empty() {
         return Err(WorktreeError::EmptyName);
@@ -57,14 +56,20 @@ pub fn create(repo: &Path, name: &str) -> Result<Worktree, WorktreeError> {
     Ok(Worktree { path, branch, name: name.to_string() })
 }
 
-/// `git worktree remove --force .worktrees/<name>`, fs fallback + best-effort branch delete.
-/// Verbatim port of `worktree.rs:118-164`.
+/// `git worktree remove --force .worktrees/<name>`, fs fallback + best-effort branch delete. A
+/// path that never was a worktree is a typed `NotFound`; one outside `<repo>/.worktrees/` is a
+/// refusal, because the fs fallback below is a RECURSIVE DELETE (see `worktree_guard`).
 pub fn remove(repo: &Path, worktree: &Worktree) -> Result<(), WorktreeError> {
+    if !worktree.path.exists() {
+        return Err(WorktreeError::NotFound { path: worktree.path.clone() });
+    }
+    let owned = crate::worktree_guard::ensure_owned_worktree(repo, &worktree.path)?;
     let rel = format!(".worktrees/{}", worktree.name);
     let output =
         run_git(repo, &["worktree", "remove", "--force", &rel]).map_err(WorktreeError::Spawn)?;
     if !output.status.success() && worktree.path.exists() {
-        let _ = std::fs::remove_dir_all(&worktree.path);
+        let fail = |e: std::io::Error| WorktreeError::RemoveFailed { path: owned.clone(), source_msg: e.to_string() };
+        std::fs::remove_dir_all(&owned).map_err(fail)?;
         if worktree.path.exists() {
             return Err(WorktreeError::RemoveLeaked { path: worktree.path.clone() });
         }

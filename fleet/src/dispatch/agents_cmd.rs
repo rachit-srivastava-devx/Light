@@ -11,9 +11,20 @@ use crate::print::human;
 use fleet_worker::resolve_hermetic_provision;
 use std::path::Path;
 
+#[derive(serde::Serialize)]
+struct AgentsReport<'a> {
+    skills: &'a std::collections::BTreeSet<String>,
+    system_prompt: &'a str,
+}
+
 pub fn agents(args: AgentsArgs) -> Result<(), DispatchError> {
     let provision = resolve_hermetic_provision(Path::new(&args.repo), &args.agent_id)?;
-    human::line("skills", format!("{:?}", provision.skill_ids));
-    human::line("system_prompt", provision.system_prompt);
+    if args.json {
+        let report = AgentsReport { skills: &provision.skill_ids, system_prompt: &provision.system_prompt };
+        crate::print::json::print_pretty(&report);
+    } else {
+        human::line("skills", format!("{:?}", provision.skill_ids));
+        human::line("system_prompt", provision.system_prompt);
+    }
     Ok(())
 }

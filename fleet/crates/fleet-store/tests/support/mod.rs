@@ -2,6 +2,8 @@
 //! this module uses only the subset of helpers it needs.
 #![allow(dead_code)]
 
+pub mod bulk;
+
 use fleet_store::graph::{ProjectRecord, SymbolRecord};
 use fleet_store::ledger::LedgerPaths;
 use fleet_store::memory::{MemoryRow, Severity};

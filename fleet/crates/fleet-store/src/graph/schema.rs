@@ -46,6 +46,6 @@ impl GraphStore {
              );
              CREATE INDEX IF NOT EXISTS aliases_name ON aliases(project_id, name);",
         )?;
-        Ok(Self { conn })
+        Ok(Self { conn, db_path: path.to_path_buf() })
     }
 }

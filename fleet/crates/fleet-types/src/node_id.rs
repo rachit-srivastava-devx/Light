@@ -1,5 +1,5 @@
 //! `NodeId` -- module/leaf brief identifier. Lifted from
-//! `fleet/contracts/module-brief.v1.json:138`.
+//! `contracts/module-brief.v1.json:138`.
 
 use serde::{Deserialize, Serialize};
 

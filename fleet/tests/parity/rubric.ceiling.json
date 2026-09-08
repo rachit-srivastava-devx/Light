@@ -1,9 +1,0 @@
-{
-  "score": "Count one point for each passed item; minimum 0, maximum 4.",
-  "items": [
-    {"id":"diff_applies","mechanical_check":"After restoring the fresh fixture repository to HEAD, git apply --check accepts the frozen artifact."},
-    {"id":"artifact_frozen","mechanical_check":"The artifact exists in FLEET_STATE/artifacts and its permission mode is exactly 0444."},
-    {"id":"attestation_verifies","mechanical_check":"fleet attest verify ARTIFACT exits 0 against the observation's state directory."},
-    {"id":"receipt_written","mechanical_check":"Every receipt hash named by the attestation exists in ledger/chain.jsonl and at least one receipt is named."}
-  ]
-}

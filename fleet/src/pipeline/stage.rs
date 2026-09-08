@@ -40,6 +40,15 @@ impl PipelineStage {
         }
     }
 
+    /// Stable, lowercase identity for this stage -- used by `teach_stage` as
+    /// `TaughtOutcome::GateRefused`'s `check_id` so a real failure names the stage that produced
+    /// it instead of a constant.
+    pub fn name(self) -> &'static str {
+        const NAMES: [&str; 8] =
+            ["event", "classify", "scan", "plan", "dispatch", "verify", "merge", "teach"];
+        NAMES[self as usize]
+    }
+
     /// Every legal successor on failure: any stage may fail forward into `Teach`, which itself
     /// has no successor at all (a required trailer, not a conditional stage).
     pub fn allowed_successors(self) -> Vec<PipelineStage> {

@@ -1,4 +1,4 @@
-//! `Blake3Hash` -- the ledger wire format. `fleet/contracts/receipt.v1.json:12`.
+//! `Blake3Hash` -- the ledger wire format. `contracts/receipt.v1.json:12`.
 
 use serde::{Deserialize, Serialize};
 

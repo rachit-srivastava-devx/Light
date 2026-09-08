@@ -1,7 +1,7 @@
 mod support;
 
 use fleet_verify::{DenominatorResult, GateSpec, ProbeTool, Requirement, Verdict};
-use support::{out, FakeProbe, FakeRunner};
+use support::{dummy_gates, out, FakeProbe, FakeRunner};
 
 fn always_pass(_stdout: &str, _stderr: &str) -> DenominatorResult {
     DenominatorResult::Counted(1, 1)
@@ -12,7 +12,7 @@ fn gate(id: &'static str, requirement: Requirement) -> GateSpec {
         id,
         requirement,
         probe: ProbeTool::Named("missing-tool"),
-        command: &["some-cmd"],
+        command: fleet_verify::GateCommand::OnPath(&["some-cmd"]),
         parse_denominator: always_pass,
     }
 }
@@ -27,7 +27,7 @@ fn empty_probe() -> FakeProbe {
 fn required_tool_missing_produces_env_fault_skip() {
     let spec = gate("g", Requirement::Required);
     let runner = FakeRunner::new(vec![]);
-    let result = fleet_verify::run_gate(&spec, &empty_probe(), &runner);
+    let result = fleet_verify::run_gate(&spec, &empty_probe(), &runner, &dummy_gates());
     match result.verdict {
         Verdict::Skip { was_required: true, .. } => {}
         other => panic!("expected Skip{{was_required: true}}, got {other:?}"),
@@ -39,7 +39,7 @@ fn required_tool_missing_produces_env_fault_skip() {
 fn advisory_tool_missing_produces_plain_skip() {
     let spec = gate("g", Requirement::Advisory);
     let runner = FakeRunner::new(vec![]);
-    let result = fleet_verify::run_gate(&spec, &empty_probe(), &runner);
+    let result = fleet_verify::run_gate(&spec, &empty_probe(), &runner, &dummy_gates());
     match result.verdict {
         Verdict::Skip { was_required: false, .. } => {}
         other => panic!("expected Skip{{was_required: false}}, got {other:?}"),
@@ -55,7 +55,7 @@ fn run_all_preserves_spec_order_and_runs_every_gate_independently() {
             id: Box::leak(format!("gate-{i}").into_boxed_str()),
             requirement: Requirement::Required,
             probe: ProbeTool::Cargo,
-            command: &["cmd"],
+            command: fleet_verify::GateCommand::OnPath(&["cmd"]),
             parse_denominator: always_pass,
         });
     }
@@ -69,7 +69,7 @@ fn run_all_preserves_spec_order_and_runs_every_gate_independently() {
         out(0, ""),
         out(0, ""),
     ]);
-    let report = fleet_verify::run_all(&specs, &probe, &runner);
+    let report = fleet_verify::run_all(&specs, &probe, &runner, &dummy_gates());
     assert_eq!(report.results.len(), 5);
     assert_eq!(report.results[0].id, "gate-0");
     assert_eq!(report.results[4].id, "gate-4");
