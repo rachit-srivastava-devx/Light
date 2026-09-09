@@ -28,6 +28,50 @@ stands as written.
 
 ---
 
+## 0b. THE BIGGEST OPEN FINDING: `merge_lane` has zero production callers
+
+Investigated because section 5 step 3 (drive the merge stage's success path) was the last
+unexercised node. The answer is that **the CLI cannot reach it at all.**
+
+`fleet_merge::merge_lane` is fully implemented and genuinely works — proven end to end by a
+harness that depends on the real, unmodified crate: real merge commit `5ceedab` landed on
+`master` in a scratch repo, containing the worker's actual edit (`git show --stat` → `src/lib.rs |
+4 ++++`), lane worktree cleaned up, `git status` clean afterwards, `cargo test` still green.
+The function is not the problem.
+
+The wiring is. Verified by hand, not taken from a subagent's report:
+
+```
+grep -rn "merge_lane" src/ | grep -v "^src/tests/"     -> no matches
+grep -rn "merge_lane" crates/*/src/                    -> only fleet-merge's own definition/docs
+```
+
+- `src/pipeline/merge_stage.rs:21` — the `Merge` stage calls only
+  `fleet_merge::check_stage_nonempty(staged_files, branch)` against whatever happens to be staged
+  in `--repo`. It never calls `merge_lane`, never receives a worktree, never runs `git merge`.
+- `src/pipeline/ctx.rs` — `StageCtx` has no worktree/branch field, so there is no channel through
+  which a worker's lane could reach the merge stage.
+- `src/pipeline/stages_dispatch.rs` — the `Dispatch` stage runs the router decision, clears the
+  lifecycle gate, and pushes the task through an in-process channel pair and back. **It never
+  spawns a worker.** So in the `fleet run` path no worktree and no code change exist to merge.
+- `crates/fleet-worker/src/freelane/apply/mod.rs:26` — `apply(worktree, reply)` writes the
+  worker's edits into the **worktree**, never the repo.
+- `crates/fleet-worker/src/spawn/prepare.rs:19` + `reap_sweep.rs:29` — the worker path creates
+  and removes worktrees, and nothing between those two calls merges the lane branch.
+
+**Consequence, stated plainly:** `fleet swarm` spawns a worker, the worker makes a real code
+change in an isolated worktree, the change-honesty check confirms a change happened, the worktree
+is torn down — and the change is discarded. Work is performed and then thrown away. `fleet run`'s
+`Merge` stage is a staged-file precondition check, not a merge.
+
+**This is a feature to complete, not a defect to patch, and it was deliberately NOT built
+unattended.** Wiring it means: Dispatch spawns a real worker, the worktree+branch thread through
+`StageCtx`, and Merge calls `merge_lane`. That is a pipeline-contract change, which
+`CLAUDE.md` (A15/D4) makes human-merge always — and getting it wrong writes to someone's real
+branch. It needs the owner's sign-off on the contract before code.
+
+---
+
 ## 1. What was uncommitted when this file was first written (now landed — see section 0)
 
 Run `git status --short` first. Expected: modifications to `src/dispatch/verify_ports.rs`,
