@@ -9,6 +9,7 @@
 //! its own `AgentOutcome`.
 
 mod apply;
+mod edit_contract;
 mod embed;
 mod error;
 mod materialize;

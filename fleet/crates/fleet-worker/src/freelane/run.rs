@@ -6,6 +6,7 @@ use std::path::Path;
 use std::process::{Command, Stdio};
 
 use super::apply;
+use super::edit_contract::with_edit_contract;
 use super::error::FreelaneAssetError;
 use super::output::{parse_resolved_model, parse_tokens, FreelaneOutput};
 use super::root::FreelaneRoot;
@@ -41,7 +42,7 @@ pub fn run(worktree: &Path, task: &str, model: Option<&str>) -> Result<FreelaneO
         cmd.arg("--model").arg(m);
     }
     let output = cmd
-        .arg(task)
+        .arg(with_edit_contract(task))
         .current_dir(worktree)
         .stdin(Stdio::null())
         .output()

@@ -18,7 +18,9 @@ mod write;
 
 pub use error::ApplyError;
 
-use parse::extract_fences;
+// `pub(crate)` so `edit_contract`'s test can feed the prompt contract's own example fence
+// through the REAL parser -- the advertised syntax and the accepted syntax cannot drift.
+pub(crate) use parse::extract_fences;
 use std::path::{Path, PathBuf};
 
 /// Applies every fenced block in `reply` to `worktree`, or refuses the whole reply. Never writes
