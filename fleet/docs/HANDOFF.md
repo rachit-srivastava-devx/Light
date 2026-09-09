@@ -6,7 +6,29 @@ before touching anything; the last section says exactly what to do next.
 
 ---
 
-## 1. What is uncommitted right now
+## 0. STATUS UPDATE — everything below section 1 is now COMMITTED AND PUSHED
+
+Section 1's warning is obsolete. The work landed on `main` at **`ff125e9`**, and the suite was
+verified green afterwards, without any `FLEET_LOAD_FACTOR` override:
+
+```
+cargo test --workspace --no-fail-fast   -> 505 passed / 0 failed, exit 0
+cargo clippy --workspace --all-targets -D warnings -> exit 0
+files over 80 lines                     -> 0 of 645
+selfcheck.sh --all                      -> 825 files, 0 FAIL, 1 advisory warn
+corpus/_selftest.sh                     -> 25 of 25 detectors proven
+fleet gate --id detectors               -> PASS 111/111
+shasum -c MANIFEST.sha256               -> exit 0
+```
+
+So **skip steps 1, 2 and 4 of section 5.** The one genuinely open item is **step 3**: drive
+`fleet run` with a task that produces a real change, so the merge stage is exercised on its
+success path rather than only on the honest-refusal path. Section 4's known-open list still
+stands as written.
+
+---
+
+## 1. What was uncommitted when this file was first written (now landed — see section 0)
 
 Run `git status --short` first. Expected: modifications to `src/dispatch/verify_ports.rs`,
 `src/dispatch/verify_ports_tests.rs` (new), `src/print/{summary,run_report,verify_report}.rs`,
