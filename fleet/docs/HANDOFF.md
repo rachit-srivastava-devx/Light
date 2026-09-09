@@ -28,7 +28,41 @@ stands as written.
 
 ---
 
-## 0b. THE BIGGEST OPEN FINDING: `merge_lane` has zero production callers
+## 0b. CLOSED — `merge_lane` is now wired and proven end to end
+
+**Resolved at `3ea36e4`.** `fleet swarm --merge` merges a real model-authored change into the
+target branch. Default remains OFF (`MergePolicy::Never`), opt-in is an explicit parameter and an
+explicit `--merge` flag, and teardown stays unconditional so a merge refusal cannot leak a
+worktree.
+
+Proven against the live keyless endpoint (`api.llm7.io`, `codestral-latest`, no key), scratch repo
+outside this tree:
+
+```
+without --merge:  HEAD 64ef8fa -> 64ef8fa   (unchanged; default-off holds)
+with    --merge:  HEAD 64ef8fa -> 3acc0b7   exit 0
+                  merged: branch=fleet/builder-22972-0 staged=1 changed=1
+git show HEAD:src/lib.rs  -> contains `mul`, `add` preserved
+git worktree list         -> no leaked lane worktree
+git status --porcelain    -> empty
+cargo test (in that repo) -> exit 0, the merged code compiles
+cargo test --workspace    -> 510 passed / 0 failed, exit 0 (no FLEET_LOAD_FACTOR override)
+```
+
+Wiring `merge_lane` was only half of it. The first live run still refused with
+`applied_files: []`: the raw task went straight to the model, while `apply/parse.rs` requires a
+declared target path per fence and refuses rather than guess. A cooperative model answered in
+prose with a bare ```rust fence, and the honesty check correctly downgraded its claimed `Done`.
+Every layer was correct; nobody had told the model the contract.
+`crates/fleet-worker/src/freelane/edit_contract.rs` now supplies it, and
+`contract_names_the_syntax_the_parser_accepts` feeds the contract's own example fence back
+through the real parser so the advertised and accepted syntax cannot drift.
+
+`fleet run`'s own `Merge` stage is still a staged-file precondition check, and its `Dispatch`
+stage still spawns no worker — wiring those is the pipeline-contract change described below,
+which remains the owner's call. The worker path (`fleet swarm`) is the one that now merges.
+
+### Original finding, kept for the record
 
 Investigated because section 5 step 3 (drive the merge stage's success path) was the last
 unexercised node. The answer is that **the CLI cannot reach it at all.**
