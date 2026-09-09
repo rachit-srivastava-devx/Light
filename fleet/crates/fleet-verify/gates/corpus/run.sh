@@ -7,6 +7,21 @@ DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 # (see verify_runner_bounded.rs) -- BEFORE anything below can change it, and hand it to every
 # detector explicitly so "scan root" never again depends on where this script happens to live.
 export FLEET_TARGET_REPO="$(pwd)"
+
+# The M-series detectors assert invariants about FLEET'S OWN source tree (that `mutants_probe.rs`
+# still holds the FLEET_MUTANTS guard, that `install.sh` still displaces a foreign binary, ...).
+# After the S1 retarget pointed every detector at `$FLEET_TARGET_REPO`, running them against a
+# USER's repo asked whether the user's repo contains fleet's files -- it does not, so they exited 1
+# "caught" and `fleet run --repo <any user repo>` failed with two findings that were category
+# errors. They are not-applicable there, which is exit 77 (counted and PRINTED as `excluded`,
+# never a silent skip).
+#
+# The fleet-ness test is deliberately narrow: inside fleet's own tree a missing anchor file must
+# still be CAUGHT, not excused as "not applicable" -- that is the M4 defect (a detector that
+# skipped itself when its own source moved, masking real breakage) and it must not come back.
+is_fleet_tree() { [ -r "$FLEET_TARGET_REPO/crates/fleet-verify/src/registry.rs" ]; }
+m_excluded=0
+
 checked=0
 total=0
 excluded=0
@@ -26,6 +41,15 @@ for f in "$DIR"/*.sh; do
   [ "$f" = "$DIR/_selftest.sh" ] && continue
   [ -f "$f" ] || continue
   total=$((total + 1))
+  case "$(basename "$f")" in
+    M[0-9]*.sh)
+      if ! is_fleet_tree; then
+        echo "  NOT-APPLICABLE $(basename "$f") -- asserts fleet's own source invariants; target repo $FLEET_TARGET_REPO is not a fleet checkout"
+        excluded=$((excluded + 1)); m_excluded=$((m_excluded + 1))
+        continue
+      fi
+      ;;
+  esac
   # D30: a per-detector timeout. A detector that HANGS is worse than one that fails -- the whole
   # gate stalls and reads as "still running" rather than "broken". This happened when a 4.9GB
   # CARGO_TARGET_DIR was created outside the pruned paths and 24 detectors began walking it.
@@ -92,8 +116,8 @@ if [ "${#timed_out_files[@]}" -gt 0 ]; then
   done
 fi
 
-printf "DENOMINATOR checked=%d total=%d excluded=%d caught=%d timeout_contention=%d timeout_confirmed=%d timeout_persistent=%d\n" \
-  "$checked" "$((total-excluded))" "$excluded" "$caught" "$timeout_contention" "$timeout_confirmed" "$timeout_persistent"
+printf "DENOMINATOR checked=%d total=%d excluded=%d caught=%d timeout_contention=%d timeout_confirmed=%d timeout_persistent=%d fleet_own_not_applicable=%d\n" \
+  "$checked" "$((total-excluded))" "$excluded" "$caught" "$timeout_contention" "$timeout_confirmed" "$timeout_persistent" "$m_excluded"
 [ "$checked" -gt 0 ] || exit 6
 if [ "$caught" -gt 0 ]; then
   exit 1

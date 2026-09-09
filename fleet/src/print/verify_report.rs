@@ -62,6 +62,7 @@ pub fn render(report: &Report) {
         emit(&line_for(r), &style);
     }
     let summary = Summary {
+        unit: "gates",
         ran: report.results.len(),
         passed: report.passed(),
         failed: report.failed(),

@@ -38,4 +38,13 @@ impl Denominator {
 pub enum DenominatorResult {
     Counted(u64, u64),
     Unparseable,
+    /// The gate declared it had NO APPLICABLE INPUT -- distinct from `Counted(_, 0)`, which means
+    /// it had input and examined none of it (`MeasuredNothing`, a failure). `recur` examines a
+    /// diff for recurrence signatures; on a clean tree there is no diff, so failing the run there
+    /// made `fleet run` unusable on any unmodified repo, while passing would have been the
+    /// empty-input green this crate exists to forbid. This becomes a VISIBLE `Verdict::Skip`.
+    ///
+    /// A gate may only reach this by printing its own explicit not-applicable marker, so it
+    /// cannot be used to dodge the `MeasuredNothing` invariant by staying silent.
+    NotApplicable,
 }

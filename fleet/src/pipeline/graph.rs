@@ -37,7 +37,13 @@ pub fn run_pipeline(
         stages::teach(state_dir, node, Role::Builder, failure);
         let _ = log.mark_done(PipelineStage::Teach);
     }
-    final_stage = PipelineStage::Teach;
+    // Teach is an always-runs epilogue, NOT where the run got to. Overwriting `final_stage` with
+    // it unconditionally destroyed the only record of where a failure happened -- so a run that
+    // died in `verify` told the user `next: investigate stage 'teach'`, naming a stage that had
+    // printed no output and failed nothing. On success, Teach genuinely IS the last stage.
+    if result.is_ok() {
+        final_stage = PipelineStage::Teach;
+    }
 
     run_ledger::run_end(state_dir, &task, final_stage, result.is_ok());
     PipelineOutcome { task, final_stage, result, classification }

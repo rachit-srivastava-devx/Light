@@ -25,7 +25,12 @@ fn a_failed_run_writes_a_lesson_that_outlives_the_process() {
         .expect("binary runs");
     assert!(!output.status.success(), "a non-worktree --repo must make Merge fail");
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("\"final_stage\": \"Teach\""), "must reach Teach: {stdout}");
+    // `final_stage` names where the run ACTUALLY ended -- here, the stage that failed. This
+    // previously asserted `"Teach"`, pinning a defect: `graph.rs` overwrote `final_stage` with
+    // Teach on every path, so `fleet run` told users to investigate a stage that never failed.
+    // Teach still runs (that is what the lesson assertion below proves); it is just not the
+    // answer to "where did this run stop".
+    assert!(stdout.contains("\"final_stage\": \"Merge\""), "must report the failing stage: {stdout}");
 
     // The child process above has already exited by the time `.output()` returns -- this is a
     // separate read, off disk, of a file no longer-running process could still be holding open.

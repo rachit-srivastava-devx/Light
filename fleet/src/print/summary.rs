@@ -25,6 +25,12 @@ pub enum Checks {
 }
 
 pub struct Summary {
+    /// What `ran`/`passed`/`failed` COUNT. `fleet run` counts stages; `fleet gate`/`oracle` count
+    /// gates. Hardcoding "gates" printed `gates 1 attempted -- 0 passed, 1 failed` directly under
+    /// six passing gates, because `fleet run` was summarising its pipeline as one unit through a
+    /// label that named a different one -- the same unit conflation this module's header warns
+    /// about for gates-vs-checks, in the line that does the warning.
+    pub unit: &'static str,
     pub ran: usize,
     pub passed: usize,
     pub failed: usize,
@@ -52,8 +58,8 @@ pub fn render_summary(s: &Summary, style: &Style) -> String {
     }
     lines.push(style.paint(style::BOLD, "-- summary --"));
     lines.push(format!(
-        "gates    {} attempted -- {} passed, {} failed, {} skipped",
-        s.ran, s.passed, s.failed, s.skipped
+        "{:<8} {} attempted -- {} passed, {} failed, {} skipped",
+        s.unit, s.ran, s.passed, s.failed, s.skipped
     ));
     if let Some(line) = checks_line(&s.checks, style) {
         lines.push(line);

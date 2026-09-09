@@ -150,7 +150,11 @@ check_diff() {
     /^-/ { next }
     { prev = "" }
     END {
-      printf("recur-gate: checked=%d flagged=%d (signatures=1: E1)\n", checked, flagged) > "/dev/stderr"
+      # STDOUT, not /dev/stderr. `parsers::recur` reads stdout only, so writing the published
+      # denominator to stderr meant this gate reported `Unparseable` on every single run since it
+      # was written -- it never published a count at all. Every peer gate (semgrep, trivy,
+      # detector-integrity, policy) prints its denominator line to stdout; this was the outlier.
+      printf("recur-gate: checked=%d flagged=%d (signatures=1: E1)\n", checked, flagged)
       exit (flagged > 0 ? 6 : 0)
     }
   ' "$diff_file"
@@ -272,10 +276,25 @@ main() {
     if git rev-parse HEAD >/dev/null 2>&1; then
       git diff HEAD > /tmp/recur-gate-diff.$$ 2>/dev/null || { echo "recur-gate: git diff failed"; return 3; }
     else
-      echo "recur-gate: no commits yet, nothing to check"; return 0
+      # NOT-APPLICABLE, not a zero count: there is no diff in existence to examine, which is
+      # different from having a diff and examining none of it. Returning prose alone made the
+      # parser report `Unparseable`; publishing `checked=0` made it `MeasuredNothing` and failed
+      # the run. Both are wrong for a repo that simply has no changes yet -- this marker makes it
+      # a visible SKIP (see `DenominatorResult::NotApplicable`).
+      echo "recur-gate: not-applicable -- no commits yet, so there is no diff to examine"
+      return 0
     fi
   else
     git diff --cached > /tmp/recur-gate-diff.$$ 2>/dev/null || { echo "recur-gate: git diff --cached failed"; return 3; }
+  fi
+  # An EMPTY diff is not-applicable, for the same reason as the no-commits path above: a clean
+  # tree has nothing for a recurrence scan to examine. Without this, `fleet run` against any
+  # unmodified repo failed on `recur: MeasuredNothing` -- the gate correctly refusing to call
+  # 0-of-0 a pass, applied to a question that was never asked.
+  if [ ! -s /tmp/recur-gate-diff.$$ ]; then
+    rm -f /tmp/recur-gate-diff.$$
+    echo "recur-gate: not-applicable -- working tree is clean, so there is no diff to examine"
+    return 0
   fi
   check_diff /tmp/recur-gate-diff.$$
   local rc=$?

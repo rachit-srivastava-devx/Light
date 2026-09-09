@@ -29,8 +29,12 @@ pub fn trivy(stdout: &str, _stderr: &str) -> D {
     }
 }
 
-/// `recur-gate.sh:146` -- `"recur-gate: checked=%d flagged=%d"`.
+/// `recur-gate.sh:146` -- `"recur-gate: checked=%d flagged=%d"`, plus the explicit
+/// not-applicable marker for a tree with no diff to examine (see `DenominatorResult`).
 pub fn recur(stdout: &str, _stderr: &str) -> D {
+    if stdout.contains("recur-gate: not-applicable") {
+        return D::NotApplicable;
+    }
     match after(stdout, "checked=").zip(after(stdout, "flagged=")) {
         Some((c, f)) => D::Counted(c.saturating_sub(f), c),
         None => D::Unparseable,

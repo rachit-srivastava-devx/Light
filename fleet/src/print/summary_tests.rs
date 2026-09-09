@@ -8,7 +8,7 @@ use crate::print::style::Style;
 const PLAIN: Style = Style::new(false);
 
 fn base(checks: Checks) -> Summary {
-    Summary { ran: 8, passed: 6, failed: 2, skipped: 0, checks, refusals: vec![], next_action: None }
+    Summary { unit: "gates", ran: 8, passed: 6, failed: 2, skipped: 0, checks, refusals: vec![], next_action: None }
 }
 
 #[test]
