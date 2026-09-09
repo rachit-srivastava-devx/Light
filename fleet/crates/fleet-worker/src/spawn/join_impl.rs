@@ -34,7 +34,10 @@ pub fn join(mut handle: LaneHandle) -> Result<LaneOutcome, JoinError> {
         LaneOutcome::Done { .. } => ScorecardOutcome::Credited,
         _ => ScorecardOutcome::Unknown,
     };
-    let state_dir = handle.repo.join(".fleet").join("state");
+    // Fleet's own bookkeeping about the AGENT, not the repo -- must never live under
+    // `handle.repo` (see `worker_state_dir` doc comment: this used to write `<repo>/.fleet/state`
+    // and show up as `?? .fleet/` in the user's `git status` after every single run).
+    let state_dir = super::worker_state_dir::resolve();
     let _ = scorecard_io::record_scorecard_outcome(&state_dir, &agent_id, score_outcome);
 
     fleet_merge::remove(&handle.repo, &handle.worktree)

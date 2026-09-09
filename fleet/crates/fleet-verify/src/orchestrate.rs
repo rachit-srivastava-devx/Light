@@ -40,7 +40,7 @@ pub fn run_gate(
     gates: &GatesRoot,
 ) -> GateResult {
     if !probe.available(spec.probe) {
-        return skip(spec, format!("{} unavailable", spec.id));
+        return skip(spec, format!("{} {}", spec.id, probe.unavailable_reason(spec.probe)));
     }
     let argv = match resolve_argv(spec, gates) {
         Ok(argv) => argv,

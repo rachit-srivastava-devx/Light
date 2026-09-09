@@ -23,7 +23,7 @@ pub mod planahead_cmd;
 pub mod role_cmd;
 pub mod route_cmd;
 pub mod run_cmd;
-mod sow_probes;
+mod mutants_probe; mod sow_probes; pub(crate) mod which_probe;
 pub mod spawn_probe_cmd;
 pub mod swarm_cmd;
 pub mod verify_cmd;

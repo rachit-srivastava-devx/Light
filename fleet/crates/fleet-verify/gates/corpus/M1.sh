@@ -6,16 +6,18 @@
 #
 # RETARGETED (fleet-verify relocation): `verify.sh`, where this guard used to live, was deleted --
 # the gate table moved to `crates/fleet-verify/src/registry.rs`, driven by `fleet gate`. The
-# `FLEET_MUTANTS` check itself now lives one layer out, in the real `ToolProbe` impl
-# (`src/dispatch/verify_ports.rs`) rather than inside `fleet-verify`, which never reads its own
-# environment (see that crate's `lib.rs`) -- IO stays injected, not inlined. Per the S1 fix (see
-# `corpus/run.sh`), the scan root comes from `$FLEET_TARGET_REPO` (the real `--repo` target this
-# script was invoked against), never from this script's own on-disk location.
+# `FLEET_MUTANTS` check itself now lives one layer out, in `src/dispatch/mutants_probe.rs` (split
+# out of the real `ToolProbe` impl, `src/dispatch/which_probe.rs`, to keep both files under the
+# 80-line cap when the opt-in-vs-not-installed distinction was added) rather than inside
+# `fleet-verify`, which never reads its own environment (see that crate's `lib.rs`) -- IO stays
+# injected, not inlined. Per the S1 fix (see `corpus/run.sh`), the scan root comes from
+# `$FLEET_TARGET_REPO` (the real `--repo` target this script was invoked against), never from this
+# script's own on-disk location.
 set -u
 ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 
-PROBE="$ROOT/src/dispatch/verify_ports.rs"
-[ -r "$PROBE" ] || { echo "M1: verify_ports.rs unreadable at $PROBE"; exit 1; }
+PROBE="$ROOT/src/dispatch/mutants_probe.rs"
+[ -r "$PROBE" ] || { echo "M1: mutants_probe.rs unreadable at $PROBE"; exit 1; }
 grep -q 'FLEET_MUTANTS' "$PROBE" || { echo "M1: mutants stage is no longer opt-in (FLEET_MUTANTS guard missing)"; exit 1; }
 
 RENDERER="$ROOT/src/print/renderer.rs"

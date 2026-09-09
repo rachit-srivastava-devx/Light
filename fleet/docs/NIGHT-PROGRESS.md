@@ -1189,3 +1189,70 @@ FLEET_LOAD_FACTOR=10000 cargo test --workspace --no-fail-fast -> 487 passed / 0 
 cargo clippy --workspace --all-targets -- -D warnings         -> exit 0
 find src crates -name '*.rs' | xargs wc -l | awk '$1>80 && $2!="total"' -> empty
 ```
+
+## fleet litters every repo it touches + the mutants skip message lied (this session)
+
+**Task 1 -- `.fleet/` litter.** `join_impl::join` (`crates/fleet-worker/src/spawn/join_impl.rs`)
+recorded the per-agent scorecard at `handle.repo.join(".fleet").join("state")` -- `handle.repo` is
+the TARGET repo, not fleet's own state. Every `swarm` run left `?? .fleet/` in the user's `git
+status`, forever, with no opt-out. Reproduced first (`FLEET_LOAD_FACTOR=10000 ./target/debug/fleet
+swarm --repo /tmp/lit --task "add a doc comment" --role builder`, then `git -C /tmp/lit status
+--porcelain` -> `?? .fleet/`), confirmed `gate`/`run` did NOT litter the target repo the same way
+(their `state_dir` comes from `runtime::config` and is CWD-relative -- out of scope, `src/runtime/`
+and `main.rs` were not touched, so that CWD-relative default is unchanged and flagged, not fixed).
+
+Fix (option (a), write it outside the user's repo): new `crates/fleet-worker/src/spawn/
+worker_state_dir.rs::resolve()` -- honors `FLEET_STATE_DIR` (the same env var name the CLI's
+`Config::state_dir` reads via `Env::prefixed("FLEET_")`, so one override controls both), defaulting
+to `$HOME/.local/state/fleet` when unset. `join_impl.rs` now calls this instead of
+`handle.repo.join(".fleet")...`. Proven both directions: reverted to the old line, the new
+regression test (`crates/fleet-worker/tests/spawn_join_no_op_zero_fleet_artifacts.rs`) failed with
+`?? .fleet/state/scorecards/builder.json` in the diff; restored byte-identically (`diff` clean),
+test passes again. Before/after `git status --porcelain` on a clean scratch repo for `swarm`
+(with and without `FLEET_STATE_DIR` override), `gate --id mutants`, and `run --task probe` are all
+byte-identical (empty) -- pasted in full in the session transcript. Scorecard data is still
+written and readable (verified `cat $state_dir/scorecards/builder.json`), just outside the repo.
+
+**Task 2 -- the mutants skip message lied.** `dispatch::verify_ports::WhichProbe::available`
+(now split into `which_probe.rs` + `mutants_probe.rs`, both under the 80-line cap) collapsed "not
+opted in" (`FLEET_MUTANTS` unset) and "not installed" (`cargo-mutants` missing from `$PATH`) into
+one boolean, so a machine with `cargo-mutants` genuinely on `PATH` printed `mutants unavailable` --
+indistinguishable from "go install this". `ToolProbe` (`crates/fleet-verify/src/ports.rs`) gained
+a second method, `unavailable_reason`, with a default that reproduces the old text verbatim (every
+other probe/tool is unaffected); `orchestrate::run_gate` now calls it for the skip line's `reason`.
+`WhichProbe::unavailable_reason` calls into `mutants_probe::probe()`/`reason()`, which distinguish
+the two causes explicitly. Verified both messages on this machine (`cargo-mutants` really is on
+`$PATH` here):
+```
+$ FLEET_LOAD_FACTOR=10000 fleet gate --id mutants --repo <scratch>            # FLEET_MUTANTS unset
+    SKIP gate mutants -- mutants skipped: set FLEET_MUTANTS=1 to run it
+$ FLEET_LOAD_FACTOR=10000 FLEET_MUTANTS=1 PATH=/usr/bin:/bin:/usr/sbin:/sbin fleet gate --id mutants --repo <scratch>
+    SKIP gate mutants -- mutants skipped: cargo-mutants not found on PATH
+```
+Two new tests drive the real binary for both (`src/tests/mutants_skip_reason.rs`). Checked every
+other gate in `crates/fleet-verify/src/registry.rs`: `mutants` is the ONLY gate with an opt-in env
+var layered on top of an on-PATH check -- every other `ProbeTool` (`Cargo`, `CargoFmt`,
+`CargoClippy`, `CargoDeny`, `CargoAudit`, `CargoLlvmCov`, `Named(...)`) is a plain on-PATH probe
+with nothing else to collapse, so no other gate has this class of bug today.
+
+`bash crates/fleet-verify/gates/corpus/M1.sh` needed retargeting (it grepped `FLEET_MUTANTS` out of
+`verify_ports.rs`, which no longer contains that string after the split) -- updated to point at
+`src/dispatch/mutants_probe.rs`, re-ran (`exit 0`), then regenerated
+`crates/fleet-verify/gates/corpus/MANIFEST.sha256` via `detector-integrity.sh --update` (111
+detectors) and confirmed `fleet gate --id detectors --repo .` -> `PASS gate detectors 111/111`.
+
+FINAL GATE, this session:
+```
+FLEET_LOAD_FACTOR=10000 cargo test --workspace --no-fail-fast -> 492 passed / 0 failed, exit 0
+cargo clippy --workspace --all-targets -- -D warnings         -> exit 0
+find src crates -name '*.rs' | xargs wc -l | awk '$1>80 && $2!="total"' -> empty
+bash crates/fleet-verify/gates/corpus/M1.sh                   -> exit 0
+fleet gate --id detectors --repo .                            -> PASS 111/111
+```
+
+Unfinished / disclosed gaps: (1) `runtime::config::Config::state_dir`'s CWD-relative default
+(`.fleet-state`) can still land inside a target repo if the user's own CWD IS that repo when they
+run `gate`/`run`/etc -- out of scope here (`src/runtime/`, `main.rs`), flagged for a follow-up
+lane. (2) `swarm_cmd.rs` never threads the CLI's `state_dir` through to `fleet-worker` at all (it
+only reads `FLEET_STATE_DIR` itself now) -- consistent by env var name, not by wiring; a config
+file layer (once added, per that module's own doc comment) would need to flow through explicitly.

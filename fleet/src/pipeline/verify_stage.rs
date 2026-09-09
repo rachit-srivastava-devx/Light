@@ -6,7 +6,8 @@
 
 use super::event::PipelineError;
 use super::ledger_events;
-use crate::dispatch::verify_ports::{resolve_gates_root, RealRunner, WhichProbe};
+use crate::dispatch::verify_ports::{resolve_gates_root, RealRunner};
+use crate::dispatch::which_probe::WhichProbe;
 use crate::print::human_stream::emit;
 use crate::print::render_event::Event;
 use crate::print::style::Style;

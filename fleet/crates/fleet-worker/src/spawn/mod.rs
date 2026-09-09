@@ -10,6 +10,7 @@ mod parent_watch;
 mod prepare;
 pub mod process_group;
 mod util;
+mod worker_state_dir;
 
 use crate::request::{LaneHandle, SpawnError, SpawnRequest};
 use fleet_types::LaneId;

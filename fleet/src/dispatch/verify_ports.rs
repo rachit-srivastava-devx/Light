@@ -4,9 +4,8 @@
 //! bounded-execution logic (S1 hang fix) lives in `verify_runner_bounded.rs` for the same reason.
 
 use super::verify_runner_bounded::run_bounded;
-use fleet_verify::{GateAssetError, GatesRoot, ProcessOutput, ProcessRunner, ProbeTool, ToolProbe};
+use fleet_verify::{GateAssetError, GatesRoot, ProcessOutput, ProcessRunner};
 use std::path::PathBuf;
-use std::process::Command;
 use std::time::{Duration, Instant};
 
 /// Where `GateCommand::Script` gates resolve their scripts from. `$FLEET_GATES_ROOT`, if set,
@@ -18,31 +17,6 @@ pub fn resolve_gates_root() -> Result<GatesRoot, GateAssetError> {
     match std::env::var_os("FLEET_GATES_ROOT") {
         Some(path) => GatesRoot::from_override(path),
         None => GatesRoot::materialize(),
-    }
-}
-
-pub struct WhichProbe;
-impl ToolProbe for WhichProbe {
-    /// D27: `mutants` must stay opt-in -- a merge once dropped this guard and the gate ran
-    /// unasked because `cargo-mutants` happened to be on `$PATH`. So `CargoMutants` is
-    /// "available" only with `FLEET_MUTANTS=1` set; else `Verdict::Skip`, a visible `SKIP` line.
-    fn available(&self, tool: ProbeTool) -> bool {
-        let name = match tool {
-            ProbeTool::Cargo => "cargo",
-            ProbeTool::CargoMutants => {
-                if std::env::var("FLEET_MUTANTS").as_deref() != Ok("1") {
-                    return false;
-                }
-                "cargo-mutants"
-            }
-            ProbeTool::CargoFmt => "cargo-fmt",
-            ProbeTool::CargoClippy => "cargo-clippy",
-            ProbeTool::CargoDeny => "cargo-deny",
-            ProbeTool::CargoAudit => "cargo-audit",
-            ProbeTool::CargoLlvmCov => "cargo-llvm-cov",
-            ProbeTool::Named(n) => n,
-        };
-        Command::new("which").arg(name).output().map(|o| o.status.success()).unwrap_or(false)
     }
 }
 
