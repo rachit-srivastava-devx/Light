@@ -4888,7 +4888,18 @@ impl lifecycle::ChangeEmitter for RealChangeEmitter {
 
             // Landmine (F08 contract §5): push BEFORE any cleanup -- `worktree::remove`
             // deletes the local branch, so the remote ref must already carry the commit.
-            git_ok(&wt.path, &["push", "-q", "-u", "origin", &wt.branch])?;
+            //
+            // Force-push, not a plain push: a retry after a partial failure (push succeeded,
+            // `gh pr create` did not) re-applies the identical attested diff onto the same
+            // base, producing a new commit with the same tree but a different timestamp -- a
+            // sibling of the already-pushed commit, not its descendant. A plain push rejects
+            // that as non-fast-forward, which permanently wedges this task's `pr emit` path
+            // until a human deletes the dangling remote branch by hand. `--force` is safe here
+            // because `wt.branch` is this agent's own disposable proposal branch (deterministic
+            // from the task id, never shared): this function is only ever reached while the
+            // task is still `Accepted`, i.e. `gh pr create` has not yet succeeded for it, so
+            // there is no open PR and nothing else has a reason to have pushed to this branch.
+            git_ok(&wt.path, &["push", "-q", "-u", "--force", "origin", &wt.branch])?;
 
             let body_path = std::env::temp_dir().join(format!(
                 "fleet-pr-body-{}-{}.md",

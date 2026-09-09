@@ -118,6 +118,35 @@ fn install_gh_shim(log: &Path) -> PathBuf {
     bin
 }
 
+/// A `gh` shim that fails its FIRST invocation (exits 0, prints nothing on stdout -- the
+/// exact `PR_URL_ABSENT` shape of a transient `gh` hiccup) and succeeds on every invocation
+/// after, tracked with a counter file (a real subprocess per call, so there is no in-process
+/// state to carry this). Records every call's argv into `log`, same as `install_gh_shim`.
+fn install_flaky_gh_shim(log: &Path, counter: &Path) -> PathBuf {
+    let bin = unique_dir("bin-flaky");
+    let shim = bin.join("gh");
+    std::fs::write(
+        &shim,
+        format!(
+            "#!/bin/sh\nfor a in \"$@\"; do printf '%s\\n' \"$a\" >> {log}; done\n\
+             n=$(cat {counter} 2>/dev/null || echo 0)\n\
+             n=$((n + 1))\n\
+             printf '%s' \"$n\" > {counter}\n\
+             if [ \"$n\" -eq 1 ]; then exit 0; fi\n\
+             printf 'https://github.test/acme/repo/pull/4242\\n'\n",
+            log = log.display(),
+            counter = counter.display(),
+        ),
+    )
+    .expect("write flaky gh shim");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&shim, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    bin
+}
+
 fn field(stdout: &str, prefix: &str, key: &str) -> Option<String> {
     stdout
         .lines()
@@ -311,5 +340,99 @@ fn lifecycle_advance_refuses_the_accepted_edge_and_points_at_pr_emit() {
         .expect("a refusal must write a receipt");
     assert!(receipts.contains("Refused"));
 
+    std::fs::remove_dir_all(&state).ok();
+}
+
+// --------------------------- retry after a partial failure (push ok, gh not) self-heals
+
+/// Reproduces the exact retry dead-end this task fixes: a `gh` hiccup on attempt 1 (exits 0,
+/// prints no URL -- `PR_URL_ABSENT`) leaves the branch already pushed but the task still
+/// `Accepted`. Attempt 2 re-applies the identical attested diff onto the identical base --
+/// same tree, new commit, same deterministic branch name -- which is exactly the sibling-commit
+/// shape that a plain (non-force) push rejects as non-fast-forward. Before the fix, attempt 2
+/// failed with `PR_EMIT_FAILED` and the task was wedged until a human ran
+/// `git push origin --delete fleet/<task>` by hand; this test asserts attempt 2 instead
+/// succeeds on its own, with no manual step in between.
+#[test]
+fn retry_after_gh_partial_failure_succeeds_without_manual_branch_deletion() {
+    let (repo, bare) = init_fixture_repo();
+    let state = unique_dir("state");
+    let gh_log = unique_dir("ghlog").join("argv.txt");
+    let counter = unique_dir("ghcounter").join("n");
+    let gh_bin = install_flaky_gh_shim(&gh_log, &counter);
+
+    fn proposal_branches(bare: &Path) -> Vec<String> {
+        let refs = Command::new("git")
+            .arg("-C").arg(bare).args(["for-each-ref", "--format=%(refname:short)"])
+            .output().expect("for-each-ref");
+        String::from_utf8_lossy(&refs.stdout)
+            .lines()
+            .filter(|r| *r != "main")
+            .map(str::to_string)
+            .collect()
+    }
+
+    // Attempt 1: gh exits 0 with no URL. The refusal is real (PR_URL_ABSENT), but the push
+    // already happened -- that ordering is deliberate (F08 contract §5, landmine note).
+    let first = probe(&state, &repo, &gh_bin, &["--oracle", "adjudicated"]);
+    let first_stdout = String::from_utf8_lossy(&first.stdout).into_owned();
+    assert!(!first.status.success(), "attempt 1 must refuse:\n{first_stdout}");
+    assert_eq!(
+        field(&first_stdout, "pr_emit_refused: ", "code").as_deref(),
+        Some("PR_URL_ABSENT"),
+        "expected PR_URL_ABSENT from the gh-silent first attempt:\n{first_stdout}"
+    );
+
+    let branches_after_first = proposal_branches(&bare);
+    assert_eq!(
+        branches_after_first.len(), 1,
+        "exactly one proposal branch must exist after attempt 1; refs were:\n{branches_after_first:?}"
+    );
+
+    let persisted_after_first = std::fs::read_to_string(
+        state.join("lifecycle").join("f08-acceptance.state")).unwrap_or_default();
+    assert_eq!(
+        persisted_after_first.trim(), "Accepted",
+        "a refused pr emit must leave the task Accepted (not advanced, not corrupted) so a retry is legal"
+    );
+
+    // Attempt 2: identical inputs, same still-Accepted task, gh now works. This is the retry a
+    // human or the fleet would issue after seeing attempt 1 fail -- no branch deletion, no
+    // state edit, nothing manual in between.
+    let second = probe(&state, &repo, &gh_bin, &["--oracle", "adjudicated"]);
+    let second_stdout = String::from_utf8_lossy(&second.stdout).into_owned();
+    let second_stderr = String::from_utf8_lossy(&second.stderr).into_owned();
+    assert!(
+        second.status.success(),
+        "retry must succeed on its own, with no manual branch deletion in between:\n\
+         stdout:\n{second_stdout}\nstderr:\n{second_stderr}"
+    );
+    assert_eq!(field(&second_stdout, "pr_emit: ", "state").as_deref(), Some("Proposed"));
+    let url = field(&second_stdout, "pr_emit: ", "pr_url").expect("pr_url field");
+    assert!(url.starts_with("https://"), "pr_url must be a real URL, got {url}");
+
+    let persisted_after_second = std::fs::read_to_string(
+        state.join("lifecycle").join("f08-acceptance.state")).unwrap_or_default();
+    assert_eq!(persisted_after_second.trim(), "Proposed", "the retry must really advance the task");
+
+    // Still exactly one proposal branch -- the retry updated it in place, it did not leak a
+    // second dangling ref alongside the first.
+    let branches_after_second = proposal_branches(&bare);
+    assert_eq!(
+        branches_after_second.len(), 1,
+        "retry must not leave a second, dangling branch behind; refs were:\n{branches_after_second:?}"
+    );
+    assert_eq!(
+        branches_after_second, branches_after_first,
+        "the retry must land on the SAME deterministic branch, not a new one"
+    );
+
+    // gh really was invoked twice -- once for each attempt.
+    let argv = std::fs::read_to_string(&gh_log).expect("gh was never invoked");
+    let create_calls = argv.lines().filter(|l| *l == "create").count();
+    assert_eq!(create_calls, 2, "gh pr create must have been invoked exactly twice; argv was:\n{argv}");
+
+    std::fs::remove_dir_all(&repo).ok();
+    std::fs::remove_dir_all(&bare).ok();
     std::fs::remove_dir_all(&state).ok();
 }
