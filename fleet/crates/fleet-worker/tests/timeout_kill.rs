@@ -2,7 +2,7 @@ mod common;
 
 use common::{fixture_exe, init_repo, lock_env};
 use fleet_types::TaskId;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, Role, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, Role, SpawnRequest};
 use std::time::Duration;
 
 /// Regression test for `terminate_group`'s whole-process-group kill: a fixture that forks a
@@ -31,7 +31,7 @@ fn join_times_out_and_kills_the_whole_process_group() {
         }
         std::thread::sleep(Duration::from_millis(50));
     }
-    let outcome = join(handle).expect("join");
+    let (outcome, _merge) = join(handle, MergePolicy::Never).expect("join");
     assert!(matches!(outcome, LaneOutcome::EnvironmentFault { .. }));
     if let Ok(pid_text) = std::fs::read_to_string(&marker) {
         if let Ok(pid) = pid_text.trim().parse::<i32>() {

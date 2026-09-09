@@ -7,7 +7,7 @@ use crate::dispatch::error::DispatchError;
 use crate::print::human_stream::emit;
 use crate::print::render_event::Event;
 use crate::print::style::Style;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
 use fleet_types::{Role, TaskId};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -51,7 +51,15 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     let style = Style::detect();
     // Lane-attributed lines -- so this worker's output is never blurred with any other lane's.
     emit(&Event::Worker { lane: lane.clone(), text: "spawned".into() }, &style);
-    let outcome = join(handle)?;
+    let policy = if args.merge { MergePolicy::OnSuccess } else { MergePolicy::Never };
+    let (outcome, merge_outcome) = join(handle, policy)?;
+    if let Some(m) = &merge_outcome {
+        let text = format!(
+            "merged: branch={} staged={} changed={} {}..{}",
+            m.branch, m.staged_files, m.changed_files, m.before, m.after
+        );
+        emit(&Event::Worker { lane: lane.clone(), text }, &style);
+    }
     emit(&Event::Worker { lane, text: format!("outcome: {outcome:?}") }, &style);
     // The EXIT CODE must agree with the receipt. `swarm` used to exit 0 for every outcome, so a
     // lane that changed nothing ("the adapter returned advice", `changed_files: 0`) still looked

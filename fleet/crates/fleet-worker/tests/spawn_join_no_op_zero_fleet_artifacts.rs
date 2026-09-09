@@ -7,7 +7,7 @@ mod common;
 
 use common::{fixture_exe, init_repo, lock_env};
 use fleet_types::TaskId;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, Role, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, Role, SpawnRequest};
 use std::process::Command;
 use std::time::Duration;
 
@@ -43,7 +43,7 @@ fn a_no_op_run_leaves_zero_fleet_owned_artifacts_in_the_repo() {
     };
     let handle = spawn(request).expect("spawn");
     std::env::remove_var("FLEET_WORKER_TEST_CHILD_EXE");
-    let outcome = join(handle).expect("join");
+    let (outcome, _merge) = join(handle, MergePolicy::Never).expect("join");
     std::env::remove_var("FLEET_STATE_DIR");
     assert!(matches!(outcome, LaneOutcome::Refused { .. }), "{outcome:?}");
 

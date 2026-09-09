@@ -2,7 +2,7 @@ mod common;
 
 use common::{fixture_exe, init_repo, lock_env};
 use fleet_types::TaskId;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, Role, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, Role, SpawnRequest};
 use std::time::Duration;
 
 /// Direct regression test for the brief's "NEVER the user's `~/.claude`" requirement: set
@@ -46,7 +46,7 @@ fn hermetic_spawn_never_exposes_real_home_or_xdg() {
         None => std::env::remove_var("XDG_CONFIG_HOME"),
     }
 
-    let outcome = join(handle).expect("join");
+    let (outcome, _merge) = join(handle, MergePolicy::Never).expect("join");
     let LaneOutcome::Done { body, .. } = outcome else {
         panic!("expected Done from envdump fixture, got {outcome:?}");
     };

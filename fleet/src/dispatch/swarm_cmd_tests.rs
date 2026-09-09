@@ -21,6 +21,7 @@ fn threads_resolved_state_dir_to_worker_even_when_env_var_was_unset() {
         task: "irrelevant".into(),
         role: "".into(), // invalid -> Role::parse fails, right after the env var is set
         prompt: String::new(),
+        merge: false,
     };
     let result = swarm(&resolved, args);
 

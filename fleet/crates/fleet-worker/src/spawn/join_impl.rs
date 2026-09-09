@@ -2,15 +2,23 @@
 //! and record the scorecard outcome. A claimed `Done` is downgraded to `Refused` here (see
 //! `change_detect`) if the worktree shows no real change -- this is the ONLY point in the
 //! process where the real diff still exists on disk, so the honesty check cannot move later.
+//!
+//! Merge-back (`lane_merge`), if opted in, runs AFTER the honesty check but BEFORE
+//! `fleet_merge::remove` -- `remove` destroys the worktree the merge reads from. Teardown still
+//! runs unconditionally regardless of what the merge attempt did.
 
 use super::change_detect::enforce_change_honesty;
 use super::interpret::interpret_fd3;
+use super::lane_merge::{maybe_merge, MergePolicy};
 use super::process_group::{wait_with_deadline, WaitOutcome};
 use crate::outcome::LaneOutcome;
 use crate::request::{JoinError, LaneHandle};
-use crate::{scorecard_io, ScorecardOutcome};
+use crate::{scorecard_io, MergeOutcome, ScorecardOutcome};
 
-pub fn join(mut handle: LaneHandle) -> Result<LaneOutcome, JoinError> {
+pub fn join(
+    mut handle: LaneHandle,
+    merge_policy: MergePolicy,
+) -> Result<(LaneOutcome, Option<MergeOutcome>), JoinError> {
     let agent_id = lane_agent_id(&handle.worktree.name);
 
     let raw_outcome = match wait_with_deadline(&mut handle.child, handle.deadline) {
@@ -40,9 +48,13 @@ pub fn join(mut handle: LaneHandle) -> Result<LaneOutcome, JoinError> {
     let state_dir = super::worker_state_dir::resolve();
     let _ = scorecard_io::record_scorecard_outcome(&state_dir, &agent_id, score_outcome);
 
+    let wt = &handle.worktree;
+    let merge_result = maybe_merge(merge_policy, &outcome, &handle.repo, &wt.path, &wt.branch);
+
     fleet_merge::remove(&handle.repo, &handle.worktree)
         .map_err(|e| JoinError::TeardownFailed(e.to_string()))?;
-    Ok(outcome)
+
+    Ok((outcome, merge_result?))
 }
 
 /// `fleet_merge::unique_name` builds `"<label>-<pid>-<seq>"`; the label is the role name this

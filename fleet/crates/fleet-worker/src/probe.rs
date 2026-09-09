@@ -5,7 +5,7 @@
 
 use crate::outcome::{LaneOutcome, NoAmbientProbeResult};
 use crate::request::{SpawnError, SpawnRequest};
-use crate::{join, spawn, CliAdapter, Role};
+use crate::{join, spawn, CliAdapter, MergePolicy, Role};
 use fleet_types::TaskId;
 use std::path::Path;
 use std::time::Duration;
@@ -22,7 +22,8 @@ pub fn probe_no_ambient(adapter: CliAdapter, repo: &Path) -> Result<NoAmbientPro
     };
     let handle = spawn(request)?;
     let sandbox_evidence = handle.sandbox_root.clone();
-    let outcome = join(handle).map_err(|e| SpawnError::ProcessSpawnFailed(e.to_string()))?;
+    let (outcome, _merge) = join(handle, MergePolicy::Never)
+        .map_err(|e| SpawnError::ProcessSpawnFailed(e.to_string()))?;
     Ok(match outcome {
         LaneOutcome::EnvironmentFault { detail } => NoAmbientProbeResult::CleanlyBlocked { detail },
         LaneOutcome::Refused { reason } => NoAmbientProbeResult::CleanlyBlocked { detail: reason },

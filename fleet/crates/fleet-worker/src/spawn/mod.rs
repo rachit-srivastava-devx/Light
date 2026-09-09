@@ -6,6 +6,7 @@ mod child_command;
 pub mod fd3;
 mod interpret;
 mod join_impl;
+mod lane_merge;
 mod parent_watch;
 mod prepare;
 pub mod process_group;
@@ -18,6 +19,7 @@ use prepare::prepare;
 use util::{which_on_path, CHILD_EXE_OVERRIDE};
 
 pub use join_impl::join;
+pub use lane_merge::MergePolicy;
 
 pub fn spawn(request: SpawnRequest) -> Result<LaneHandle, SpawnError> {
     if request.task.trim().is_empty() {

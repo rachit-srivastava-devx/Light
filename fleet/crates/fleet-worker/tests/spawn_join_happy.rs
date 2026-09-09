@@ -6,7 +6,7 @@ mod common;
 
 use common::{fixture_exe, init_repo, lock_env};
 use fleet_types::TaskId;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, Role, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, Role, SpawnRequest};
 use std::time::Duration;
 
 fn spawn_fixture(repo: &std::path::Path, task: &str) -> fleet_worker::LaneHandle {
@@ -32,7 +32,7 @@ fn spawn_join_stub_agent_round_trips_cleanly() {
     let handle = spawn_fixture(&repo, "done");
     let worktree_path = handle.worktree_path.clone();
     assert!(worktree_path.is_dir());
-    let outcome = join(handle).expect("join");
+    let (outcome, _merge) = join(handle, MergePolicy::Never).expect("join");
     match outcome {
         LaneOutcome::Done { resolved_model, tokens, body } => {
             assert_eq!(resolved_model.as_deref(), Some("stub-1"));

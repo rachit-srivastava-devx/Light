@@ -71,4 +71,8 @@ pub enum SpawnError {
 pub enum JoinError {
     #[error("worktree/sandbox teardown failed after the lane finished: {0}")]
     TeardownFailed(String),
+    /// `MergePolicy::OnSuccess` was requested and `merge_lane` refused. Teardown has already run
+    /// by the time this is returned -- a merge refusal must never leak the worktree.
+    #[error("merge-back refused: {0}")]
+    MergeRefused(String),
 }

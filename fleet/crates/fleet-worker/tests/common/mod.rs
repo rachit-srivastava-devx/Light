@@ -54,3 +54,12 @@ capabilities = ["write"]
 pub fn fixture_exe() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fw-fixture-agent"))
 }
+
+/// `git rev-parse HEAD` in `repo`, trimmed. Shared by the `MergePolicy` tests to assert a target
+/// repo's `HEAD` did (or, for `Never`, did not) move. `common` is recompiled per test binary, so
+/// binaries that don't call this would otherwise see it as dead code.
+#[allow(dead_code)]
+pub fn head(repo: &std::path::Path) -> String {
+    let out = Command::new("git").arg("-C").arg(repo).args(["rev-parse", "HEAD"]).output().unwrap();
+    String::from_utf8_lossy(&out.stdout).trim().to_string()
+}

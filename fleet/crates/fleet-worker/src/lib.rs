@@ -33,4 +33,5 @@ pub use sandbox::{
 };
 pub use scorecard::{Scorecard, ScorecardOutcome};
 pub use scorecard_io::{scorecard_path, record_scorecard_outcome};
-pub use spawn::{fd3, join, spawn};
+pub use fleet_merge::MergeOutcome;
+pub use spawn::{fd3, join, spawn, MergePolicy};

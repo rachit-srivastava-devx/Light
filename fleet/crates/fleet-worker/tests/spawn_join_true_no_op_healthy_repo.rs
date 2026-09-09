@@ -14,7 +14,7 @@ mod common;
 
 use common::{fixture_exe, init_repo, lock_env};
 use fleet_types::TaskId;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, Role, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, Role, SpawnRequest};
 use std::time::Duration;
 
 #[test]
@@ -35,7 +35,7 @@ fn a_true_no_op_through_the_real_lifecycle_against_a_healthy_repo_is_refused() {
     std::env::remove_var("FLEET_WORKER_TEST_CHILD_EXE");
 
     // `git` is untouched here (unlike spawn_join_git_env_fault.rs) -- this is the healthy path.
-    let outcome = join(handle).expect("join");
+    let (outcome, _merge) = join(handle, MergePolicy::Never).expect("join");
 
     match outcome {
         LaneOutcome::Refused { reason } => {

@@ -7,7 +7,7 @@ mod common;
 
 use common::{fixture_exe, init_repo, lock_env};
 use fleet_types::TaskId;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, Role, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, Role, SpawnRequest};
 use std::time::Duration;
 
 #[test]
@@ -26,7 +26,7 @@ fn a_lane_that_commits_its_work_is_still_reported_as_done() {
     };
     let handle = spawn(request).expect("spawn");
     std::env::remove_var("FLEET_WORKER_TEST_CHILD_EXE");
-    let outcome = join(handle).expect("join");
+    let (outcome, _merge) = join(handle, MergePolicy::Never).expect("join");
     match outcome {
         LaneOutcome::Done { .. } => {}
         other => panic!("a worker that committed real work must be Done, got {other:?}"),

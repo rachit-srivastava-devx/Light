@@ -15,7 +15,7 @@ mod common;
 
 use common::{fixture_exe, init_repo, lock_env};
 use fleet_types::TaskId;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, Role, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, Role, SpawnRequest};
 use std::time::Duration;
 
 const GIT_OVERRIDE_ENV: &str = "FLEET_WORKER_TEST_CHANGE_DETECT_GIT";
@@ -38,7 +38,7 @@ fn git_unavailable_during_the_honesty_check_is_an_environment_fault_not_a_refusa
     std::env::remove_var("FLEET_WORKER_TEST_CHILD_EXE");
 
     std::env::set_var(GIT_OVERRIDE_ENV, "definitely-not-a-real-git-binary-xyz");
-    let outcome = join(handle).expect("join");
+    let (outcome, _merge) = join(handle, MergePolicy::Never).expect("join");
     std::env::remove_var(GIT_OVERRIDE_ENV);
 
     match outcome {

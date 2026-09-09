@@ -2,7 +2,7 @@ mod common;
 
 use common::{fixture_exe, init_repo, lock_env};
 use fleet_types::TaskId;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, Role, SpawnError, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, Role, SpawnError, SpawnRequest};
 use std::time::Duration;
 
 fn base_request(repo: &std::path::Path, task: &str) -> SpawnRequest {
@@ -58,7 +58,7 @@ fn join_rejects_malformed_fd3_packet_as_environment_fault_not_refusal() {
     std::env::set_var("FLEET_WORKER_TEST_CHILD_EXE", fixture_exe());
     let handle = spawn(base_request(&repo, "malformed")).expect("spawn");
     std::env::remove_var("FLEET_WORKER_TEST_CHILD_EXE");
-    let outcome = join(handle).expect("join");
+    let (outcome, _merge) = join(handle, MergePolicy::Never).expect("join");
     match outcome {
         LaneOutcome::EnvironmentFault { .. } => {}
         LaneOutcome::Refused { .. } => panic!("malformed packet must never be classified Refused"),

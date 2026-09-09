@@ -6,7 +6,7 @@
 use crate::cli::args_agent::SpawnProbeArgs;
 use crate::dispatch::error::DispatchError;
 use fleet_types::{Role, TaskId};
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, SpawnRequest};
+use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -21,7 +21,7 @@ pub fn probe(args: SpawnProbeArgs) -> Result<(), DispatchError> {
         deadline: Duration::from_secs(30),
     };
     let handle = spawn(request)?;
-    let outcome = join(handle)?;
+    let (outcome, _merge) = join(handle, MergePolicy::Never)?;
     match outcome {
         LaneOutcome::Done { .. } => println!("__spawn_probe: done"),
         LaneOutcome::Refused { reason } => println!("__spawn_probe: refused: {reason}"),

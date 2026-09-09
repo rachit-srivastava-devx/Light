@@ -39,6 +39,12 @@ pub struct SwarmArgs {
     /// only (the task id stays `--task`'s value either way). Defaults to `--task`'s value.
     #[arg(long, default_value = "")]
     pub prompt: String,
+    /// Opt in to merging the lane's worktree branch back into this repo's `HEAD` if (and only
+    /// if) it finishes `Done`. Off by default -- a `Refused` or `EnvironmentFault` lane is never
+    /// merged. This WRITES to the target branch given by `--repo`; only pass it when you mean
+    /// to update that branch.
+    #[arg(long)]
+    pub merge: bool,
 }
 
 #[derive(Args, Debug)]
