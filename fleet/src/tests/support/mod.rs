@@ -3,6 +3,7 @@
 //! `tests/support/` is a subdirectory, and Cargo only auto-discovers files directly in `tests/`.
 #![allow(dead_code)]
 
+pub mod bounded;
 pub mod m4;
 
 use std::fs;

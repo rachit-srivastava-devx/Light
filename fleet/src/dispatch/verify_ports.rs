@@ -1,8 +1,7 @@
 //! The two IO ports `fleet-verify` declares but does not implement itself: `ToolProbe` (is a
 //! tool on `$PATH`) and `ProcessRunner` (actually spawn a gate's command line). Split out of
-//! `verify_cmd.rs` purely to keep that file under the 80-line-per-file cap (BLUEPRINT §2/§7).
-//! The bounded-execution logic (the S1 hang fix) lives in `verify_runner_bounded.rs`, split out
-//! for the same reason.
+//! `verify_cmd.rs` to keep that file under the 80-line-per-file cap (BLUEPRINT §2/§7); the
+//! bounded-execution logic (S1 hang fix) lives in `verify_runner_bounded.rs` for the same reason.
 
 use super::verify_runner_bounded::run_bounded;
 use fleet_verify::{GateAssetError, GatesRoot, ProcessOutput, ProcessRunner, ProbeTool, ToolProbe};
@@ -24,10 +23,18 @@ pub fn resolve_gates_root() -> Result<GatesRoot, GateAssetError> {
 
 pub struct WhichProbe;
 impl ToolProbe for WhichProbe {
+    /// D27: `mutants` must stay opt-in -- a merge once dropped this guard and the gate ran
+    /// unasked because `cargo-mutants` happened to be on `$PATH`. So `CargoMutants` is
+    /// "available" only with `FLEET_MUTANTS=1` set; else `Verdict::Skip`, a visible `SKIP` line.
     fn available(&self, tool: ProbeTool) -> bool {
         let name = match tool {
             ProbeTool::Cargo => "cargo",
-            ProbeTool::CargoMutants => "cargo-mutants",
+            ProbeTool::CargoMutants => {
+                if std::env::var("FLEET_MUTANTS").as_deref() != Ok("1") {
+                    return false;
+                }
+                "cargo-mutants"
+            }
             ProbeTool::CargoFmt => "cargo-fmt",
             ProbeTool::CargoClippy => "cargo-clippy",
             ProbeTool::CargoDeny => "cargo-deny",
@@ -40,12 +47,10 @@ impl ToolProbe for WhichProbe {
 }
 
 /// Total wall-clock budget for one `oracle`/`gate`/pipeline-`Verify` invocation, shared across
-/// every gate it runs. Fixes the S1 hang: `fleet_verify::GATES` includes `cargo test --workspace`
-/// (measured ~94s on this machine) and `cargo mutants` (minutes-to-hours) run via a plain
-/// `Command::output()` with no timeout, so `fleet run`/`fleet oracle`/`fleet gate` never returned.
-/// Once the budget is spent, every remaining gate fails fast (typed `NonZeroExit(124)`, naming
-/// itself in the `fleet: verify:` stderr line) instead of spawning. Override with
-/// `FLEET_VERIFY_BUDGET_SECS` (tests use a short budget to stay fast and deterministic).
+/// every gate it runs. Fixes the S1 hang: a plain `Command::output()` with no timeout let
+/// `fleet run`/`fleet oracle`/`fleet gate` never return. Once spent, every remaining gate fails
+/// fast (typed `NonZeroExit(124)`) instead of spawning. Override with `FLEET_VERIFY_BUDGET_SECS`
+/// (tests use a short budget to stay fast and deterministic).
 pub fn verify_budget() -> Duration {
     std::env::var("FLEET_VERIFY_BUDGET_SECS")
         .ok()

@@ -1005,3 +1005,58 @@ independent live calls was always too strong an assertion.
 Fix in flight: assert the real property (neither invocation is rejected for an empty task) instead of
 comparing two live outcomes, with a required proof that the test still catches the original defect
 when reintroduced.
+
+### 2026-09-09 · M1 retargeted, the mutants opt-in guard was genuinely LOST, fleet-events confirmed already dropped · DONE
+Two independent leftovers, both closed out:
+
+**M1 / mutants opt-in (D27).** Confirmed the regression is real, not cosmetic: `WhichProbe::available`
+(`src/dispatch/verify_ports.rs`) probed `CargoMutants` with a plain `which cargo-mutants` and nothing
+else -- no `FLEET_MUTANTS` check anywhere in the migrated tree (`grep -rn FLEET_MUTANTS` found only
+M1.sh's own assertion strings). Proved it live: on a machine with `cargo-mutants` on `$PATH`,
+`fleet gate --id mutants --repo <scratch>` actually RAN the mutants stage and burned the whole verify
+budget before timing out -- exactly the D27 failure mode ("still PASSED, just took 24 minutes"), just
+now reachable with zero opt-in at all. `src/dispatch/run_cmd.rs`'s own doc comment already knew this
+("this machine has every gate's tool on PATH... cargo mutants... minutes-to-hours") and worked around
+it with a `NO_GATES` test fixture rather than fixing the guard.
+
+Fix: `WhichProbe::available` now requires `FLEET_MUTANTS=1` before it will even report `CargoMutants`
+present; missing it is an ordinary `Verdict::Skip` (never a silent pass), rendered as a visible `SKIP`
+line by `src/print/renderer.rs`. Verified both branches with the real binary end to end: unset ->
+`SKIP gate mutants -- mutants unavailable`, exit 0; `FLEET_MUTANTS=1` -> the gate actually spawns
+`cargo mutants` and runs to the verify budget. Two new tests pin this:
+`src/tests/mutants_opt_in_real_binary.rs` (`mutants_gate_skips_visibly_without_the_opt_in_env_var`,
+`mutants_gate_actually_runs_when_opted_in`), sharing a `run_bounded` helper split into
+`src/tests/support/bounded.rs` to keep both files ≤80 lines.
+
+Retargeted `M1.sh` off the deleted `verify.sh` onto the live mechanism: it now reads
+`$FLEET_TARGET_REPO` (S1 idiom, falls back to `$(pwd)`) and asserts `FLEET_MUTANTS` appears in
+`src/dispatch/verify_ports.rs` and that `src/print/renderer.rs` still renders `Outcome::Skip` /
+`"SKIP"`. Regenerated `MANIFEST.sha256` via `detector-integrity.sh --update` (111 detectors).
+`_selftest.sh` has no M1 fixture (checked -- it never did; only 25 of the corpus detectors are
+fixture-proven there) so it stays **25 of 25** unchanged. Watched M1 fire for real: renamed the
+asserted string to `FLEET_MUTANTZ` in the live file, `bash M1.sh` printed
+`M1: mutants stage is no longer opt-in (FLEET_MUTANTS guard missing)` and exited 1; restored
+byte-identically (`diff` clean); `bash M1.sh` clean again, exit 0.
+`fleet gate --id detectors --repo .` -> `PASS gate detectors 111/111`.
+
+**fleet-events.** Found the dependency line already absent from `src/Cargo.toml` at HEAD
+(`145b952`) -- `git diff HEAD -- src/Cargo.toml` is empty, and `git log -p` shows that same commit's
+diff removing `fleet-events = { path = "../crates/fleet-events" }`, even though its own commit
+message still said "still dead -- wire it or drop the dependency" (stale wording from an earlier
+draft of that commit). So the "drop" decision was already made and enacted before this session;
+re-verified it was the RIGHT call rather than trusting the stale sentence: `grep -rn fleet_events
+src/ --include='*.rs'` is empty, and the product has no ingestion surface at all today (`Commands` in
+`src/cli/root.rs` has no ingest/webhook/watch variant; `fleet run --task <string>` takes a task
+description directly, never a `GithubAdapter`/`GmailAdapter`/`FsAdapter`/`CliAdapter` pull) -- so
+`fleet-events`'s adapters have no legitimate call site in the product as it exists. Crate stays in the
+workspace (`Cargo.toml` root still lists `crates/fleet-events`); `cargo test -p fleet-events` ->
+15 passed / 0 failed; `cargo build --workspace` -> clean.
+
+Full re-verify after both changes: `FLEET_LOAD_FACTOR=10000 cargo test --workspace --no-fail-fast` ->
+**480 passed, 0 failed** (478 baseline + 2 new mutants-opt-in tests); `cargo clippy --workspace
+--all-targets -- -D warnings` -> exit 0; no Rust file over 80 lines.
+
+Pre-existing, out of scope: the corpus gate's own M2 finding (target/ inside the repo, 335k+ files)
+and an M11 exclusion (bin/freelane.sh not at that path in this checkout -- the real script lives at
+`crates/fleet-worker/assets/freelane.sh`) both still fire against this real repo; neither is caused
+by tonight's changes and neither was in this task's scope.
