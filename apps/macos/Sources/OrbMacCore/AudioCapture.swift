@@ -18,22 +18,73 @@ public final class MicCapture {
     /// hop back to the main queue themselves.
     public var onFrame: ((Data) -> Void)?
 
+    /// Whether voice processing (hardware AEC via CoreAudio VPIO) is enabled.
+    /// When true and `VoiceProcessingIOManager.isAvailable`, the capture path
+    /// uses the VPIO AudioUnit instead of a plain `AVAudioEngine.inputNode`.
+    public private(set) var isVoiceProcessingEnabled: Bool
+
     private var engine: AVAudioEngine?
+    private var vpioManager: VoiceProcessingIOManager?
     private let accumulator = PCM16FrameAccumulator(frameSampleCount: AudioIOFormat.micFrameSampleCount)
 
-    public init() {}
+    public init() {
+        self.isVoiceProcessingEnabled = false
+    }
+
+    /// - Parameter voiceProcessingEnabled: When `true` and
+    ///   `VoiceProcessingIOManager.isAvailable`, hardware AEC is activated
+    ///   via the CoreAudio VoiceProcessingIO AudioUnit. On macOS,
+    ///   `AVAudioEngine.inputNode`'s voice-processing properties are
+    ///   read-only, so the raw VPIO unit is the only path to real AEC.
+    public init(voiceProcessingEnabled: Bool) {
+        if voiceProcessingEnabled && VoiceProcessingIOManager.isAvailable {
+            self.isVoiceProcessingEnabled = true
+        } else {
+            self.isVoiceProcessingEnabled = false
+        }
+    }
 
     /// Starts capture. Builds a fresh `AVAudioEngine` each call (mirroring
     /// OrbMic.swift: `inputNode` snapshots the hardware input format on
     /// first access, so a stored/reused engine can pin a stale format).
+    /// When `voiceProcessingEnabled` was set to `true` in the initializer
+    /// and `VoiceProcessingIOManager.isAvailable`, the VPIO AudioUnit is
+    /// used instead of the plain AVAudioEngine input tap.
     /// Throws if the hardware input format is unusable (no input route) or
-    /// if `engine.start()` fails — including the case where the process has
-    /// not yet been granted microphone permission by the user (macOS surfaces
-    /// this as a start failure / silent zero-format route rather than a
-    /// distinct error type).
+    /// if the engine/VPIO fails to start.
     public func start() throws {
         accumulator.reset()
 
+        if isVoiceProcessingEnabled {
+            try startWithVoiceProcessing()
+        } else {
+            try startWithPlainEngine()
+        }
+    }
+
+    /// Starts capture using the VPIO AudioUnit for hardware AEC.
+    private func startWithVoiceProcessing() throws {
+        let manager = try VoiceProcessingIOManager()
+        self.vpioManager = manager
+
+        // The VPIO manager handles AEC/AGC internally. We wire its
+        // processed output to our accumulator → onFrame pipeline.
+        manager.onProcessedFrame = { [weak self] data in
+            guard let self else { return }
+            let samples = data.withUnsafeBytes { raw -> [Int16] in
+                let ptr = raw.bindMemory(to: Int16.self)
+                return Array(ptr)
+            }
+            for frame in self.accumulator.append(samples) {
+                self.onFrame?(frame)
+            }
+        }
+
+        try manager.start()
+    }
+
+    /// Starts capture using a plain AVAudioEngine (no AEC).
+    private func startWithPlainEngine() throws {
         guard let targetFormat = PCM16Buffers.monoInt16Format(sampleRate: AudioIOFormat.micSampleRate) else {
             throw MicCaptureError.formatConstructionFailed
         }
@@ -82,6 +133,8 @@ public final class MicCapture {
     }
 
     public func stop() {
+        vpioManager?.stop()
+        vpioManager = nil
         engine?.inputNode.removeTap(onBus: 0)
         engine?.stop()
         engine = nil
