@@ -44,3 +44,29 @@ pub fn scratch_repo(dir: &Path) {
     run(&["add", "f.txt"]);
     run(&["commit", "-q", "-m", "init"]);
 }
+
+/// Same as `scratch_repo`, but stops after `git add` -- `Merge`'s real `check_stage_nonempty`
+/// sees a non-empty stage, so the pipeline's `Merge` stage (and every stage before it) succeeds.
+pub fn scratch_repo_staged(dir: &Path) {
+    let run = |args: &[&str]| {
+        let out = Command::new("git").current_dir(dir).args(args).output().expect("git runs");
+        assert!(out.status.success(), "git {args:?} failed: {}", String::from_utf8_lossy(&out.stderr));
+    };
+    run(&["init", "-q"]);
+    run(&["config", "user.email", "test@example.com"]);
+    run(&["config", "user.name", "test"]);
+    fs::write(dir.join("f.txt"), "hello").unwrap();
+    run(&["add", "f.txt"]);
+}
+
+/// Runs the hidden `__pipeline_probe` (real `Verify`, zero gates -- see `run_cmd.rs`'s own doc
+/// comment on `NO_GATES`) against `state_dir`/`repo`, with `FLEET_STREAM_DIR` set to `stream_dir`
+/// when given.
+pub fn pipeline_probe(state_dir: &Path, repo: &Path, task_id: &str, stream_dir: Option<&Path>) -> Output {
+    let mut c = cmd();
+    c.env("FLEET_STATE_DIR", state_dir).args(["__pipeline_probe", "--task-id", task_id, "--repo"]).arg(repo);
+    if let Some(dir) = stream_dir {
+        c.env("FLEET_STREAM_DIR", dir);
+    }
+    c.output().expect("binary runs")
+}

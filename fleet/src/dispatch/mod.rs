@@ -1,5 +1,5 @@
-//! Top-level dispatch: match the parsed `Commands`, call the one `*_cmd` fn that owns it. This
-//! is the only place a `Commands` variant is matched against a real handler.
+//! Top-level dispatch: match the parsed `Commands`, call the one `*_cmd` fn that owns it -- the
+//! only place a `Commands` variant is matched against a real handler.
 
 mod adjudicate_cmd;
 mod adjudicate_cmd_error;
@@ -15,7 +15,7 @@ pub mod error;
 mod error_exit;
 pub mod ledger_cmd;
 pub mod lifecycle_cmd;
-mod memory;
+pub(crate) mod memory;
 pub mod meter_cmd;
 pub mod ops_cmd;
 pub mod plan_cmd;
@@ -27,15 +27,15 @@ mod sow_probes;
 pub mod spawn_probe_cmd;
 pub mod swarm_cmd;
 pub mod verify_cmd;
-/// `pub(crate)`, not `mod`: `pipeline::verify_stage` reuses the same real `WhichProbe`/
-/// `RealRunner` ports this module's `verify_cmd` uses, instead of a second hand-rolled pair.
 mod verify_report;
+mod verify_repo;
+/// `pub(crate)`: `pipeline::verify_stage` reuses this module's real `WhichProbe`/`RealRunner`.
 pub(crate) mod verify_ports;
 mod verify_runner_bounded;
+mod verify_runner_io;
 mod walk;
 mod walk_error;
 pub mod worker_cmd;
-
 use crate::cli::Commands;
 use crate::runtime::ConcurrencyCap;
 use error::DispatchError;
@@ -53,7 +53,7 @@ pub fn run(command: Commands, state_dir: &Path, cap: ConcurrencyCap) -> Result<(
         Commands::Agents(a) => agents_cmd::agents(a),
         Commands::Lifecycle(a) => lifecycle_cmd::lifecycle(state_dir, a),
         Commands::Run(a) => run_cmd::run(state_dir, a),
-        Commands::Oracle => verify_cmd::oracle(),
+        Commands::Oracle(a) => verify_cmd::oracle(a),
         Commands::Gate(a) => verify_cmd::gate(a),
         Commands::Ledger(a) => ledger_cmd::ledger(state_dir, a),
         Commands::Rollback(a) => ledger_cmd::rollback(a),

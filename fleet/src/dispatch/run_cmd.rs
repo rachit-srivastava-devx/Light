@@ -3,7 +3,7 @@
 
 use crate::cli::args_ops::RunArgs;
 use crate::dispatch::error::DispatchError;
-use crate::pipeline::run_pipeline;
+use crate::pipeline::{maybe_flush, run_pipeline};
 use crate::print::json;
 use fleet_types::TaskId;
 use std::collections::{BTreeMap, BTreeSet};
@@ -23,6 +23,7 @@ pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
     let task = TaskId::parse(args.task).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let repo = PathBuf::from(&args.repo);
     let outcome = run_pipeline(state_dir, &repo, task, &healthy_runtime(), fleet_verify::GATES);
+    maybe_flush(state_dir);
     if args.json {
         json::print_pretty(&outcome);
     } else {
@@ -46,6 +47,7 @@ const NO_GATES: &[fleet_verify::GateSpec] = &[];
 pub fn pipeline_probe(state_dir: &Path, repo: String, task_id: String) -> Result<(), DispatchError> {
     let task = TaskId::parse(task_id).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let outcome = run_pipeline(state_dir, Path::new(&repo), task, &healthy_runtime(), NO_GATES);
+    maybe_flush(state_dir);
     json::print_pretty(&outcome);
     outcome.result.map_err(|e| DispatchError::Refusal(e.to_string()))
 }

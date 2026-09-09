@@ -6,6 +6,7 @@
 
 use super::verify_runner_bounded::run_bounded;
 use fleet_verify::{GateAssetError, GatesRoot, ProcessOutput, ProcessRunner, ProbeTool, ToolProbe};
+use std::path::PathBuf;
 use std::process::Command;
 use std::time::{Duration, Instant};
 
@@ -53,24 +54,22 @@ pub fn verify_budget() -> Duration {
         .unwrap_or(Duration::from_secs(8))
 }
 
+/// Runs every gate's argv with `repo` as its cwd (the S1 fix) -- `OnPath` gates (`cargo test`)
+/// and `Script` gates alike, so a gate script resolved from the gates-root still executes
+/// against the target repo, never the calling process's own cwd.
 pub struct RealRunner {
     deadline: Instant,
+    repo: PathBuf,
 }
 
 impl RealRunner {
-    pub fn new() -> Self {
-        Self { deadline: Instant::now() + verify_budget() }
-    }
-}
-
-impl Default for RealRunner {
-    fn default() -> Self {
-        Self::new()
+    pub fn new(repo: impl Into<PathBuf>) -> Self {
+        Self { deadline: Instant::now() + verify_budget(), repo: repo.into() }
     }
 }
 
 impl ProcessRunner for RealRunner {
     fn run(&self, command: &[&str]) -> ProcessOutput {
-        run_bounded(command, self.deadline)
+        run_bounded(command, self.deadline, &self.repo)
     }
 }

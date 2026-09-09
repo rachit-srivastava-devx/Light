@@ -6,6 +6,7 @@ mod child_command;
 pub mod fd3;
 mod interpret;
 mod join_impl;
+mod parent_watch;
 mod prepare;
 pub mod process_group;
 mod util;
@@ -60,6 +61,7 @@ pub fn spawn(request: SpawnRequest) -> Result<LaneHandle, SpawnError> {
     unsafe {
         libc::close(channel.child_fd);
     }
+    crate::reap::record_worker_pid(&worktree.path, child.id());
     Ok(LaneHandle {
         lane_id,
         worktree_path: worktree.path.clone(),

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 printf '%s\n' 'T2 `shift 2` past end-of-args silently no-ops and the loop spins, ignoring SIGTERM (25 of 94 flags hung)'
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 python3 - "$ROOT" <<'PY'
 import sys, re
 from pathlib import Path

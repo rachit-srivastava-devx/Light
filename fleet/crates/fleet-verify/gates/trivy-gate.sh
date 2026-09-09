@@ -24,12 +24,11 @@
 # secret scan. That is real, separate scope (a cached/pre-fetched DB, a documented offline
 # fallback, and its own false-positive review) and is left open, not silently dropped: tracked as
 # a named follow-up, not claimed done here.
-# NOTE (fleet-verify relocation): see semgrep-gate.sh's matching note -- ROOT is this script's
-# own directory (the gates root), which is only a live fleet/ checkout when the caller supplies a
-# gates-root override that points at one.
+# NOTE (fleet-verify relocation, S1 fix): see semgrep-gate.sh's matching note -- `REPO` is the
+# cwd this script was invoked with (fleet's runner sets it to the `--repo` target), not this
+# script's own gates-root directory, so the scan covers the repo the caller actually named.
 set -u
-ROOT="$(cd "$(dirname "$0")" && pwd)"
-cd "$ROOT"
+REPO="${FLEET_TARGET_REPO:-$(pwd)}"
 
 OUT="$(mktemp -t trivy-gate-out.XXXXXX)"
 ERR="$(mktemp -t trivy-gate-err.XXXXXX)"
@@ -43,7 +42,7 @@ if ! trivy fs \
       --skip-dirs var \
       --format json --quiet \
       -o "$OUT" \
-      . 2>"$ERR"; then
+      "$REPO" 2>"$ERR"; then
   echo "trivy-gate: trivy exited non-zero (scan error, not a findings verdict):" >&2
   cat "$ERR" >&2
   exit 1

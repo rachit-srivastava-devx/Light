@@ -12,7 +12,7 @@
 # how many it tried -- a surface this script could not make refuse counts against the detector,
 # never as a silent pass (AGENTS.md #6).
 set -u
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 # B18b: honor the same FLEET_BIN override verify.sh derives from CARGO_TARGET_DIR (M2 moved the
 # build out of the repo; without this M9 would silently exit 77 -- excluded, not checked -- every
 # time CARGO_TARGET_DIR is set, the exact AGENTS.md-recommended worktree convention).

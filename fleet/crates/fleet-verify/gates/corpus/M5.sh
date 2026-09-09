@@ -4,7 +4,7 @@
 # code. PRINCIPLES #1: two tools were once adopted and defended for a day without either having
 # run. An installed binary is not an adoption; a mention in a document is not a caller.
 set -u
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 A="$ROOT/docs/ADOPTION.md"
 [ -r "$A" ] || exit 77
 FAILED=0; CHECKED=0

@@ -19,7 +19,11 @@ fn denominator(v: &Verdict) -> (Option<u64>, Option<u64>) {
     }
 }
 
-fn line_for(r: &GateResult) -> Event {
+/// `pub(crate)`, not `pub`: `pipeline::verify_stage` composes this same event construction for
+/// its own per-gate ledger receipts, so `fleet run`'s live gate lines and its durable trail can
+/// never drift into disagreeing about what one `GateResult` means (one source of truth, two
+/// consumers -- see the pipeline-wiring brief this shares a call site with).
+pub(crate) fn line_for(r: &GateResult) -> Event {
     let (checked, total) = denominator(&r.verdict);
     let (outcome, detail) = match &r.verdict {
         Verdict::Pass(_) => (Outcome::Pass, None),

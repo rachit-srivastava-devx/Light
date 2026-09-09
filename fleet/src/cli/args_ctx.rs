@@ -13,6 +13,18 @@ pub struct ContractArgs {
 pub struct GateArgs {
     #[arg(long)]
     pub id: Option<String>,
+    /// Defaults to the process's cwd, matching `graph`/`impact`. Threaded all the way to every
+    /// spawned gate's `.current_dir()` -- see `verify_runner_bounded.rs` (S1 fix).
+    #[arg(long, default_value = ".")]
+    pub repo: String,
+}
+
+/// `fleet oracle --repo <path>`: previously accepted no `--repo` at all (S1), always verifying
+/// the calling process's own cwd. Same default and same threading as `GateArgs::repo`.
+#[derive(Args, Debug)]
+pub struct OracleArgs {
+    #[arg(long, default_value = ".")]
+    pub repo: String,
 }
 
 #[derive(Args, Debug)]

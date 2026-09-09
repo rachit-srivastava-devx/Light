@@ -5,7 +5,8 @@
 //! failing report still exited 0 -- the defect this file exists to not regress.
 
 use super::verify_ports::{resolve_gates_root, RealRunner, WhichProbe};
-use crate::cli::args_ctx::GateArgs;
+use super::verify_repo::ensure_repo;
+use crate::cli::args_ctx::{GateArgs, OracleArgs};
 use crate::dispatch::error::DispatchError;
 use crate::print::verify_report::render as print_report;
 use fleet_types::ExitCode;
@@ -30,9 +31,11 @@ fn to_result(report: Report) -> Result<(), DispatchError> {
     }
 }
 
-pub fn oracle() -> Result<(), DispatchError> {
+pub fn oracle(args: OracleArgs) -> Result<(), DispatchError> {
+    let repo = ensure_repo(&args.repo)?;
     let gates = resolve_gates_root()?;
-    let report = fleet_verify::run_all(fleet_verify::GATES, &WhichProbe, &RealRunner::new(), &gates);
+    let runner = RealRunner::new(repo);
+    let report = fleet_verify::run_all(fleet_verify::GATES, &WhichProbe, &runner, &gates);
     print_report(&report);
     to_result(report)
 }
@@ -48,8 +51,10 @@ pub fn gate(args: GateArgs) -> Result<(), DispatchError> {
             return Err(DispatchError::UnknownGate(id.clone()));
         }
     }
+    let repo = ensure_repo(&args.repo)?;
     let gates = resolve_gates_root()?;
-    let report = fleet_verify::run_all(&specs, &WhichProbe, &RealRunner::new(), &gates);
+    let runner = RealRunner::new(repo);
+    let report = fleet_verify::run_all(&specs, &WhichProbe, &runner, &gates);
     print_report(&report);
     to_result(report)
 }

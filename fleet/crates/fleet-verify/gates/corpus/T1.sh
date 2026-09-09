@@ -2,7 +2,7 @@
 FLEET_CORPUS_PRUNE="-path */target/* -o -path */.venv/* -o -path */node_modules/* -o -path */.git/* -o -path */.codebase-memory/*"
 export FLEET_CORPUS_PRUNE
 printf '%s\n' 'T1 a POSIX ERE used [^\\n] as if it meant a non-newline'
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 python3 -B - "$ROOT" "$DIR" <<'PY'
 import json, re, sys

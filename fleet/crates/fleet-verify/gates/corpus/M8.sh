@@ -19,7 +19,7 @@
 # all (`recur` at 08.5 is ABSENT, named specifically because it is missing) -- those are not claims
 # this detector should hold to "still exists".
 set -u
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 # Same override chain as M9/M3/M10/install.sh's fixed form: FLEET_BIN wins, else CARGO_TARGET_DIR's
 # debug/fleet, else the in-repo default. A hardcoded $ROOT/keel/target/debug/fleet path was a real
 # bug found this session in M3/M9/M10/install.sh -- silently exit-77'ing (excluded, not checked)

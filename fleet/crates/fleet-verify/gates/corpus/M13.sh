@@ -44,7 +44,7 @@
 # does not clean superseded hashes on its own). Any one of them being stale is the bug: check
 # every candidate under this test-binary naming convention, not only the newest.
 set -u
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/keel/target}"
 DEPS="$TARGET_DIR/debug/deps"
 

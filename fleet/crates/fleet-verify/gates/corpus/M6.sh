@@ -16,7 +16,7 @@
 # general NLP negation solver, and mutation-tested below (docs/delta.d/B12.md) so this stays a
 # real check and not a rule quietly taught to ignore things.
 set -u
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 B="${FLEET_BIN:-${CARGO_TARGET_DIR:-$ROOT/keel/target}/debug/fleet}"
 [ -x "$B" ] || exit 77
 # DELTA.md is excluded BY SCOPE, not by suppression: it is a historical record of defects and

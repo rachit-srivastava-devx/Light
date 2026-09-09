@@ -13,7 +13,7 @@
 # self-reported trace (the `tried=...:answered` / `resolved_model=` line it already emits) to
 # confirm THAT lane, and not some other one, is what produced the reply.
 set -u
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 FREELANE="$ROOT/bin/freelane.sh"
 LANES_CONF="$ROOT/bin/lanes.conf"
 

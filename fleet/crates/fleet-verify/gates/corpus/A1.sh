@@ -2,7 +2,7 @@
 FLEET_CORPUS_PRUNE="-path */target/* -o -path */.venv/* -o -path */node_modules/* -o -path */.git/* -o -path */.codebase-memory/*"
 export FLEET_CORPUS_PRUNE
 printf '%s\n' 'A1 hand-rolled solved primitives replaced adopted open-source components'
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 python3 -B - "$ROOT" "$DIR" <<'PY'
 import json, re, sys
@@ -14,7 +14,12 @@ from _scan import lines
 import re
 hits=[]
 for p,ln,s in lines(root):
- if p.suffix in {'.sh','.py','.js','.ts','.rs','.go','.java','.rb'} and re.search(r'(?i)(blake3|blake2|sha256).*(iv|permutation|round|compress)',s): hits.append((p,ln,s.strip()))
+ # \b word boundaries on the implementation-detail terms: without them "iv" matched inside
+ # ordinary words like "archival" or "Delivery" (a doc comment mentioning the blake3 chain's
+ # verifiability, or a type named BareBlake3Digest next to DeliveryTier) -- a hash NAME near
+ # unrelated prose, not a hand-rolled reimplementation. The fixture 'sha256 custom compress
+ # round' still matches: compress/round are whole words there.
+ if p.suffix in {'.sh','.py','.js','.ts','.rs','.go','.java','.rb'} and re.search(r'(?i)(blake3|blake2|sha256).*\b(iv|permutation|round|compress)\b',s): hits.append((p,ln,s.strip()))
 if hits:
  for p,n,s in hits[:8]: print(f'{p}:{n}: {s}')
  sys.exit(1)

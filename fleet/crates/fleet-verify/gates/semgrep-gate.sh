@@ -15,13 +15,13 @@
 # this gate report clean instead of failing loud -- exactly the "a check cheaper to fake than to
 # satisfy will be faked" trap, PRINCIPLES.md #1/#11). Pin explicit registry packs instead, and
 # treat zero scanned files or a hard scan error as an environment failure, not a pass.
-# NOTE (fleet-verify relocation): this copy lives directly at the gates root (materialized by
-# fleet-verify, or a caller-supplied override) rather than under `bin/` inside a full checkout.
-# ROOT is therefore the gates root itself, and `.` below scans THAT tree, not necessarily a live
-# fleet/ checkout -- see crates/fleet-verify's README/report for how to point this at a real repo.
+# NOTE (fleet-verify relocation, S1 fix): this copy lives at the gates root (materialized by
+# fleet-verify, or a caller-supplied override) rather than under `bin/` inside a full checkout, so
+# it cannot resolve the scan target from its own script path. `REPO` is the cwd this script was
+# invoked with -- fleet's runner sets it to the `--repo` target (verify_runner_bounded.rs) -- so
+# this scans the repo the caller actually named, never the gates root `$0` happens to live in.
 set -u
-ROOT="$(cd "$(dirname "$0")" && pwd)"
-cd "$ROOT"
+REPO="${FLEET_TARGET_REPO:-$(pwd)}"
 
 OUT="$(mktemp -t semgrep-gate-out.XXXXXX)"
 ERR="$(mktemp -t semgrep-gate-err.XXXXXX)"
@@ -86,7 +86,7 @@ if ! semgrep \
       --exclude '**/__pycache__/*' \
       --exclude 'keel/mutants.out.old/*' \
       --json --quiet \
-      . >"$OUT" 2>"$ERR"; then
+      "$REPO" >"$OUT" 2>"$ERR"; then
   echo "semgrep-gate: semgrep exited non-zero (scan error, not a findings verdict):" >&2
   cat "$ERR" >&2
   exit 1

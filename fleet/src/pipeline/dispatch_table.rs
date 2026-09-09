@@ -15,7 +15,9 @@ pub fn run_one(stage: PipelineStage, ctx: &StageCtx) -> Result<StageOutput, Pipe
         PipelineStage::Scan => stages::scan().map(|_| StageOutput::None),
         PipelineStage::Plan => stages::plan().map(|_| StageOutput::None),
         PipelineStage::Dispatch => stages::dispatch(ctx.runtime, ctx.task).map(|_| StageOutput::None),
-        PipelineStage::Verify => stages::verify(ctx.verify_gates).map(|_| StageOutput::None),
+        PipelineStage::Verify => {
+            stages::verify(ctx.verify_gates, ctx.repo, ctx.state_dir).map(|_| StageOutput::None)
+        }
         PipelineStage::Merge => stages::merge(ctx.repo).map(|_| StageOutput::None),
         PipelineStage::Teach => unreachable!("Teach is run as the trailer, not in this loop"),
     }

@@ -14,15 +14,15 @@
 # .githooks/pre-commit on whatever `grep`/`awk` is actually on the operator's PATH — not the
 # harness's own ugrep-wrapped Bash tool used to develop it. Procedural line-by-line logic in awk,
 # not a single clever regex, so it behaves the same under BSD and GNU userlands.
-# NOTE (fleet-verify relocation): this copy lives directly at the gates root. It is NOT
-# self-contained: it needs (a) `memory/lessons/` -- live, evolving repo content deliberately not
-# bundled/embedded here, since a compile-time-frozen copy would go stale immediately -- and (b) a
-# real `git` working tree to diff. Both only exist when the caller supplies a gates-root override
-# that points at a real fleet/ checkout; run without one, it fails fast (LESSONS_DIR absent /
-# `git diff` outside a repo), which is the correct behavior for a gate that cannot prove anything
-# without its live inputs.
+# NOTE (fleet-verify relocation, S1 fix): this copy lives directly at the gates root, but the
+# `git diff` it needs must run against the TARGET repo (`--repo`), never the gates root -- it used
+# to unconditionally `cd "$(dirname "$0")"` (the gates root) before running any `git` command,
+# which only worked when a gates-root override happened to point at a real fleet/ checkout.
+# `REPO` is the cwd this script was invoked with (fleet's runner sets it to the `--repo` target);
+# `cd` into it explicitly so every bare `git diff`/`git rev-parse` below is unambiguous.
 set -u
-cd "$(dirname "$0")"
+REPO="${FLEET_TARGET_REPO:-$(pwd)}"
+cd "$REPO" || { echo "recur-gate: repo $REPO not accessible"; exit 3; }
 
 LESSONS_DIR="memory/lessons"
 

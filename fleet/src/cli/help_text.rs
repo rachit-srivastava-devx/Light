@@ -16,7 +16,12 @@ pub fn with_descriptions(cmd: Command) -> Command {
         .mut_subcommand("role-check", |c| c.about("Check whether --role passes fleet-router's role gate."))
         .mut_subcommand("agents", |c| c.about("Resolve a hermetic agent provision for --agent-id in --repo."))
         .mut_subcommand("lifecycle", |c| c.about("Resume --task-id from Intake and advance it using --evidence."))
-        .mut_subcommand("run", |c| c.about("Run the full durable pipeline for --task in --repo."))
+        .mut_subcommand("run", |c| {
+            c.about(
+                "Run the full durable pipeline for --task in --repo. Set FLEET_STREAM_DIR to also \
+                 mirror the run's ledger receipts as NDJSON under that directory (off by default).",
+            )
+        })
         .mut_subcommand("oracle", |c| c.about("Run every real verify gate and exit on the aggregate verdict."))
         .mut_subcommand("adjudicate", |c| c.about("Judge an artifact with fleet-judge (needs --features llm7); abstain/failure exit non-zero."))
         .mut_subcommand("attest", |c| c.about("NOT IMPLEMENTED: fleet-types has the wire shape only, no builder fn."))

@@ -24,7 +24,7 @@
 # `/worktrees/...keel/fleet` shape as a substring is enough on its own to exclude the dot-prefixed
 # relative literal above, without needing line boundaries at all.
 set -u
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 BIN="${FLEET_BIN:-${CARGO_TARGET_DIR:-$ROOT/keel/target}/debug/fleet}"
 [ -x "$BIN" ] || exit 77   # not built here: not mechanisable in this context
 HITS=$(strings "$BIN" 2>/dev/null | grep -cE '/worktrees/.*/keel/fleet' || true)

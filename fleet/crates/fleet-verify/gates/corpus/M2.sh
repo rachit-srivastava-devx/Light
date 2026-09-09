@@ -4,7 +4,7 @@
 # stopped returning at all (D30). Python's rglob walks the whole tree BEFORE the path filter runs,
 # so a string exclusion does not prevent the traversal -- only keeping the artifacts out does.
 set -u
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 N=$(cd "$ROOT" && python3 -c "import pathlib;print(sum(1 for _ in pathlib.Path('.').rglob('*')))" 2>/dev/null || echo 0)
 [ "$N" -gt 0 ] || { echo "M2: could not count files -- measuring nothing is a failure"; exit 1; }
 if [ "$N" -gt 15000 ]; then

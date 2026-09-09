@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 printf '%s\n' 'H1 TEST-HARNESS bug produced a false reading (3x today: $? after pipe, $? after command-substitution, zsh no-word-split)'
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 python3 - "$ROOT" "$DIR" <<'PY'
 import sys, re

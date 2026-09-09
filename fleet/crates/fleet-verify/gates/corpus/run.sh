@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -u
 DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+# S1 fix: each detector used to derive its scan root from ITS OWN script path (dirname/../..),
+# which only ever pointed at a real checkout when the gates-root itself was overridden to be one.
+# Capture the cwd this script was invoked with -- fleet's runner sets it to the `--repo` target
+# (see verify_runner_bounded.rs) -- BEFORE anything below can change it, and hand it to every
+# detector explicitly so "scan root" never again depends on where this script happens to live.
+export FLEET_TARGET_REPO="$(pwd)"
 checked=0
 total=0
 excluded=0

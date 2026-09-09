@@ -5,7 +5,7 @@
 # (main.rs re-invokes the binary with it to spawn the fd-3 supervised worker), so an arm counts
 # whether or not it appears in --help. What this catches is a *_command function with no arm at all.
 set -u
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 SRC="$ROOT/keel/fleet/src/main.rs"
 [ -r "$SRC" ] || exit 77
 python3 - "$SRC" <<'PY'

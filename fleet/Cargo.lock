@@ -842,7 +842,6 @@ dependencies = [
  "clap_complete",
  "figment",
  "fleet-context",
- "fleet-events",
  "fleet-govern",
  "fleet-judge",
  "fleet-lifecycle",

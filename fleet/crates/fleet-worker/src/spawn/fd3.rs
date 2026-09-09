@@ -45,9 +45,13 @@ pub fn wire(command: &mut Command) -> Option<Fd3Channel> {
     let child_fd = fds[1];
     unsafe {
         command.pre_exec(move || {
+            // Captured before any fork happens in this closure: at this point the direct parent
+            // is the fleet process itself (see `parent_watch`'s doc comment).
+            let fleet_pid = nix::unistd::Pid::from_raw(libc::getppid());
             if libc::setsid() < 0 {
                 return Err(std::io::Error::last_os_error());
             }
+            super::parent_watch::spawn_parent_death_watchdog(fleet_pid)?;
             let _ = setrlimit(Resource::RLIMIT_AS, LANE_RLIMIT_AS_BYTES, LANE_RLIMIT_AS_BYTES);
             if child_fd != 3 && libc::dup2(child_fd, 3) < 0 {
                 return Err(std::io::Error::last_os_error());

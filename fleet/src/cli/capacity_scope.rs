@@ -19,7 +19,7 @@ impl Commands {
             self,
             Commands::Run(_)
                 | Commands::Swarm(_)
-                | Commands::Oracle
+                | Commands::Oracle(_)
                 | Commands::Gate(_)
                 | Commands::Graph(_)
                 | Commands::Impact(_)

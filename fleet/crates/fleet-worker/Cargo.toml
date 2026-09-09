@@ -20,3 +20,9 @@ name = "fw-fixture-agent"
 path = "tests/fixtures/fixture_agent.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fw-lane-driver"
+path = "tests/fixtures/lane_driver.rs"
+test = false
+doc = false

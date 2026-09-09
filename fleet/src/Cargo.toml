@@ -19,7 +19,6 @@ thiserror = "1"
 fleet-types = { path = "../crates/fleet-types" }
 fleet-lifecycle = { path = "../crates/fleet-lifecycle" }
 fleet-store = { path = "../crates/fleet-store" }
-fleet-events = { path = "../crates/fleet-events" }
 fleet-router = { path = "../crates/fleet-router" }
 fleet-scan = { path = "../crates/fleet-scan" }
 fleet-plan = { path = "../crates/fleet-plan" }

@@ -835,3 +835,173 @@ fleet rollback --repo /tmp/rbrepo --worktree /tmp/victim9
 
 Still open, flagged not fixed: `kill -9` on the parent `fleet` leaves orphaned workers and a stale
 worktree; the dead `scaffold_fleet_dir` export.
+
+### 2026-09-09 · EXHAUSTIVE NODE-BY-NODE GRAPH AUDIT · found the night's worst defect
+Report: `docs/GRAPH-NODE-AUDIT.md`. 16/16 crates + 8/8 pipeline stages, each with evidence.
+Part A: every crate passes its own `cargo test -p` and `clippy -p`, no file over 80 lines, clean DAG,
+no cycles.
+
+**S1 — `Verify` verifies the WRONG REPOSITORY.** `src/dispatch/verify_runner_bounded.rs::run_bounded`
+spawns every gate with **no `.current_dir()`**, so gates inherit the fleet process's OS cwd.
+Reproduced: `fleet run --repo /tmp/scratch_repo` launched from the fleet workspace made
+`cargo test --workspace` compile and test **the entire fleet monorepo** (hyper, tokio, …) while
+reporting a verdict about the scratch repo. `fleet gate`/`fleet oracle` do not even ACCEPT `--repo`.
+`semgrep-gate.sh` `cd`s into the materialised gates-root and scans `.` there — i.e. it scans the gate
+scripts, never the repo.
+
+This is the purest form of the defect this repo exists to catch — **a true measurement of the wrong
+quantity** — inside the component whose only job is measurement. Every verdict fleet has emitted was
+about whatever directory the process happened to be sitting in.
+
+**It invalidates a claim I made earlier tonight and I am correcting it here.** I reported that the
+user journey proved "fleet can verify a change made by a coding agent", citing
+`fleet gate --id "unit tests"` → `2/2` after aider added a test. That number was correct only
+because the journey agent happened to be INSIDE the scratch repo when it ran; `--repo` was not being
+honoured and the cwd did the work. The capability is NOT proven. Re-prove it after the fix with
+cwd deliberately different from the target.
+
+**S2 — `Teach` computes a lesson and discards it.** The stage calls `fleet_plan::derive_lesson` and
+binds the result to `_lesson`, persisting nothing. Every failing run reaches Teach and teaches
+nothing, so "continuous learning" is a no-op at the pipeline level even though `fleet-memory` is now
+wired at `sow`.
+
+**S3 — `Scan`/`Plan` call real functions with permanently empty inputs** (`merge_questions(Vec::new())`,
+a fixed template). Self-flagged in the source, but the effect is that they can only ever trivially
+pass.
+
+**Two DEAD crates: `fleet-events` and `fleet-stream`.** Declared dependencies of `fleet-cli` with
+**zero** references outside their own directories. Note the irony: `fleet-stream` is the
+observability crate, and tonight a durable `FileCursorStore` was added to it — real, tested, and
+reachable from nothing. (`fleet-memory` and `fleet-judge`, previously dead, are now both reachable.)
+
+Answer to "does every node of the graph work?": **No.** All crates are structurally sound, but two
+are dead, and the Verify stage does not check the repository it claims to verify. Fix lane running
+for S1 + S2; the required proof is two different scratch repos giving two different correct answers
+from the SAME cwd.
+
+### 2026-09-09 · S1 (Verify targeted the wrong repo) + S2 (Teach discarded its lesson) · FIXED
+Verified by me, independent of the fixer. **467 passed / 0 failed**, clippy 0, zero files over 80,
+and the corpus self-test still **25 of 25** after 44 gate scripts were rewritten.
+
+**S1 — the proof I demanded, and it is unambiguous.** Same cwd (`fleet`), two scratch repos, two
+different CORRECT answers:
+```
+cwd=fleet  fleet gate --id "unit tests" --repo /tmp/pf   (test asserts 1==2)
+  → FAIL gate unit tests 0/1 -- NonZeroExit(101)   exit=6   elapsed=3s
+cwd=fleet  fleet gate --id "unit tests" --repo /tmp/pf   (test fixed to pass)
+  → PASS gate unit tests 1/1                        exit=0   elapsed=1s
+cwd=fleet  fleet gate --repo /definitely/not/here
+  → fleet: repo root "..." does not exist or could not be read   exit=3, NO verdict
+```
+The 1–3s elapsed is the load-bearing evidence: verifying fleet's own tree takes 90+ seconds and would
+fail on unrelated crates. Before the fix, that is exactly what happened while fleet reported a
+verdict about the scratch repo.
+
+How: `RealRunner` now carries the repo and `run_bounded` sets `.current_dir(repo)` on every spawned
+gate — for `OnPath` gates (`cargo`) and `Script` gates alike, while still RESOLVING scripts from the
+materialised gates-root (two different paths, deliberately not conflated). `gate`/`oracle` gained
+`--repo` (default `.`); `run` already had it and it now actually reaches the gates. A nonexistent
+repo is refused up front rather than silently falling back to cwd.
+
+Gate scripts: `semgrep-gate.sh`/`trivy-gate.sh` scanned `.` after `cd`-ing into the gates-root — i.e.
+they scanned the gate scripts. `recur-gate.sh` did an unconditional `cd "$(dirname "$0")"` that
+discarded the inherited repo cwd before every `git diff`. 40 corpus detectors derived
+`ROOT="$(dirname "$0")/../.."`, a gates-root-relative path that was only ever right by accident. All
+now use `${FLEET_TARGET_REPO:-$(pwd)}`. `MANIFEST.sha256` regenerated (the deliberate update
+`detector-integrity.sh` asks for). Left alone with reasons: `detector-integrity.sh` (hashes the
+bundled corpus — the corpus IS the subject) and `policy/run.sh` (self-tests its own Rego fixtures).
+`_selftest.sh` now mints its own `mktemp -d` as `FLEET_TARGET_REPO`, because proving "plant a fixture
+→ the detector fires; remove it → clean" needs an ISOLATED root; scanning a live megarepo would match
+unrelated pre-existing text. Verified: 25/25 from any cwd.
+
+**S2 — a lesson now survives the process.** `teach_stage` wrote `let _lesson = derive_lesson(..)`
+and dropped it. It now records through the already-wired `fleet-memory` path. Proven by me across a
+process boundary:
+```
+$ FLEET_STATE_DIR=/tmp/s2s fleet __pipeline_probe --task-id s2check --repo /tmp/s2r    exit=7
+--- process exited; separate command reads it back ---
+$ python3 -c "json.load(open('/tmp/s2s/memory/sow.json'))"
+lessons persisted: 1
+text: source=THREAD-LESSONS:fleet-cli-pipeline affected_leaf=pipeline-run
+      risk=the merge depth-readiness check failed trigger=Merge(EmptyStage{branch:"ma...
+```
+
+**Honest finding the fix EXPOSED** (flagged, not papered over): now that `corpus/run.sh` scans the
+real target repo instead of a tiny wrong directory, several heuristic detectors (A1, S6, S9, T1)
+produce real false positives against a mature codebase — e.g. matching "blake3" in a doc comment.
+That is a pre-existing precision problem that S1 had been hiding by measuring the wrong thing.
+Tuning detector precision is separate, larger work.
+
+Sequence worth remembering: a defect that made a check measure the wrong thing ALSO concealed the
+true quality of the checks themselves. Fixing the measurement surfaced a backlog rather than a win.
+
+### 2026-09-09 · observability wired: `fleet-stream` is no longer dead · DONE (verified by Opus)
+`grep -rn fleet_stream src/` returned NOTHING before; now real call sites:
+`src/pipeline/stream_flush.rs` (FileSink, CursorStore, FileCursorStore, Sink, StreamEvent) and
+`src/pipeline/ledger_log_source.rs` (adapts `fleet_store::Ledger` to `fleet_stream::LogSource`).
+That is the right architecture: the hash-chained ledger IS the durable log, streamed out through a
+sink with a cursor for resume — not a second parallel event vocabulary.
+
+Opt-in via `FLEET_STREAM_DIR`; unset means byte-identical behaviour. Verified by me across a process
+boundary:
+```
+# unset:
+FLEET_STATE_DIR=/tmp/stst  fleet __pipeline_probe --task-id nostream --repo /tmp/strepo
+  → exit 7,  ndjson files produced: 0
+# enabled:
+FLEET_STREAM_DIR=/tmp/stout ... --task-id withstream
+  → /tmp/stout/events.ndjson + /tmp/stout/cursors/file.cursor
+{"schema_version":"1.0","seq":0,"prev_hash":"GENESIS","hash":"blake3:8a8d63bf…",
+ "ts_wall":"2026-09-09T00:28:45Z","event":"run_start","actor":"fleet-cli-pipeline",
+ "body":{"task_id":"withstream"}}
+# resume (the cursor's whole purpose):
+re-run → 3 lines became 6, total records 6, DUPLICATE seqs 0
+```
+`fleet-events` is STILL dead — no call site anywhere in `src/`. The lane stalled before reaching a
+verdict on it. Open question for the owner: wire it or drop the dependency from `src/Cargo.toml`. A
+declared-and-unused dependency is better deleted than pretend-wired.
+
+### 2026-09-09 · detector precision + M10 install contract · DONE (verified by Opus)
+The four suspected false positives (A1, S6, S9, T1) are **clean** — I ran every detector individually
+and captured exit codes without a pipe. Only TWO detectors fire, and BOTH are real:
+
+```
+M2: 335132 files in the tree (>15000). Build artifacts are almost certainly inside the repo;
+    set CARGO_TARGET_DIR outside it. Detectors walk the tree and will stall (D30).
+M1: verify.sh unreadable at crates/fleet-verify/gates/corpus/../../verify.sh
+```
+**M2 is TRUE** — `target/` is inside the repo (I built there all night). Owner action: set
+`CARGO_TARGET_DIR` outside. **M1 is TRUE in a subtler way** — it guards the mutants opt-in that lived
+in `verify.sh`, and tonight's cleanup DELETED `verify.sh`. M1 cannot check its invariant so it fails
+rather than passing, which is correct; the real hole is that the guard has no home now that gates
+live in `registry.rs`. Neither is suppressed.
+
+M10 now **4 of 4 fixtures behave correctly** (exit 0), after being taught the install contract the
+owner changed tonight: a foreign `fleet` on PATH is DISPLACED to `<path>.displaced-by-fleet-rs`
+rather than refused. Note the correct asymmetry the fixtures now encode: **install displaces**
+(so `fleet` is always this CLI) while **uninstall still refuses** ("this repo did not install it") —
+installing must win, uninstalling must never delete a file it did not create.
+`_selftest.sh` still **25 of 25**; `fleet gate --id detectors --repo .` passes with
+`checks 111/111 performed`.
+
+Harness honesty worth quoting — M10 timed out under CPU contention and the runner refused to excuse it:
+```
+TIMEOUT-CONTENTION M10.sh -- timed out on the main pass, PASSED CLEAN on serial retry (consistent
+with CPU contention, not a broken detector). Still fails the gate; rerun uncontended to confirm
+before trusting this label.
+```
+
+### 2026-09-09 · SUITE WENT RED and I nearly missed it · IN PROGRESS
+`cargo test --workspace` → **477 passed / 1 FAILED**.
+`task_alone_reaches_the_same_downstream_step_as_task_plus_prompt` runs `fleet swarm` TWICE and
+asserts the two exit codes are EQUAL. Both spawn a real worker hitting the rate-limited keyless
+endpoint, so one returned 0 and the other 3 (`EnvironmentFault`). Took 303s.
+
+Same defect class already fixed tonight for `freelane_live.rs` — a suite that goes red when an
+external endpoint throttles. I missed this one because it does not LOOK like a network test: the
+network is reached indirectly, through a spawned lane. Lesson: "is this test network-dependent?" must
+be asked about what a test SPAWNS, not just about what it calls. Exit-code equality across two
+independent live calls was always too strong an assertion.
+Fix in flight: assert the real property (neither invocation is rejected for an empty task) instead of
+comparing two live outcomes, with a required proof that the test still catches the original defect
+when reintroduced.

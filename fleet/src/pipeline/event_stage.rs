@@ -4,8 +4,7 @@
 //! stage used to return, which left a pipeline run with no auditable trace at all.
 
 use super::event::PipelineError;
-use fleet_store::ledger::LedgerPaths;
-use fleet_store::Ledger;
+use super::ledger_events;
 use fleet_types::{ReceiptEvent, TaskId};
 use std::path::Path;
 
@@ -15,11 +14,6 @@ pub fn event(state_dir: &Path, task: &TaskId) -> Result<(), PipelineError> {
     // `state_dir` yet on a fresh run, so this stage must.
     std::fs::create_dir_all(state_dir)
         .map_err(|e| PipelineError::Event(format!("could not create {}: {e}", state_dir.display())))?;
-    let paths = LedgerPaths { chain: state_dir.join("ledger.chain"), lock: state_dir.join("ledger.lock") };
-    let ledger = Ledger::open(paths);
     let body = serde_json::json!({ "task_id": task.as_str() });
-    ledger
-        .append(ReceiptEvent::RunStart, body, "fleet-cli-pipeline".to_string(), None, None)
-        .map(|_receipt| ())
-        .map_err(|e| PipelineError::Event(e.to_string()))
+    ledger_events::append(state_dir, ReceiptEvent::RunStart, body).map_err(PipelineError::Event)
 }

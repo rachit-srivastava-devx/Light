@@ -4,7 +4,7 @@
 # INVISIBLE. So were meter, lifecycle, graph and completions: 5 real commands a user could not
 # discover (D60). M6 catches documented-but-missing; this catches the inverse, present-but-hidden.
 set -u
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 B="${FLEET_BIN:-${CARGO_TARGET_DIR:-$ROOT/keel/target}/debug/fleet}"
 [ -x "$B" ] || exit 77
 HELP="$("$B" --help 2>&1)"

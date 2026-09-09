@@ -34,7 +34,7 @@ pub enum Commands {
     Agents(AgentsArgs),
     Lifecycle(LifecycleArgs),
     Run(RunArgs),
-    Oracle,
+    Oracle(OracleArgs),
     Adjudicate(AdjudicateArgs),
     Attest(AttestArgs),
     Pr(PrArgs),

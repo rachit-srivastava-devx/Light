@@ -21,15 +21,22 @@ struct Budget {
     bytes: u64,
 }
 
+/// Checked once, up front, for the root only -- a nonexistent/unreadable `--repo` must be a
+/// clear error, never a silent fallback to the process's cwd (see `WalkError::RepoUnreadable`).
+/// Shared by every `--repo`-taking command (`graph`/`impact` via `read_source_files_bounded`
+/// below, `gate`/`oracle` via `verify_cmd.rs`) so "refuse an unusable target" is one rule, not
+/// one per caller.
+pub fn ensure_repo_readable(repo: &Path) -> Result<(), WalkError> {
+    std::fs::read_dir(repo).map(|_| ()).map_err(|e| WalkError::RepoUnreadable(repo.to_path_buf(), e.to_string()))
+}
+
 /// Walks `repo` for `fleet-context`-parseable source files, skipping `SKIP_DIRS` and refusing
 /// (with a typed `WalkError`) rather than hanging once any of the file/byte/deadline budgets is
 /// exceeded.
 pub fn read_source_files_bounded(repo: &Path) -> Result<Vec<SourceFile>, WalkError> {
-    // Checked once, up front, for the root only -- a nonexistent/unreadable `--repo` must be a
-    // clear error, never a silent empty result (see `WalkError::RepoUnreadable`). A subdirectory
-    // becoming unreadable mid-walk still just gets skipped, unchanged from before.
-    std::fs::read_dir(repo)
-        .map_err(|e| WalkError::RepoUnreadable(repo.to_path_buf(), e.to_string()))?;
+    // A subdirectory becoming unreadable mid-walk still just gets skipped, unchanged from before
+    // -- only the root the caller explicitly named must be a hard error.
+    ensure_repo_readable(repo)?;
     let mut out = Vec::new();
     let mut budget = Budget { started: Instant::now(), bytes: 0 };
     collect(repo, repo, &mut out, &mut budget)?;

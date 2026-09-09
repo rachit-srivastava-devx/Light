@@ -2,9 +2,18 @@
 set -u
 
 DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-ROOT="$(CDPATH= cd -- "$DIR/../.." && pwd)"
+# S1 fix, self-test isolation: every OTHER detector now scans `${FLEET_TARGET_REPO:-$(pwd)}` (the
+# real `--repo` target) instead of a path relative to its own script -- correct for a real `fleet
+# gate` run, but wrong for THIS script's own purpose, which is proving "plant one fixture line,
+# the detector fires; remove it, the detector goes clean" in isolation. Scanning a real repo (this
+# one included) risks unrelated pre-existing text elsewhere in the tree matching a detector's
+# pattern regardless of the planted probe. So this exports its OWN clean scratch dir as
+# `FLEET_TARGET_REPO` for every detector `prove()` below invokes, overriding whatever the caller's
+# cwd or `FLEET_TARGET_REPO` happened to be.
+ROOT="$(mktemp -d)" || exit 3
+export FLEET_TARGET_REPO="$ROOT"
 PROBE_DIR="$(mktemp -d "$ROOT/.detector-selftest.XXXXXX")" || exit 3
-trap 'rm -rf "$PROBE_DIR"' EXIT HUP INT TERM
+trap 'rm -rf "$ROOT" "$PROBE_DIR"' EXIT HUP INT TERM
 
 proven=0
 total=25

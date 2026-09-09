@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
-# M10 — install.sh must never clobber a binary or symlink it did not put there (B9).
+# M10 — install.sh must never SILENTLY destroy a binary or symlink it did not put there (B9).
 # On the author's own machine ~/.local/bin/fleet was a symlink into a DIFFERENT, unrelated `fleet`
 # repository. A plain `./install.sh` would have overwritten it, and `--uninstall` would have deleted
 # it, with no warning at all -- destroying someone else's tool and workflow. `foreign_bin()` guards
-# both paths now; this mechanises the four directions it must get right, each in its own throwaway
+# both paths; this mechanises the four directions it must get right, each in its own throwaway
 # fixture dir so no real machine state (including the real $HOME) is ever touched.
+#
+# Owner decision (2026-09-09): `fleet` on PATH must ALWAYS be this CLI (a stale symlink to a
+# predecessor repo was shadowing every build of this one). install.sh no longer REFUSES on a
+# foreign binary at the install path -- it DISPLACES it to `<path>.displaced-by-fleet-rs` (created
+# once, never clobbered by a later install) and installs over it. Fixture 3 below asserts that new
+# contract: nothing is silently destroyed, it is preserved at a documented path instead. The
+# `--uninstall` direction (fixture 4) is UNCHANGED by that decision -- it still refuses outright,
+# because uninstalling is destructive with no displacement to fall back on.
 #
 # Fixture 3 nests BIN_DIR *inside* the fixture's own ROOT_DIR on purpose: that exact layout is what
 # exposed a real bug during this detector's own construction (see docs/delta.d/B9.md) -- the guard's
@@ -12,7 +20,7 @@
 # foreign file sitting under a BIN_DIR nested inside ROOT_DIR was silently classified as "ours" and
 # clobbered. Fixed in install.sh; this fixture pins the fix down.
 set -u
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 command -v cargo >/dev/null 2>&1 || exit 77
 command -v rustc >/dev/null 2>&1 || exit 77
 [ "$(uname -s)" = "Darwin" ] || exit 77   # install.sh itself refuses off-Darwin
@@ -24,12 +32,19 @@ FAILS=()
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-# A minimal, fast-building stand-in for the real `keel` crate: it only needs to answer `--help`
+# A minimal, fast-building stand-in for the real workspace: it only needs to answer `--help`
 # with the exact marker string install.sh's foreign_bin() looks for, and `completions zsh` with
 # anything (install.sh pipes that straight to a file). Using this instead of the real ~300+ crate
 # workspace keeps this detector on the order of a few seconds instead of a full release build.
-mkdir -p "$WORK/keel/src"
-cat > "$WORK/keel/Cargo.toml" <<'EOF'
+#
+# This MUST live directly at $WORK (not a subdirectory): install.sh computes its own ROOT_DIR as
+# `dirname "$0"`, and $WORK is where the copy of install.sh below is placed, so `$WORK/Cargo.toml`
+# is exactly the manifest path install.sh's `cargo build --manifest-path "$ROOT_DIR/Cargo.toml"`
+# will look for. A fake crate nested one level down (e.g. `$WORK/keel/`) leaves that manifest path
+# empty and every fixture that builds fails with "manifest path ... does not exist" for reasons that
+# have nothing to do with the foreign-binary guard under test.
+mkdir -p "$WORK/src"
+cat > "$WORK/Cargo.toml" <<'EOF'
 [package]
 name = "fleet"
 version = "0.1.0"
@@ -43,7 +58,7 @@ path = "src/main.rs"
 opt-level = 0
 debug = false
 EOF
-cat > "$WORK/keel/src/main.rs" <<'EOF'
+cat > "$WORK/src/main.rs" <<'EOF'
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(|s| s.as_str()) {
@@ -92,22 +107,63 @@ else
     BAD=$((BAD+1))
 fi
 
-# --- Fixture 3: a foreign script must refuse, and must be left byte-for-byte untouched --------
+# --- Fixture 3: a foreign file at the install path is DISPLACED, never silently destroyed ------
 # BIN_DIR is deliberately nested inside $WORK (this fixture's ROOT_DIR) -- see header comment.
+# New contract (2026-09-09): `fleet` on PATH must always be this CLI, so install.sh no longer
+# refuses -- it moves the foreign file to `<path>.displaced-by-fleet-rs` (once; never clobbered by
+# a later install) and installs over it. This asserts every part of that: `--check` reports the
+# displacement without performing it, a real install performs it and preserves the original bytes,
+# and a second run does not clobber the existing backup with a newer foreign file.
+F3OK=1
 B3="$WORK/f3-bin"; S3="$WORK/f3-state"
 mkdir -p "$B3"
-printf '#!/bin/sh\necho "not the real fleet"\n' > "$B3/fleet"
+printf '#!/bin/sh\necho "not the real fleet, v1"\n' > "$B3/fleet"
 chmod +x "$B3/fleet"
-SUM3_BEFORE="$(shasum -a 256 "$B3/fleet" | awk '{print $1}')"
+SUM3_ORIG="$(shasum -a 256 "$B3/fleet" | awk '{print $1}')"
+
+# 3a: --check must report the displacement and must NOT mutate anything.
+OUT3CHECK="$(run_install "$B3" "$S3" --check)"; RC3CHECK=$?
+SUM3_AFTER_CHECK="$(shasum -a 256 "$B3/fleet" | awk '{print $1}')"
+BACKUP3="$B3/fleet.displaced-by-fleet-rs"
+if [ "$RC3CHECK" -ne 0 ] || [ "$SUM3_ORIG" != "$SUM3_AFTER_CHECK" ] || [ -e "$BACKUP3" ] \
+    || ! printf '%s' "$OUT3CHECK" | grep -q 'displaced-by-fleet-rs'; then
+    echo "M10: fixture3a (--check on foreign file) expected exit 0, file untouched, no backup created, and a displacement report; got exit=$RC3CHECK before=$SUM3_ORIG after=$SUM3_AFTER_CHECK backup_exists=$([ -e "$BACKUP3" ] && echo yes || echo no)"
+    F3OK=0
+fi
+
+# 3b: a real install must move the ORIGINAL foreign file to the backup path, byte-for-byte, and
+# install our binary at the target path.
 OUT3="$(run_install "$B3" "$S3")"; RC3=$?
-SUM3_AFTER="$(shasum -a 256 "$B3/fleet" | awk '{print $1}')"
-if [ "$RC3" -ne 7 ] || [ "$SUM3_BEFORE" != "$SUM3_AFTER" ]; then
-    echo "M10: fixture3 (foreign script, BIN_DIR nested under ROOT_DIR) expected exit 7 + untouched file, got exit=$RC3 before=$SUM3_BEFORE after=$SUM3_AFTER"
+SUM3_BACKUP="$([ -e "$BACKUP3" ] && shasum -a 256 "$BACKUP3" | awk '{print $1}' || echo MISSING)"
+HELP3="$("$B3/fleet" --help 2>/dev/null || true)"
+if [ "$RC3" -ne 0 ] || [ "$SUM3_BACKUP" != "$SUM3_ORIG" ] || [ ! -x "$B3/fleet" ] \
+    || ! printf '%s' "$HELP3" | grep -q 'frozen, attested change'; then
+    echo "M10: fixture3b (real install on foreign file) expected exit 0, original preserved at $BACKUP3 ($SUM3_ORIG), and our binary installed; got exit=$RC3 backup_sum=$SUM3_BACKUP installed=$([ -x "$B3/fleet" ] && echo yes || echo no)"
+    F3OK=0
+fi
+
+# 3c: a foreign file reappearing at the target path (e.g. something else wrote over our binary)
+# must be removed on the next install WITHOUT clobbering the backup already holding the ORIGINAL
+# foreign file -- the backup is "once", not "most recent".
+printf '#!/bin/sh\necho "not the real fleet, v2"\n' > "$B3/fleet"
+chmod +x "$B3/fleet"
+OUT3SECOND="$(run_install "$B3" "$S3")"; RC3SECOND=$?
+SUM3_BACKUP_AFTER="$([ -e "$BACKUP3" ] && shasum -a 256 "$BACKUP3" | awk '{print $1}' || echo MISSING)"
+HELP3SECOND="$("$B3/fleet" --help 2>/dev/null || true)"
+if [ "$RC3SECOND" -ne 0 ] || [ "$SUM3_BACKUP_AFTER" != "$SUM3_ORIG" ] \
+    || ! printf '%s' "$HELP3SECOND" | grep -q 'frozen, attested change'; then
+    echo "M10: fixture3c (second install over a NEW foreign file) expected exit 0, backup still holding the original ($SUM3_ORIG), and our binary reinstalled; got exit=$RC3SECOND backup_sum=$SUM3_BACKUP_AFTER"
+    F3OK=0
+fi
+
+if [ "$F3OK" -ne 1 ]; then
     FAILS+=("fixture3")
     BAD=$((BAD+1))
 fi
 
 # --- Fixture 4: --uninstall on a foreign symlink must refuse and leave it alive ----------------
+# Unchanged by the 2026-09-09 contract change: uninstalling is destructive (rm, not a move-aside),
+# so there is no safe displacement to fall back on -- refusing outright is still the only option.
 B4="$WORK/f4-bin"; S4="$WORK/f4-state"
 mkdir -p "$B4"
 FOREIGN_TARGET="/nonexistent/some-other-fleet-repo/fleet"

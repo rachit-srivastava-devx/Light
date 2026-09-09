@@ -3,7 +3,7 @@ FLEET_CORPUS_PRUNE="-path */target/* -o -path */.venv/* -o -path */node_modules/
 export FLEET_CORPUS_PRUNE
 REGENERABLE_OK='target|var|node_modules|\.venv|\.codebase-memory|dist|build'
 printf '%s\n' 'C12 the learning corpus was ignored by git'
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 python3 -B - "$ROOT" "$DIR" <<'PY'
 import json, re, sys

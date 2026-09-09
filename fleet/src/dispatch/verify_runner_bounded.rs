@@ -1,42 +1,20 @@
 //! `run_bounded` -- the S1-hang fix. Spawns a gate's argv with stdin closed, drains its stdout/
-//! stderr pipes on background threads (so a chatty child cannot deadlock by filling a pipe buffer
-//! nobody is reading), and polls `try_wait` against a shared deadline. On expiry the child is
-//! killed and a typed timeout `ProcessOutput` (exit 124, naming the command and budget) is
-//! returned instead of blocking forever. Split out of `verify_ports.rs` for the 80-line cap.
+//! stderr pipes on background threads, and polls `try_wait` against a shared deadline; on expiry
+//! the child is killed and a typed timeout `ProcessOutput` (exit 124) is returned instead of
+//! blocking forever. Split out of `verify_ports.rs` for the 80-line cap.
+//!
+//! **S1 fix**: every spawn sets `.current_dir(repo)` -- the child no longer inherits the `fleet`
+//! process's own cwd. A `Script` gate is still RESOLVED against the gates-root
+//! (`verify_ports.rs::resolve_gates_root`) but now EXECUTES with `repo` as cwd, same as `OnPath`.
 
 use super::verify_report as report;
+use super::verify_runner_io::{drain, io_error, timeout_output};
 use fleet_verify::ProcessOutput;
-use std::io::Read;
+use std::path::Path;
 use std::process::{Command, Stdio};
-use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
-fn io_error(e: std::io::Error) -> ProcessOutput {
-    ProcessOutput { exit_code: -1, stdout: String::new(), stderr: e.to_string() }
-}
-
-fn timeout_output(command: &[&str], budget: Duration) -> ProcessOutput {
-    let joined = command.join(" ");
-    ProcessOutput {
-        exit_code: 124,
-        stdout: String::new(),
-        stderr: format!("fleet: verify: `{joined}` exceeded the {budget:?} verify budget, killed"),
-    }
-}
-
-/// Read a pipe to completion on a background thread, delivering the collected text over a
-/// channel so the poll loop below never blocks on a `read` directly.
-fn drain(mut pipe: impl Read + Send + 'static) -> mpsc::Receiver<String> {
-    let (tx, rx) = mpsc::channel();
-    std::thread::spawn(move || {
-        let mut buf = String::new();
-        let _ = pipe.read_to_string(&mut buf);
-        let _ = tx.send(buf);
-    });
-    rx
-}
-
-pub fn run_bounded(command: &[&str], deadline: Instant) -> ProcessOutput {
+pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessOutput {
     let Some((bin, rest)) = command.split_first() else {
         return ProcessOutput { exit_code: -1, stdout: String::new(), stderr: "empty command".into() };
     };
@@ -48,6 +26,7 @@ pub fn run_bounded(command: &[&str], deadline: Instant) -> ProcessOutput {
     report::running(&command.join(" "), remaining);
     let mut child = match Command::new(bin)
         .args(rest)
+        .current_dir(repo)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

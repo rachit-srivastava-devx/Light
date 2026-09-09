@@ -17,7 +17,7 @@
 # make an honest "just mentioned in a README, not actually run yet" script indistinguishable from
 # a fully dead one.
 set -u
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+ROOT="${FLEET_TARGET_REPO:-$(pwd)}"
 BIN="$ROOT/bin"
 [ -d "$BIN" ] || exit 77
 
