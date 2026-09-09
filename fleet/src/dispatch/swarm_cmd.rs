@@ -9,10 +9,26 @@ use crate::print::render_event::Event;
 use crate::print::style::Style;
 use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, SpawnRequest};
 use fleet_types::{Role, TaskId};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-pub fn swarm(args: SwarmArgs) -> Result<(), DispatchError> {
+/// Env var name `fleet-worker::spawn::worker_state_dir::resolve` reads. Kept as a literal, not a
+/// shared const, since crossing the crate boundary for one string would cost more than it saves;
+/// `runtime::state_dir_default::ENV_STATE_DIR` documents the same name on the CLI side.
+const ENV_STATE_DIR: &str = "FLEET_STATE_DIR";
+
+#[cfg(test)]
+#[path = "swarm_cmd_tests.rs"]
+mod tests;
+
+pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
+    // Thread the CLI's already-resolved state dir into the worker EXPLICITLY, rather than
+    // relying on both sides happening to read the same env var name (the gap: a future
+    // config-file layer could set the CLI's `state_dir` without `FLEET_STATE_DIR` being set at
+    // all, and the two would silently diverge). Setting the var here, from the value `dispatch`
+    // already threaded through as `state_dir`, makes the worker's independent env read agree
+    // with the CLI's resolution by construction instead of by coincidence.
+    std::env::set_var(ENV_STATE_DIR, state_dir);
     let role = Role::parse(&args.role).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let task_id = TaskId::parse(args.task.clone()).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     // `--task` is both the lane's task id and, unless `--prompt` overrides it, the free-text

@@ -66,9 +66,29 @@ ever received. So the right-hand column of the external tables is evidence, not 
 | `codex` | the builder agent for the autonomous loop | active — 4 parallel workers |
 | `qwen` | installed, candidate lane | probed, not wired |
 | `curl` | every lane call | core |
+| `aider` (0.86.2) | keyless coding-agent CLI, used to make real code changes without an account for docs/CLI-behavior verification work | **ADOPTED** — verified working keyless, no account, real code that compiled and passed an independently-written test (see recipe below) |
+| `opencode` (1.18.25) | was tried as `aider`'s alternative | **WITHDRAWN** — `opencode run` hangs and emits zero bytes, reproduced 3× (bare, `--pure --print-logs`, and with a configured keyless provider); `--version`/`--help` work fine, only `run` is dead |
 
 `opa` and `rekor` are listed **because they were withdrawn.** A dependency list that only shows
 what survived hides the more useful half.
+
+### Driving a keyless coding agent against this repo
+
+`opencode` is dead on this machine (above); `aider` is the working replacement, verified keyless,
+no login, no account:
+
+```
+export PATH="$HOME/.local/bin:$PATH"
+OPENAI_API_BASE=https://api.llm7.io/v1 OPENAI_API_KEY=unused \
+  aider --model openai/codestral-latest --yes --no-auto-commits --message '<task>'
+```
+
+`https://api.llm7.io/v1` (the same endpoint as the `api.llm7.io` lane above) answers `/v1/models`
+and `/v1/chat/completions` with no key and **supports tool calling** (returns a well-formed
+`tool_calls` payload) — only `codestral-latest` is keyless on that host, every other model there
+returns 401. A second verified keyless lane using a different (non-OpenAI) dialect:
+`https://devtoolbox-api.devtoolbox-api.workers.dev/ai/generate|llama-3.2-3b-instruct` — this is the
+same lane already listed in the keyless-lanes table below.
 
 ## Keyless inference lanes — `crates/fleet-worker/assets/lanes.conf`
 

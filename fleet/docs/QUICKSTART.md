@@ -3,7 +3,7 @@
 Executed top to bottom from a clean `/tmp` scratch dir on 2026-09-08 against
 `target/debug/fleet`. Every command below and its output is real — see
 `docs/USING-FLEET.md` for the full command reference and the defects found along the way, and
-`docs/DX-AUDIT.md` for the adversarial sweep this is built on.
+`docs/archive/night-2026-09-08/DX-AUDIT.md` for the adversarial sweep this is built on.
 
 **Honest framing:** the full "plan a task, run it, get an attestation" workflow the product aims
 for does not exist end to end today (3 of 28 commands needed for it — `adjudicate`, `attest`,
@@ -55,7 +55,7 @@ EXIT:7
 Exit 7, refused — `run` executes the *target repo's own* verify gates
 (`cargo test`, `cargo mutants`, `semgrep`, ...), and an empty scratch repo has no `Cargo.toml`, so
 those gates fail honestly. That is the correct, expected outcome for a throwaway repo, not a bug.
-Give it real up-to-40s of budget: `docs/DX-AUDIT.md` recorded this same command hanging
+Give it real up-to-40s of budget: `docs/archive/night-2026-09-08/DX-AUDIT.md` recorded this same command hanging
 indefinitely; retested for this rewrite it now completes in ~8s, but treat anything under
 `timeout 60` as the safety margin, not `timeout 15`.
 

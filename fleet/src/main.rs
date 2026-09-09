@@ -10,7 +10,6 @@ mod print;
 mod runtime;
 
 use clap::{CommandFactory, FromArgMatches};
-use std::path::PathBuf;
 
 fn main() {
     // Builder-side help-text augmentation (`cli::help_text`) instead of doc comments on the
@@ -23,7 +22,7 @@ fn main() {
         eprintln!("config load failed: {e}");
         std::process::exit(fleet_types::ExitCode::Env.as_i32());
     });
-    let state_dir = PathBuf::from(&config.state_dir);
+    let state_dir = config.state_dir.clone();
     // Only work-spawning commands may be refused for capacity (see `cli::capacity_scope`):
     // gating `completions`/`doctor`/`__agent` broke the installer and killed spawned children.
     let preflight_cfg = runtime::capacity::PreflightConfig::from_env(config.review_cap, config.ram_lanes);

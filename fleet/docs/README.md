@@ -8,6 +8,7 @@ to `archive/`, everything else fixed in place or left as active governance).
 
 | File | What it's for |
 |---|---|
+| [`MORNING.md`](MORNING.md) | Single entry point for the latest overnight session: what's fixed, what's still open, and the one recurring pattern behind most of it. Read this first if you're catching up. |
 | [`QUICKSTART.md`](QUICKSTART.md) | Shortest verified path from a fresh clone to real output, executed top to bottom. Start here. |
 | [`USING-FLEET.md`](USING-FLEET.md) | Every `fleet` command, a real walkthrough, the six exit codes. Linked from the root `README.md`. |
 | [`DEPENDENCIES.md`](DEPENDENCIES.md) | Every crate, package, external binary and lane fleet depends on, and whether it's actually adopted. Linked from the root `README.md`. |
@@ -41,6 +42,10 @@ Point-in-time reports, kept for history but not current guidance:
   tree.
 - **`archive/BRIEF-P0.md`, `BRIEF-P0-VERIFY.md`** — the original P0 builder/verifier task briefs,
   superseded once P0 shipped.
+- **`archive/night-2026-09-08/`** — the nine session artifacts (a work order, a DX audit, two user
+  journeys, two independent verification passes, a graph-node audit, plus this file's own earlier
+  draft) consolidated into `MORNING.md` on 2026-09-09. Read `MORNING.md` first; come here only for
+  the underlying command transcripts.
 
 None of the archived files were rewritten to use current paths — they are historical records of
 what was true when written, and correcting their paths would misrepresent that history.

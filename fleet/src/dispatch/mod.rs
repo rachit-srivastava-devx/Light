@@ -46,7 +46,7 @@ pub fn run(command: Commands, state_dir: &Path, cap: ConcurrencyCap) -> Result<(
         Commands::Meter(a) => meter_cmd::meter(state_dir, a),
         Commands::Route(a) => route_cmd::route(a),
         Commands::Roles(a) => role_cmd::roles(a.json),
-        Commands::Swarm(a) => swarm_cmd::swarm(a),
+        Commands::Swarm(a) => swarm_cmd::swarm(state_dir, a),
         Commands::Sow(a) => plan_cmd::sow(state_dir, a),
         Commands::Plan(a) => plan_cmd::plan(a),
         Commands::RoleCheck(a) => role_cmd::role_check(a),

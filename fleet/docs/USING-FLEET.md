@@ -6,7 +6,7 @@ pasted verbatim. Where the previous version of this file showed nested subcomman
 (`sow accept`, `ledger verify`, `agents list`, `oracle o1 --suite ...`, `attest verify <ID>`,
 `lifecycle states`, `meter show`, `rollback --artifact <ID>`) — **none of that shape exists**. The
 real CLI is flat: every command takes only top-level flags, never a second positional
-subcommand word. See `docs/DX-AUDIT.md` for the full adversarial sweep this rewrite is based on,
+subcommand word. See `docs/archive/night-2026-09-08/DX-AUDIT.md` for the full adversarial sweep this rewrite is based on,
 and `docs/QUICKSTART.md` for the shortest path from a fresh clone to something working.
 
 Exit codes are real, captured as `cmd > out.txt 2>&1; echo "EXIT:$?"` on its own line — never
@@ -73,7 +73,7 @@ is overloaded: both "your environment is missing something" (e.g. `gate --id <ba
 subcommand isn't built yet" (the 8 stubs) return it, with no way to tell them apart except by
 reading the message. `6` is similarly overloaded across "lane not configured" (`meter`),
 "agents.toml has no matching id" (`agents`), and "bad task id" (`lifecycle`). Documented here as
-found; not fixed by this docs pass (see `docs/DX-AUDIT.md` §6 "Consistency matrix").
+found; not fixed by this docs pass (see `docs/archive/night-2026-09-08/DX-AUDIT.md` §6 "Consistency matrix").
 
 ---
 
@@ -192,11 +192,11 @@ not reproduced against this binary.
 ### 5. `fleet run` — the flagship command, now completing (was hanging)
 
 `--help`: `fleet run --repo <REPO> --task <TASK>`. No `--agent` flag exists (the old docs' `--agent
-<stub|env-probe|freelane>` is not accepted). **`docs/DX-AUDIT.md` recorded this command hanging
+<stub|env-probe|freelane>` is not accepted). **`docs/archive/night-2026-09-08/DX-AUDIT.md` recorded this command hanging
 indefinitely earlier the same day** (S1-1, zero bytes for a 15s window with stdin closed). Retested
 during this docs pass against the same binary (unchanged mtime), `fleet run` now completes
 reliably in ~8s — a fix appears to have landed in `src/` concurrently while this docs pass was
-running (other agents are actively working `src/`; see `docs/NIGHT-PLAN.md` lane 1). Verified 3
+running (other agents are actively working `src/`; see `docs/archive/night-2026-09-08/NIGHT-PLAN.md` lane 1). Verified 3
 consecutive times, `timeout 15`/`timeout 20`/`timeout 60`, all exit before the timeout:
 
 ```bash
@@ -224,7 +224,7 @@ this session saw it complete every time once given a real budget.
 
 ### 6. `fleet oracle` / `fleet gate` (no args) — also now completing (were hanging)
 
-Same story as `run`: `docs/DX-AUDIT.md` recorded both hanging for a full 60s with zero output
+Same story as `run`: `docs/archive/night-2026-09-08/DX-AUDIT.md` recorded both hanging for a full 60s with zero output
 (S1-2, S1-3). Retested here, both now complete in ~8-10s and run the same gate pipeline `run`
 does, refusing with a real per-gate breakdown:
 
@@ -254,7 +254,7 @@ EXIT:3
 
 ### 7. `fleet swarm` — cross-wiring also fixed
 
-`docs/DX-AUDIT.md` recorded (S1-4) that a non-empty `--task` was rejected as empty whenever
+`docs/archive/night-2026-09-08/DX-AUDIT.md` recorded (S1-4) that a non-empty `--task` was rejected as empty whenever
 `--prompt` was omitted (`--prompt` defaults to `""` per `--help`). Retested: `--task` alone now
 works without `--prompt`, in the sense that it is no longer rejected as an empty prompt. But the
 literal command below is a *chat-only* task — "hello world task" has no fenced-code-apply step,
@@ -280,7 +280,7 @@ for the identical flow; see `crates/fleet-worker/src/spawn/change_detect/` for t
 tests.
 
 **Note:** this makes a real outbound network call (a keyless LLM endpoint, per
-`docs/NIGHT-PLAN.md`) — don't run it somewhere without network access, or in a loop. There is no
+`docs/archive/night-2026-09-08/NIGHT-PLAN.md`) — don't run it somewhere without network access, or in a loop. There is no
 `swarm dispatch` subcommand; the flat `fleet swarm --repo <P> --task <T> --role <ROLE>
 [--prompt <P>]` is the whole surface.
 
@@ -297,7 +297,7 @@ $ fleet status --json
 EXIT:0
 ```
 This is capacity/scheduling data — the same shape `fleet doctor` reports — not a task rollup.
-`docs/DX-AUDIT.md`'s S1-5 is unchanged: there is no way to ask fleet "what did you just do" from
+`docs/archive/night-2026-09-08/DX-AUDIT.md`'s S1-5 is unchanged: there is no way to ask fleet "what did you just do" from
 `status`; use `fleet ledger` (row count) instead, per the next section.
 
 ### 9. Check the evidence
@@ -331,7 +331,7 @@ EXIT:0
 |---|---|---|
 | `fleet plan [--model <M>]` | no positional intent; prints a fixed acceptance-check template | WORKS (does not do what old docs described — see §3) |
 | `fleet sow --text <T> --intent-hash <H>` | `--text` is the literal SOW body; see §4 for the real required vocabulary | WORKS once you match the real vocabulary |
-| `fleet run --repo <P> --task <T>` | no `--agent` flag | WORKS — was hanging per `DX-AUDIT.md`, fixed during this docs pass, see §5 |
+| `fleet run --repo <P> --task <T>` | no `--agent` flag | WORKS — was hanging per `archive/night-2026-09-08/DX-AUDIT.md`, fixed during this docs pass, see §5 |
 | `fleet swarm --repo <P> --task <T> --role <R> [--prompt <P>]` | flat, no `dispatch` subcommand; makes a real network call | WORKS — `--task`/`--prompt` cross-wire fixed during this docs pass, see §7 |
 | `fleet rollback --repo <P> --worktree <W>` | addresses by repo+worktree path, not an artifact id; `<W>` must be a path under `<P>/.worktrees` | WORKS — refuses (exit 7) outside `.worktrees`, removes cleanly inside it; see below |
 
@@ -340,7 +340,7 @@ EXIT:0
 |---|---|---|
 | `fleet status [--json]` | prints `concurrency_cap`, not a task rollup | WORKS but semantically wrong — see §8 |
 | `fleet ledger [--verify]` | no `count`/`dump`/`append` subcommands | WORKS — see §9 |
-| `fleet oracle` (no flags) | | WORKS — was hanging per `DX-AUDIT.md`, fixed during this docs pass, see §6 |
+| `fleet oracle` (no flags) | | WORKS — was hanging per `archive/night-2026-09-08/DX-AUDIT.md`, fixed during this docs pass, see §6 |
 | `fleet adjudicate <ARTIFACT>` | positional, not `--artifact` | **NOT IMPLEMENTED** — always exit 3, "no adjudication-table fn exposed yet" |
 | `fleet attest --artifact <ID>` | no `verify` subcommand | **NOT IMPLEMENTED** — always exit 3, "no builder-flow fn yet" |
 | `fleet pr --repo <P> --branch <B>` | | **NOT IMPLEMENTED** — always exit 3, "no pr-emit fn exposed yet" |

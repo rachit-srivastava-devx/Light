@@ -78,14 +78,17 @@ foreign_bin() {
     # our own build output). The path-prefix test is meaningless for a plain file -- comparing
     # BIN_PATH's own location to ROOT_DIR says nothing about who put it there or what it is, and
     # doing so let a foreign plain file sitting under a BIN_DIR nested inside ROOT_DIR bypass the
-    # --help marker check entirely and get silently overwritten. So a plain file is judged ONLY by
-    # content (the --help marker), never by where it happens to sit.
+    # marker check entirely and get silently overwritten. So a plain file is judged ONLY by
+    # content (the identity marker), never by where it happens to sit.
     if [[ -L "$BIN_PATH" ]]; then
         local real; real="$(readlink "$BIN_PATH")"
         case "$real" in "$ROOT_DIR"/*) return 1 ;; esac
         return 0
     fi
-    "$BIN_PATH" --help 2>/dev/null | grep -q 'frozen, attested change' && return 1
+    # This marker was `--help | grep 'frozen, attested change'` -- a string that exists nowhere in
+    # this repo, so OUR OWN prior install was classified foreign on every re-install. Pinned now by
+    # `src/tests/install_marker_matches_binary.rs`, which fails if the two ever drift again.
+    "$BIN_PATH" version 2>/dev/null | grep -q '^fleet-cli:' && return 1
     return 0
 }
 describe_foreign() {
