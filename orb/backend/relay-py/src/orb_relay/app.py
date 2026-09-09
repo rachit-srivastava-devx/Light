@@ -9,7 +9,7 @@ import os
 import time
 from collections.abc import AsyncIterator, Awaitable
 from pathlib import Path
-from typing import Annotated, TypeVar
+from typing import Annotated, Protocol, TypeVar
 
 import httpx
 from fastapi import Body, Depends, FastAPI, HTTPException
@@ -27,7 +27,7 @@ from .build.freeze_protocol import SPLIT_TRIGGER_TURNS, Move, freeze_eligible, n
 from .build.handoff import FleetHandoff, Handoff, UnavailableHandoff
 from .build.readiness import ReadinessGate, SubprocessReadinessGate, UnavailableReadinessGate
 from .cognitive.belief import CoverageSlot, Evidence, EvidenceTier, PremiseRevised, Register
-from .cost.meter import Rates, ReservationExceededError, SessionMeter
+from .cost.meter import Rates, ReservationExceededError, SessionMeter, UsageDelta
 from .eval.gates import aggregate_local_corpus, all_passed, evaluate_metrics
 from .observability.devlog import DEV_LOGGING, dev_log, truncate
 from .observability.metrics import HopHistogram, SentinelCanary
@@ -340,7 +340,12 @@ _rates = rates_from_env()
 _atomizer_latency = HopHistogram()
 _eval_canary = SentinelCanary(expected_interval_ms=60_000)
 
-_HasUsage = TypeVar("_HasUsage")
+class _HasUsageProtocol(Protocol):
+    @property
+    def usage(self) -> UsageDelta: ...
+
+
+_HasUsage = TypeVar("_HasUsage", bound=_HasUsageProtocol)
 
 
 async def _reserve_run_settle(

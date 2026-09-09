@@ -17,6 +17,7 @@ import json
 import time
 from dataclasses import dataclass
 from enum import Enum
+from typing import Literal
 
 from ..cost.meter import UsageDelta
 from ..observability.devlog import dev_log, truncate
@@ -95,7 +96,7 @@ class DecomposeRejection:
 
 @dataclass(frozen=True)
 class DecomposeResult:
-    kind: str
+    kind: Literal["brief", "clarify_request"]
     brief: ModuleBrief | None
     missing: tuple[str, ...]
     usage: UsageDelta
@@ -129,7 +130,7 @@ def _strip_markdown_fence(text: str) -> str:
     return "\n".join(lines)
 
 
-def _rejection_detail_from_errors(parsed: dict) -> str:
+def _rejection_detail_from_errors(parsed: dict[str, object]) -> str:
     """§0.2/§3.1: render the DETAILED validator's full error list, not one constant string, so the
     repair prompt names the actual violation(s) (`"<path>: <message>"`, joined, in the validator's
     own declared order) instead of a blind re-ask. Capped at `MAX_REJECTION_DETAIL_CHARS` so a
