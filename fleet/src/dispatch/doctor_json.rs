@@ -1,5 +1,6 @@
 //! `fleet doctor --json`'s report shape -- split out of `ops_cmd.rs` to keep it ≤80 lines.
 
+use crate::build_info::BuildIdentity;
 use crate::runtime::capacity::{preflight, PreflightConfig, StdCapacityProbe};
 
 #[derive(serde::Serialize)]
@@ -7,6 +8,8 @@ pub struct DoctorReport {
     pub cargo: bool,
     pub git: bool,
     pub capacity_decision: String,
+    #[serde(flatten)]
+    pub build: BuildIdentity,
 }
 
 pub fn build(cargo: bool, git: bool) -> DoctorReport {
@@ -15,5 +18,5 @@ pub fn build(cargo: bool, git: bool) -> DoctorReport {
         Ok(cap) => format!("allow (concurrency_cap={})", cap.get()),
         Err(refusal) => format!("refuse: {refusal}"),
     };
-    DoctorReport { cargo, git, capacity_decision }
+    DoctorReport { cargo, git, capacity_decision, build: crate::build_info::IDENTITY }
 }

@@ -1,5 +1,4 @@
-//! Top-level dispatch: match the parsed `Commands`, call the one `*_cmd` fn that owns it -- the
-//! only place a `Commands` variant is matched against a real handler.
+//! Top-level dispatch: match the parsed `Commands`, call the one `*_cmd` fn that owns it.
 
 mod adjudicate_cmd;
 mod adjudicate_cmd_error;
@@ -18,6 +17,7 @@ pub mod lifecycle_cmd;
 pub(crate) mod memory;
 pub mod meter_cmd;
 pub mod ops_cmd;
+mod ops_version; // `fleet version` + build identity, split out of `ops_cmd` for its 80-line gate
 pub mod plan_cmd;
 pub mod planahead_cmd;
 pub mod role_cmd;
@@ -62,7 +62,7 @@ pub fn run(command: Commands, state_dir: &Path, cap: ConcurrencyCap) -> Result<(
         Commands::Mcp(a) => worker_cmd::mcp(a),
         Commands::Status { json } => ops_cmd::status(json, cap),
         Commands::Doctor(a) => ops_cmd::doctor(a.json),
-        Commands::Version => ops_cmd::version(),
+        Commands::Version(a) => ops_cmd::version(a.json),
         Commands::Completions { shell } => ops_cmd::completions(shell),
         Commands::PipelineProbe { task_id, repo } => run_cmd::pipeline_probe(state_dir, repo, task_id),
         Commands::PlanAheadProbe(a) => planahead_cmd::probe(state_dir, a),

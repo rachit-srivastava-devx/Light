@@ -51,6 +51,11 @@ fn an_uncommitted_change_is_still_reported_as_done() {
 
 /// A chat-only worker that touches nothing at all: `git status` clean AND `HEAD` unmoved. Must
 /// still be refused -- the fix must not weaken this, the original no-op case.
+///
+/// NOTE: this calls `enforce_change_honesty` directly against a bare `tempfile::tempdir()` that
+/// never went through the real `spawn()`, so `record_worker_pid` never wrote `.fleet-lane.pid`
+/// into it. It does NOT cover the real defect (fleet's own pid marker making every worktree look
+/// dirty to `git status`) -- see `spawn_join_true_no_op_healthy_repo.rs` for that.
 #[test]
 fn a_true_no_op_is_still_refused() {
     let dir = tempfile::tempdir().unwrap();

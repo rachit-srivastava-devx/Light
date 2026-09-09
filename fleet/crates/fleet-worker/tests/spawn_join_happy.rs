@@ -1,3 +1,7 @@
+//! NOTE: this uses the "done" fixture scenario, which writes a real file
+//! (`fixture-change.txt`) before returning `Done` -- it exercises the legitimate-change path
+//! through the real `spawn()`/`join()` lifecycle, not the no-op case. See
+//! `spawn_join_true_no_op_healthy_repo.rs` for a true no-op through the same real lifecycle.
 mod common;
 
 use common::{fixture_exe, init_repo, lock_env};

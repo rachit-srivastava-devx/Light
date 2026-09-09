@@ -1,0 +1,21 @@
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+fn subtract(a: i32, b: i32) -> i32 {
+    a - b
+}
+
+fn main() {
+    println!("{}", add(2, 3));
+}
+
+#[test]
+fn test_add() {
+    assert_eq!(add(2, 3), 5);
+}
+
+#[test]
+fn test_subtract() {
+    assert_eq!(subtract(5, 3), 2);
+}

@@ -4,6 +4,7 @@
 pub mod extract;
 pub mod extract_call;
 pub mod extract_definition;
+pub mod extract_macro_call;
 pub mod language;
 pub mod symbol_id;
 

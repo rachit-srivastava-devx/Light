@@ -3,6 +3,7 @@
 
 use crate::error::ContextError;
 use crate::parse::extract_call::call;
+use crate::parse::extract_macro_call::macro_body_call;
 use crate::parse::extract_definition::definition;
 use crate::types::Language;
 use tree_sitter::Node;
@@ -41,6 +42,18 @@ pub fn collect_nodes(
             callee_name,
             arity,
         });
+    }
+    // Rust only: a `token_tree` is a macro invocation's opaque argument list -- scan its named
+    // children pairwise for `<name> <nested "(...)"  token_tree>` (see `macro_body_call`'s doc).
+    if language == Language::Rust && node.kind() == "token_tree" {
+        if let Some(caller) = next {
+            let children: Vec<Node> = (0..node.named_child_count()).filter_map(|i| node.named_child(i)).collect();
+            for pair in children.windows(2) {
+                if let Some((callee_name, arity)) = macro_body_call(pair[0], pair[1], source) {
+                    calls.push(RawCall { caller, callee_name, arity });
+                }
+            }
+        }
     }
     for index in 0..node.named_child_count() {
         if let Some(child) = node.named_child(index) {

@@ -56,7 +56,7 @@ pub enum Commands {
     Mcp(McpArgs),
     Completions { shell: Shell },
     Doctor(JsonOnly),
-    Version,
+    Version(JsonOnly),
     /// Hidden, test-only: drives the real pipeline end to end through the real binary.
     #[command(name = "__pipeline_probe", hide = true)]
     PipelineProbe {

@@ -7,6 +7,10 @@
 //! step too and mask the outcome under test behind a teardown error instead. So this uses the
 //! test-only seam `change_detect::detect::GIT_OVERRIDE_ENV` (a bogus program name that only the
 //! honesty check's own git invocations consult) rather than touching `PATH` at all.
+//!
+//! NOTE: because `git` is broken here on purpose, this test never reaches the real, healthy-repo
+//! `dirty_file_count` call -- it does NOT cover whether a true no-op is refused on a healthy
+//! repo. See `spawn_join_true_no_op_healthy_repo.rs` for that.
 mod common;
 
 use common::{fixture_exe, init_repo, lock_env};

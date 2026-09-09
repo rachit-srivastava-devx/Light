@@ -23,9 +23,11 @@ pub fn join(mut handle: LaneHandle) -> Result<LaneOutcome, JoinError> {
         WaitOutcome::Exited => interpret_fd3(handle.parent_fd),
     };
 
-    // `.fleet-sandbox/` is this crate's own scaffolding, not the worker's work -- removed
-    // BEFORE the honesty check so it never needs excluding from `git status` by name.
+    // `.fleet-sandbox/` and `.fleet-lane.pid` are this crate's OWN bookkeeping, not the
+    // worker's work -- both removed BEFORE the honesty check runs so the count it takes
+    // reflects the worker's changes only, never fleet's own artifacts (see reap::clear_worker_pid).
     let _ = std::fs::remove_dir_all(&handle.sandbox_root);
+    crate::reap::clear_worker_pid(&handle.worktree.path);
     let outcome = enforce_change_honesty(raw_outcome, &handle.worktree.path, &handle.base_commit);
 
     let score_outcome = match &outcome {

@@ -6,6 +6,7 @@ edition = "2021"
 [[bin]]
 name = "fleet"
 path = "main.rs"
+# build.rs at the package root (this dir) is picked up by cargo convention automatically.
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

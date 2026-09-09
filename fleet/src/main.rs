@@ -2,6 +2,7 @@
 //! calls into fleet-* crates. Contains no decision logic, no hashing, no subprocess business
 //! rules (BLUEPRINT §2). **Restate deferred** -- see `pipeline/graph.rs`'s doc comment.
 
+mod build_info;
 mod cli;
 mod dispatch;
 mod pipeline;

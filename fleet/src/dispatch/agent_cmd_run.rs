@@ -30,6 +30,9 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
     match freelane::run(worktree, task, model) {
         Ok(out) => {
             let resolved_model = out.resolved_model.clone();
+            // Surface apply's signal: applied N files, vs named no target (`apply_note` set,
+            // e.g. `AmbiguousTarget`), vs no code at all (both empty, e.g. `NoFence`).
+            let applied: Vec<String> = out.applied_files.iter().map(|p| p.display().to_string()).collect();
             AgentOutcome::Done {
                 body: json!({
                     "agent": "freelane",
@@ -38,6 +41,8 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
                     "log": out.log,
                     "resolved_model": out.resolved_model,
                     "tokens": out.tokens,
+                    "applied_files": applied,
+                    "apply_note": out.apply_note,
                 }),
                 resolved_model,
             }
@@ -65,15 +70,10 @@ fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>
             }),
             resolved_model: model.map(str::to_string),
         },
-        Ok(out) => AgentOutcome::Refused(format!(
-            "{}: worker exited {:?}: {}",
-            adapter.agent_kind(),
-            out.status.code(),
-            String::from_utf8_lossy(&out.stderr).trim()
-        )),
-        Err(err) => AgentOutcome::Refused(format!(
-            "{}: cannot launch: {err}",
-            adapter.agent_kind()
-        )),
+        Ok(out) => {
+            let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
+            AgentOutcome::Refused(format!("{}: worker exited {:?}: {stderr}", adapter.agent_kind(), out.status.code()))
+        }
+        Err(err) => AgentOutcome::Refused(format!("{}: cannot launch: {err}", adapter.agent_kind())),
     }
 }

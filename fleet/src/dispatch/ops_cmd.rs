@@ -45,15 +45,16 @@ pub fn doctor(json: bool) -> Result<(), DispatchError> {
         crate::print::json::print_pretty(&super::doctor_json::build(cargo, git));
         return Ok(());
     }
+    let id = crate::build_info::IDENTITY;
     human::line("cargo", if cargo { "found" } else { "missing" });
     human::line("git", if git { "found" } else { "missing" });
+    human::line("commit_sha", id.commit_sha);
+    human::line("tree_state", id.tree_state);
+    human::line("build_time", id.build_time);
     crate::dispatch::capacity_probe_cmd::report(3, None)
 }
 
-pub fn version() -> Result<(), DispatchError> {
-    human::line("fleet-cli", env!("CARGO_PKG_VERSION"));
-    Ok(())
-}
+pub use super::ops_version::version;
 
 pub fn completions(shell: Shell) -> Result<(), DispatchError> {
     let mut cmd = Cli::command();
