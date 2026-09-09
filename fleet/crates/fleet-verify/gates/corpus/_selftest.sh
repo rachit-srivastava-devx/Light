@@ -132,7 +132,7 @@ probe="$PROBE_DIR/C9.sh"
 # DELIBERATE: this bad mktemp template is the FIXTURE, not a defect -- it is written into a probe
 # file so `prove C9` can watch the C9 detector actually fire on it. A detector never seen to fail
 # is not a detector. Any linter flagging this line is matching the fixture it exists to test.
-printf '%s\n' 'mktemp sample.XXXXXXsuffix' > "$probe"
+printf '%s\n' 'mktemp sample.XXXXXXsuffix' > "$probe"  # selfcheck:ignore -- see comment above
 prove C9 "$probe"
 
 probe="$PROBE_DIR/S4.sh"
