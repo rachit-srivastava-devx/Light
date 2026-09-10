@@ -4,7 +4,7 @@
 //! machine that genuinely has `cargo-mutants` on `PATH` printed "unavailable" (which reads like
 //! "go install this"), when the real reason was that `FLEET_MUTANTS=1` was not set.
 
-use std::process::Command;
+use super::tool_path;
 
 pub enum Availability {
     Yes,
@@ -23,8 +23,10 @@ pub fn probe() -> Availability {
     }
 }
 
+/// `cargo-mutants` is a cargo subcommand, so it installs where cargo does -- `~/.cargo/bin`,
+/// which is exactly the directory `$PATH` alone misses. Same lookup as every other tool.
 pub fn on_path(name: &str) -> bool {
-    Command::new("which").arg(name).output().map(|o| o.status.success()).unwrap_or(false)
+    tool_path::found(name)
 }
 
 pub fn reason(a: Availability) -> String {

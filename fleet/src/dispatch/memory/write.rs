@@ -1,7 +1,14 @@
-//! Write side of `sow`'s memory wiring: `record_sow_refusal` dedup-writes (`fleet_memory::
-//! dedup::write`) a refused requirement's text so a later, similar `sow` call recalls it via
-//! `memory_adapter::RealMemory::recall_similar`. Split out of `memory_adapter.rs` to hold that
-//! file under the ≤80-line rule.
+//! Write side of `sow`'s memory wiring: dedup-writes (`fleet_memory::dedup::write`) a piece of
+//! text so a later, similar `sow` call recalls it via `memory_adapter::RealMemory::
+//! recall_similar`. Split out of `memory_adapter.rs` to hold that file under the ≤80-line rule.
+//!
+//! Two entry points over one `record`, because WHAT may be remembered is a policy decision, not
+//! a storage one: `record_accepted_sow` (an accepted SOW is a real prior decision a later,
+//! similar SOW should be measured against) and `record_sow_refusal` (the pipeline `Teach`
+//! trailer's derived lesson). A REFUSED `sow` submission is deliberately neither: remembering a
+//! draft that was rejected made the corrected resubmission collide with it
+//! ("This looks like a prior decision -- which one governs?"), so a caller could never get out
+//! of the hole their own rejected draft dug.
 
 use super::clock::now;
 use super::embed::{embed_text, stable_id};
@@ -18,7 +25,18 @@ pub enum SowMemoryError {
     Retrieve(#[from] RetrieveError),
 }
 
+/// An ACCEPTED SOW: the only submission `fleet sow` itself is allowed to remember.
+pub fn record_accepted_sow(state_dir: &Path, text: &str) -> Result<(), SowMemoryError> {
+    record(state_dir, text)
+}
+
+/// A lesson derived from a real pipeline stage failure (`pipeline::teach_stage`), not a `sow`
+/// submission -- kept on the same store so one recall surfaces both kinds.
 pub fn record_sow_refusal(state_dir: &Path, text: &str) -> Result<(), SowMemoryError> {
+    record(state_dir, text)
+}
+
+fn record(state_dir: &Path, text: &str) -> Result<(), SowMemoryError> {
     let store = SowMemoryStore::new(state_dir);
     let mut items = store.load()?;
     let candidate = NewMemory {

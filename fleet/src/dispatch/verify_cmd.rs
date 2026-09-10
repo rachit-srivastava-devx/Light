@@ -34,25 +34,25 @@ fn to_result(report: Report) -> Result<(), DispatchError> {
 
 pub fn oracle(args: OracleArgs) -> Result<(), DispatchError> {
     let repo = ensure_repo(&args.repo)?;
+    let specs = super::gate_config::resolve(&repo)?;
     let gates = resolve_gates_root()?;
     let runner = RealRunner::new(repo);
-    let report = fleet_verify::run_all(fleet_verify::GATES, &WhichProbe, &runner, &gates);
+    let report = fleet_verify::run_all(&specs, &WhichProbe, &runner, &gates);
     print_report(&report);
     to_result(report)
 }
 
 pub fn gate(args: GateArgs) -> Result<(), DispatchError> {
-    let specs: Vec<_> = fleet_verify::GATES
-        .iter()
+    let repo = ensure_repo(&args.repo)?;
+    let specs: Vec<_> = super::gate_config::resolve(&repo)?
+        .into_iter()
         .filter(|g| args.id.as_deref().map(|id| id == g.id).unwrap_or(true))
-        .copied()
         .collect();
     if let Some(id) = &args.id {
         if specs.is_empty() {
             return Err(DispatchError::UnknownGate(id.clone()));
         }
     }
-    let repo = ensure_repo(&args.repo)?;
     let gates = resolve_gates_root()?;
     let runner = RealRunner::new(repo);
     let report = fleet_verify::run_all(&specs, &WhichProbe, &runner, &gates);

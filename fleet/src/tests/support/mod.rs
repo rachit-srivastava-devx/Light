@@ -4,6 +4,7 @@
 #![allow(dead_code)]
 
 pub mod bounded;
+pub mod gates;
 pub mod m4;
 
 use std::fs;

@@ -69,6 +69,11 @@ The final line must print `verified artifact=<64-character-id>`.
 
 Run `fleet help` for the full command list and runnable examples. Shell completion is generated with `fleet completions zsh`, `fleet completions bash`, or `fleet completions fish`.
 
+To gate a repo that is not a cargo workspace, give it a `.fleet/gates.toml` naming its own gate
+commands (a Node repo maps the unit-tests gate to `npm run test:unit`) — see
+[docs/GATES-CONFIG.md](docs/GATES-CONFIG.md). With no such file the committed Rust defaults are
+used unchanged.
+
 ## Exit codes
 
 | Code | Meaning |

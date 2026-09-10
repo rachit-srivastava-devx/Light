@@ -1,8 +1,7 @@
 //! `fleet status|doctor|version|completions`: composition-root's own job (BLUEPRINT §2 --
 //! printing/generation, no crate delegation needed) plus `fleet console|freeze|contract|pr|
-//! attest|adjudicate|skills`, which are flagged `NotYetImplemented` where their owning crate
-//! (per BLUEPRINT §2's non-goals table) has no public entry point this pass could reach without
-//! inventing business logic here.
+//! attest|adjudicate|skills`, flagged `NotYetImplemented` where their owning crate (BLUEPRINT
+//! §2's non-goals table) exposes no entry point reachable without inventing business logic here.
 
 use crate::cli::{Cli, Commands};
 use crate::dispatch::error::DispatchError;
@@ -11,18 +10,18 @@ use crate::runtime::ConcurrencyCap;
 use clap::CommandFactory;
 use clap_complete::{generate, Shell};
 
-/// `status`'s payload as an actual object -- previously `--json` serialized the bare `usize`
-/// from `cap.get()`, so `fleet status --json` emitted the scalar `3` instead of JSON with a
-/// field name, unparseable by any caller expecting an object (D3 in the E2E findings).
+/// `status`'s payload as an actual object -- previously `--json` serialized the bare `usize` from
+/// `cap.get()`, so `fleet status --json` emitted the scalar `3`, unparseable by any caller
+/// expecting an object (D3 in the E2E findings).
 #[derive(serde::Serialize)]
 struct StatusReport {
     concurrency_cap: usize,
 }
 
 /// Takes the cap `main.rs` already computed from a REAL measurement. It used to recompute its own
-/// with `ConcurrencyCap::from_env(usize::MAX, 3)` -- `usize::MAX` meaning "ignore RAM entirely" --
-/// so `status` reported 3 while the measured preflight cap was 2. Reporting an unmeasured number
-/// next to a measured gate is how a check becomes cosmetic; the cap is now passed in, never re-derived.
+/// with `ConcurrencyCap::from_env(usize::MAX, 3)` -- "ignore RAM entirely" -- so `status` reported
+/// 3 while the measured preflight cap was 2. Reporting an unmeasured number next to a measured
+/// gate is how a check becomes cosmetic; the cap is passed in now, never re-derived.
 pub fn status(json: bool, cap: ConcurrencyCap) -> Result<(), DispatchError> {
     let report = StatusReport { concurrency_cap: cap.get() };
     if json {
@@ -33,21 +32,18 @@ pub fn status(json: bool, cap: ConcurrencyCap) -> Result<(), DispatchError> {
     Ok(())
 }
 
-fn which(tool: &str) -> bool {
-    std::process::Command::new("which").arg(tool).output().map(|o| o.status.success()).unwrap_or(false)
-}
-
 /// "no crashing again": folds the capacity preflight into `doctor`. `--json` builds the same
-/// facts as a `DoctorReport` object (`doctor_json.rs`) instead of printing human lines.
+/// facts as a `DoctorReport` (`doctor_json.rs`) instead of printing human lines.
 pub fn doctor(json: bool) -> Result<(), DispatchError> {
-    let (cargo, git) = (which("cargo"), which("git"));
+    use super::doctor_json::{build, probe};
+    let ((cargo, cargo_where), (git, git_where)) = (probe("cargo"), probe("git"));
     if json {
-        crate::print::json::print_pretty(&super::doctor_json::build(cargo, git));
+        crate::print::json::print_pretty(&build(cargo, cargo_where, git, git_where));
         return Ok(());
     }
     let id = crate::build_info::IDENTITY;
-    human::line("cargo", if cargo { "found" } else { "missing" });
-    human::line("git", if git { "found" } else { "missing" });
+    human::line("cargo", if cargo { format!("found ({cargo_where})") } else { cargo_where });
+    human::line("git", if git { format!("found ({git_where})") } else { git_where });
     human::line("commit_sha", id.commit_sha);
     human::line("tree_state", id.tree_state);
     human::line("build_time", id.build_time);
@@ -63,9 +59,9 @@ pub fn completions(shell: Shell) -> Result<(), DispatchError> {
     Ok(())
 }
 
-/// One named refusal per subcommand this pass could not reach a real owning-crate entry point
-/// for -- see BLUEPRINT §2's non-goals table for who owns each (fleet-stream/console,
-/// fleet-worker/skills-registry, fleet-merge/pr-emit, fleet-verify/adjudication-table).
+/// One named refusal per subcommand with no reachable owning-crate entry point -- see BLUEPRINT
+/// §2's non-goals table for who owns each (fleet-stream/console, fleet-worker/skills-registry,
+/// fleet-merge/pr-emit, fleet-verify/adjudication-table).
 pub fn not_yet_implemented(command: &Commands) -> DispatchError {
     let reason = match command {
         Commands::Console { .. } => "fleet-stream's console/dashboard sink wiring",

@@ -1,6 +1,7 @@
 //! `PipelineOutcome`/`PipelineError` -- the seam where every crate's own typed error is wrapped
 //! into one error type so `run_pipeline` has a single `Result` to propagate (BLUEPRINT §3).
 
+use super::records::{GateRecord, StageRecord};
 use super::stage::PipelineStage;
 
 /// `Scan`/`Plan` are still never constructed: `stages::{scan,plan}` remain pure wiring (BLUEPRINT
@@ -40,8 +41,16 @@ pub struct PipelineOutcome {
     #[serde(skip)]
     pub result: Result<(), PipelineError>,
     /// `Classify`'s real routing decision over the task text, or `None` if that stage never ran
-    /// (crash-resumed past it) this invocation.
+    /// (crash-resumed past it) this invocation -- `stages` says which of the two it was.
     pub classification: Option<Box<fleet_router::Decision>>,
+    /// Every stage, in order, with its outcome and real duration. The `--json` counterpart of the
+    /// `> stage x` / `PASS stage x (1.23s)` lines the human path streams to stderr.
+    pub stages: Vec<StageRecord>,
+    /// Every gate `Verify` ran this invocation, with its verdict and published denominator.
+    /// Empty when `Verify` did not run (refused earlier, or resumed past).
+    pub gates: Vec<GateRecord>,
+    /// The refusal reason, verbatim -- the same text the human path prints after `REFUSED`.
+    pub refusal: Option<String>,
 }
 
 /// What a stage handed back beyond pass/fail. Only `Classify` carries data today; every other
