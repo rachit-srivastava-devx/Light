@@ -67,7 +67,6 @@ pub fn not_yet_implemented(command: &Commands) -> DispatchError {
         Commands::Console { .. } => "fleet-stream's console/dashboard sink wiring",
         Commands::Freeze(_) => "no crate in the roster names Freeze ownership yet",
         Commands::Contract(_) => "no crate in the roster names Contract ownership yet",
-        Commands::Pr(_) => "fleet-merge has no pr-emit fn exposed yet (worktree/merge only)",
         Commands::Attest(_) => "fleet-types has the wire shape only, no builder-flow fn yet",
         Commands::Skills { .. } => "fleet-worker's skills_registry module is private",
         _ => "not wired in this pass",
