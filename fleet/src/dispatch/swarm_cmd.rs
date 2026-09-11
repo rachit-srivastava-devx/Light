@@ -9,7 +9,7 @@ use crate::print::render_event::Event;
 use crate::print::style::Style;
 use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
 use fleet_types::{Role, TaskId};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Duration;
 
 /// Env var name `fleet-worker::spawn::worker_state_dir::resolve` reads. Kept as a literal, not a
@@ -29,6 +29,10 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // already threaded through as `state_dir`, makes the worker's independent env read agree
     // with the CLI's resolution by construction instead of by coincidence.
     std::env::set_var(ENV_STATE_DIR, state_dir);
+    // Intake: refuse a `--repo` that isn't a git worktree up front, with an actionable
+    // message -- the lane's worktree/checkout/merge stages all assume it, and fail opaquely
+    // deep inside `fleet-worker` otherwise. Same helper `run`/`oracle`/`gate` already use.
+    let repo = super::verify_repo::ensure_repo(&args.repo)?;
     let role = Role::parse(&args.role).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let task_id = TaskId::parse(args.task.clone()).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     // `--task` is both the lane's task id and, unless `--prompt` overrides it, the free-text
@@ -38,7 +42,7 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // give the worker different instructions than the task id/name itself.
     let prompt = if args.prompt.trim().is_empty() { args.task.clone() } else { args.prompt };
     let request = SpawnRequest {
-        repo: PathBuf::from(&args.repo),
+        repo,
         role,
         task_id,
         adapter: CliAdapter::Freelane,
