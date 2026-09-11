@@ -46,12 +46,32 @@ pub struct AttestArgs {
     pub artifact: String,
 }
 
+/// Open a GitHub PR against `--repo`, attaching the last passing run's receipt for `--task`
+/// from the ledger to the PR body. `--dry-run` prints the resolved `gh pr create` invocation
+/// and composed body instead of shelling out -- the review-before-push path.
 #[derive(Args, Debug)]
 pub struct PrArgs {
+    /// The target repo (a git worktree). Its origin remote is parsed for `owner/name`.
     #[arg(long)]
     pub repo: String,
+    /// The task id whose last passing receipt is attached.
     #[arg(long)]
-    pub branch: String,
+    pub task: String,
+    /// PR title.
+    #[arg(long)]
+    pub title: String,
+    /// PR base branch. Defaults to the repo's default branch (`gh repo view`).
+    #[arg(long)]
+    pub base: Option<String>,
+    /// PR head branch. Defaults to the current branch of `--repo` (`git symbolic-ref`).
+    #[arg(long)]
+    pub head: Option<String>,
+    /// Optional extra body. If given, the receipt block is appended below it.
+    #[arg(long)]
+    pub body: Option<String>,
+    /// Print the resolved `gh` command + body and exit; do not shell out.
+    #[arg(long)]
+    pub dry_run: bool,
 }
 
 #[derive(Args, Debug)]

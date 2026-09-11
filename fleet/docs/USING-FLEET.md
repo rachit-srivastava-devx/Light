@@ -343,7 +343,7 @@ EXIT:0
 | `fleet oracle` (no flags) | | WORKS — was hanging per `archive/night-2026-09-08/DX-AUDIT.md`, fixed during this docs pass, see §6 |
 | `fleet adjudicate <ARTIFACT>` | positional, not `--artifact` | **NOT IMPLEMENTED** — always exit 3, "no adjudication-table fn exposed yet" |
 | `fleet attest --artifact <ID>` | no `verify` subcommand | **NOT IMPLEMENTED** — always exit 3, "no builder-flow fn yet" |
-| `fleet pr --repo <P> --branch <B>` | | **NOT IMPLEMENTED** — always exit 3, "no pr-emit fn exposed yet" |
+| `fleet pr --repo <P> --task <T> --title <S> [--base <B>] [--head <H>] [--body <S>] [--dry-run]` | | WORKS — reads the last passing receipt for `<T>` from the ledger, composes a Markdown receipt block, shells out to `gh pr create`. `--dry-run` prints the resolved command + body without invoking `gh`. |
 
 ### The machinery
 | Command | Real shape | Status |
@@ -366,8 +366,8 @@ EXIT:0
 | `fleet mcp --lease <L>` | | **NOT IMPLEMENTED** — always exit 3 |
 | `fleet version` | no args | WORKS — `fleet-cli: 0.1.0` |
 
-**8 of 28 commands are undisclosed stubs as of this writing**: `console`, `skills`, `adjudicate`,
-`attest`, `pr`, `contract`, `freeze`, `mcp`. Every invocation (flags valid or not) returns exit 3
+**7 of 28 commands are undisclosed stubs as of this writing**: `console`, `skills`, `adjudicate`,
+`attest`, `contract`, `freeze`, `mcp`. Every invocation (flags valid or not) returns exit 3
 with `fleet: this subcommand's owning crate does not yet expose a public entry point: <reason>`.
 Nothing in `fleet <cmd> --help` says so — you only find out by running it. Treat any of these 8
 names you see elsewhere in this repo's docs as **not usable today**, regardless of what a `--help`
@@ -429,7 +429,7 @@ EXIT:7
    reproduced: `fleet sow` and `fleet run` do not appear to share any state in this binary.
 2. **`fleet status` cannot answer "what did fleet just do."** It reports host capacity, not a task
    or receipt rollup, regardless of `--json`.
-3. **8 of 28 commands are unimplemented stubs.** `adjudicate`/`attest`/`pr` in particular mean the
+3. **7 of 28 commands are unimplemented stubs.** `adjudicate`/`attest` in particular mean the
    "two independent oracles, 2×2 adjudication, frozen diff and attestation" story from the old
    walkthrough's step 7 cannot be verified end to end — `run`'s own internal verify pipeline is the
    only oracle-shaped thing that currently runs.

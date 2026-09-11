@@ -17,6 +17,7 @@ pub mod lifecycle_cmd;
 pub(crate) mod memory;
 pub mod meter_cmd;
 pub mod ops_cmd;
+pub mod pr_cmd;
 mod ops_version; // `fleet version` + build identity, split out of `ops_cmd` for its 80-line gate
 pub mod plan_cmd;
 pub mod planahead_cmd;
@@ -70,10 +71,10 @@ pub fn run(command: Commands, state_dir: &Path, cap: ConcurrencyCap) -> Result<(
         Commands::SpawnProbe(a) => spawn_probe_cmd::probe(a),
         Commands::CapacityProbe => capacity_probe_cmd::report(3, None),
         Commands::Adjudicate(a) => adjudicate_cmd::adjudicate(a.artifact, a.json),
+        Commands::Pr(a) => pr_cmd::pr(state_dir, a),
         other @ (Commands::Console { .. }
         | Commands::Freeze(_)
         | Commands::Contract(_)
-        | Commands::Pr(_)
         | Commands::Attest(_)
         | Commands::Skills { .. }) => Err(ops_cmd::not_yet_implemented(&other)),
     }
