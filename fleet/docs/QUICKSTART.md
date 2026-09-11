@@ -77,8 +77,16 @@ undisclosed defect — see `USING-FLEET.md`).
 
 - `fleet sow`/`fleet plan` work (see `USING-FLEET.md` §3-4 for the real, undocumented-in-`--help`
   vocabulary each expects) but nothing observed here links a SOW to `run` proceeding or refusing.
-- `fleet adjudicate`, `fleet attest`, `fleet pr` are unimplemented stubs (exit 3, every input).
-  There is no way to get from the receipt above to an "attested" artifact today.
+- `fleet adjudicate`, `fleet attest` are unimplemented stubs (exit 3, every input). There is no
+  way to get from the receipt above to an "attested" artifact today.
+- **Correction, 2026-09-11:** `fleet pr` is no longer a stub -- `--help`'s own claim ("Create a
+  GitHub pull request from a lane worktree branch") is now true: it shells out to `gh pr create`
+  and exits 3 if `gh` is missing or has no remote to target, not because it is unimplemented.
+  (The previous build of this binary had it wired to a raw `git merge` of the branch straight into
+  the checked-out branch instead -- silently bypassing PR review entirely; fixed, not just
+  redocumented. Verified: `gh pr create` invoked for real against a scratch repo with no remote,
+  refused with `gh pr create failed: no git remotes found`, exit 3; target repo's branch was
+  unchanged, confirming no merge happened.)
 - `fleet meter` and `fleet agents` need one-time setup (a seeded `meter.json` row, or a valid
   built-in agent id) not mentioned in `--help` — see `USING-FLEET.md` for verified recipes.
 

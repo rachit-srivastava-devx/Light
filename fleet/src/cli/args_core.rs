@@ -78,3 +78,20 @@ pub struct AgentsArgs {
     #[arg(long)]
     pub json: bool,
 }
+
+#[derive(Args, Debug)]
+pub struct RunModulesArgs {
+    #[arg(long)]
+    pub repo: String,
+    #[arg(long)]
+    pub modules: Vec<String>,
+    /// Path to a YAML file containing module definitions
+    #[arg(long)]
+    pub modules_file: Option<String>,
+    /// Maximum number of modules to process in parallel
+    #[arg(long, default_value = "4")]
+    pub parallelism: usize,
+    /// Merge each module to main when complete (default: false, uses PRs)
+    #[arg(long)]
+    pub merge_to_main: bool,
+}

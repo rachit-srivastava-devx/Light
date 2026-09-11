@@ -37,7 +37,7 @@ mod tests {
     use clap::Parser;
 
     fn cmd(args: &[&str]) -> Commands {
-        Cli::parse_from(args).command
+        Cli::parse_from(args).command.expect("command present")
     }
 
     /// Regression pin for the install failure: these do no work and must never be refused.

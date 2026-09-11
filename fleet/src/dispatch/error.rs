@@ -54,6 +54,9 @@ pub enum DispatchError {
     /// embedded copies could not be materialized to a temp dir.
     #[error(transparent)]
     GateAssets(#[from] fleet_verify::GateAssetError),
+    /// `fleet pr_emit` failed.
+    #[error(transparent)]
+    PrEmit(#[from] fleet_merge::PrError),
     /// `fleet graph|impact`'s source walk hit its file/byte/deadline budget (§ `walk.rs`).
     #[error(transparent)]
     Walk(#[from] crate::dispatch::walk::WalkError),

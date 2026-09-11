@@ -343,7 +343,7 @@ EXIT:0
 | `fleet oracle` (no flags) | | WORKS — was hanging per `archive/night-2026-09-08/DX-AUDIT.md`, fixed during this docs pass, see §6 |
 | `fleet adjudicate <ARTIFACT>` | positional, not `--artifact` | **NOT IMPLEMENTED** — always exit 3, "no adjudication-table fn exposed yet" |
 | `fleet attest --artifact <ID>` | no `verify` subcommand | **NOT IMPLEMENTED** — always exit 3, "no builder-flow fn yet" |
-| `fleet pr --repo <P> --branch <B>` | | **NOT IMPLEMENTED** — always exit 3, "no pr-emit fn exposed yet" |
+| `fleet pr --repo <P> --branch <B> --module-brief <T> --diff-summary <T>` | | **Correction, 2026-09-11: WORKS** — shells out to `gh pr create`; exits 3 if `gh` is missing or the repo has no remote (verified against a scratch repo: `gh pr create failed: no git remotes found`, branch left unmerged). The build reviewed for the original "NOT IMPLEMENTED" note actually had `fleet pr` wired to a raw `git merge` of the branch straight into the checked-out branch — bypassing PR review, not a stub — which is the defect that got fixed here. |
 
 ### The machinery
 | Command | Real shape | Status |
@@ -366,8 +366,9 @@ EXIT:0
 | `fleet mcp --lease <L>` | | **NOT IMPLEMENTED** — always exit 3 |
 | `fleet version` | no args | WORKS — `fleet-cli: 0.1.0` |
 
-**8 of 28 commands are undisclosed stubs as of this writing**: `console`, `skills`, `adjudicate`,
-`attest`, `pr`, `contract`, `freeze`, `mcp`. Every invocation (flags valid or not) returns exit 3
+**7 of 28 commands are undisclosed stubs as of this writing** (`pr` corrected out of this list
+2026-09-11 — see the Evidence table above): `console`, `skills`, `adjudicate`, `attest`,
+`contract`, `freeze`, `mcp`. Every invocation (flags valid or not) returns exit 3
 with `fleet: this subcommand's owning crate does not yet expose a public entry point: <reason>`.
 Nothing in `fleet <cmd> --help` says so — you only find out by running it. Treat any of these 8
 names you see elsewhere in this repo's docs as **not usable today**, regardless of what a `--help`

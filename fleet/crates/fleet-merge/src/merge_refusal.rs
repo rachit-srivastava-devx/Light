@@ -5,7 +5,7 @@
 use fleet_types::ExitCode;
 use std::path::PathBuf;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum MergeRefusal {
     /// `merge-lane.sh:9`. No directory at the given worktree path.
     #[error("no worktree at {0}")]

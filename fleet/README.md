@@ -20,50 +20,13 @@ The installer probes `cargo`, `rustc`, and `git` with `--version`, builds a rele
 
 ## 60-second quickstart
 
-After installation, this is a copy-pasteable run that creates real work in a disposable git repository and ends by verifying the resulting attestation:
-
-```sh
-set -eu
-demo="$(mktemp -d)"
-trap 'rm -rf "$demo"' EXIT
-cd "$demo"
-git init -q
-git config user.email fleet@example.invalid
-git config user.name fleet-demo
-printf 'before\n' > main.rs
-git add main.rs && git commit -qm initial
-
-# fleet plans before it executes: `run` refuses a task with no accepted SOW.
-# The SOW needs atomic leaves, cited challenges and two named alternatives.
-task='make the demo change
-leaves:
-- change main.rs and exit 0 | acceptance: the diff is non-empty and applies
-challenges:
-- the change may collide with existing content | citation: A1
-alternatives:
-- append: add a line at the end | tradeoff: no context awareness
-- rewrite: replace the file | tradeoff: discards existing content
-estimates:
-- 5 minutes
-edge cases:
-- the file is empty'
-
-# `sow` exits 9 (SOW_READY_AWAITING_REVIEW) and prints the id on stderr.
-sow="$(fleet sow --task "$task" 2>&1 >/dev/null | grep -oE 'id=[0-9a-f]+' | cut -d= -f2 | head -1)"
-fleet sow accept --id "$sow"
-
-# The final stdout line is the bare `artifact=<id>`; take that one, not the progress lines.
-artifact="$(fleet run --task "$task" --repo "$demo" --agent stub | grep -oE '^artifact=[0-9a-f]{64}$' | tail -1 | cut -d= -f2)"
-fleet ledger verify
-fleet attest verify "$artifact"
-fleet status
-```
-
-To skip the planning gate in scripts and CI, set `FLEET_SOW_BYPASS=1` — it is recorded in the
-receipt, so a run without a plan stays distinguishable from one with a plan.
-
-
-The final line must print `verified artifact=<64-character-id>`.
+**Use [`docs/QUICKSTART.md`](docs/QUICKSTART.md), not the snippet below.** The flags and
+subcommand shapes drift as the CLI evolves, and a quickstart that isn't re-verified against a real
+build goes stale silently — `docs/QUICKSTART.md` and [`docs/USING-FLEET.md`](docs/USING-FLEET.md)
+are re-run against a real `target/debug/fleet` and updated when they diverge; this file is not.
+(A previous revision of this section showed `fleet sow --task ... | sow accept --id`, `fleet run
+--agent stub`, `fleet ledger verify`, and `fleet attest verify <id>` — none of that shape exists
+in the current CLI; see `docs/QUICKSTART.md` for the real one.)
 
 ## Commands
 

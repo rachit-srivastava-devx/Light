@@ -27,3 +27,12 @@ pub fn plan() -> Result<(), PipelineError> {
     let _ = fleet_plan::assemble_acceptance_checks_draft("wired-by-fleet-cli");
     Ok(())
 }
+
+/// Plan modules in parallel with streaming.
+/// This is a placeholder for the full parallel execution implementation.
+#[expect(dead_code)]
+pub fn plan_modules() -> Result<(), PipelineError> {
+    // TODO: Implement full parallel module planning with blueprint streaming
+    let _ = fleet_plan::assemble_acceptance_checks_draft("wired-by-fleet-cli-parallel");
+    Ok(())
+}

@@ -25,6 +25,6 @@ pub fn with_descriptions(cmd: Command) -> Command {
         .mut_subcommand("oracle", |c| c.about("Run every real verify gate and exit on the aggregate verdict."))
         .mut_subcommand("adjudicate", |c| c.about("Judge an artifact with fleet-judge (needs --features llm7); abstain/failure exit non-zero."))
         .mut_subcommand("attest", |c| c.about("NOT IMPLEMENTED: fleet-types has the wire shape only, no builder fn."))
-        .mut_subcommand("pr", |c| c.about("NOT IMPLEMENTED: fleet-merge has no pr-emit fn exposed yet."));
+        .mut_subcommand("pr", |c| c.about("Create a GitHub pull request from a lane worktree branch."));
     super::help_text_ops::with_descriptions(cmd)
 }

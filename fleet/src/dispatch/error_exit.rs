@@ -13,6 +13,7 @@ impl DispatchError {
             DispatchError::NotYetImplemented(_) => ExitCode::Env,
             DispatchError::Io(_) => ExitCode::Env,
             DispatchError::Merge(e) => e.exit_code(),
+            DispatchError::PrEmit(e) => e.exit_code(),
             DispatchError::VerifyFailed { code, .. } => *code,
             DispatchError::UnknownGate(_) => ExitCode::Env,
             DispatchError::GateAssets(_) => ExitCode::Env,

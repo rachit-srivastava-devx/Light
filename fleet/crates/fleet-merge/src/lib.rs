@@ -21,13 +21,15 @@ mod cache;
 mod error;
 mod git_exec;
 mod invariant;
+mod lane_manager;
 mod merge;
 mod merge_refusal;
 mod worktree;
 mod worktree_guard;
 
 pub use cache::invalidate_build_cache;
-pub use error::{MergeRefusal, WorktreeError};
+pub use error::{MergeRefusal, PrError, WorktreeError};
+pub use lane_manager::{Lane, LaneManager, LaneOutcome};
 pub use invariant::{check_files_changed, check_head_moved, check_stage_nonempty};
-pub use merge::{merge_lane, MergeOutcome};
+pub use merge::{merge_lane, MergeOutcome, pr_emit};
 pub use worktree::{create, remove, unique_name, Worktree};

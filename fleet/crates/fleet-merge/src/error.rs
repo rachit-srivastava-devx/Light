@@ -57,3 +57,22 @@ impl WorktreeError {
         }
     }
 }
+
+/// Why `pr_emit` failed. Maps to `EXIT_ENV = 3` for missing gh CLI or GitHub errors.
+#[derive(Debug, thiserror::Error)]
+pub enum PrError {
+    /// The `gh` CLI binary was not found in PATH.
+    #[error("github cli not found")]
+    GhCliNotFound,
+    /// `gh pr create` failed (non-zero exit or stderr).
+    #[error("gh pr create failed: {0}")]
+    CreateFailed(String),
+}
+
+impl PrError {
+    pub fn exit_code(&self) -> ExitCode {
+        match self {
+            PrError::GhCliNotFound | PrError::CreateFailed(_) => ExitCode::Env,
+        }
+    }
+}

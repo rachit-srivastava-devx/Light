@@ -1,7 +1,8 @@
 //! `fleet status|doctor|version|completions`: composition-root's own job (BLUEPRINT §2 --
-//! printing/generation, no crate delegation needed) plus `fleet console|freeze|contract|pr|
+//! printing/generation, no crate delegation needed) plus `fleet console|freeze|contract|
 //! attest|adjudicate|skills`, flagged `NotYetImplemented` where their owning crate (BLUEPRINT
 //! §2's non-goals table) exposes no entry point reachable without inventing business logic here.
+//! `fleet pr` used to be in that list too; it now delegates to `pr_cmd`, see below.
 
 use crate::cli::{Cli, Commands};
 use crate::dispatch::error::DispatchError;
@@ -58,16 +59,16 @@ pub fn completions(shell: Shell) -> Result<(), DispatchError> {
     generate(shell, &mut cmd, name, &mut std::io::stdout());
     Ok(())
 }
+pub use super::pr_cmd::pr_emit;
 
-/// One named refusal per subcommand with no reachable owning-crate entry point -- see BLUEPRINT
-/// §2's non-goals table for who owns each (fleet-stream/console, fleet-worker/skills-registry,
-/// fleet-merge/pr-emit, fleet-verify/adjudication-table).
+/// One named refusal per subcommand this pass could not reach a real owning-crate entry point
+/// for -- see BLUEPRINT §2's non-goals table for who owns each (fleet-stream/console,
+/// fleet-worker/skills-registry, fleet-verify/adjudication-table).
 pub fn not_yet_implemented(command: &Commands) -> DispatchError {
     let reason = match command {
         Commands::Console { .. } => "fleet-stream's console/dashboard sink wiring",
         Commands::Freeze(_) => "no crate in the roster names Freeze ownership yet",
         Commands::Contract(_) => "no crate in the roster names Contract ownership yet",
-        Commands::Pr(_) => "fleet-merge has no pr-emit fn exposed yet (worktree/merge only)",
         Commands::Attest(_) => "fleet-types has the wire shape only, no builder-flow fn yet",
         Commands::Skills { .. } => "fleet-worker's skills_registry module is private",
         _ => "not wired in this pass",

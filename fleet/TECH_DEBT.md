@@ -29,14 +29,16 @@
 | FD-4 | P2 | pipeline | `FLEET_STREAM_DIR` writes nothing; parent dir never created | S | fixed 2026-09-10 |
 | FD-9 | P1 | pipeline | `fleet run` never passes a role, so classification always refuses while the stage reports pass | S | **open** |
 | FD-7 | P2 | dispatch | `cargo` reported missing when installed outside `PATH` | S | fixed 2026-09-10 |
+| FD-10 | P2 | dispatch | FD-7's `tool_path` fallback silently made a pre-authored `cargo-mutants`-absent test collide with a machine that has it | S | **found 2026-09-11, needs a lead decision** |
 
 Severity: **P0** blocks the stated use case · **P1** will cost a user a debugging cycle ·
 **P2** wrong-but-survivable
 
-Seven fixed 2026-09-10, in the working tree, uncommitted and unpushed. Two open. Two items need a
-lead decision, both flagged in place: the pre-authored test FD-3 turned red, and whether a
-required gate that SKIPs should fail `fleet run` (it currently does not, though `fleet gate` and
-`fleet oracle` both exit 3 for it — the pipeline is the odd one out, and that contradicts r6/r10).
+Seven fixed 2026-09-10, in the working tree, uncommitted and unpushed. Two open. Three items need
+a lead decision, all flagged in place: the pre-authored test FD-3 turned red, whether a required
+gate that SKIPs should fail `fleet run` (it currently does not, though `fleet gate` and
+`fleet oracle` both exit 3 for it — the pipeline is the odd one out, and that contradicts r6/r10),
+and FD-10's pre-authored test now failing on any machine with `cargo-mutants` installed.
 
 ---
 
@@ -379,6 +381,47 @@ required gate that SKIPs should fail `fleet run` (it currently does not, though 
 - **Left alone, flagged:** `doctor` still exits 0 while reporting a miss. Outside the scope of
   this row, and `build_identity_present.rs` asserts `doctor --json` succeeds — so changing it is
   a lead decision.
+
+---
+
+## FD-10 — FD-7's fallback makes `mutants_skip_reason.rs` fail on a machine with `cargo-mutants`
+
+- **Severity:** P2 · **Effort:** S
+- **Found:** 2026-09-11, running `cargo test --workspace` after pulling FD-1..FD-9 (commit
+  `2441646`) on a machine that has `cargo-mutants` installed at `~/.cargo/bin/cargo-mutants`.
+- **Evidence:**
+  ```
+  test mutants_gate_skip_names_the_path_cause_when_the_tool_is_absent ... FAILED
+  thread '...' panicked at src/tests/mutants_skip_reason.rs:47:5:
+  not-installed skip must name the real cause: stdout= stderr=    .... gate cargo mutants -- running
+      FAIL gate mutants -- NonZeroExit(1)
+  ```
+  `src/tests/mutants_skip_reason.rs:41-45` simulates "`cargo-mutants` genuinely not installed" by
+  setting `FLEET_MUTANTS=1` and `PATH=/usr/bin:/bin:/usr/sbin:/sbin` (no rustup directory), then
+  asserts the gate skips with `"cargo-mutants not found on PATH"`. That was a valid simulation
+  before FD-7. After FD-7, `mutants_probe::on_path` calls `tool_path::found`, which searches
+  `$PATH` **then `$CARGO_HOME/bin`/`~/.cargo/bin`** — and the test only clears `$PATH`, not `$HOME`
+  or `$CARGO_HOME`. On any machine with `cargo-mutants` actually installed (the normal case for a
+  Rust dev box, and true of this one), the fallback finds it regardless of the restricted `$PATH`,
+  the gate is no longer skipped, and it actually runs `cargo mutants` against the test's bare
+  scratch repo — which then fails for an unrelated reason (`NonZeroExit(1)`, no mutants config),
+  not the one this test is trying to name.
+- **Root cause:** FD-7's own new test (`src/tests/cargo_found_outside_path.rs`) already knew this:
+  its "genuinely missing tool" case deliberately uses `conftest`, not a cargo subcommand, precisely
+  *because* a cargo-ecosystem tool would be found via the `~/.cargo/bin` fallback regardless of
+  `$PATH`. `mutants_skip_reason.rs` predates that fix and was never revisited against it.
+- **Not fixed here.** Same shape as FD-3 immediately above: a pre-authored acceptance test's
+  environment simulation is now stale relative to a later, deliberate, already-reviewed behaviour
+  change — not a product regression (`tool_path`'s fallback is doing exactly what FD-7 designed it
+  to do, and correctly reports "found" for a tool that genuinely is on this machine). AGENTS.md
+  hard rule 1 forbids editing a pre-authored acceptance test to make it pass, so this is left red
+  and named here rather than patched. Confirmed via `cargo test --workspace` on 2026-09-11:
+  **549 passed, 2 failed** (this row + FD-3's `sow_memory_influence.rs`), 4 ignored — no other
+  regressions from the FD-1..FD-9 pull.
+- **For the lead:** the test's intent ("a genuinely-absent tool is skipped, named correctly") is
+  still correct and worth keeping; it needs its fixture updated to also isolate `$HOME`/
+  `$CARGO_HOME` (e.g. point them at an empty temp dir) so the simulated "absent" case survives the
+  FD-7 fallback, mirroring how `cargo_found_outside_path.rs` already handles this for `conftest`.
 
 ---
 

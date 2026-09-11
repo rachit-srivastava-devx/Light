@@ -52,6 +52,10 @@ pub struct PrArgs {
     pub repo: String,
     #[arg(long)]
     pub branch: String,
+    #[arg(long)]
+    pub module_brief: String,
+    #[arg(long)]
+    pub diff_summary: String,
 }
 
 #[derive(Args, Debug)]

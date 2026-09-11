@@ -1,10 +1,7 @@
 //! `Cli`/`Commands` -- the clap derive replacement for `main.rs`'s hand-rolled `match`. Every
 //! variant name is a real subcommand string from the current dispatcher (BLUEPRINT §5).
 
-use super::args_agent::*;
-use super::args_core::*;
-use super::args_ctx::*;
-use super::args_ops::*;
+use super::{args_agent::*, args_core::*, args_ctx::*, args_ops::*};
 use clap::{Parser, Subcommand};
 use clap_complete::Shell;
 
@@ -15,7 +12,7 @@ pub struct Cli {
     #[arg(long, global = true)]
     pub no_color: bool,
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -47,16 +44,16 @@ pub enum Commands {
     Contract(ContractArgs),
     Gate(GateArgs),
     Freeze(FreezeArgs),
-    Console {
-        #[arg(long)]
-        task: Option<String>,
-    },
+    Console { #[arg(long)] task: Option<String> },
     Graph(GraphArgs),
     Impact(ImpactArgs),
     Mcp(McpArgs),
     Completions { shell: Shell },
     Doctor(JsonOnly),
     Version(JsonOnly),
+    /// Run multiple modules in parallel using worktrees.
+    #[command(name = "run-modules")]
+    RunModules(RunModulesArgs),
     /// Hidden, test-only: drives the real pipeline end to end through the real binary.
     #[command(name = "__pipeline_probe", hide = true)]
     PipelineProbe {

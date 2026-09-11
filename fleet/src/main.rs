@@ -5,11 +5,13 @@
 mod build_info;
 mod cli;
 mod dispatch;
+mod interactive;
 mod pipeline;
 mod print;
 mod runtime;
 
 use clap::{CommandFactory, FromArgMatches};
+use std::io::IsTerminal;
 
 fn main() {
     // Builder-side help-text augmentation (`cli::help_text`) instead of doc comments on the
@@ -27,12 +29,10 @@ fn main() {
     // gating `completions`/`doctor`/`__agent` broke the installer and killed spawned children.
     let preflight_cfg = runtime::capacity::PreflightConfig::from_env(config.review_cap, config.ram_lanes);
     let measured = runtime::capacity::preflight(&runtime::capacity::StdCapacityProbe, &preflight_cfg);
-    let cap = match (measured, cli.command.is_capacity_gated()) {
+    let is_gated = cli.command.as_ref().map(|c| c.is_capacity_gated()).unwrap_or(false);
+    let cap = match (measured, is_gated) {
         (Ok(cap), _) => cap,
         (Err(refusal), true) => {
-            // Route through the same structured render path every other refusal/verdict line
-            // uses, instead of a one-off `eprintln!`, so `REFUSED ...` looks identical here and
-            // in `fleet gate`'s output (colour/NO_COLOR honoured the same way too).
             let event = print::render_event::Event::Refusal {
                 source: "fleet".into(),
                 reason: format!("system capacity check failed: {refusal}"),
@@ -40,14 +40,28 @@ fn main() {
             print::human_stream::emit(&event, &print::style::Style::detect());
             std::process::exit(fleet_types::ExitCode::Refusal.as_i32());
         }
-        // Not gated: answer anyway, single-lane. Introspection must work on a loaded machine.
         (Err(_), false) => runtime::ConcurrencyCap::minimum(),
     };
     let tokio_rt = runtime::tokio_rt::build(cap).expect("tokio runtime builds");
     let rayon_pool = runtime::rayon_pool::build(cap).expect("rayon pool builds");
 
-    let outcome =
-        rayon_pool.install(|| tokio_rt.block_on(async { dispatch::run(cli.command, &state_dir, cap) }));
+    let outcome = rayon_pool.install(|| {
+        tokio_rt.block_on(async {
+            match cli.command {
+                Some(cmd) => dispatch::run(cmd, &state_dir, cap).await,
+                None => {
+                    if std::io::stdin().is_terminal() && std::io::stdout().is_terminal() {
+                        interactive::run(&state_dir, cap).await;
+                        Ok(())
+                    } else {
+                        let _ = cli::help_text::with_descriptions(cli::Cli::command()).print_help();
+                        println!();
+                        Ok(())
+                    }
+                }
+            }
+        })
+    });
     match outcome {
         Ok(()) => std::process::exit(fleet_types::ExitCode::Ok.as_i32()),
         Err(e) => {
