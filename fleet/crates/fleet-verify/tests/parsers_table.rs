@@ -54,6 +54,18 @@ fn corpus_collapses_seven_field_line_to_clean_over_total() {
 }
 
 #[test]
+fn corpus_honours_not_applicable_marker_on_foreign_repos() {
+    let p = parser_for("corpus");
+    // The whole corpus gate asserts fleet-own-source invariants; on a user
+    // repo the script prints this marker and exits 0. Parser must return
+    // NotApplicable so the gate reads as SKIP, not FAIL -- otherwise every
+    // `fleet run --repo <any user repo>` ends with a red gate that never
+    // had a chance to succeed.
+    let out = "corpus-gate: not-applicable -- target repo /some/user/repo is not a fleet checkout";
+    assert_eq!(p(out, ""), DenominatorResult::NotApplicable);
+}
+
+#[test]
 fn unit_tests_parses_libtest_result_line() {
     let p = parser_for("unit tests");
     assert_eq!(p("test result: ok. 42 passed; 0 failed; 0 ignored", ""), DenominatorResult::Counted(42, 42));

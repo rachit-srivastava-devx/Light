@@ -20,6 +20,20 @@ export FLEET_TARGET_REPO="$(pwd)"
 # still be CAUGHT, not excused as "not applicable" -- that is the M4 defect (a detector that
 # skipped itself when its own source moved, masking real breakage) and it must not come back.
 is_fleet_tree() { [ -r "$FLEET_TARGET_REPO/crates/fleet-verify/src/registry.rs" ]; }
+
+# The whole corpus gate asserts invariants about FLEET'S OWN source tree
+# (A/B/C/D/M/S-series detectors that grep fleet's crates for regression
+# signatures). Individual M-detectors self-excluded on a foreign repo, but the
+# rest either FAILed or returned unexpected exit codes, so `fleet run --repo
+# <any user repo>` always ended with `FAIL gate corpus -- NonZeroExit(3)` --
+# a category error, not a real regression. Print the not-applicable marker
+# `parsers::corpus` recognizes and exit 0; the gate then reads as SKIP, same
+# shape recur-gate uses on a clean-tree run.
+if ! is_fleet_tree; then
+  echo "corpus-gate: not-applicable -- target repo $FLEET_TARGET_REPO is not a fleet checkout (corpus detectors assert fleet's own source invariants)"
+  exit 0
+fi
+
 m_excluded=0
 
 checked=0
