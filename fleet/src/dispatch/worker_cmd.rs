@@ -8,7 +8,8 @@ use crate::cli::args_ctx::McpArgs;
 use crate::dispatch::error::DispatchError;
 
 pub fn mcp(_args: McpArgs) -> Result<(), DispatchError> {
-    Err(DispatchError::NotYetImplemented(
-        "fleet-worker::sandbox::manifest::manifest_for_lease is not pub from lib.rs",
-    ))
+    Err(DispatchError::NotYetImplemented {
+        subcommand: "mcp",
+        tracking: Some("fleet-worker::sandbox::manifest::manifest_for_lease is not pub from lib.rs"),
+    })
 }

@@ -30,8 +30,15 @@ pub enum DispatchError {
     Merge(#[from] fleet_merge::WorktreeError),
     #[error("io: {0}")]
     Io(#[from] std::io::Error),
-    #[error("this subcommand's owning crate does not yet expose a public entry point: {0}")]
-    NotYetImplemented(&'static str),
+    /// Typed stub: `subcommand` is a STABLE machine id (`"attest"`, `"pr"`, `"mcp"`, …) that
+    /// `--json` consumers can key off; `tracking` is a short human reason ("awaiting fleet-attest
+    /// crate", "fleet-worker's skills_registry module is private", …) or `None`. `exit_code()`
+    /// still maps to `ExitCode::Env` -- scripts observing exit 3 keep working unchanged.
+    #[error("{subcommand}: {}", .tracking.unwrap_or("owning crate exposes no public entry point yet"))]
+    NotYetImplemented {
+        subcommand: &'static str,
+        tracking: Option<&'static str>,
+    },
     #[error("{0}")]
     Refusal(String),
     /// A lane's fd-3 channel delivered nothing, a malformed packet, or the deadline fired. This is

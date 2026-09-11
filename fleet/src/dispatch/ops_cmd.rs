@@ -61,16 +61,17 @@ pub fn completions(shell: Shell) -> Result<(), DispatchError> {
 
 /// One named refusal per subcommand with no reachable owning-crate entry point -- see BLUEPRINT
 /// §2's non-goals table for who owns each (fleet-stream/console, fleet-worker/skills-registry,
-/// fleet-merge/pr-emit, fleet-verify/adjudication-table).
+/// fleet-merge/pr-emit, fleet-verify/adjudication-table). `subcommand` is the STABLE machine id
+/// `--json` consumers key off; `tracking` is a short reason for the human line.
 pub fn not_yet_implemented(command: &Commands) -> DispatchError {
-    let reason = match command {
-        Commands::Console { .. } => "fleet-stream's console/dashboard sink wiring",
-        Commands::Freeze(_) => "no crate in the roster names Freeze ownership yet",
-        Commands::Contract(_) => "no crate in the roster names Contract ownership yet",
-        Commands::Pr(_) => "fleet-merge has no pr-emit fn exposed yet (worktree/merge only)",
-        Commands::Attest(_) => "fleet-types has the wire shape only, no builder-flow fn yet",
-        Commands::Skills { .. } => "fleet-worker's skills_registry module is private",
-        _ => "not wired in this pass",
+    let (subcommand, tracking) = match command {
+        Commands::Console { .. } => ("console", "fleet-stream's console/dashboard sink wiring"),
+        Commands::Freeze(_) => ("freeze", "no crate in the roster names Freeze ownership yet"),
+        Commands::Contract(_) => ("contract", "no crate in the roster names Contract ownership yet"),
+        Commands::Pr(_) => ("pr", "fleet-merge has no pr-emit fn exposed yet (worktree/merge only)"),
+        Commands::Attest(_) => ("attest", "fleet-types has the wire shape only, no builder-flow fn yet"),
+        Commands::Skills { .. } => ("skills", "fleet-worker's skills_registry module is private"),
+        _ => ("unknown", "not wired in this pass"),
     };
-    DispatchError::NotYetImplemented(reason)
+    DispatchError::NotYetImplemented { subcommand, tracking: Some(tracking) }
 }
