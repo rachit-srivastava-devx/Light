@@ -23,6 +23,7 @@ fn threads_resolved_state_dir_to_worker_even_when_env_var_was_unset() {
         prompt: String::new(),
         merge: false,
         then_verify: false,
+        agent: "freelane".into(),
     };
     let result = swarm(&resolved, args);
 
@@ -102,10 +103,44 @@ fn then_verify_with_refused_lane_returns_swarm_refusal() {
         prompt: String::new(),
         merge: false,
         then_verify: true, // must NOT chain verify on a Refusal
+        agent: "freelane".into(),
     };
     let result = swarm(&resolved, args);
 
     assert!(matches!(result, Err(DispatchError::Refusal(_))),
         "then-verify must preserve swarm's Refusal exit code, got: {result:?}");
     std::env::remove_var(ENV_STATE_DIR);
+}
+
+/// Unknown `--agent` values must be refused at dispatch, not silently defaulted to Freelane.
+/// Uses a valid role + valid task so parse reaches the adapter step (unlike the env-var test
+/// above, which fails earlier on an invalid role). `CliAdapter::from_agent_kind` is the single
+/// parse point; this test proves swarm actually calls it and surfaces its typed error.
+#[test]
+fn unknown_agent_flag_is_refused_not_silently_defaulted() {
+    let _guard = ENV_LOCK.lock().unwrap();
+    let resolved = PathBuf::from("/tmp/fleet-swarm-agent-flag-test-state-dir");
+    let args = SwarmArgs {
+        repo: "/nonexistent".into(),
+        task: "some-task".into(),
+        role: "builder".into(), // valid role, see fleet_types::Role::ALL
+        prompt: String::new(),
+        merge: false,
+        then_verify: false,
+        agent: "bogus".into(),
+    };
+    let result = swarm(&resolved, args);
+    match result {
+        Err(DispatchError::EnvFault(msg)) => {
+            assert!(msg.contains("bogus"), "EnvFault must name the offending value: {msg}");
+        }
+        other => panic!("expected EnvFault for unknown --agent, got {other:?}"),
+    }
+}
+
+/// Direct proof at the parse boundary: unknown agent kinds are typed errors, so `--agent bogus`
+/// cannot slip through as a silent default (the whole point of Defect 1's fix).
+#[test]
+fn from_agent_kind_rejects_bogus_value() {
+    assert!(builder::CliAdapter::from_agent_kind("bogus").is_err());
 }

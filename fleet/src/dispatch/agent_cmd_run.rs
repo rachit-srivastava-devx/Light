@@ -3,6 +3,12 @@
 //! `Freelane` now shells out to the freelane.sh keyless lane restored into
 //! `crates/fleet-worker/src/freelane/` (see that module for the embed/materialize/invoke split
 //! this file only wires together); `Claude`/`Codex` invoke their CLI directly.
+//!
+//! Non-TTY invocation: `spawn::child_command::build` sets `stdin(Stdio::null())`, so the child
+//! sees no TTY. `claude`'s default REPL refuses under those conditions -- v2.1.268 exits 1 with
+//! empty stderr; `claude -p "<prompt>"` runs and prints the response. Verified 2026-09-11.
+//! `codex`'s non-interactive shape is `codex exec "<prompt>"`. `run_cli` therefore branches on
+//! adapter to pick the right non-REPL flag; Freelane never reaches `run_cli` (see `run` match).
 
 use builder::freelane;
 use builder::CliAdapter;
@@ -56,12 +62,20 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
 fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
     let binary = adapter.cli_binary_name().unwrap_or("true");
     let mut cmd = Command::new(binary);
-    // Claude CLI requires --print for non-interactive (batch) mode; without it, it tries
-    // to start an interactive session and fails when stdin is null.
-    if matches!(adapter, CliAdapter::Claude) {
-        cmd.arg("--print");
+    // Non-TTY branch per module doc: default REPL refuses under Stdio::null; each CLI needs its
+    // non-interactive flag. Freelane never lands here (dispatched to run_freelane above), but
+    // matched exhaustively so a future variant is a compile error, not a silent wrong flag.
+    match adapter {
+        CliAdapter::Claude => {
+            cmd.arg("-p").arg(task);
+        }
+        CliAdapter::Codex => {
+            cmd.arg("exec").arg(task);
+        }
+        CliAdapter::Freelane => {
+            cmd.arg(task);
+        }
     }
-    cmd.arg(task);
     if let Some(m) = model {
         if matches!(adapter, CliAdapter::Claude) {
             cmd.args(["--model", m]);
