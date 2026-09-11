@@ -10,6 +10,25 @@
 set -u
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 MAN="$ROOT/corpus/MANIFEST.sha256"
+
+# Capture the cwd this script was invoked with -- fleet's runner sets it to the `--repo` target
+# (see verify_runner_bounded.rs) -- BEFORE the `cd` below can change it. The detector inventory
+# this gate hashes is fleet's OWN corpus (materialized under $ROOT/corpus by fleet-verify), so
+# on a user repo that has no fleet source to inspect the whole gate is a category error:
+# `fleet run --repo <any user repo>` used to end with `FAIL gate detectors -- NonZeroExit(6)`
+# via the manifest/count/hash refusals below, a red gate that never had a chance to succeed.
+# Print the not-applicable marker `parsers::detectors` recognizes and exit 0; the gate then
+# reads as SKIP, same shape recur-gate and corpus/run.sh use on a foreign checkout.
+#
+# The fleet-ness test is deliberately narrow -- same probe file corpus/run.sh uses -- so that
+# inside fleet's own tree the D28 tamper-guard still fires; only a truly foreign repo skips.
+export FLEET_TARGET_REPO="$(pwd)"
+is_fleet_tree() { [ -r "$FLEET_TARGET_REPO/crates/fleet-verify/src/registry.rs" ]; }
+if [ "${1:-}" != "--update" ] && ! is_fleet_tree; then
+  echo "detectors-gate: not-applicable -- target repo $FLEET_TARGET_REPO is not a fleet checkout"
+  exit 0
+fi
+
 cd "$ROOT/corpus" || exit 3
 if [ "${1:-}" = "--update" ]; then
   shasum -a 256 *.sh > MANIFEST.sha256

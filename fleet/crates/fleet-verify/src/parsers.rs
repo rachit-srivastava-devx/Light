@@ -42,7 +42,14 @@ pub fn recur(stdout: &str, _stderr: &str) -> D {
 }
 
 /// `detector-integrity.sh:29` -- `"$N detectors match the manifest (denominator: $N)"`.
+/// Also honours the explicit not-applicable marker the script emits on a
+/// foreign (non-fleet) checkout: the gate hashes fleet's OWN detector
+/// inventory, so a `fleet run` against a user repo has nothing to verify.
+/// Same `NotApplicable` treatment as `recur` and `corpus`.
 pub fn detectors(stdout: &str, _stderr: &str) -> D {
+    if stdout.contains("detectors-gate: not-applicable") {
+        return D::NotApplicable;
+    }
     match after(stdout, "(denominator: ") {
         Some(n) => D::Counted(n, n),
         None => D::Unparseable,
