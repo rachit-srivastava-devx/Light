@@ -9,7 +9,7 @@ mod agent_cmd_run;
 pub mod agents_cmd;
 pub mod capacity_probe_cmd;
 pub mod context_cmd;
-mod doctor_json;
+mod doctor_json; mod doctor_optional;
 pub mod error; mod gate_config; mod gate_config_file;
 mod error_exit;
 pub mod ledger_cmd;
