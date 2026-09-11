@@ -37,11 +37,16 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // prompt (S1-4). `--prompt` remains a genuinely distinct, optional override: pass it to
     // give the worker different instructions than the task id/name itself.
     let prompt = if args.prompt.trim().is_empty() { args.task.clone() } else { args.prompt };
+    // `--agent` selects the CLI adapter; unknown values fail here as EnvironmentFault rather
+    // than silently defaulting to Freelane (the prior behavior -- Claude/Codex existed in the
+    // type system but were unreachable from CLI). `from_agent_kind` is the single parse point.
+    let adapter = CliAdapter::from_agent_kind(&args.agent)
+        .map_err(|e| DispatchError::EnvFault(format!("--agent {:?}: {e}", args.agent)))?;
     let request = SpawnRequest {
         repo: PathBuf::from(&args.repo),
         role,
         task_id,
-        adapter: CliAdapter::Freelane,
+        adapter,
         requested_model: None,
         task: prompt,
         deadline: Duration::from_secs(300),
