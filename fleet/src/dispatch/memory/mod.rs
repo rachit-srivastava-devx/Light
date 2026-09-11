@@ -11,4 +11,4 @@ mod store;
 mod write;
 
 pub use adapter::RealMemory;
-pub use write::record_sow_refusal;
+pub use write::{record_accepted_sow, record_sow_refusal};

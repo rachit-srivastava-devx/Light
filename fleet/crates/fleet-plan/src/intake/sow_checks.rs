@@ -19,11 +19,17 @@ pub(crate) fn section_body(text: &str, heading: &str) -> Option<String> {
     None
 }
 
+/// `l.get(..n)`/`l.get(n..)`, never `l[..n]`: `prefix.len()` is a BYTE count, and a SOW line
+/// whose first `n` bytes end inside a multi-byte char (an em-dash heading, an emoji, an accented
+/// word) made the slicing form panic the whole process. `get` yields `None` there instead, which
+/// is the same verdict as "this line does not start with the prefix". Semantics are otherwise
+/// unchanged: the ASCII-case-insensitive head must match and the remainder must be non-blank
+/// (a line exactly equal to the prefix leaves an empty remainder, so it still fails, as before).
 pub(crate) fn has_line_prefix_ci(text: &str, prefix: &str) -> bool {
     text.lines().any(|l| {
-        l.len() > prefix.len()
-            && l[..prefix.len()].eq_ignore_ascii_case(prefix)
-            && !l[prefix.len()..].trim().is_empty()
+        let n = prefix.len();
+        matches!(l.get(..n), Some(head) if head.eq_ignore_ascii_case(prefix))
+            && matches!(l.get(n..), Some(rest) if !rest.trim().is_empty())
     })
 }
 

@@ -22,7 +22,10 @@ fn healthy_runtime() -> fleet_router::RuntimeState {
 pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
     let task = TaskId::parse(args.task).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let repo = PathBuf::from(&args.repo);
-    let outcome = run_pipeline(state_dir, &repo, task, &healthy_runtime(), fleet_verify::GATES);
+    // The committed table with this repo's `.fleet/gates.toml` applied -- identical to
+    // `fleet_verify::GATES` when the repo has no such file (see `gate_config`).
+    let gates = super::gate_config::resolve(&repo)?;
+    let outcome = run_pipeline(state_dir, &repo, task, &healthy_runtime(), &gates);
     maybe_flush(state_dir);
     if args.json {
         json::print_pretty(&outcome);
@@ -41,7 +44,7 @@ pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
 /// so the real table would actually execute `cargo test --workspace` (this probe is itself
 /// invoked BY that gate's own integration-test run -- unbounded recursion) and `cargo mutants`
 /// (minutes-to-hours per run) inside what must stay a fast, deterministic crash-resume test.
-/// `fleet run` never filters: it always gets the real, full `fleet_verify::GATES`.
+/// `fleet run` never filters: it always gets the real, full table (`gate_config::resolve`).
 const NO_GATES: &[fleet_verify::GateSpec] = &[];
 
 pub fn pipeline_probe(state_dir: &Path, repo: String, task_id: String) -> Result<(), DispatchError> {

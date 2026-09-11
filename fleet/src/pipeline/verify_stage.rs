@@ -6,6 +6,7 @@
 
 use super::event::PipelineError;
 use super::ledger_events;
+use super::records::{label, GateRecord};
 use crate::dispatch::verify_ports::{resolve_gates_root, RealRunner};
 use crate::dispatch::which_probe::WhichProbe;
 use crate::print::human_stream::emit;
@@ -19,14 +20,19 @@ use std::path::Path;
 /// `repo` is the same `--repo` the pipeline was invoked with (`StageCtx::repo`) -- the S1 fix:
 /// this stage used to run every gate against the `fleet` process's own cwd instead of the repo
 /// the caller actually named.
-pub fn verify(gates: &[GateSpec], repo: &Path, state_dir: &Path) -> Result<(), PipelineError> {
+pub fn verify(
+    gates: &[GateSpec],
+    repo: &Path,
+    state_dir: &Path,
+    out: &mut Vec<GateRecord>,
+) -> Result<(), PipelineError> {
     let gates_root =
         resolve_gates_root().map_err(|e| PipelineError::Verify(format!("gates root: {e}")))?;
     let runner = RealRunner::new(repo);
     let report = fleet_verify::run_all(gates, &WhichProbe, &runner, &gates_root);
     let mut failed: Vec<String> = Vec::new();
     for r in &report.results {
-        report_gate(state_dir, r);
+        report_gate(state_dir, r, out);
         if let Verdict::Fail { reason, .. } = &r.verdict {
             failed.push(format!("{}: {reason:?}", r.id));
         }
@@ -40,7 +46,7 @@ pub fn verify(gates: &[GateSpec], repo: &Path, state_dir: &Path) -> Result<(), P
 /// One gate's real, structured verdict, pushed to both consumers of the same `Event`: the human
 /// render path (previously silent per-gate during `fleet run` -- only the stage's own pass/fail
 /// showed) and the durable ledger `fleet-stream` tails.
-fn report_gate(state_dir: &Path, r: &fleet_verify::GateResult) {
+fn report_gate(state_dir: &Path, r: &fleet_verify::GateResult, out: &mut Vec<GateRecord>) {
     let event = line_for(r);
     emit(&event, &Style::detect());
     let Event::GateVerdict { id, outcome, checked, total, detail } = &event else { return };
@@ -48,4 +54,12 @@ fn report_gate(state_dir: &Path, r: &fleet_verify::GateResult) {
         "id": id, "outcome": format!("{outcome:?}"), "checked": checked, "total": total, "detail": detail,
     });
     ledger_events::observe(state_dir, ReceiptEvent::GateVerdict, body);
+    out.push(GateRecord {
+        id: id.clone(),
+        verdict: label(*outcome),
+        checked: *checked,
+        total: *total,
+        detail: detail.clone(),
+        env_fault: matches!(r.verdict, Verdict::Skip { was_required: true, .. }),
+    });
 }

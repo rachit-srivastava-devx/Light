@@ -12,6 +12,7 @@ mod rubric;
 mod rubric_defs;
 mod sow;
 mod sow_checks;
+mod sow_intent;
 
 pub use atomic::validate_atomic_rows;
 pub use atomic_types::{AtomicRow, AtomicTier};

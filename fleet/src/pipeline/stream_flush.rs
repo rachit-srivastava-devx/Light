@@ -21,12 +21,21 @@ pub const FLEET_STREAM_DIR: &str = "FLEET_STREAM_DIR";
 pub fn maybe_flush(state_dir: &Path) {
     let Ok(dir) = std::env::var(FLEET_STREAM_DIR) else { return };
     if let Err(reason) = flush(state_dir, Path::new(&dir)) {
-        let note = Event::Note { source: "fleet-stream".to_string(), text: reason };
-        emit(&note, &Style::detect());
+        // Name the directory AND the env var that named it: the failure used to surface as a bare
+        // `No such file or directory (os error 2)` with no path in it, which reads as noise rather
+        // than as "your FLEET_STREAM_DIR could not be written".
+        let text = format!("{FLEET_STREAM_DIR}={dir}: {reason}");
+        emit(&Event::Note { source: "fleet-stream".to_string(), text }, &Style::detect());
     }
 }
 
 fn flush(state_dir: &Path, stream_dir: &Path) -> Result<(), String> {
+    // `FileSink` opens its NDJSON file with `create(true)`, which creates the FILE but never its
+    // parent DIRECTORY -- so a `FLEET_STREAM_DIR` that did not already exist produced no file, no
+    // cursor, and (before the message above) an unattributed errno. The env var names a directory
+    // fleet is being told to write; creating it (and its parents) is this function's job.
+    std::fs::create_dir_all(stream_dir)
+        .map_err(|e| format!("could not create stream directory: {e}"))?;
     let source = LedgerLogSource::new(ledger_events::open(state_dir));
     let cursors = FileCursorStore::new(stream_dir.join("cursors"));
     let mut sink = FileSink::new(stream_dir.join("events.ndjson"), vec![]);

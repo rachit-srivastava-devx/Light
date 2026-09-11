@@ -6,7 +6,7 @@
 
 use crate::cli::args_core::{PlanArgs, SowArgs};
 use crate::dispatch::error::DispatchError;
-use crate::dispatch::memory::{record_sow_refusal, RealMemory};
+use crate::dispatch::memory::{record_accepted_sow, RealMemory};
 use crate::dispatch::sow_probes::{SequentialRunner, StubCodebase, StubResearch};
 use crate::print::human;
 use fleet_scan::{assess, Assessment, BusinessProbe, MemoryProbe, ProbeSet, RequirementInput, ResearchProbe, TechnicalProbe};
@@ -33,16 +33,19 @@ pub fn sow(state_dir: &Path, args: SowArgs) -> Result<(), DispatchError> {
     }
 
     if messages.is_empty() {
+        // ONLY an accepted SOW is remembered. Writing refused submissions here poisoned the
+        // next run: the corrected draft is textually similar to the rejected one, so `MemoryProbe`
+        // flagged it as "a prior decision" and refused it a second time for colliding with the
+        // caller's own rejected draft. Best-effort -- a memory-store fault must never turn an
+        // otherwise-valid SOW into a refusal.
+        if let Err(e) = record_accepted_sow(state_dir, &args.text) {
+            eprintln!("note: sow memory not recorded: {e}");
+        }
         human::ok("sow valid");
         Ok(())
     } else {
         for m in &messages {
             human::refused(m);
-        }
-        // Lesson-worthy outcome: a refused `sow` writes its text into memory (best-effort --
-        // a memory-store fault must never mask or change the real refusal below it caused).
-        if let Err(e) = record_sow_refusal(state_dir, &args.text) {
-            eprintln!("note: sow memory not recorded: {e}");
         }
         Err(DispatchError::Refusal(format!("{} sow violation(s)", messages.len())))
     }

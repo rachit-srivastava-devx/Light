@@ -2,8 +2,8 @@
 //! under the 80-line cap.
 
 use super::mutants_probe;
+use super::tool_path;
 use fleet_verify::{ProbeTool, ToolProbe};
-use std::process::Command;
 
 pub struct WhichProbe;
 impl ToolProbe for WhichProbe {
@@ -19,16 +19,19 @@ impl ToolProbe for WhichProbe {
         }
     }
 
+    /// Names the tool AND everywhere it was looked for. A bare "unavailable" sent a user with
+    /// cargo installed under `~/.cargo/bin` (rustup's default, absent from a non-login shell's
+    /// `PATH`) off to reinstall a tool they already had -- see `tool_path`.
     fn unavailable_reason(&self, tool: ProbeTool) -> String {
         match tool {
             ProbeTool::CargoMutants => mutants_probe::reason(mutants_probe::probe()),
-            _ => "unavailable".to_string(),
+            other => format!("not found: no `{}` in {}", name_on_path(other), tool_path::searched()),
         }
     }
 }
 
 fn on_path(name: &str) -> bool {
-    Command::new("which").arg(name).output().map(|o| o.status.success()).unwrap_or(false)
+    tool_path::found(name)
 }
 
 fn name_on_path(tool: ProbeTool) -> &'static str {

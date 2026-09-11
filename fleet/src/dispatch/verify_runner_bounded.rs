@@ -7,6 +7,7 @@
 //! process's own cwd. A `Script` gate is still RESOLVED against the gates-root
 //! (`verify_ports.rs::resolve_gates_root`) but now EXECUTES with `repo` as cwd, same as `OnPath`.
 
+use super::tool_path;
 use super::verify_report as report;
 use super::verify_runner_io::{drain, io_error, timeout_output};
 use fleet_verify::ProcessOutput;
@@ -24,7 +25,10 @@ pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessO
         return timeout_output(command, remaining);
     }
     report::running(&command.join(" "), remaining);
-    let mut child = match Command::new(bin)
+    // The probe may have found this tool outside `$PATH` (rustup's `~/.cargo/bin`); spawning the
+    // bare name would then fail with ENOENT right after the probe said it was available.
+    let bin = tool_path::resolve_bin(bin);
+    let mut child = match Command::new(&bin)
         .args(rest)
         .current_dir(repo)
         .stdin(Stdio::null())
@@ -48,7 +52,7 @@ pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessO
                 if Instant::now() >= deadline {
                     let _ = child.kill();
                     let _ = child.wait();
-                    report::timed_out(bin);
+                    report::timed_out(&bin);
                     return timeout_output(command, remaining);
                 }
                 std::thread::sleep(Duration::from_millis(50));
