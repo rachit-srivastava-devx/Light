@@ -45,6 +45,11 @@ pub struct SwarmArgs {
     /// to update that branch.
     #[arg(long)]
     pub merge: bool,
+    /// `--agent` selects the CLI adapter -- one of `freelane` (default, keyless), `claude`
+    /// (drives `claude` CLI on PATH), or `codex` (drives `codex` CLI on PATH). Unknown values
+    /// refused at dispatch time as EnvironmentFault.
+    #[arg(long, default_value = "freelane")]
+    pub agent: String,
 }
 
 #[derive(Args, Debug)]
