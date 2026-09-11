@@ -6,6 +6,7 @@
 //! process-global and `cargo test` runs unit tests in one process by default.
 use super::*;
 use crate::cli::args_core::SwarmArgs;
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 static ENV_LOCK: Mutex<()> = Mutex::new(());
