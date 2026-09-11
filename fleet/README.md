@@ -33,27 +33,35 @@ git config user.name fleet-demo
 printf 'before\n' > main.rs
 git add main.rs && git commit -qm initial
 
-# fleet plans before it executes: `run` refuses a task with no accepted SOW.
-# The SOW needs atomic leaves, cited challenges and two named alternatives.
-task='make the demo change
-leaves:
-- change main.rs and exit 0 | acceptance: the diff is non-empty and applies
-challenges:
-- the change may collide with existing content | citation: A1
-alternatives:
-- append: add a line at the end | tradeoff: no context awareness
-- rewrite: replace the file | tradeoff: discards existing content
-estimates:
-- 5 minutes
-edge cases:
-- the file is empty'
+# fleet plans before it executes. `sow` takes `--text` (the literal SOW body) and
+# `--intent-hash` (must match a `source_intent_hash:` line inside that body). It
+# prints `ok: sow valid` on success. There is no `sow accept` subcommand — see
+# docs/USING-FLEET.md#4-fleet-sow--the-real-shape-and-what-it-actually-validates
+# for the full template and every required section heading.
+sow_body='source_intent_hash: demo1
+request: make the demo change
 
-# `sow` exits 9 (SOW_READY_AWAITING_REVIEW) and prints the id on stderr.
-sow="$(fleet sow --task "$task" 2>&1 >/dev/null | grep -oE 'id=[0-9a-f]+' | cut -d= -f2 | head -1)"
-fleet sow accept --id "$sow"
+## Request restatement
+Change main.rs so the diff is non-empty.
+
+## Built for
+The demo user; the success metric is that the change lands.
+
+## Must do
+- Modify main.rs and exit 0
+
+## Explicitly will not do
+- Not adding new files; out of scope: refactors
+
+## Done when
+The diff is non-empty and applies.
+
+## Acceptance threshold
+100% of runs exit 0'
+fleet sow --text "$sow_body" --intent-hash demo1
 
 # The final stdout line is the bare `artifact=<id>`; take that one, not the progress lines.
-artifact="$(fleet run --task "$task" --repo "$demo" --agent stub | grep -oE '^artifact=[0-9a-f]{64}$' | tail -1 | cut -d= -f2)"
+artifact="$(fleet run --task 'make the demo change' --repo "$demo" | grep -oE '^artifact=[0-9a-f]{64}$' | tail -1 | cut -d= -f2)"
 fleet ledger verify
 fleet attest verify "$artifact"
 fleet status
