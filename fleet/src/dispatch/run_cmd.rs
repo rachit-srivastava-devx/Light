@@ -7,7 +7,7 @@ use crate::pipeline::{maybe_flush, run_pipeline};
 use crate::print::json;
 use fleet_types::TaskId;
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Every candidate confirmed installed, with an unmeasured-but-generous quota window and no
 /// cooldown -- the "everything is healthy" default a fresh CLI invocation has no better basis to
@@ -21,7 +21,11 @@ fn healthy_runtime() -> fleet_router::RuntimeState {
 
 pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
     let task = TaskId::parse(args.task).map_err(|e| DispatchError::Refusal(e.to_string()))?;
-    let repo = PathBuf::from(&args.repo);
+    // Intake: refuse a `--repo` that isn't a git worktree up front, with an actionable
+    // message -- otherwise the failure surfaces deep in the verify stage on a per-gate `git`
+    // command, which is what happens today on `/Users/.../work/Frido` (a directory holding
+    // three sibling checkouts). Same helper `oracle`/`gate` already use.
+    let repo = super::verify_repo::ensure_repo(&args.repo)?;
     // The committed table with this repo's `.fleet/gates.toml` applied -- identical to
     // `fleet_verify::GATES` when the repo has no such file (see `gate_config`).
     let gates = super::gate_config::resolve(&repo)?;
