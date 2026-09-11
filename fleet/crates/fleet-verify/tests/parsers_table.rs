@@ -66,6 +66,36 @@ fn unit_tests_total_is_passed_plus_failed_not_passed_minus_failed() {
 }
 
 #[test]
+fn unit_tests_parses_jest_summary_line() {
+    let p = parser_for("unit tests");
+    // Jest's typical summary; `failed` and `skipped` counts may precede `passed`.
+    let jest = "Test Suites: 1 passed, 1 total\nTests:       671 passed, 671 total\nSnapshots:   0 total\n";
+    assert_eq!(p(jest, ""), DenominatorResult::Counted(671, 671));
+
+    // Jest actually writes its summary to STDERR in normal runs -- proven against
+    // posx-frido-backend `npm run --silent test:unit` (stdout empty, stderr carries the summary).
+    // Regression fixture for that: parser must read stderr as well as stdout.
+    assert_eq!(p("", jest), DenominatorResult::Counted(671, 671));
+
+    let with_failed = "Tests:       1 failed, 670 passed, 671 total\n";
+    assert_eq!(p(with_failed, ""), DenominatorResult::Counted(670, 671));
+
+    let with_skipped = "Tests:       1 failed, 2 skipped, 670 passed, 673 total\n";
+    assert_eq!(p(with_skipped, ""), DenominatorResult::Counted(670, 673));
+}
+
+#[test]
+fn unit_tests_parses_vitest_summary_line() {
+    let p = parser_for("unit tests");
+    let vitest = " Test Files  1 passed (1)\n      Tests  10 passed (10)\n";
+    // `Test Files 1 passed (1)` must NOT be picked up as the test count.
+    assert_eq!(p(vitest, ""), DenominatorResult::Counted(10, 10));
+
+    let vitest_mixed = " Test Files  2 failed | 5 passed (7)\n      Tests  3 failed | 10 passed (13)\n";
+    assert_eq!(p(vitest_mixed, ""), DenominatorResult::Counted(10, 13));
+}
+
+#[test]
 fn unparseable_stdout_is_unparseable_for_every_gate() {
     for gate in GATES {
         assert_eq!((gate.parse_denominator)("nothing recognizable here", ""), DenominatorResult::Unparseable);
