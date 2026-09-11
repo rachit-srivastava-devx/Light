@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Supports macOS and Linux. Windows and BSDs refuse with a clear message.
+# Rationale: Light/fleet's Cargo workspace has no target_os cfgs -- the crates
+# build cleanly on any Rust-supported platform. install.sh is the only
+# macOS-only surface today; this file drops that gate.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -30,9 +34,11 @@ fail_env() {
     exit 3
 }
 
-if [[ "$(uname -s)" != "Darwin" ]]; then
-    fail_env "macOS is required; detected $(uname -s). fleet is a local macOS CLI."
-fi
+OS_KIND="$(uname -s)"
+case "$OS_KIND" in
+    Darwin|Linux) ;;
+    *) fail_env "unsupported OS: $OS_KIND. fleet install supports macOS (Darwin) and Linux; other Unixes and Windows are not supported by this installer." ;;
+esac
 
 MODE="install"
 case "${1:-}" in
@@ -63,7 +69,7 @@ probe_version() {
     printf 'OK prerequisite: %s --version => %s\n' "$tool" "$output"
 }
 
-printf 'fleet install target: macOS (%s)\n' "$(uname -m)"
+printf 'fleet install target: %s (%s)\n' "$OS_KIND" "$(uname -m)"
 probe_version cargo 1 74
 probe_version rustc 1 74
 probe_version git 2 30
