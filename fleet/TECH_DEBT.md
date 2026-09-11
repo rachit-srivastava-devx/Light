@@ -28,6 +28,7 @@
 | FD-5 | P1 | fleet-cli | `--json` carries strictly less than the human summary | S | fixed 2026-09-10 |
 | FD-4 | P2 | pipeline | `FLEET_STREAM_DIR` writes nothing; parent dir never created | S | fixed 2026-09-10 |
 | FD-9 | P1 | pipeline | `fleet run` never passes a role, so classification always refuses while the stage reports pass | S | **open** |
+| FD-10 | P1 | sandbox / fleet-worker | `swarm --agent claude\|codex` cannot authenticate — HermeticEnv wipes `~/.claude` and `~/.codex` | M | **open — needs a design call** |
 | FD-7 | P2 | dispatch | `cargo` reported missing when installed outside `PATH` | S | fixed 2026-09-10 |
 
 Severity: **P0** blocks the stated use case · **P1** will cost a user a debugging cycle ·
@@ -379,6 +380,72 @@ required gate that SKIPs should fail `fleet run` (it currently does not, though 
 - **Left alone, flagged:** `doctor` still exits 0 while reporting a miss. Outside the scope of
   this row, and `build_identity_present.rs` asserts `doctor --json` succeeds — so changing it is
   a lead decision.
+
+---
+
+## FD-10 — `swarm --agent claude|codex` cannot authenticate — HermeticEnv wipes `~/.claude` and `~/.codex`
+
+- **Severity:** P1 · **Effort:** M · **Status:** **open — needs a design call**
+- **Area:** sandbox / fleet-worker
+- **Context:** PR #9 (`feat/swarm-agent-flag-and-non-tty-invocation`) wires
+  `fleet swarm --agent claude|codex|freelane` end-to-end at the CLI/dispatch layer. The flag
+  parses, the adapter is selected, and the lane spawns — but the two real-agent adapters
+  (`claude` and `codex`) exit 1 on first invocation because they cannot find their auth on disk.
+- **Evidence / reproduction:**
+  ```
+  $ fleet swarm --repo /tmp/scratch-repo --task "edit README" --role builder --agent claude
+      [builder-*] spawned
+      [builder-*] outcome: Failed { reason: "claude -p exited 1: not authenticated" }
+  EXIT:7
+  ```
+  Same shape with `--agent codex` — the `codex` CLI reads `$HOME/.codex/auth.json` and finds
+  nothing.
+- **Root cause:** `crates/fleet-worker/src/sandbox/hermetic_env.rs:48-61` (`HermeticEnv::apply`)
+  calls `command.env_clear()` and then points `HOME` at a fresh per-lane tempdir built in
+  `build(root)` at `hermetic_env.rs:24-38` (`root.join("home")`). The header comment on
+  `hermetic_env.rs:2-4` states this is deliberate: *"a spawned CLI never sees the real `HOME`."*
+  The `claude` CLI keeps its OAuth token / config under `$HOME/.claude/` and the `codex` CLI
+  keeps its credentials under `$HOME/.codex/`; both directories are absent inside the hermetic
+  tempdir, so both CLIs exit 1 before doing any work. `freelane` (the keyless default) is
+  unaffected because it does not read `$HOME`.
+- **Why this is a design call, not a patch:** the reason `HermeticEnv` exists is to keep a
+  spawned lane from reading arbitrary secrets, dotfiles, or shell state out of the user's real
+  `$HOME`. Punching two directory-shaped holes in it is exactly the kind of decision the auto-mode
+  classifier is meant to refuse without a human — it changes the sandbox contract that the rest
+  of `fleet-worker` was written against, and it is not obviously the *right* trade-off for every
+  deployment (a CI runner vs. a developer laptop want different answers).
+- **Candidate mechanisms (each has a real trade-off — reviewer picks):**
+  1. **Read-only bind/symlink allowlist.** After `build(root)`, symlink (or `bind_mount` on
+     Linux) the real `~/.claude` and `~/.codex` into the tempdir's `home/`. Cheapest to
+     implement, keeps the rest of `$HOME` invisible. Cost: the lane can now read *and write* the
+     real auth files unless the symlink target is made read-only per-lane; a rogue prompt can
+     exfiltrate the OAuth token by reading the file and printing it.
+  2. **Env passthrough via a config-dir override.** If the `claude` CLI honours a
+     `CLAUDE_CONFIG_DIR` (or equivalent) env var, forward that value from the parent env in
+     `HermeticEnv::apply` instead of touching `$HOME`. `codex` would need the equivalent
+     (`CODEX_HOME` / similar). Cost: needs verification that both CLIs actually support such an
+     override — if not, this mechanism is off the table; and it still exposes the token file to
+     the lane's process.
+  3. **Wholesale opt-out of hermetic env for the two named adapters.** In the adapter's
+     `Command`-building path, skip `HermeticEnv::apply` entirely and inherit the parent env when
+     `--agent` is `claude` or `codex`. Simplest, worst for isolation — the lane inherits the
+     whole user env, not just the two auth dirs. Explicitly the wrong choice for a shared or
+     CI-runner deployment.
+
+  None of the three is free. Option 1 with a read-only bind is the least-bad default for a
+  single-developer laptop; option 3 is defensible for local `--agent claude` iteration and
+  indefensible for anything else. The register does not pick one.
+- **Reviewer / lead decision needed:** which of {read-only allowlist, config-dir env
+  passthrough, per-adapter opt-out} to adopt — and how to gate it (build feature, runtime flag,
+  per-repo config in `.fleet/`). This is *agent utility vs. sandbox integrity*: making
+  `--agent claude|codex` work end-to-end is the point of PR #9, but every mechanism above widens
+  what a spawned lane can read, and the whole reason `HermeticEnv` exists is to narrow that.
+  A human/reviewer sets the ratio; this row does not.
+- **Workaround today:** use `--agent freelane` (the default). It is keyless and does not read
+  `$HOME`, so the hermetic env does not block it.
+- **Not fixed here on purpose.** This entry is doc-only. Editing `hermetic_env.rs` to allowlist
+  auth dirs is the fix; making that choice unattended would be the wrong shape of change under
+  auto mode, which is why the classifier refused it.
 
 ---
 

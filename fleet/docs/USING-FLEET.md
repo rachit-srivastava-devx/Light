@@ -284,6 +284,11 @@ tests.
 `swarm dispatch` subcommand; the flat `fleet swarm --repo <P> --task <T> --role <ROLE>
 [--prompt <P>]` is the whole surface.
 
+> **Known blocker (FD-10):** `--agent claude` / `--agent codex` are wired but not yet functional
+> end-to-end: the lane's hermetic `HOME` does not carry `~/.claude` / `~/.codex`, so the CLI
+> cannot authenticate and exits 1. Use `--agent freelane` (the default) until this is resolved.
+> Tracked as FD-10 in `TECH_DEBT.md`.
+
 ### 8. Ask what happened — `fleet status` still doesn't show task status
 
 ```
