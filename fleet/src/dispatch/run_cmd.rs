@@ -20,14 +20,27 @@ fn healthy_runtime() -> fleet_router::RuntimeState {
 }
 
 pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
-    let task = TaskId::parse(args.task).map_err(|e| DispatchError::Refusal(e.to_string()))?;
-    let repo = PathBuf::from(&args.repo);
+    run_pipeline_on(state_dir, args.repo, args.task, args.json)
+}
+
+/// Shared entrypoint for the verify pipeline. `run` is the CLI-invoked path; `swarm_cmd`'s
+/// `--then-verify` reuses this same function so the two never drift (BLUEPRINT §5: one
+/// composition root per subcommand -- verify's one place is here, not duplicated in swarm).
+/// `json` mirrors `RunArgs::json` so callers can request either the machine or human report.
+pub(crate) fn run_pipeline_on(
+    state_dir: &Path,
+    repo: String,
+    task_id: String,
+    json: bool,
+) -> Result<(), DispatchError> {
+    let task = TaskId::parse(task_id).map_err(|e| DispatchError::Refusal(e.to_string()))?;
+    let repo = PathBuf::from(&repo);
     // The committed table with this repo's `.fleet/gates.toml` applied -- identical to
     // `fleet_verify::GATES` when the repo has no such file (see `gate_config`).
     let gates = super::gate_config::resolve(&repo)?;
     let outcome = run_pipeline(state_dir, &repo, task, &healthy_runtime(), &gates);
     maybe_flush(state_dir);
-    if args.json {
+    if json {
         json::print_pretty(&outcome);
     } else {
         crate::print::run_report::render(&outcome);
