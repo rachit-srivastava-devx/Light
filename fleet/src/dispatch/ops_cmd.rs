@@ -37,8 +37,9 @@ pub fn status(json: bool, cap: ConcurrencyCap) -> Result<(), DispatchError> {
 pub fn doctor(json: bool) -> Result<(), DispatchError> {
     use super::doctor_json::{build, probe};
     let ((cargo, cargo_where), (git, git_where)) = (probe("cargo"), probe("git"));
+    let optional = super::doctor_optional::collect();
     if json {
-        crate::print::json::print_pretty(&build(cargo, cargo_where, git, git_where));
+        crate::print::json::print_pretty(&build(cargo, cargo_where, git, git_where, &optional));
         return Ok(());
     }
     let id = crate::build_info::IDENTITY;
@@ -47,7 +48,9 @@ pub fn doctor(json: bool) -> Result<(), DispatchError> {
     human::line("commit_sha", id.commit_sha);
     human::line("tree_state", id.tree_state);
     human::line("build_time", id.build_time);
-    crate::dispatch::capacity_probe_cmd::report(3, None)
+    crate::dispatch::capacity_probe_cmd::report(3, None)?;
+    super::doctor_optional::print(&optional);
+    Ok(())
 }
 
 pub use super::ops_version::version;
