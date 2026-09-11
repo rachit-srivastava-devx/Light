@@ -40,6 +40,18 @@ fn detectors_parses_plain_n_over_n() {
 }
 
 #[test]
+fn detectors_honours_not_applicable_marker_on_foreign_repos() {
+    let p = parser_for("detectors");
+    // The detectors gate hashes fleet's own detector inventory; on a user
+    // repo the script prints this marker and exits 0. Parser must return
+    // NotApplicable so the gate reads as SKIP, not FAIL -- otherwise every
+    // `fleet run --repo <any user repo>` ends with `FAIL gate detectors --
+    // NonZeroExit(6)`, a red gate that never had a chance to succeed.
+    let out = "detectors-gate: not-applicable -- target repo /some/user/repo is not a fleet checkout";
+    assert_eq!(p(out, ""), DenominatorResult::NotApplicable);
+}
+
+#[test]
 fn policy_parses_passed_failed_denominator() {
     let p = parser_for("policy");
     assert_eq!(p("-- 9 passed, 1 failed (denominator: 10 policies) --", ""), DenominatorResult::Counted(9, 10));
