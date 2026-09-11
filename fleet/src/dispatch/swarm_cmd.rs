@@ -21,6 +21,24 @@ const ENV_STATE_DIR: &str = "FLEET_STATE_DIR";
 #[path = "swarm_cmd_tests.rs"]
 mod tests;
 
+/// The verify-chain decision, extracted so `--then-verify`'s wiring is unit-testable without
+/// having to spawn a real lane. Returns the exact `(repo, task_id)` that a `Done` swarm should
+/// hand to the verify pipeline, or `None` when verify must be skipped (flag off, or lane did
+/// not finish `Done`). The `repo`/`task` fields come straight from `SwarmArgs`, so verify is
+/// invoked against the same targets as the swarm call -- pinned by tests below.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct VerifyPlan {
+    pub repo: String,
+    pub task: String,
+}
+
+pub(crate) fn verify_plan(then_verify: bool, swarm_done: bool, repo: &str, task: &str) -> Option<VerifyPlan> {
+    if !then_verify || !swarm_done {
+        return None;
+    }
+    Some(VerifyPlan { repo: repo.to_string(), task: task.to_string() })
+}
+
 pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // Thread the CLI's already-resolved state dir into the worker EXPLICITLY, rather than
     // relying on both sides happening to read the same env var name (the gap: a future
@@ -29,6 +47,13 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // already threaded through as `state_dir`, makes the worker's independent env read agree
     // with the CLI's resolution by construction instead of by coincidence.
     std::env::set_var(ENV_STATE_DIR, state_dir);
+    // Snapshot `repo`/`task` before `args` is partially moved into `SpawnRequest`: `--then-verify`
+    // needs the same two strings after the lane joins to hand the verify pipeline the same
+    // targets (never a mutated or re-parsed variant -- the "one command instead of two" promise
+    // relies on this being the byte-identical pair the dev passed).
+    let then_verify = args.then_verify;
+    let verify_repo = args.repo.clone();
+    let verify_task = args.task.clone();
     let role = Role::parse(&args.role).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let task_id = TaskId::parse(args.task.clone()).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     // `--task` is both the lane's task id and, unless `--prompt` overrides it, the free-text
@@ -64,9 +89,27 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // The EXIT CODE must agree with the receipt. `swarm` used to exit 0 for every outcome, so a
     // lane that changed nothing ("the adapter returned advice", `changed_files: 0`) still looked
     // like success to a script or CI -- an honest label paired with a lying exit code.
-    match outcome {
+    let done = matches!(outcome, LaneOutcome::Done { .. });
+    let swarm_result: Result<(), DispatchError> = match outcome {
         LaneOutcome::Done { .. } => Ok(()),
         LaneOutcome::Refused { reason } => Err(DispatchError::Refusal(reason)),
         LaneOutcome::EnvironmentFault { detail } => Err(DispatchError::EnvFault(detail)),
+    };
+    // `--then-verify`: `Refused`/`EnvironmentFault` short-circuits (never chain verify on a
+    // non-Done lane). A `Done` lane -- even one with `changed_files: 0` -- proceeds to the
+    // verify pipeline via the SAME `run_pipeline_on` `fleet run` uses, so the two paths cannot
+    // drift. The final exit code becomes verify's outcome in the Done case; swarm's own error
+    // in the skip case.
+    match verify_plan(then_verify, done, &verify_repo, &verify_task) {
+        Some(plan) => {
+            println!("-- then-verify --");
+            crate::dispatch::run_cmd::run_pipeline_on(state_dir, plan.repo, plan.task, false)
+        }
+        None => {
+            if then_verify && !done {
+                println!("then-verify skipped: swarm did not finish Done");
+            }
+            swarm_result
+        }
     }
 }
