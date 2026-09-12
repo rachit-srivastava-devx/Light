@@ -36,11 +36,20 @@ fn mutants_gate_skip_names_the_path_cause_when_the_tool_is_absent() {
     support::scratch_repo(repo.path());
     let repo_arg = repo.path().to_string_lossy().into_owned();
 
-    // A minimal PATH with `which`/`sysctl` but never `~/.cargo/bin` (where `cargo-mutants`
-    // actually lives on a real dev machine) -- simulates the tool genuinely not being installed.
+    // Restrict PATH AND route HOME+CARGO_HOME to an empty tempdir so that
+    // tool_path::fallback_dirs() cannot find cargo-mutants in ~/.cargo/bin either
+    // (the fallback exists for rustup installs missing from PATH, which would defeat this test).
+    let fake_home = tempfile::tempdir().unwrap();
+    let fake_home_arg = fake_home.path().to_string_lossy().into_owned();
+
     let result = run_bounded(
         &["gate", "--id", "mutants", "--repo", &repo_arg],
-        &[("FLEET_MUTANTS", "1"), ("PATH", "/usr/bin:/bin:/usr/sbin:/sbin")],
+        &[
+            ("FLEET_MUTANTS", "1"),
+            ("PATH", "/usr/bin:/bin:/usr/sbin:/sbin"),
+            ("HOME", &fake_home_arg),
+            ("CARGO_HOME", &fake_home_arg),
+        ],
         Duration::from_secs(10),
     );
     let (_code, out, err) = result.expect("a not-on-PATH skip must terminate fast, not hang");

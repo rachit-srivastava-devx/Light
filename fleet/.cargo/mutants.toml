@@ -1,0 +1,4 @@
+# Minimum test-phase timeout in seconds for cargo-mutants.
+# The default (20s) is too tight when linking 3 test binaries on macOS;
+# this raises the floor so mutations are caught rather than timed out.
+minimum_test_timeout = 60

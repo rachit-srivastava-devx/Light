@@ -1,0 +1,60 @@
+use integrate::{integrate, Grant, MergeRequest, RealGit};
+use std::path::Path;
+
+fn git_in(dir: &Path, args: &[&str]) {
+    std::process::Command::new("git")
+        .args(args)
+        .current_dir(dir)
+        .env("GIT_AUTHOR_NAME", "t")
+        .env("GIT_AUTHOR_EMAIL", "t@t.com")
+        .env("GIT_COMMITTER_NAME", "t")
+        .env("GIT_COMMITTER_EMAIL", "t@t.com")
+        .output()
+        .expect("git command failed");
+}
+
+fn head_of(dir: &Path) -> String {
+    let o = std::process::Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .current_dir(dir)
+        .output()
+        .expect("rev-parse HEAD");
+    String::from_utf8(o.stdout).unwrap().trim().to_string()
+}
+
+fn grant(target_ref: &str, digest: &str) -> Grant {
+    Grant { target_ref: target_ref.into(), candidate_digest: digest.into(), expires_at: 9_999_999_999 }
+}
+
+#[test]
+fn receipt_is_written_before_cleanup() {
+    use tempfile::TempDir;
+    let d = TempDir::new().unwrap();
+    let p = d.path();
+    git_in(p, &["init", "-b", "main"]);
+    std::fs::write(p.join("x.txt"), "base\n").unwrap();
+    git_in(p, &["add", "."]);
+    git_in(p, &["commit", "-m", "base"]);
+    git_in(p, &["checkout", "-b", "lane"]);
+    std::fs::write(p.join("y.txt"), "new\n").unwrap();
+    git_in(p, &["add", "."]);
+    git_in(p, &["commit", "-m", "lane"]);
+    git_in(p, &["checkout", "main"]);
+    let before = head_of(p);
+    let req = MergeRequest {
+        repo: p.to_path_buf(),
+        expected_head: before.clone(),
+        lane_head: "lane".into(),
+        candidate_digest: "d3".into(),
+        grant: grant("lane", "d3"),
+        checked: 1,
+        total: 1,
+    };
+    let r = integrate(&RealGit, req).expect("clean merge must succeed");
+    assert_eq!(r.before, before);
+    assert_ne!(r.after, before);
+    assert_eq!(r.lane, "lane");
+    assert_eq!(r.candidate_digest, "d3");
+    assert_eq!(r.checked, 1);
+    assert_eq!(r.total, 1);
+}
