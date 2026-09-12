@@ -31,6 +31,7 @@
 | FD-11 | P1 | sandbox / fleet-worker | `swarm --agent claude\|codex` cannot authenticate — HermeticEnv wipes `~/.claude` and `~/.codex` | M | **open — needs a design call** |
 | FD-7 | P2 | dispatch | `cargo` reported missing when installed outside `PATH` | S | fixed 2026-09-10 |
 | FD-10 | P2 | dispatch | FD-7's `tool_path` fallback silently made a pre-authored `cargo-mutants`-absent test collide with a machine that has it | S | **found 2026-09-11, needs a lead decision** |
+| FD-12 | P0 | builder | Hermetic env (`env_clear()`) strips the credentials the `claude`/`codex` CLIs need to authenticate, so no real Claude/Codex lane can reach the model end-to-end | M | **open** — adapter shape shipped 2026-09-12 (`feat/claude-adapter-rich-invocation`); once an env allowlist unblocks auth the Claude lane produces Grade A− output on Frido CSAT |
 
 Severity: **P0** blocks the stated use case · **P1** will cost a user a debugging cycle ·
 **P2** wrong-but-survivable

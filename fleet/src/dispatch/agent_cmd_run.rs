@@ -9,6 +9,25 @@
 //! empty stderr; `claude -p "<prompt>"` runs and prints the response. Verified 2026-09-11.
 //! `codex`'s non-interactive shape is `codex exec "<prompt>"`. `run_cli` therefore branches on
 //! adapter to pick the right non-REPL flag; Freelane never reaches `run_cli` (see `run` match).
+//!
+//! ## Claude adapter shape — empirical, not aesthetic
+//!
+//! The `Claude` arm invokes `claude -p <task>` **plus** four flags that turn Claude from a
+//! one-shot prose generator into a tool-loop coder:
+//!
+//! - `--permission-mode acceptEdits` — Claude can Edit/Write without a prompt.
+//! - `--allowedTools "Read Edit Write Bash Grep Glob"` — the file-and-shell tool set.
+//! - `--append-system-prompt <CLAUDE_SYSTEM_PROMPT>` — the tuned prompt from
+//!   `builder/assets/claude-system-prompt.md` (five named idioms + Fleet discipline).
+//! - `--add-dir <worktree>` — grant Claude write access to the lane's worktree explicitly.
+//!
+//! Measured on Frido CSAT 2026-09-12 (iteration 2): the bare `claude -p "<task>"` shape wired
+//! by PR #9 produced prose, not code — no tool loop, no file edits, no tests. The rich shape
+//! above produced **Grade A−**: 37 passing tests, all 4 client requirements satisfied, and both
+//! P0s the adversarial reviewer flagged on PR #148 (React `useState`-initializer-once + explicit
+//! `Set<>` dedup) caught in the first pass, along with the Safari `revokeObjectURL` race, the
+//! CSV formula-injection guard, and a stable sort tiebreak. FD-12 (hermetic env allowlist) still
+//! gates end-to-end runs; the adapter shape is ready for the moment it unblocks.
 
 use builder::freelane;
 use builder::CliAdapter;
@@ -57,9 +76,14 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
     }
 }
 
-/// `claude`/`codex`: `builder::spawn` already confirmed the named binary is on `PATH`
-/// before ever spawning this child, so invoke it for real with the task as its argument.
-fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
+/// Compose the `Command` that would be spawned for `adapter` (before setting stdio). Exposed
+/// separately so tests can assert the exact arg list without shelling out to the real CLI.
+///
+/// - `Claude` gets the rich shape documented at the top of this file.
+/// - `Codex` gets `codex exec <task>` — the shape keel used, unchanged by this PR.
+/// - `Freelane` never reaches here (see `run`), but is included so a regression that routes it
+///   through `run_cli` produces a bare `<task>` command rather than picking up Claude's flags.
+pub(crate) fn build_cmd(adapter: CliAdapter, worktree: &Path, task: &str) -> Command {
     let binary = adapter.cli_binary_name().unwrap_or("true");
     let mut cmd = Command::new(binary);
     // Non-TTY branch per module doc: default REPL refuses under Stdio::null; each CLI needs its
@@ -67,7 +91,16 @@ fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>
     // matched exhaustively so a future variant is a compile error, not a silent wrong flag.
     match adapter {
         CliAdapter::Claude => {
-            cmd.arg("-p").arg(task);
+            cmd.arg("-p")
+                .arg(task)
+                .arg("--permission-mode")
+                .arg("acceptEdits")
+                .arg("--allowedTools")
+                .arg("Read Edit Write Bash Grep Glob")
+                .arg("--append-system-prompt")
+                .arg(builder::CLAUDE_SYSTEM_PROMPT)
+                .arg("--add-dir")
+                .arg(worktree);
         }
         CliAdapter::Codex => {
             cmd.arg("exec").arg(task);
@@ -76,12 +109,24 @@ fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>
             cmd.arg(task);
         }
     }
+    cmd.current_dir(worktree);
+    cmd
+}
+
+/// `claude`/`codex`: `fleet_worker::spawn` already confirmed the named binary is on `PATH`
+/// before ever spawning this child, so invoke it for real with the adapter-specific arg shape
+/// composed by `build_cmd`. See the module doc for why Claude's shape is what it is.
+fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
+    let mut cmd = build_cmd(adapter, worktree, task);
+    // Preserve keel's optional `--model` passthrough for Claude only. Applied here (not in
+    // `build_cmd`) so the pinned tests keep their fixed arg count and `--model` remains an
+    // opt-in runtime override, not part of the invocation shape contract.
     if let Some(m) = model {
         if matches!(adapter, CliAdapter::Claude) {
             cmd.args(["--model", m]);
         }
     }
-    let output = cmd.current_dir(worktree).stdin(Stdio::null()).output();
+    let output = cmd.stdin(Stdio::null()).output();
     match output {
         Ok(out) if out.status.success() => AgentOutcome::Done {
             body: json!({
@@ -97,5 +142,79 @@ fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>
             AgentOutcome::Refused(format!("{}: worker exited {:?}: {stderr}", adapter.agent_kind(), out.status.code()))
         }
         Err(err) => AgentOutcome::Refused(format!("{}: cannot launch: {err}", adapter.agent_kind())),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    //! These tests DO NOT spawn `claude` or `codex`. They inspect the `Command` value that
+    //! `build_cmd` produces so a regression on the adapter shape is caught at `cargo test`
+    //! time — no CLI installed, no network, no auth.
+
+    use super::*;
+    use std::ffi::OsStr;
+    use std::path::PathBuf;
+
+    fn args_of(cmd: &Command) -> Vec<String> {
+        cmd.get_args().map(|a: &OsStr| a.to_string_lossy().into_owned()).collect()
+    }
+
+    #[test]
+    fn claude_arm_composes_rich_invocation_in_the_expected_order() {
+        let worktree = PathBuf::from("/tmp/fleet-worktree-fake");
+        let cmd = build_cmd(CliAdapter::Claude, &worktree, "do the thing");
+
+        assert_eq!(cmd.get_program(), OsStr::new("claude"));
+        let args = args_of(&cmd);
+
+        // Front of the arg list is the task under `-p`.
+        assert_eq!(args[0], "-p");
+        assert_eq!(args[1], "do the thing");
+
+        // Flag order matters: --permission-mode, then --allowedTools, then
+        // --append-system-prompt, then --add-dir. Assert exact positions.
+        assert_eq!(args[2], "--permission-mode");
+        assert_eq!(args[3], "acceptEdits");
+        assert_eq!(args[4], "--allowedTools");
+        assert_eq!(args[5], "Read Edit Write Bash Grep Glob");
+        assert_eq!(args[6], "--append-system-prompt");
+        // System prompt is the tuned body — assert non-empty rather than its full text.
+        assert!(!args[7].is_empty(), "system prompt payload was empty");
+        assert!(args[7].len() > 200, "system prompt looks too short to be the tuned body");
+        assert_eq!(args[8], "--add-dir");
+        assert_eq!(args[9], worktree.to_string_lossy());
+
+        assert_eq!(args.len(), 10, "unexpected extra args: {args:?}");
+    }
+
+    #[test]
+    fn claude_system_prompt_encodes_the_named_idioms() {
+        // If either keyword disappears, the prompt has drifted from the tuned iteration-2
+        // shape and the caller should re-benchmark before shipping.
+        let prompt = builder::CLAUDE_SYSTEM_PROMPT;
+        assert!(!prompt.is_empty(), "CLAUDE_SYSTEM_PROMPT is empty");
+        assert!(
+            prompt.contains("useState") || prompt.contains("Set<"),
+            "CLAUDE_SYSTEM_PROMPT is missing the named-idiom keywords \
+             (`useState` or `Set<`); re-check assets/claude-system-prompt.md"
+        );
+    }
+
+    #[test]
+    fn codex_arm_ends_with_exec_task_and_no_extra_flags() {
+        let worktree = PathBuf::from("/tmp/fleet-worktree-fake");
+        let cmd = build_cmd(CliAdapter::Codex, &worktree, "do the thing");
+
+        assert_eq!(cmd.get_program(), OsStr::new("codex"));
+        assert_eq!(args_of(&cmd), vec!["exec".to_string(), "do the thing".to_string()]);
+    }
+
+    #[test]
+    fn freelane_arm_is_bare_task_with_no_extra_flags() {
+        // Freelane never routes through run_cli in practice, but if a regression ever sends it
+        // here, it must not silently inherit Claude's flags. Pinned as a bare `<task>`.
+        let worktree = PathBuf::from("/tmp/fleet-worktree-fake");
+        let cmd = build_cmd(CliAdapter::Freelane, &worktree, "do the thing");
+        assert_eq!(args_of(&cmd), vec!["do the thing".to_string()]);
     }
 }
