@@ -1,6 +1,7 @@
 //! Context compiler — assemble token-budgeted context from store records.
-//! Re-exports fleet-context for backward compat while new implementation matures.
-pub use fleet_context::*;
+
+mod impl_;
+pub use impl_::*;
 
 pub mod budget;
 pub mod compile;

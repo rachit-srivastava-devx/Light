@@ -1,6 +1,6 @@
 //! Requirement input and the fixed 4-probe identity enum.
 
-use fleet_types::TaskId;
+use types::TaskId;
 
 /// The requirement text to probe, plus optional correlation metadata. This crate never mutates
 /// or persists it -- `text` is read, nothing else.

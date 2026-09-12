@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Fleet \u2014 proposed local harness",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1040,
+      530
+    ]
+  },
+  "components": [
+    {
+      "id": "input",
+      "type": "external",
+      "label": "User / event",
+      "sublabel": "Request and feedback",
+      "pos": [
+        80,
+        30
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "control",
+      "type": "backend",
+      "label": "Local controller",
+      "sublabel": "Policy, DAG, leases",
+      "pos": [
+        400,
+        30
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Durable state",
+      "sublabel": "Events, receipts, budgets",
+      "pos": [
+        720,
+        30
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "context",
+      "type": "backend",
+      "label": "Context compiler",
+      "sublabel": "Standards and memory",
+      "pos": [
+        400,
+        160
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "planner",
+      "type": "backend",
+      "label": "Planning agent",
+      "sublabel": "Blueprint and questions",
+      "pos": [
+        80,
+        160
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "builder",
+      "type": "backend",
+      "label": "Builder agent",
+      "sublabel": "Isolated worktree",
+      "pos": [
+        400,
+        290
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "reviewer",
+      "type": "backend",
+      "label": "Review agent",
+      "sublabel": "Independent critique",
+      "pos": [
+        80,
+        290
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "Verifier",
+      "sublabel": "Tests and secret scan",
+      "pos": [
+        720,
+        290
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "publish",
+      "type": "security",
+      "label": "Publication",
+      "sublabel": "User approval required",
+      "pos": [
+        720,
+        420
+      ],
+      "size": [
+        220,
+        76
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "input",
+      "to": "control",
+      "label": "request"
+    },
+    {
+      "from": "control",
+      "to": "store",
+      "label": "persist"
+    },
+    {
+      "from": "control",
+      "to": "context",
+      "label": "compile",
+      "labelDy": 50
+    },
+    {
+      "from": "context",
+      "to": "planner",
+      "label": "brief"
+    },
+    {
+      "from": "context",
+      "to": "builder",
+      "label": "lease",
+      "labelDy": 50
+    },
+    {
+      "from": "builder",
+      "to": "reviewer",
+      "label": "diff"
+    },
+    {
+      "from": "builder",
+      "to": "gate",
+      "label": "candidate"
+    },
+    {
+      "from": "gate",
+      "to": "publish",
+      "label": "verified",
+      "labelDy": 50
+    }
+  ],
+  "cards": []
+}

@@ -4,7 +4,7 @@ mod policy;
 mod score;
 
 // Fleet-router backward-compat re-exports for src/ (Decision, TaskClass, etc.)
-pub use fleet_router::{decide, evaluate_role_check, RoleCheck, RoleRefusal,
+pub use router::{decide, evaluate_role_check, RoleCheck, RoleRefusal,
     CandidateSpec, TaskClass, Tier, ORDER, Decision, Refusal, RuntimeState, Stage};
 
 pub use explain::{CandidateId, ReservationRequest, RouteDecision, RouteRefusal, StageEvidence};

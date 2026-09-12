@@ -1,0 +1,15 @@
+# Gitleaks false-positive triage — reviewed 2026-09-11
+#
+# Finding 1: fleet/tmp/pdfs/build_ai_native_sdlc_atlas.py line 310
+# Rule: generic-api-key (entropy 3.52)
+# Triage: FALSE POSITIVE. The matched text is a Python string constant in a build
+# script data tuple: ("01","Receive","bounded POST body; connector/tenant route", ...).
+# No API key is present. The entropy match is a short string within TOML/Python syntax.
+8f86440e92a5f1a4e7e4c86024a615fa6d9829ca:fleet/tmp/pdfs/build_ai_native_sdlc_atlas.py:generic-api-key:310
+
+# Finding 2: orb/ios/Podfile.lock line 2926
+# Rule: generic-api-key (entropy 3.59)
+# Triage: FALSE POSITIVE. The matched text is a CocoaPods SHA1 checksum:
+# "ReactCodegen: 11c08ff43a62009d48c71de000352e4515918801"
+# This is a standard CocoaPods dependency hash, not an API key.
+8f86440e92a5f1a4e7e4c86024a615fa6d9829ca:orb/ios/Podfile.lock:generic-api-key:2926

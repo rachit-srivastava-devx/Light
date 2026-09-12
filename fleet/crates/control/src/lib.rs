@@ -1,7 +1,8 @@
 //! Controller — lifecycle state machine and admission control.
-//! Re-exports fleet-lifecycle and fleet-govern for backward compat while new implementation matures.
-pub use fleet_govern::*;
-pub use fleet_lifecycle::*;
+mod impl_govern;
+mod impl_lifecycle;
+pub use impl_govern::*;
+pub use impl_lifecycle::*;
 
 // ── Core types used by the sub-modules ─────────────────────────────────────
 

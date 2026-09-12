@@ -4,7 +4,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use fleet_types::ReceiptEvent;
+use types::ReceiptEvent;
 use serde_json::Value;
 
 use super::meter_types::{MeterSample, MeterSnapshot};

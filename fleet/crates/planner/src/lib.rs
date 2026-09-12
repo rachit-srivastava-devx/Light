@@ -1,6 +1,6 @@
 //! Module planner — plan a sequence of modules given a DAG.
-//! Re-exports fleet-plan for backward compat while new implementation matures.
-pub use fleet_plan::*;
+//! Re-exports plan for backward compat while new implementation matures.
+pub use plan::*;
 
 mod propose;
 mod types;

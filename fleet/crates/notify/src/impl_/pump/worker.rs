@@ -1,6 +1,6 @@
 //! `run_sink`: poll/filter/deliver/retry/persist, one cycle at a time, for one sink.
 
-use fleet_types::Receipt;
+use types::Receipt;
 use tokio::sync::watch;
 use tokio::time::sleep;
 

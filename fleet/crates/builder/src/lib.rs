@@ -1,6 +1,6 @@
 //! Builder agent — lease-bound worker launcher and observation validator.
-//! Re-exports fleet-worker for backward compat while new implementation matures.
-pub use fleet_worker::*;
+mod impl_;
+pub use impl_::*;
 
 pub mod launch;
 pub mod lease;

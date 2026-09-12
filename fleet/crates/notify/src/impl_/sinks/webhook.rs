@@ -1,7 +1,7 @@
 //! `WebhookSink`: POSTs the raw `Receipt` as JSON to a configured URL, filtered by an
 //! allow-list of `ReceiptEvent` variants.
 
-use fleet_types::ReceiptEvent;
+use types::ReceiptEvent;
 
 use super::super::event::StreamEvent;
 use super::super::sink::{Sink, SinkError};

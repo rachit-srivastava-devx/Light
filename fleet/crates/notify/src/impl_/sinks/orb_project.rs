@@ -1,6 +1,6 @@
 //! `OrbSink`'s lane-status projection, split out to keep `orb.rs` under the line cap.
 
-use fleet_types::Receipt;
+use types::Receipt;
 use serde_json::{json, Value};
 
 use super::super::sink::SinkError;

@@ -1,0 +1,1048 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Fleet Coding Harness — Low-Level System Design",
+    "output": "fleet-harness-lld.html",
+    "quality_profile": "standard",
+    "viewBox": [
+      1560,
+      3050
+    ]
+  },
+  "components": [
+    {
+      "id": "user_cli",
+      "type": "external",
+      "label": "User / CLI",
+      "sublabel": "the person: asks, answers, pauses, approves",
+      "pos": [
+        60,
+        30
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "connectors",
+      "type": "external",
+      "label": "GitHub / Gmail",
+      "sublabel": "reacts to authorized external events",
+      "tag": "deterministic",
+      "pos": [
+        1000,
+        30
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "ingest",
+      "type": "backend",
+      "label": "Event Ingest",
+      "sublabel": "normalize + dedup",
+      "tag": "deterministic",
+      "pos": [
+        480,
+        180
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "SQLite WAL Store",
+      "sublabel": "events, leases, outbox · SQLite WAL",
+      "tag": "deterministic",
+      "pos": [
+        830,
+        220
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "control",
+      "type": "backend",
+      "label": "Controller",
+      "sublabel": "state reducer + scheduler",
+      "tag": "deterministic",
+      "pos": [
+        480,
+        340
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "intent",
+      "type": "backend",
+      "label": "Intent Agent",
+      "sublabel": "reads the request, proposes what kind of work it is",
+      "tag": "model, gated",
+      "pos": [
+        480,
+        500
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "route",
+      "type": "security",
+      "label": "Route Admission",
+      "sublabel": "capability, budget, policy — a filter, not a model call",
+      "tag": "deterministic",
+      "pos": [
+        480,
+        660
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "model_catalog",
+      "type": "database",
+      "label": "Model / Adapter Catalog",
+      "sublabel": "probation to qualified · ACP probe",
+      "tag": "deterministic",
+      "pos": [
+        830,
+        660
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "scan",
+      "type": "backend",
+      "label": "Ambiguity Scan",
+      "sublabel": "checks a fixed rule, not a vibe, before asking",
+      "tag": "deterministic",
+      "pos": [
+        480,
+        820
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "probe_business",
+      "type": "backend",
+      "label": "Business-Context Probe",
+      "sublabel": "reads for intent/stakeholder context",
+      "tag": "model, ungated",
+      "pos": [
+        130,
+        980
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "probe_tech",
+      "type": "backend",
+      "label": "Technical-Context Probe",
+      "sublabel": "reads the repo for technical constraints",
+      "tag": "model, ungated",
+      "pos": [
+        340,
+        980
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "probe_learn",
+      "type": "backend",
+      "label": "Learning-Retrieval Probe",
+      "sublabel": "checks past lessons for this shape of task",
+      "tag": "model, ungated",
+      "pos": [
+        550,
+        980
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "probe_research",
+      "type": "backend",
+      "label": "Research Probe",
+      "sublabel": "checks external docs/SOTA if relevant",
+      "tag": "model, ungated",
+      "pos": [
+        760,
+        980
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "questions",
+      "type": "backend",
+      "label": "Question Merger",
+      "sublabel": "dedup, max 3 asked",
+      "tag": "deterministic",
+      "pos": [
+        480,
+        1140
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "dag",
+      "type": "backend",
+      "label": "Workflow DAG",
+      "sublabel": "versioned recipe",
+      "tag": "deterministic",
+      "pos": [
+        480,
+        1300
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "knowledge",
+      "type": "database",
+      "label": "Repo Memory + Standards",
+      "sublabel": "pinned central revision · Git or MCP",
+      "tag": "deterministic",
+      "pos": [
+        830,
+        1300
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "planner",
+      "type": "backend",
+      "label": "Module Planner",
+      "sublabel": "drafts a blueprint: modules, tasks, dependencies",
+      "tag": "model, ungated",
+      "pos": [
+        480,
+        1460
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "context",
+      "type": "backend",
+      "label": "Context Compiler",
+      "sublabel": "retrieve, rank, pack — mostly algorithmic",
+      "tag": "deterministic",
+      "pos": [
+        830,
+        1460
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "plan_review",
+      "type": "security",
+      "label": "Reviewer Gate",
+      "sublabel": "a different, qualified model checks the plan",
+      "tag": "model, gated",
+      "pos": [
+        480,
+        1620
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "ready",
+      "type": "backend",
+      "label": "Ready Contract",
+      "sublabel": "checks a fixed predicate before work starts",
+      "tag": "deterministic",
+      "pos": [
+        350,
+        1780
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "next_plan",
+      "type": "backend",
+      "label": "Next-Module Planner",
+      "sublabel": "drafts module N+1 while N builds",
+      "tag": "model, ungated",
+      "pos": [
+        590,
+        1780
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "builder",
+      "type": "external",
+      "label": "Builder Agent",
+      "sublabel": "writes the actual code, sandboxed",
+      "tag": "model, gated",
+      "pos": [
+        350,
+        1940
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "review",
+      "type": "backend",
+      "label": "Code Review",
+      "sublabel": "a different model checks the diff before tests run",
+      "tag": "model, gated",
+      "pos": [
+        480,
+        2100
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "verify",
+      "type": "security",
+      "label": "Verify + Secret Scan",
+      "sublabel": "runs real tests + a two-tier secret scanner",
+      "tag": "deterministic",
+      "pos": [
+        475,
+        2260
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "candidate",
+      "type": "database",
+      "label": "Learning Candidate",
+      "sublabel": "failure signature",
+      "tag": "deterministic",
+      "pos": [
+        1060,
+        2260
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "integrate",
+      "type": "backend",
+      "label": "Integration Merge",
+      "sublabel": "CAS on expected HEAD",
+      "tag": "deterministic",
+      "pos": [
+        480,
+        2420
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "offline",
+      "type": "backend",
+      "label": "Offline Evaluator",
+      "sublabel": "runs paired trials, computes stats",
+      "tag": "deterministic",
+      "pos": [
+        1060,
+        2420
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "post",
+      "type": "security",
+      "label": "Post-Merge Verify",
+      "sublabel": "invalidates on HEAD change",
+      "tag": "deterministic",
+      "pos": [
+        480,
+        2580
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "approval",
+      "type": "backend",
+      "label": "Publication Approval",
+      "sublabel": "grant required — checks a permission, not a judgment",
+      "tag": "deterministic",
+      "pos": [
+        350,
+        2740
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "notify",
+      "type": "external",
+      "label": "Notification",
+      "sublabel": "redacted, meaningful only",
+      "tag": "deterministic",
+      "pos": [
+        590,
+        2740
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "broker",
+      "type": "external",
+      "label": "External Broker",
+      "sublabel": "the only path allowed to touch GitHub/push",
+      "tag": "deterministic",
+      "pos": [
+        355,
+        2900
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "rollback",
+      "type": "backend",
+      "label": "Guarded Rollback",
+      "sublabel": "private ref, else compensate",
+      "tag": "deterministic",
+      "pos": [
+        590,
+        2900
+      ],
+      "size": [
+        200,
+        60
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "user_cli",
+      "to": "ingest",
+      "label": "request / pause / feedback",
+      "payload": "InputEnvelope",
+      "test": "ingest::tests::user_request_normalizes"
+    },
+    {
+      "from": "connectors",
+      "to": "ingest",
+      "label": "authorized event",
+      "payload": "ConnectorEnvelope",
+      "test": "ingest::tests::connector_event_deduplicates"
+    },
+    {
+      "from": "ingest",
+      "to": "store",
+      "label": "append durable",
+      "payload": "DurableEvent",
+      "test": "store::tests::append_event_idempotent"
+    },
+    {
+      "from": "ingest",
+      "to": "control",
+      "label": "normalized event",
+      "labelDy": 24,
+      "payload": "NormalizedEvent",
+      "test": "control::tests::normalized_event_transitions_state"
+    },
+    {
+      "from": "control",
+      "to": "store",
+      "label": "read/write state",
+      "payload": "StoreCommand",
+      "test": "store::tests::cas_revision_increment"
+    },
+    {
+      "from": "control",
+      "to": "intent",
+      "label": "dispatch",
+      "labelDy": 24,
+      "payload": "DispatchRequest",
+      "test": "intent::tests::dispatch_request_emits_intent_spec"
+    },
+    {
+      "from": "intent",
+      "to": "route",
+      "label": "typed IntentSpec",
+      "labelDy": 24,
+      "payload": "IntentSpec",
+      "test": "route::tests::intent_spec_admitted_on_capability_match"
+    },
+    {
+      "from": "model_catalog",
+      "to": "route",
+      "label": "capability snapshot",
+      "variant": "dashed",
+      "payload": "CatalogSnapshot",
+      "test": "route::tests::catalog_snapshot_filters_unavailable_candidates"
+    },
+    {
+      "from": "route",
+      "to": "scan",
+      "label": "admitted",
+      "labelDy": 24,
+      "payload": "RouteDecision",
+      "test": "scan::tests::route_decision_triggers_ambiguity_probes"
+    },
+    {
+      "from": "scan",
+      "to": "probe_business",
+      "label": "if unknown",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "AmbiguityRequest",
+      "test": "probe_business::tests::ambiguity_request_produces_question"
+    },
+    {
+      "from": "scan",
+      "to": "probe_tech",
+      "label": "if unknown",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "AmbiguityRequest",
+      "test": "probe_tech::tests::ambiguity_request_produces_question"
+    },
+    {
+      "from": "scan",
+      "to": "probe_learn",
+      "label": "if unknown",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "AmbiguityRequest",
+      "test": "probe_learn::tests::ambiguity_request_retrieves_scoped_lessons"
+    },
+    {
+      "from": "scan",
+      "to": "probe_research",
+      "label": "if unknown",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "AmbiguityRequest",
+      "test": "probe_research::tests::ambiguity_request_produces_research_question"
+    },
+    {
+      "from": "probe_business",
+      "to": "questions",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "Vec<Question>",
+      "test": "questions::tests::business_probe_output_merges"
+    },
+    {
+      "from": "probe_tech",
+      "to": "questions",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "Vec<Question>",
+      "test": "questions::tests::tech_probe_output_merges"
+    },
+    {
+      "from": "probe_learn",
+      "to": "questions",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "Vec<Question>",
+      "test": "questions::tests::learn_probe_output_merges"
+    },
+    {
+      "from": "probe_research",
+      "to": "questions",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "Vec<Question>",
+      "test": "questions::tests::research_probe_output_merges"
+    },
+    {
+      "from": "questions",
+      "to": "user_cli",
+      "label": "<= 3 concise questions",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "via": [
+        [
+          80,
+          1170
+        ],
+        [
+          80,
+          100
+        ],
+        [
+          145,
+          100
+        ]
+      ],
+      "payload": "QuestionSet",
+      "test": "questions::tests::output_capped_at_three"
+    },
+    {
+      "from": "scan",
+      "to": "dag",
+      "label": "no unknowns, or resolved",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          1080,
+          850
+        ],
+        [
+          1080,
+          1275
+        ],
+        [
+          585,
+          1275
+        ]
+      ],
+      "payload": "WorkflowSelection",
+      "test": "dag::tests::workflow_selection_produces_recipe"
+    },
+    {
+      "from": "dag",
+      "to": "planner",
+      "label": "recipe",
+      "labelDy": 24,
+      "payload": "WorkflowRecipe",
+      "test": "planner::tests::recipe_drives_module_plan"
+    },
+    {
+      "from": "dag",
+      "to": "ready",
+      "label": "skip: risk=low, scope bounded (§7/§17)",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "via": [
+        [
+          585,
+          1250
+        ],
+        [
+          1200,
+          1250
+        ],
+        [
+          1200,
+          1900
+        ],
+        [
+          445,
+          1900
+        ]
+      ],
+      "payload": "SkipPlanningSignal",
+      "test": "ready::tests::low_risk_scope_skips_planning"
+    },
+    {
+      "from": "plan_review",
+      "to": "user_cli",
+      "label": "walkthrough + feedback",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "top",
+      "via": [
+        [
+          25,
+          1652
+        ],
+        [
+          25,
+          5
+        ],
+        [
+          145,
+          5
+        ]
+      ],
+      "payload": "PlanWalkthrough",
+      "test": "plan_review::tests::walkthrough_emitted_before_ready"
+    },
+    {
+      "from": "approval",
+      "to": "user_cli",
+      "label": "PR + explanation",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "top",
+      "via": [
+        [
+          45,
+          2770
+        ],
+        [
+          45,
+          20
+        ],
+        [
+          145,
+          20
+        ]
+      ],
+      "payload": "PublicationRequest",
+      "test": "approval::tests::publication_request_awaits_user_grant"
+    },
+    {
+      "from": "planner",
+      "to": "plan_review",
+      "label": "draft blueprint",
+      "labelDy": 24,
+      "payload": "PlanProposal",
+      "test": "plan_review::tests::proposal_reviewed_by_independent_model"
+    },
+    {
+      "from": "plan_review",
+      "to": "ready",
+      "label": "accepted digest",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "ReviewedPlanDigest",
+      "test": "ready::tests::reviewed_digest_enables_builder_lease"
+    },
+    {
+      "from": "ready",
+      "to": "builder",
+      "label": "lease + module",
+      "labelDy": 24,
+      "payload": "Lease",
+      "test": "builder::tests::lease_scopes_private_worktree"
+    },
+    {
+      "from": "ready",
+      "to": "next_plan",
+      "label": "N+1 planning starts",
+      "variant": "emphasis",
+      "labelAt": [
+        565,
+        1858
+      ],
+      "payload": "NextPlanSignal",
+      "test": "next_plan::tests::n1_plan_starts_while_n_builds"
+    },
+    {
+      "from": "builder",
+      "to": "review",
+      "label": "candidate observation",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "CandidateObservation",
+      "test": "review::tests::candidate_observation_triggers_code_review"
+    },
+    {
+      "from": "review",
+      "to": "verify",
+      "label": "reviewed candidate",
+      "labelDy": 24,
+      "payload": "ReviewedCandidate",
+      "test": "verify::tests::reviewed_candidate_runs_deterministic_gates"
+    },
+    {
+      "from": "verify",
+      "to": "integrate",
+      "label": "pass",
+      "labelDy": 24,
+      "payload": "GateEvidence",
+      "test": "integrate::tests::gate_evidence_passes_integration"
+    },
+    {
+      "from": "integrate",
+      "to": "post",
+      "payload": "IntegrationReceipt",
+      "test": "post::tests::integration_receipt_triggers_post_verify"
+    },
+    {
+      "from": "post",
+      "to": "approval",
+      "label": "pass",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "payload": "PostVerifyEvidence",
+      "test": "approval::tests::post_verify_pass_requests_publication"
+    },
+    {
+      "from": "post",
+      "to": "rollback",
+      "label": "fail",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "right",
+      "via": [
+        [
+          900,
+          2610
+        ],
+        [
+          900,
+          2930
+        ]
+      ],
+      "payload": "PostVerifyFailure",
+      "test": "rollback::tests::post_verify_failure_triggers_rollback"
+    },
+    {
+      "from": "approval",
+      "to": "broker",
+      "label": "PR draft",
+      "labelDy": 24,
+      "payload": "PublicationGrant",
+      "test": "broker::tests::publication_grant_dispatches_pr_draft"
+    },
+    {
+      "from": "approval",
+      "to": "notify",
+      "label": "state change",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelAt": [
+        570,
+        2814
+      ],
+      "payload": "StateChangeEvent",
+      "test": "notify::tests::state_change_emits_redacted_notification"
+    },
+    {
+      "from": "rollback",
+      "to": "dag",
+      "label": "requeue / repair",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          1450,
+          2930
+        ],
+        [
+          1450,
+          1235
+        ],
+        [
+          585,
+          1235
+        ]
+      ],
+      "payload": "RepairSignal",
+      "test": "dag::tests::repair_signal_requeues_failed_module"
+    },
+    {
+      "from": "verify",
+      "to": "candidate",
+      "label": "evidence",
+      "payload": "GateEvidence",
+      "test": "candidate::tests::gate_evidence_creates_lesson_candidate"
+    },
+    {
+      "from": "candidate",
+      "to": "offline",
+      "payload": "LessonCandidate",
+      "test": "offline::tests::lesson_candidate_evaluated_in_paired_trial"
+    },
+    {
+      "from": "offline",
+      "to": "knowledge",
+      "label": "promote",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "bottom",
+      "via": [
+        [
+          1400,
+          2450
+        ],
+        [
+          1400,
+          1390
+        ],
+        [
+          935,
+          1390
+        ]
+      ],
+      "payload": "ValidatedLesson",
+      "test": "knowledge::tests::validated_lesson_promoted_to_store"
+    },
+    {
+      "from": "knowledge",
+      "to": "context",
+      "label": "manifest source",
+      "labelDy": 24,
+      "payload": "KnowledgeManifest",
+      "test": "context::tests::knowledge_manifest_bounds_retrieval"
+    },
+    {
+      "from": "context",
+      "to": "planner",
+      "label": "compiled manifest",
+      "variant": "dashed",
+      "payload": "ContextManifest",
+      "test": "planner::tests::context_manifest_scopes_plan_generation"
+    },
+    {
+      "from": "context",
+      "to": "builder",
+      "label": "compiled manifest",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "via": [
+        [
+          935,
+          1972
+        ]
+      ],
+      "payload": "ContextManifest",
+      "test": "builder::tests::context_manifest_scopes_build_context"
+    },
+    {
+      "from": "context",
+      "to": "review",
+      "label": "compiled manifest",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "right",
+      "via": [
+        [
+          1165,
+          1490
+        ],
+        [
+          1165,
+          2130
+        ]
+      ],
+      "payload": "ContextManifest",
+      "test": "review::tests::context_manifest_scopes_review_evidence"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Node tag = mistake risk, not code quality",
+      "items": [
+        "deterministic: code logic — bugs possible, judgment-call errors are not",
+        "model, gated: a model proposes, a deterministic check or an independent reviewer catches disagreement before it has effect",
+        "model, ungated: a model's output is trusted directly — the 4 probes are the only such nodes, and their output only ever produces questions or context, never a direct effect"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Trust zones (LLD §3)",
+      "items": [
+        "Operator-approved: controller, config, grants",
+        "Immutable evidence: store, verify results, candidates",
+        "Untrusted: worker output, retrieved content, external events",
+        "No model writes the ledger, credentials, or policy directly"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Conditional, not exhaustive",
+      "items": [
+        "Ambiguity probes run only when the IntentSpec has real unknowns",
+        "At most 3 deduped questions asked per interaction",
+        "dag -> ready skips planning entirely at risk tier low (dashed edge above)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Safety invariants",
+      "items": [
+        "Builder AND reviewer must each be independently qualified — same cohort bar, applied twice",
+        "Rollback resets a private ref only if HEAD is unchanged, else compensating revert",
+        "Self-optimizer perturbs numeric knobs only; a new prompt version is human-authored, never autonomous"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Not drawn as nodes here (see LLD.md)",
+      "items": [
+        "Quota failover: route re-checks the model catalog and reroutes on exhaustion (§16) — a runtime retry concern, not a pipeline stage",
+        "Multi-repo ChangeSet: dag routes to a separate saga coordinator for the multi-repo workflow kind (§15) — PREPARING/VERIFIED/PUBLISHING/PARTIAL/COMPLETE/COMPENSATING",
+        "Pause/resume state machine (§16) — 15 named states, omitted to keep the primary flow legible"
+      ]
+    }
+  ]
+}

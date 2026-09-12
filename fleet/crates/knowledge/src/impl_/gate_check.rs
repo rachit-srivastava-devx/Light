@@ -2,7 +2,7 @@
 //! See BLUEPRINT.md §3.H.
 
 use super::promote::{DiffPattern, PromotedLesson};
-use fleet_types::GateRefusal;
+use types::GateRefusal;
 
 /// The injected pattern-matching port — wraps whatever regex engine the caller chooses. This
 /// crate links no regex engine itself.

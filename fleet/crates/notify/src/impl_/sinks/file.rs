@@ -4,7 +4,7 @@ use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use fleet_types::ReceiptEvent;
+use types::ReceiptEvent;
 
 use super::super::event::StreamEvent;
 use super::super::sink::{Sink, SinkError};

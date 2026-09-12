@@ -82,8 +82,12 @@ foreign_bin() {
     # content (the identity marker), never by where it happens to sit.
     if [[ -L "$BIN_PATH" ]]; then
         local real; real="$(readlink "$BIN_PATH")"
-        case "$real" in "$ROOT_DIR"/*) return 1 ;; esac
-        return 0
+        # Fast path: exact match is definitely ours regardless of ROOT_DIR.
+        # (AGENTS.md documents CARGO_TARGET_DIR outside ROOT_DIR, so BUILT_BIN can live
+        # anywhere; the ROOT_DIR prefix test is unreliable and has been removed.)
+        [[ "$real" == "$BUILT_BIN" ]] && return 1
+        # For any other symlink target, fall through to the content-marker check below — same
+        # verdict logic as plain files, consistent across both path/CARGO_TARGET_DIR variants.
     fi
     # This marker was `--help | grep 'frozen, attested change'` -- a string that exists nowhere in
     # this repo, so OUR OWN prior install was classified foreign on every re-install. Pinned now by
@@ -105,7 +109,7 @@ if [[ "$MODE" == "check" ]]; then
         printf '  because `fleet` on PATH must always be this CLI. Install elsewhere with:\n'
         printf '    FLEET_BIN_DIR=~/.local/bin/fleet-rs ./install.sh\n'
     else
-        printf 'WOULD install: %s\n' "$BIN_PATH"
+        printf 'WOULD symlink: %s -> %s\n' "$BIN_PATH" "$BUILT_BIN"
     fi
     printf 'WOULD create/chmod 700: %s/{runs,artifacts,attestations,ledger}\n' "$STATE_DIR"
     printf 'UNDO: ./install.sh --uninstall (preserves %s)\n' "$STATE_DIR"
@@ -118,7 +122,8 @@ if [[ "$MODE" == "uninstall" ]]; then
             "$BIN_PATH" "$(describe_foreign)" >&2
         exit 7
     fi
-    if [[ -e "$BIN_PATH" ]]; then
+    # -L is needed: -e follows symlinks and is false for dangling ones (e.g. after cargo clean).
+    if [[ -e "$BIN_PATH" || -L "$BIN_PATH" ]]; then
         rm -f "$BIN_PATH"
         printf 'CHANGE removed: %s\n' "$BIN_PATH"
     else
@@ -135,6 +140,10 @@ if [[ "$MODE" == "uninstall" ]]; then
 fi
 
 printf 'CHANGE build: cargo build --release --manifest-path %s/Cargo.toml\n' "$ROOT_DIR"
+# Force the build script to re-run even when HEAD/index are unchanged so that the shipped binary
+# always gets a fresh build_time and tree_state (not a stale cached stamp from a prior dev build).
+export FLEET_FORCE_STAMP
+FLEET_FORCE_STAMP="$(date +%s)"
 cargo build --release --manifest-path "$ROOT_DIR/Cargo.toml" --bin fleet
 if [[ ! -x "$BUILT_BIN" ]]; then
     fail_env "release build produced no executable at $BUILT_BIN"
@@ -160,11 +169,14 @@ if foreign_bin; then
     fi
 fi
 
-if [[ ! -e "$BIN_PATH" ]] || ! cmp -s "$BUILT_BIN" "$BIN_PATH"; then
-    install -m 755 "$BUILT_BIN" "$BIN_PATH"
-    printf 'CHANGE installed: %s (mode 755)\n' "$BIN_PATH"
+# Use a symlink so PATH always tracks the latest release build without re-running this script.
+# Note: `ln -sf` is NOT atomic on macOS/BSD (it is unlink + symlink); the window is negligible
+# for a local install tool but matters if atomicity is ever required (use ln -s + mv -f then).
+if [[ -L "$BIN_PATH" ]] && [[ "$(readlink "$BIN_PATH")" == "$BUILT_BIN" ]]; then
+    printf 'UNCHANGED symlink already current: %s -> %s\n' "$BIN_PATH" "$BUILT_BIN"
 else
-    printf 'UNCHANGED binary already current: %s\n' "$BIN_PATH"
+    ln -sf "$BUILT_BIN" "$BIN_PATH"
+    printf 'CHANGE symlinked: %s -> %s\n' "$BIN_PATH" "$BUILT_BIN"
 fi
 
 mkdir -p "$STATE_DIR"

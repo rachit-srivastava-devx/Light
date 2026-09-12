@@ -1,0 +1,37 @@
+# Verification / anti-stub audit
+
+Scope: read-only inspection of all 32 `docs/blueprints-next/*/BLUEPRINT.md` files, `AGENTS.md`, `REVIEW-GATE.md`, `NODE-MAP.md`, and the LLD proof/acceptance trace. No runtime or test claim was treated as executed evidence.
+
+## Findings
+
+1. **FAIL — no implementation proof exists for the proposed node set.** The blueprints are design artifacts and repeatedly mark real-binary/provider wiring as blocked or unverified. Explicit real-binary proof is absent from `connectors`, `intent`, `model_catalog`, `probe_business`, `probe_learn`, `probe_research`, `probe_tech`, `questions`, and several other model/read-only nodes. The LLD requires a reachable real product path; fake readers, mock MCP tools, scripted providers, and unit APIs cannot close that gate. `probe_business` §10/§12 and `probe_tech` §10/§12 explicitly leave this proof blocked.
+
+2. **FAIL — acceptance-test identity is not closed for every node.** `probe_learn` says “Named integration tests” without the required heading form, and `probe_tech` §13 verifies only bare function names with `grep -E "fn (...)"`, not qualified test IDs or execution. `probe_research` uses Markdown subheadings rather than the common table form. These checks can pass because a function name appears in source (or a comment/string) while the test is absent, renamed, skipped, or never run. The LLD trace requires exact node test observations, not source-text presence.
+
+3. **FAIL — mutation evidence is mostly a recipe, not measured proof.** Every blueprint states a mutation percentage, but most §12/§13 sections do not provide a concrete `cargo mutants`/equivalent command that emits `discovered>0,killed/total`, nor a raw denominator. `next_plan`, `notify`, and `probe_learn` reduce the requirement to one manually deleted branch; `probe_tech` and `probe_research` have no executable mutation command; `verify` mixes a table header and a separate function list. A constant-return, skipped-input, dropped-receipt, or wrong-payload mutant can therefore be claimed killed without proving it was discovered or that the denominator was nonzero.
+
+4. **FAIL — mutation target bindings are not uniformly executable.** Several targets are prose predicates or omit the source file, rather than naming a resolvable function/file. Examples: `rollback` §11 uses “containment check”; `route` uses “capability filter”; `review` has rows without file paths; `next_plan`/`notify` omit file paths. `verify`’s declared `Function mutated` column is structurally inconsistent with its rows and relies on a separate list below the table. This permits a vacuous mutation run against no actual target.
+
+5. **FAIL — denominators are inconsistent and sometimes non-equivalent.** Many nodes publish `checked,total` only in prose or expected output, while their DoD checks merely `test result: ok`, `grep` for a name, or `wc -l`. `next_plan` uses `queued_checked,queued_total`, which is not the required gate verdict shape. `route` and `store` have real-binary denominator text in §12 but the prior gate review identified that the §13 completion criteria can be satisfied without running that binary. No cross-node acceptance test proves `checked > 0` and `checked == total` for every required gate.
+
+6. **FAIL — typed exit-code coverage is not proven as a cross-node contract.** The LLD defines `0/3/6/7/8`, but the blueprints generally list individual error variants without a required integration matrix asserting all five mappings. `verify` explicitly requires the missing-tool → `3` test; the other nodes do not consistently require environment-fault, invariant, refusal, and verification-mismatch observations. A test that only asserts `Err(...)` can still map an environment fault to an agent failure or success.
+
+7. **FAIL — refusal-receipt coverage is incomplete at the named-test level.** Some refusal behavior is described in the behavior matrix or hidden tests but not asserted with durable receipt state in a named acceptance test. Examples include `approval::tests::expired_grant_refused`, `dag` refusal rows, and several probe/model nodes whose real-binary paths are blocked. `verify` also requires receipt/evidence fields in its DoD but its ordinary named tests primarily inspect returned structs. The LLD rule is every refusal writes a receipt before exit; this needs an explicit store/readback assertion per effectful boundary, not only prose or a mock error.
+
+8. **FAIL — fd3 isolation is tested narrowly and can still be bypassed by the fixture boundary.** `builder` has a useful empty-fd3 test and `control` names a `__spawn_probe`, but neither blueprint’s required real-binary acceptance observation proves the complete invariant: no ledger/state/socket/actor/timestamp/model/approval/budget authority in the worker environment, inherited fd3 as the only result channel, rejection of worker-supplied authority fields, bounded frames, sequence validation, and descendant cleanup. A fake child is explicitly supplemental, yet the remaining real-binary fixture assertions mostly check output/denominators, so a composition path that bypasses the actual worker launch can pass.
+
+9. **FAIL — source-size enforcement does not consistently cover source and test files.** `next_plan`, `notify`, and `plan_review` use prose/`wc -l`; `rollback`, `planner`, `route`, `ready`, `store`, and `user_cli` run `find .../src`, excluding `tests/`, despite the global rule covering source and test files. Other blueprints use crate-wide `find`, so the corpus has no uniform 80-line gate and a test file can violate the rule while the stated command passes.
+
+10. **FAIL — “real binary” commands are often non-reproducible or not tied to a declared fixture.** Commands such as `target/debug/fleet ...`, `target/debug/fleet context ...`, `target/debug/fleet review --fixture`, and `target/debug/fleet rollback --artifact ...` omit build provenance, state-directory isolation, fixture existence/readback, and exact exit-code assertions. Several are explicitly “blocked until wiring exists.” They are plans for future proof, not proof gates that can currently reject a stub.
+
+11. **FAIL — hidden/property/differential tests are not independently enforceable.** The blueprints name hidden cases and fixed case counts, but do not specify the controller-owned location, seed/output format, or a command that fails on skipped/zero generated cases for every node. Differential tests frequently permit “explicit divergence” without a required persisted comparison artifact. A proposing worker could satisfy the visible mock tests while omitting the hidden safety predicate or returning a constant provider result.
+
+12. **FAIL — the documentation set itself has known cross-section drift.** The current blueprints contain mismatched mutation counts and DoD references (for example `approval` §13 says three mutation targets while §11 has five; other prior review evidence identifies DoD tests not present in §10). This makes the denominator negotiable: an implementation can select the smaller list or pass a DoD bullet that has no corresponding named test/mutant. The requested anti-stub proof is therefore not closed even where individual rows look strong.
+
+## Boundary of this audit
+
+No code, test, blueprint, or other documentation was edited. No cargo suite, mutation run, real binary, remote CI, provider, or production proof was executed; those remain unverified evidence gates rather than implied passes.
+
+## Verdict
+
+**FAIL**

@@ -2,7 +2,7 @@
 //! itself -- every fact about "what's new" arrives through `LogSource`, implemented by
 //! `fleet-store` in production and by a test fake in this crate's own suite.
 
-use fleet_types::Receipt;
+use types::Receipt;
 
 /// Deliberately `&self`, not `&mut self`: a real store answers "give me every receipt after
 /// seq N" as a stateless query, which is what lets every sink's worker poll independently

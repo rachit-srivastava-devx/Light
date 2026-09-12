@@ -1,7 +1,7 @@
 //! The full run's outcome -- aggregates every `GateResult` into typed pass/fail/skip counters
 //! and one overall `ExitCode`.
 
-use fleet_types::ExitCode;
+use types::ExitCode;
 
 use super::verdict::{GateResult, Verdict};
 

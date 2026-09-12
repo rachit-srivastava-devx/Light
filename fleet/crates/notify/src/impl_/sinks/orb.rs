@@ -1,7 +1,7 @@
 //! `OrbSink`: projects a `lane_status` receipt into `contracts/lane-status.v1.json`'s shape and
 //! POSTs it to a configured local URL. Mirrors `console.rs`'s `load_lane_status` (see §5).
 
-use fleet_types::ReceiptEvent;
+use types::ReceiptEvent;
 
 use super::super::event::StreamEvent;
 use super::super::sink::{Sink, SinkError};

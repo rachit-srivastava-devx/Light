@@ -1,8 +1,10 @@
+mod impl_;
+
 /// Re-export so callers never need to depend on rusqlite directly.
 pub use rusqlite::Connection;
 
-// Fleet-store backward-compat re-exports for src/ (ledger module, Ledger, etc.)
-pub use fleet_store::{ledger, Ledger};
+// Inlined from fleet-store (ledger module, Ledger, etc.)
+pub use impl_::{ledger, Ledger};
 
 pub(crate) mod schema;
 pub(crate) mod transaction;

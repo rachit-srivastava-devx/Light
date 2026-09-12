@@ -1,6 +1,6 @@
 //! Per-cycle helpers for `worker::run_sink`: order validation and single-event retry delivery.
 
-use fleet_types::Receipt;
+use types::Receipt;
 use tokio::time::sleep;
 
 use super::super::cursor::CursorError;

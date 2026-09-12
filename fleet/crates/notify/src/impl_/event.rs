@@ -1,9 +1,9 @@
 //! `StreamEvent` -- the egress plane's own thin wrapper around a ledger `Receipt`.
 
-use fleet_types::Receipt;
+use types::Receipt;
 
 /// One ledger receipt as it flows through the egress pump. A thin wrapper (not a bare alias) so
-/// this crate can add pump-internal bookkeeping later without changing `fleet_types::Receipt`.
+/// this crate can add pump-internal bookkeeping later without changing `types::Receipt`.
 #[derive(Clone, Debug)]
 pub struct StreamEvent(pub Receipt);
 

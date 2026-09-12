@@ -8,9 +8,12 @@ serde      = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror  = "2"
 tokio      = { version = "1", features = ["rt-multi-thread", "macros"] }
-rusqlite   = { version = "0.32.1", features = ["bundled"] }
+rusqlite   = { version = "0.32.1", features = ["bundled", "load_extension"] }
 sha2       = "0.10"
-fleet-store = { path = "../fleet-store" }
+blake3     = "1.8"
+fs2        = "0.4"
+redb       = "2"
+types = { path = "../types" }
 
 [dev-dependencies]
 tempfile = "3"

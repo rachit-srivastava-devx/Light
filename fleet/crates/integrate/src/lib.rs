@@ -4,7 +4,7 @@ pub mod merge;
 pub mod receipt;
 
 // Fleet-merge backward-compat re-exports for src/ (LaneManager, Worktree, MergeRefusal, etc.)
-pub use fleet_merge::{
+pub use ::merge::{
     invalidate_build_cache, MergeRefusal, PrError, WorktreeError,
     Lane, LaneManager, LaneOutcome,
     check_files_changed, check_head_moved, check_stage_nonempty,
