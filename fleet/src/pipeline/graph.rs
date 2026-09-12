@@ -14,7 +14,7 @@ use super::stage::PipelineStage;
 use super::stage_loop::run_through_merge;
 use super::stages;
 use super::step_log::StepLog;
-use fleet_types::{NodeId, Role, TaskId};
+use types::{NodeId, Role, TaskId};
 use std::path::Path;
 use std::time::Instant;
 
@@ -24,8 +24,8 @@ pub fn run_pipeline(
     state_dir: &Path,
     repo: &Path,
     task: TaskId,
-    runtime: &fleet_router::RuntimeState,
-    verify_gates: &[fleet_verify::GateSpec],
+    runtime: &route::RuntimeState,
+    verify_gates: &[verify::GateSpec],
 ) -> PipelineOutcome {
     let log = StepLog::open(state_dir, task.as_str());
     let ctx = StageCtx { state_dir, repo, task: &task, runtime, verify_gates };

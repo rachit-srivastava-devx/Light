@@ -2,8 +2,8 @@
 //! a human running it by hand (exactly how the owner found this bug) gets a clear diagnostic
 //! instead of a panic or a silent success.
 
-use fleet_types::ExitCode;
-use fleet_worker::UnknownAgentKind;
+use types::ExitCode;
+use builder::UnknownAgentKind;
 use std::path::PathBuf;
 
 #[derive(Debug, thiserror::Error)]
@@ -15,7 +15,7 @@ pub enum AgentCmdError {
     /// `<worktree>` does not exist or is not a directory.
     #[error("worktree path {0:?} does not exist or is not a directory")]
     MissingWorktree(PathBuf),
-    /// `<task>` was empty/whitespace-only -- the parent (`fleet_worker::spawn`) already refuses
+    /// `<task>` was empty/whitespace-only -- the parent (`builder::spawn`) already refuses
     /// this before ever spawning a child, so seeing it here means that contract was bypassed.
     #[error("task is empty or all-whitespace")]
     EmptyTask,

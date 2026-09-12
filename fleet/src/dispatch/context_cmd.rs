@@ -1,6 +1,6 @@
-//! `fleet graph|impact`: walk the repo into `fleet_context::SourceFile`s (bounded -- see
+//! `fleet graph|impact`: walk the repo into `context::SourceFile`s (bounded -- see
 //! `walk.rs`, which skips build/VCS/vendor dirs and enforces a file/byte/deadline budget so a
-//! real multi-hundred-MB repo finishes instead of hanging), call `fleet_context::build_repo_map`,
+//! real multi-hundred-MB repo finishes instead of hanging), call `context::build_repo_map`,
 //! and print. Parsing/symbol-graph/PageRank logic is entirely `fleet-context`'s; this only reads
 //! files off disk (a real, named IO touch this outermost layer is allowed -- BLUEPRINT §4).
 
@@ -8,7 +8,7 @@ use crate::cli::args_ctx::{GraphArgs, ImpactArgs};
 use crate::dispatch::error::DispatchError;
 use crate::dispatch::walk::read_source_files_bounded;
 use crate::print::human;
-use fleet_context::build_repo_map;
+use context::build_repo_map;
 use std::path::Path;
 
 #[derive(serde::Serialize)]

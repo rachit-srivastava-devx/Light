@@ -9,7 +9,7 @@ use super::stage::PipelineStage;
 use crate::print::human_stream::emit;
 use crate::print::render_event::Event;
 use crate::print::style::Style;
-use fleet_types::{ReceiptEvent, TaskId};
+use types::{ReceiptEvent, TaskId};
 use std::path::Path;
 
 /// A stage failed for real: render it through the same `Refusal`-shaped line every other refusal

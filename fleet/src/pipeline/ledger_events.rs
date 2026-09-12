@@ -8,9 +8,9 @@
 use crate::print::human_stream::emit;
 use crate::print::render_event::Event;
 use crate::print::style::Style;
-use fleet_store::ledger::LedgerPaths;
-use fleet_store::Ledger;
-use fleet_types::ReceiptEvent;
+use store::ledger::LedgerPaths;
+use store::Ledger;
+use types::ReceiptEvent;
 use serde_json::Value;
 use std::path::Path;
 

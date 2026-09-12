@@ -4,8 +4,8 @@
 //! `crates/fleet-worker/src/freelane/` (see that module for the embed/materialize/invoke split
 //! this file only wires together); `Claude`/`Codex` invoke their CLI directly.
 
-use fleet_worker::freelane;
-use fleet_worker::CliAdapter;
+use builder::freelane;
+use builder::CliAdapter;
 use serde_json::{json, Value};
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -24,7 +24,7 @@ pub fn run(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>
     }
 }
 
-/// `fleet_worker::freelane::run` owns asset resolution (embedded, or `$FLEET_FREELANE_ROOT` on
+/// `builder::freelane::run` owns asset resolution (embedded, or `$FLEET_FREELANE_ROOT` on
 /// disk -- see that module) and invocation; this just shapes the fd-3 body from its typed result.
 fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
     match freelane::run(worktree, task, model) {
@@ -51,7 +51,7 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
     }
 }
 
-/// `claude`/`codex`: `fleet_worker::spawn` already confirmed the named binary is on `PATH`
+/// `claude`/`codex`: `builder::spawn` already confirmed the named binary is on `PATH`
 /// before ever spawning this child, so invoke it for real with the task as its argument.
 fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
     let binary = adapter.cli_binary_name().unwrap_or("true");

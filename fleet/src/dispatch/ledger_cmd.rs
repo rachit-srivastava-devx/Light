@@ -1,11 +1,11 @@
-//! `fleet ledger|rollback`: parse -> `fleet_store::Ledger`/`fleet_merge::remove` -> print.
+//! `fleet ledger|rollback`: parse -> `store::Ledger`/`integrate::remove` -> print.
 
 use crate::cli::args_ops::{LedgerArgs, RollbackArgs};
 use crate::dispatch::error::DispatchError;
 use crate::print::human;
-use fleet_merge::Worktree;
-use fleet_store::ledger::LedgerPaths;
-use fleet_store::Ledger;
+use integrate::Worktree;
+use store::ledger::LedgerPaths;
+use store::Ledger;
 use std::path::{Path, PathBuf};
 
 #[derive(serde::Serialize)]
@@ -47,7 +47,7 @@ pub fn rollback(args: RollbackArgs) -> Result<(), DispatchError> {
         branch: format!("fleet/{}", args.worktree),
         name: args.worktree.clone(),
     };
-    fleet_merge::remove(Path::new(&args.repo), &worktree)?;
+    integrate::remove(Path::new(&args.repo), &worktree)?;
     human::ok("worktree removed");
     Ok(())
 }

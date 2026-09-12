@@ -2,7 +2,7 @@
 //! out purely to keep that file under the 80-line cap after the S1 `.current_dir(repo)` fix grew
 //! its doc comment and signature.
 
-use fleet_verify::ProcessOutput;
+use verify::ProcessOutput;
 use std::io::Read;
 use std::sync::mpsc;
 use std::time::Duration;

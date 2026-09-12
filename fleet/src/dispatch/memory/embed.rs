@@ -1,9 +1,9 @@
-//! Deterministic text -> `fleet_memory::Embedding`, plus a stable `MemoryId` derivation. Pure:
+//! Deterministic text -> `knowledge::Embedding`, plus a stable `MemoryId` derivation. Pure:
 //! no clock, no RNG, no IO -- same text always yields the same vector/id. This is a feature-
 //! hashing bag-of-words embedding (FNV-1a into a fixed number of buckets), not a learned model;
 //! it is honest about that trade-off (see `sow_probes.rs`) rather than pretending to be more.
 
-use fleet_memory::{Embedding, MemoryId};
+use knowledge::{Embedding, MemoryId};
 
 const DIMS: usize = 64;
 

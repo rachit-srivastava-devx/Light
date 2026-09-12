@@ -3,10 +3,10 @@
 //! caller-supplied port). No codebase index or research backend is wired into the CLI yet, so
 //! `Codebase` answers conservatively (never blocks or lies about existence) and `Research`
 //! reports a typed fault instead of fabricating a result -- `assess` treats a faulted probe
-//! exactly like one that raised zero questions (see `fleet_scan::assess`'s doc). Memory recall
-//! IS wired, via `memory_adapter::RealMemory` (backed by `fleet_memory::retrieve`).
+//! exactly like one that raised zero questions (see `scan::assess`'s doc). Memory recall
+//! IS wired, via `memory_adapter::RealMemory` (backed by `knowledge::retrieve`).
 
-use fleet_scan::{CodebasePort, ConcurrentRunner, EnvFault, ProbeJob, ProbeRun, ResearchPort};
+use scan::{CodebasePort, ConcurrentRunner, EnvFault, ProbeJob, ProbeRun, ResearchPort};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 /// No codebase index is wired into `sow` yet; every symbol reports "not found" rather than

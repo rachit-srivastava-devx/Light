@@ -1,4 +1,4 @@
-//! Renders a `fleet_verify::Report` (from `fleet oracle`/`fleet gate`) as structured events plus
+//! Renders a `verify::Report` (from `fleet oracle`/`fleet gate`) as structured events plus
 //! a terminal summary. Lives in `print/`, not `dispatch/`, because it only decides what a
 //! `Report` LOOKS like -- `Report::exit_code()` still owns pass/fail, called by `dispatch`.
 
@@ -6,7 +6,7 @@ use super::human_stream::emit;
 use super::render_event::{Event, Outcome};
 use super::style::Style;
 use super::summary::{render_summary, Checks, Summary};
-use fleet_verify::{GateResult, Report, Verdict};
+use verify::{GateResult, Report, Verdict};
 
 /// The gate-published `(checked, total)` denominator, when this verdict carries one -- shared by
 /// `line_for` (per-gate display) and `aggregate_checks` (the summary's aggregate `checks` line)

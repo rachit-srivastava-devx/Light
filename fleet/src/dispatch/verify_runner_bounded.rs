@@ -10,7 +10,7 @@
 use super::tool_path;
 use super::verify_report as report;
 use super::verify_runner_io::{drain, io_error, timeout_output};
-use fleet_verify::ProcessOutput;
+use verify::ProcessOutput;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};

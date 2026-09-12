@@ -27,9 +27,9 @@ fn task_alone_is_never_rejected_as_an_empty_prompt() {
     assert!(!err.contains("task is empty"), "cross-wire regression: --task alone got: {err}");
 }
 
-// `fleet_types::ExitCode::Invariant` -- the code `SpawnError::EmptyTask` maps to (the fallback
+// `types::ExitCode::Invariant` -- the code `SpawnError::EmptyTask` maps to (the fallback
 // arm of `DispatchError::exit_code`). Duplicated as a plain const, matching
-// `capacity_refusal_real_binary.rs`'s precedent, rather than pulling `fleet_types` into this
+// `capacity_refusal_real_binary.rs`'s precedent, rather than pulling `types` into this
 // integration-test crate's dependency graph for one constant.
 const INVARIANT: i32 = 6;
 

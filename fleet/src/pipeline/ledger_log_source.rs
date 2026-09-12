@@ -1,11 +1,11 @@
-//! `LedgerLogSource`: adapts `fleet_store::Ledger` to `fleet_stream::LogSource` so the egress
+//! `LedgerLogSource`: adapts `store::Ledger` to `notify::LogSource` so the egress
 //! side can tail the exact same durable ledger `event_stage`/`verify_stage`/`run_ledger` append
 //! to -- one durable log, one durable-write path (`Ledger::append`), one durable-read path
 //! (here), never a second parallel event store invented for streaming alone.
 
-use fleet_store::Ledger;
-use fleet_stream::{LogSource, LogSourceError};
-use fleet_types::Receipt;
+use store::Ledger;
+use notify::{LogSource, LogSourceError};
+use types::Receipt;
 
 pub struct LedgerLogSource {
     ledger: Ledger,

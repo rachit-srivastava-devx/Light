@@ -18,9 +18,6 @@ pub fn render_banner(color: bool, model: &str, lanes: usize) {
     println!("{}   {}", mascot_colored[0], title);
     println!("{}   {}", mascot_colored[1], meta);
     println!("{}   {}", mascot_colored[2], path);
-    println!("{}", mascot_colored[3]);
-    println!("{}", mascot_colored[4]);
-    println!("{}", mascot_colored[5]);
     println!();
     println!("  {}", paint(color, WHITE, "Autonomous agent swarms in parallel worktrees. Switch anytime with /model."));
     println!();

@@ -1,4 +1,4 @@
-//! `fleet agents`: parse -> `fleet_worker::resolve_hermetic_provision` -> print. **Deviation**:
+//! `fleet agents`: parse -> `builder::resolve_hermetic_provision` -> print. **Deviation**:
 //! the blueprint's reuse map cites `agent_registry::load_agent`/`manifest::manifest_for_lease`
 //! directly, but `fleet-worker`'s `sandbox` module is private (`mod sandbox;`, not `pub mod`) --
 //! only `resolve_hermetic_provision` (its whole-provision entry point) is re-exported from
@@ -8,7 +8,7 @@
 use crate::cli::args_core::AgentsArgs;
 use crate::dispatch::error::DispatchError;
 use crate::print::human;
-use fleet_worker::resolve_hermetic_provision;
+use builder::resolve_hermetic_provision;
 use std::path::Path;
 
 #[derive(serde::Serialize)]

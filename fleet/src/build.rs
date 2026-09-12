@@ -10,9 +10,26 @@ fn main() {
     println!("cargo:rustc-env=FLEET_BUILD_SHA={}", git_sha());
     println!("cargo:rustc-env=FLEET_BUILD_DIRTY={}", git_dirty());
     println!("cargo:rustc-env=FLEET_BUILD_TIME={}", build_time());
-    // Re-run only when HEAD or the index changes, not on every `cargo build`.
-    println!("cargo:rerun-if-changed=../.git/HEAD");
-    println!("cargo:rerun-if-changed=../.git/index");
+    // The repo root at build time, embedded so interactive startup can find it for the version
+    // check without shelling out to git at runtime (which would read the CWD's repo, not ours).
+    // Use `git rev-parse --show-toplevel` rather than path arithmetic: the .git dir may be
+    // multiple levels above CARGO_MANIFEST_DIR in a monorepo (here: Light/ not Light/fleet/src/).
+    let repo_root = run_git(&["rev-parse", "--show-toplevel"])
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| env!("CARGO_MANIFEST_DIR").to_string());
+    println!("cargo:rustc-env=FLEET_REPO_PATH={repo_root}");
+    // The fleet package directory (where install.sh lives): parent of CARGO_MANIFEST_DIR (src/).
+    // Distinct from FLEET_REPO_PATH (the git root) — used for user-facing cd + install commands.
+    let fleet_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.to_str())
+        .unwrap_or(env!("CARGO_MANIFEST_DIR"));
+    println!("cargo:rustc-env=FLEET_DIR={fleet_dir}");
+    // Re-run when HEAD or index changes (dev iteration), or when install.sh forces a re-stamp
+    // via FLEET_FORCE_STAMP so the shipped binary always gets a fresh build_time/tree_state.
+    println!("cargo:rerun-if-changed={repo_root}/.git/HEAD");
+    println!("cargo:rerun-if-changed={repo_root}/.git/index");
+    println!("cargo:rerun-if-env-changed=FLEET_FORCE_STAMP");
 }
 
 /// Short commit sha, or the literal `unknown` if `git` is unavailable or this isn't a checkout.

@@ -5,7 +5,7 @@
 
 use super::to_result;
 use crate::dispatch::error::DispatchError;
-use fleet_verify::{FailReason, GateResult, Report, Verdict};
+use verify::{FailReason, GateResult, Report, Verdict};
 
 fn fail_result(id: &'static str) -> GateResult {
     GateResult {
@@ -15,7 +15,7 @@ fn fail_result(id: &'static str) -> GateResult {
 }
 
 fn pass_result(id: &'static str) -> GateResult {
-    let denom = fleet_verify::Denominator::new(3, 3).expect("3/3 is a valid denominator");
+    let denom = verify::Denominator::new(3, 3).expect("3/3 is a valid denominator");
     GateResult { id, verdict: Verdict::Pass(denom) }
 }
 

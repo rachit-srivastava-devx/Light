@@ -1,4 +1,4 @@
-//! `fleet adjudicate`: `fleet_judge::judge` over one real `JudgeModel` -> print (`adjudicate_render.rs`).
+//! `fleet adjudicate`: `review::judge` over one real `JudgeModel` -> print (`adjudicate_render.rs`).
 //! `select_model` picks the real keyless adapter behind the `llm7` cargo feature (passthrough in
 //! `src/Cargo.toml`); with it OFF this fails with `AdjudicateCmdError::NoJudgeConfigured` --
 //! never a fabricated verdict, never a silent default judge. `run_with_model` is the seam a test
@@ -8,7 +8,7 @@
 use crate::dispatch::adjudicate_cmd_error::AdjudicateCmdError;
 use crate::dispatch::adjudicate_render::render;
 use crate::dispatch::error::DispatchError;
-use fleet_judge::{judge, Candidate, Criteria, JudgeModel, Verdict};
+use review::{judge, Candidate, Criteria, JudgeModel, Verdict};
 use std::fs;
 
 fn criteria() -> Criteria {
@@ -23,7 +23,7 @@ fn criteria() -> Criteria {
 
 #[cfg(feature = "llm7")]
 fn select_model() -> Result<Box<dyn JudgeModel>, AdjudicateCmdError> {
-    Ok(Box::new(fleet_judge::llm7::Llm7Judge::new()))
+    Ok(Box::new(review::llm7::Llm7Judge::new()))
 }
 
 #[cfg(not(feature = "llm7"))]

@@ -1,4 +1,4 @@
-//! `fleet lifecycle`: parse -> `fleet_lifecycle::{resume,advance_any}` -> print. Forwards to the
+//! `fleet lifecycle`: parse -> `control::{resume,advance_any}` -> print. Forwards to the
 //! already-blueprinted `fleet-lifecycle`; this layer supplies only the `ReceiptLedger` IO port
 //! (a plain append-only JSON-lines file under `state_dir`) that crate declares and does not
 //! implement itself.
@@ -6,8 +6,8 @@
 use crate::cli::args_ops::LifecycleArgs;
 use crate::dispatch::error::DispatchError;
 use crate::print::human;
-use fleet_lifecycle::{advance_any, resume, ReceiptLedger, TaskId, TransitionReceipt};
-use fleet_types::GateRefusal;
+use control::{advance_any, resume, ReceiptLedger, TaskId, TransitionReceipt};
+use types::GateRefusal;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};

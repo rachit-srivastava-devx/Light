@@ -1,12 +1,12 @@
 //! `Merge`'s wiring, split out of `stages.rs` to stay under the 80-line file gate. Derives the
 //! staged-file count and branch from the real repo the CLI was pointed at (`--repo`) instead of
-//! the hardcoded `(1, "pipeline-demo-branch")` this stage used to pass `fleet_merge` unconditionally.
-//! No git work tree at that path is reported through `fleet_merge::MergeRefusal::NoWorktree` --
-//! the same typed refusal `fleet_merge` already uses for "nothing to merge" -- rather than
+//! the hardcoded `(1, "pipeline-demo-branch")` this stage used to pass `integrate` unconditionally.
+//! No git work tree at that path is reported through `integrate::MergeRefusal::NoWorktree` --
+//! the same typed refusal `integrate` already uses for "nothing to merge" -- rather than
 //! synthesizing a fake success.
 
 use super::event::PipelineError;
-use fleet_merge::MergeRefusal;
+use integrate::MergeRefusal;
 use std::path::Path;
 use std::process::Command;
 
@@ -17,7 +17,7 @@ pub fn merge(repo: &Path) -> Result<(), PipelineError> {
     let staged = git(repo, &["diff", "--cached", "--name-only"])?;
     let staged_files = staged.lines().filter(|l| !l.trim().is_empty()).count();
     let branch = git(repo, &["symbolic-ref", "--short", "HEAD"])?;
-    fleet_merge::check_stage_nonempty(staged_files, branch.trim()).map_err(PipelineError::Merge)
+    integrate::check_stage_nonempty(staged_files, branch.trim()).map_err(PipelineError::Merge)
 }
 
 /// `git rev-parse --is-inside-work-tree` succeeds for ANY path inside a real git checkout

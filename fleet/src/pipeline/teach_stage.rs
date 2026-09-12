@@ -13,8 +13,8 @@
 use super::event::PipelineError;
 use super::stage::PipelineStage;
 use crate::dispatch::memory::record_sow_refusal;
-use fleet_plan::{derive_lesson, Lesson, LessonSource, TaughtOutcome};
-use fleet_types::{NodeId, Role};
+use planner::{derive_lesson, Lesson, LessonSource, TaughtOutcome};
+use types::{NodeId, Role};
 use std::path::Path;
 
 fn lesson_text(lesson: &Lesson) -> String {

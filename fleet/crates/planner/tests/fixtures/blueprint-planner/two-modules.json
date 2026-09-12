@@ -1,0 +1,7 @@
+{
+  "task_digest": "task-abc123",
+  "recipe_digest": "recipe-def456",
+  "context_digest": "context-ghi789",
+  "acceptance_refs": ["tests/acceptance/dag.rs", "tests/acceptance/planner.rs"],
+  "max_modules": 10
+}

@@ -3,7 +3,7 @@
 //! This module provides types and functions for streaming module blueprints back to the user
 //! as an L8 engineer would - teaching per module with explanations, questions, and guidance.
 
-use fleet_types::Blueprint;
+use types::Blueprint;
 use std::fmt;
 
 /// Update event for blueprint streaming.

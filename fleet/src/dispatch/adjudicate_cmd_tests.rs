@@ -3,7 +3,7 @@
 //! feature-gated off by default (see `adjudicate_cmd.rs`'s doc comment).
 
 use super::*;
-use fleet_judge::{ModelError, RawVerdict};
+use review::{ModelError, RawVerdict};
 
 struct FakeModel(Result<RawVerdict, ModelError>);
 impl JudgeModel for FakeModel {

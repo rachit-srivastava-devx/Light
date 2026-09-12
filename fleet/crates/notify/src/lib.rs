@@ -1,4 +1,6 @@
 //! Notification outbox: redaction, durable outbox, transport port, reconciliation.
+//! Re-exports fleet-stream for backward compat while new implementation matures.
+pub use fleet_stream::*;
 pub mod outbox;
 pub mod reconcile;
 pub mod redact;

@@ -12,3 +12,7 @@ tokio       = { version = "1", features = ["rt-multi-thread", "process", "macros
 
 # fleet-internal
 fleet-plan  = { path = "../../crates/fleet-plan" }
+fleet-judge = { path = "../fleet-judge" }
+
+[features]
+llm7 = ["fleet-judge/llm7"]

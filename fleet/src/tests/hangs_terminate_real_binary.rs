@@ -1,5 +1,5 @@
 //! Pins the three S1 hangs from `docs/DX-AUDIT.md` fixed: `fleet run`/`fleet oracle`/`fleet gate`
-//! used to block indefinitely because `fleet_verify::GATES` includes `cargo test --workspace`
+//! used to block indefinitely because `verify::GATES` includes `cargo test --workspace`
 //! (measured ~94s) and `cargo mutants` (minutes-to-hours), run via a plain, unbounded
 //! `Command::output()` in `dispatch::verify_ports::RealRunner`. Every test here drives the REAL
 //! compiled binary (`env!("CARGO_BIN_EXE_fleet")`), never a substituted fake -- the project

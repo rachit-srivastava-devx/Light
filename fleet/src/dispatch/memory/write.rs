@@ -1,4 +1,4 @@
-//! Write side of `sow`'s memory wiring: dedup-writes (`fleet_memory::dedup::write`) a piece of
+//! Write side of `sow`'s memory wiring: dedup-writes (`knowledge::dedup::write`) a piece of
 //! text so a later, similar `sow` call recalls it via `memory_adapter::RealMemory::
 //! recall_similar`. Split out of `memory_adapter.rs` to hold that file under the ≤80-line rule.
 //!
@@ -14,7 +14,7 @@ use super::clock::now;
 use super::embed::{embed_text, stable_id};
 use super::ports::InMemoryPorts;
 use super::store::{MemoryStoreError, SowMemoryStore};
-use fleet_memory::{write, DedupThreshold, Importance, MemoryKind, NewMemory, RetrieveError, WriteDecision};
+use knowledge::{write, DedupThreshold, Importance, MemoryKind, NewMemory, RetrieveError, WriteDecision};
 use std::path::Path;
 
 #[derive(Debug, thiserror::Error)]

@@ -1,0 +1,13 @@
+[package]
+name = "probe-tech"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+
+[dependencies]
+fleet-scan = { path = "../fleet-scan" }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
+tree-sitter = { version = "0.24.7", optional = true }
+tree-sitter-rust = { version = "0.23.3", optional = true }

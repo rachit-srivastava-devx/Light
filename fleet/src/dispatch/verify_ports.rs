@@ -4,7 +4,7 @@
 //! bounded-execution logic (S1 hang fix) lives in `verify_runner_bounded.rs` for the same reason.
 
 use super::verify_runner_bounded::run_bounded;
-use fleet_verify::{GateAssetError, GatesRoot, ProcessOutput, ProcessRunner};
+use verify::{GateAssetError, GatesRoot, ProcessOutput, ProcessRunner};
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 

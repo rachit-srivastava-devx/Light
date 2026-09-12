@@ -4,7 +4,7 @@
 //! for one CLI's worth of lessons is small enough that a linear scan per call is the honest,
 //! simplest thing that satisfies these ports.
 
-use fleet_memory::{
+use knowledge::{
     CosineSimilarity, Embedding, LexicalHit, LexicalSearch, MemoryId, MemoryItem,
     NearestNeighborLookup, RetrieveError, VectorHit, VectorSearch,
 };

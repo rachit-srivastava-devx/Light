@@ -33,7 +33,7 @@ fn agent_subcommand_is_recognized_by_the_real_binary() {
     assert_ne!(out.status.code(), Some(2), "must not fail as a clap usage error: {stderr}");
 }
 
-/// `__spawn_probe` drives `fleet_worker::spawn`/`join`'s real parent path (real worktree, real
+/// `__spawn_probe` drives `builder::spawn`/`join`'s real parent path (real worktree, real
 /// re-exec of the real binary) end to end, WITHOUT `FLEET_WORKER_TEST_CHILD_EXE`. A `refused`
 /// or `done` line proves a receipt genuinely came back over fd 3; the probe only reports "no
 /// receipt" if `join` sees `EnvironmentFault`, and turns that into a nonzero exit.

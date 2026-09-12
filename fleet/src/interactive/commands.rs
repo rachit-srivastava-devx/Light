@@ -30,10 +30,10 @@ pub fn execute_slash(cmd: &str, cap: ConcurrencyCap, model: &str, color: bool) -
         }
         "/gates" => {
             println!("  {}", paint(color, BOLD, "Configured Verification Gates:"));
-            for gate in fleet_verify::GATES {
+            for gate in verify::GATES {
                 let req = match gate.requirement {
-                    fleet_verify::Requirement::Required => "required",
-                    fleet_verify::Requirement::Advisory => "advisory",
+                    verify::Requirement::Required => "required",
+                    verify::Requirement::Advisory => "advisory",
                 };
                 println!("    {} {:<6} {}", paint(color, CYAN, "•"), gate.id, paint(color, GRAY, req));
             }

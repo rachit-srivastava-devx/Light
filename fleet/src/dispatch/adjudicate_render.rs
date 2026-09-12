@@ -5,7 +5,7 @@
 
 use crate::print::human;
 use crate::print::style::{self, Style};
-use fleet_judge::Verdict;
+use review::Verdict;
 
 #[derive(serde::Serialize)]
 struct AdjudicateReport {

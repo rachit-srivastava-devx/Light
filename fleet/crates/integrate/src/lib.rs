@@ -3,6 +3,15 @@ pub mod cleanup;
 pub mod merge;
 pub mod receipt;
 
+// Fleet-merge backward-compat re-exports for src/ (LaneManager, Worktree, MergeRefusal, etc.)
+pub use fleet_merge::{
+    invalidate_build_cache, MergeRefusal, PrError, WorktreeError,
+    Lane, LaneManager, LaneOutcome,
+    check_files_changed, check_head_moved, check_stage_nonempty,
+    merge_lane, MergeOutcome, pr_emit,
+    create, remove, unique_name, Worktree,
+};
+
 pub use merge::{GitPort, RealGit};
 
 use serde::{Deserialize, Serialize};

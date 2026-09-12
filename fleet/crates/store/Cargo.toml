@@ -1,0 +1,17 @@
+[package]
+name = "store"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror  = "2"
+tokio      = { version = "1", features = ["rt-multi-thread", "macros"] }
+rusqlite   = { version = "0.32.1", features = ["bundled"] }
+sha2       = "0.10"
+fleet-store = { path = "../fleet-store" }
+
+[dev-dependencies]
+tempfile = "3"
+sha2     = "0.10"

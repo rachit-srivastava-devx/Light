@@ -1,11 +1,11 @@
 //! `Event`'s wiring, split out of `stages.rs` to stay under the 80-line file gate. Appends a real
-//! `ReceiptEvent::RunStart` row to `fleet_store`'s hash-chained ledger under `state_dir` -- the
+//! `ReceiptEvent::RunStart` row to `store`'s hash-chained ledger under `state_dir` -- the
 //! same `Ledger::append` path `fleet ledger` reads back -- instead of the literal `Ok(())` this
 //! stage used to return, which left a pipeline run with no auditable trace at all.
 
 use super::event::PipelineError;
 use super::ledger_events;
-use fleet_types::{ReceiptEvent, TaskId};
+use types::{ReceiptEvent, TaskId};
 use std::path::Path;
 
 pub fn event(state_dir: &Path, task: &TaskId) -> Result<(), PipelineError> {

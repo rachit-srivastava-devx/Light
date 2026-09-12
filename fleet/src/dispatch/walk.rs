@@ -4,7 +4,7 @@
 //! budget so a real ~450MB repo (`target/`, `.git/`, `.worktrees/`, `node_modules/`, `.venv/`)
 //! finishes in bounded time instead of spinning forever walking generated or vendored trees.
 
-use fleet_context::{language_for, SourceFile};
+use context::{language_for, SourceFile};
 use std::path::Path;
 use std::time::{Duration, Instant};
 

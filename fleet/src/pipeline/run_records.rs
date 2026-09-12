@@ -9,7 +9,7 @@ use std::time::Duration;
 
 pub struct RunRecords {
     pub final_stage: PipelineStage,
-    pub classification: Option<Box<fleet_router::Decision>>,
+    pub classification: Option<Box<route::Decision>>,
     pub stages: Vec<StageRecord>,
     pub gates: Vec<GateRecord>,
 }
@@ -32,7 +32,7 @@ impl RunRecords {
     /// refusal text can never disagree with the process's exit code.
     pub fn into_outcome(
         self,
-        task: fleet_types::TaskId,
+        task: types::TaskId,
         result: Result<(), PipelineError>,
     ) -> PipelineOutcome {
         let refusal = result.as_ref().err().map(|e| e.to_string());

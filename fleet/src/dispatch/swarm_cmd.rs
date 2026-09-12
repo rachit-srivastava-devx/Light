@@ -1,4 +1,4 @@
-//! `fleet swarm`: parse -> `fleet_worker::{spawn,join}` -> print. Lane execution itself
+//! `fleet swarm`: parse -> `builder::{spawn,join}` -> print. Lane execution itself
 //! (worktree, fd-3, subprocess) is entirely `fleet-worker`'s; this only builds the typed
 //! `SpawnRequest` from CLI args and reports the outcome (BLUEPRINT §2 non-goals).
 
@@ -7,8 +7,8 @@ use crate::dispatch::error::DispatchError;
 use crate::print::human_stream::emit;
 use crate::print::render_event::Event;
 use crate::print::style::Style;
-use fleet_worker::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
-use fleet_types::{Role, TaskId};
+use builder::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
+use types::{Role, TaskId};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 

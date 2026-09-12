@@ -10,8 +10,8 @@ use super::ledger_log_source::LedgerLogSource;
 use crate::print::human_stream::emit;
 use crate::print::render_event::Event;
 use crate::print::style::Style;
-use fleet_stream::sinks::FileSink;
-use fleet_stream::{CursorStore, FileCursorStore, LogSource, Sink, SinkError, StreamEvent};
+use notify::sinks::FileSink;
+use notify::{CursorStore, FileCursorStore, LogSource, Sink, SinkError, StreamEvent};
 use std::path::Path;
 
 pub const FLEET_STREAM_DIR: &str = "FLEET_STREAM_DIR";
@@ -47,7 +47,7 @@ fn flush(state_dir: &Path, stream_dir: &Path) -> Result<(), String> {
             continue;
         }
         match sink.deliver(&event) {
-            // Matches `fleet_stream::pump`'s own semantics: a permanent per-event rejection
+            // Matches `notify::pump`'s own semantics: a permanent per-event rejection
             // still advances the cursor (this one event is never retried); a transient failure
             // does not, so the NEXT flush (next `fleet run`, or a re-run of this one) retries it.
             Ok(()) => cursors.save(sink.id(), event.seq()).map_err(|e| e.reason)?,

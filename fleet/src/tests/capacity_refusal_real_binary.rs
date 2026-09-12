@@ -7,7 +7,7 @@ use support::bin;
 
 use std::process::{Command, Output};
 
-const REFUSAL: i32 = 7; // fleet_types::ExitCode::Refusal
+const REFUSAL: i32 = 7; // types::ExitCode::Refusal
 
 fn run(env: &[(&str, &str)], args: &[&str]) -> Output {
     let mut c = Command::new(bin());

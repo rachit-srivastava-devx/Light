@@ -68,7 +68,7 @@ pub enum Commands {
     /// __agent <kind> <worktree> <task> [model]`. See `dispatch/agent_cmd.rs`.
     #[command(name = "__agent", hide = true)]
     Agent(AgentArgs),
-    /// Hidden, test-only: drives `fleet_worker::spawn`/`join`'s real parent path end to end.
+    /// Hidden, test-only: drives `builder::spawn`/`join`'s real parent path end to end.
     #[command(name = "__spawn_probe", hide = true)]
     SpawnProbe(SpawnProbeArgs),
     /// Hidden: capacity reading + preflight verdict, no spawn (dispatch/capacity_probe_cmd.rs).

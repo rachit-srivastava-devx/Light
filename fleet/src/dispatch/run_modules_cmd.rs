@@ -3,7 +3,7 @@
 use crate::cli::args_core::RunModulesArgs;
 use crate::dispatch::error::DispatchError;
 use crate::dispatch::run_cmd;
-use fleet_types::Module;
+use types::Module;
 use std::path::Path;
 
 /// Parse modules from CLI args. Neither `--modules` nor `--modules-file` has a parser wired up

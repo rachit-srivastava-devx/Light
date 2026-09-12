@@ -2,8 +2,8 @@
 //! `ExitCode`. Mirrors `AgentCmdError`'s split (`agent_cmd_error.rs`): the detailed enum lives
 //! here so `error.rs` only needs one `#[from]` wrapper line, keeping it under the ≤80-line rule.
 
-use fleet_judge::JudgeError;
-use fleet_types::ExitCode;
+use review::JudgeError;
+use types::ExitCode;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AdjudicateCmdError {
@@ -18,7 +18,7 @@ pub enum AdjudicateCmdError {
     /// The artifact path could not be read.
     #[error("could not read artifact {path:?}: {source}")]
     ArtifactUnreadable { path: String, source: std::io::Error },
-    /// The judge core itself refused/faulted (`fleet_judge::judge`'s own typed errors).
+    /// The judge core itself refused/faulted (`review::judge`'s own typed errors).
     #[error(transparent)]
     Judge(#[from] JudgeError),
     /// The judge model produced an honest `Verdict::Abstain` -- not a pass, not an error, but

@@ -19,12 +19,12 @@ pub use super::teach_stage::teach;
 pub use super::verify_stage::verify;
 
 pub fn scan() -> Result<(), PipelineError> {
-    let _ = fleet_scan::merge_questions(Vec::new());
+    let _ = scan::merge_questions(Vec::new());
     Ok(())
 }
 
 pub fn plan() -> Result<(), PipelineError> {
-    let _ = fleet_plan::assemble_acceptance_checks_draft("wired-by-fleet-cli");
+    let _ = planner::assemble_acceptance_checks_draft("wired-by-fleet-cli");
     Ok(())
 }
 
@@ -33,6 +33,6 @@ pub fn plan() -> Result<(), PipelineError> {
 #[expect(dead_code)]
 pub fn plan_modules() -> Result<(), PipelineError> {
     // TODO: Implement full parallel module planning with blueprint streaming
-    let _ = fleet_plan::assemble_acceptance_checks_draft("wired-by-fleet-cli-parallel");
+    let _ = planner::assemble_acceptance_checks_draft("wired-by-fleet-cli-parallel");
     Ok(())
 }

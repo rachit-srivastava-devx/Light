@@ -2,7 +2,7 @@
 //! deliberately NOT inside `fleet-memory` (that crate never reads an ambient clock): this plays
 //! the same "real adapter" role `fleet-context::StdConventionFs` plays for filesystem access.
 
-use fleet_memory::Timestamp;
+use knowledge::Timestamp;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn now() -> Timestamp {

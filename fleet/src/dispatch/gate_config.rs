@@ -1,4 +1,4 @@
-//! Per-repo gate commands: the committed `fleet_verify::GATES` table with `.fleet/gates.toml`'s
+//! Per-repo gate commands: the committed `verify::GATES` table with `.fleet/gates.toml`'s
 //! overrides applied, so `fleet run|gate|oracle` can act as a quality gate for a repo that is not
 //! a cargo workspace. The unit-tests gate shelled out to `cargo test --workspace` unconditionally,
 //! so on a Node repo it SKIPped as "unavailable" -- five of eight gates never meaningfully ran.
@@ -13,7 +13,7 @@
 
 use super::error::DispatchError;
 use super::gate_config_file as file;
-use fleet_verify::{GateCommand, GateSpec, ProbeTool};
+use verify::{GateCommand, GateSpec, ProbeTool};
 use std::path::Path;
 
 /// `GateSpec`'s `id`/`command`/`probe` are all `&'static` (the type is `Copy`, built as a `const`
@@ -29,7 +29,7 @@ fn leak_argv(argv: &[String]) -> &'static [&'static str] {
 }
 
 fn known_ids() -> String {
-    fleet_verify::GATES.iter().map(|g| format!("{:?}", g.id)).collect::<Vec<_>>().join(", ")
+    verify::GATES.iter().map(|g| format!("{:?}", g.id)).collect::<Vec<_>>().join(", ")
 }
 
 fn fault(reason: String) -> DispatchError {
@@ -38,7 +38,7 @@ fn fault(reason: String) -> DispatchError {
 
 /// The gate table to run against `repo`. Absent config -> the committed table, unchanged.
 pub fn resolve(repo: &Path) -> Result<Vec<GateSpec>, DispatchError> {
-    let mut specs: Vec<GateSpec> = fleet_verify::GATES.to_vec();
+    let mut specs: Vec<GateSpec> = verify::GATES.to_vec();
     let Some(config) = file::load(repo).map_err(DispatchError::EnvFault)? else {
         return Ok(specs);
     };

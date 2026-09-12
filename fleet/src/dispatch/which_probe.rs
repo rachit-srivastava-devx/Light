@@ -3,7 +3,7 @@
 
 use super::mutants_probe;
 use super::tool_path;
-use fleet_verify::{ProbeTool, ToolProbe};
+use verify::{ProbeTool, ToolProbe};
 
 pub struct WhichProbe;
 impl ToolProbe for WhichProbe {

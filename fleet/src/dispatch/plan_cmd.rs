@@ -1,6 +1,6 @@
-//! `fleet sow|plan`: parse -> `fleet_plan::validate_sow_text` (structural section checks) ->
-//! `fleet_scan::assess` (content-level ambiguity probing over the raw text, wired via
-//! `sow_probes`'s stub ports/runner -- §`sow_probes.rs`) -> `fleet_plan::assemble_*` -> print.
+//! `fleet sow|plan`: parse -> `planner::validate_sow_text` (structural section checks) ->
+//! `scan::assess` (content-level ambiguity probing over the raw text, wired via
+//! `sow_probes`'s stub ports/runner -- §`sow_probes.rs`) -> `planner::assemble_*` -> print.
 //! The structural check alone cannot distinguish a placeholder from a real spec (both lack the
 //! same section headings); `assess` is what actually reads what the text says.
 //!
@@ -12,13 +12,13 @@ use crate::dispatch::error::DispatchError;
 use crate::dispatch::memory::{record_accepted_sow, RealMemory};
 use crate::dispatch::sow_probes::{SequentialRunner, StubCodebase, StubResearch};
 use crate::print::human;
-use fleet_scan::{assess, Assessment, BusinessProbe, MemoryProbe, ProbeSet, RequirementInput, ResearchProbe, TechnicalProbe};
-use fleet_types::{Blueprint, Module, TaskId};
+use scan::{assess, Assessment, BusinessProbe, MemoryProbe, ProbeSet, RequirementInput, ResearchProbe, TechnicalProbe};
+use types::{Blueprint, Module, TaskId};
 use std::collections::HashMap;
 use std::path::Path;
 
 pub fn sow(state_dir: &Path, args: SowArgs) -> Result<(), DispatchError> {
-    let mut messages: Vec<String> = fleet_plan::validate_sow_text(&args.text, &args.intent_hash)
+    let mut messages: Vec<String> = planner::validate_sow_text(&args.text, &args.intent_hash)
         .into_iter()
         .map(|v| v.0)
         .collect();
@@ -68,7 +68,7 @@ pub fn sow_modules(
     let mut state_map: HashMap<String, String> = HashMap::new();
 
     for module in modules {
-        let mut messages: Vec<String> = fleet_plan::validate_sow_text(&module.sow_text, &format!("hash-{}", module.id))
+        let mut messages: Vec<String> = planner::validate_sow_text(&module.sow_text, &format!("hash-{}", module.id))
             .into_iter()
             .map(|v| v.0)
             .collect();
@@ -105,7 +105,7 @@ pub fn sow_modules(
     for module in modules {
         if state_map.get(&module.id).map(|s| s == "sowed").unwrap_or(false) {
             let mut updated = module.clone();
-            updated.state = fleet_types::ModuleState::Sowed { sow_id: format!("sow-{}", module.id) };
+            updated.state = types::ModuleState::Sowed { sow_id: format!("sow-{}", module.id) };
             result.insert(module.id.clone(), updated);
         }
     }
@@ -115,7 +115,7 @@ pub fn sow_modules(
 
 #[allow(dead_code)]
 pub fn plan(args: PlanArgs) -> Result<(), DispatchError> {
-    let doc = fleet_plan::assemble_acceptance_checks_draft(&args.model);
+    let doc = planner::assemble_acceptance_checks_draft(&args.model);
     println!("{doc}");
     Ok(())
 }

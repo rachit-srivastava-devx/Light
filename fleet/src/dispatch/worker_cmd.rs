@@ -1,4 +1,4 @@
-//! `fleet mcp`: BLUEPRINT §5 cites `fleet_worker::sandbox::manifest::manifest_for_lease`, but
+//! `fleet mcp`: BLUEPRINT §5 cites `builder::sandbox::manifest::manifest_for_lease`, but
 //! that module is private to `fleet-worker` (`mod sandbox;`) and not re-exported from `lib.rs` --
 //! only whole-provision `resolve_hermetic_provision` is public, and it takes an `agent_id`, not
 //! a bare lease expression. Flagged rather than silently faked: this subcommand parses but

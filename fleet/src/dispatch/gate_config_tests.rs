@@ -3,7 +3,7 @@
 //! `src/tests/run_json_reports_stages_and_gates.rs`: this proves the mapping, not the wiring.
 
 use super::*;
-use fleet_verify::Requirement;
+use verify::Requirement;
 
 fn write_config(repo: &Path, body: &str) {
     std::fs::create_dir_all(repo.join(".fleet")).unwrap();
@@ -30,8 +30,8 @@ fn argv(spec: &GateSpec) -> Vec<String> {
 fn no_config_file_returns_the_committed_table_unchanged() {
     let repo = tempfile::tempdir().unwrap();
     let specs = resolve(repo.path()).expect("an absent config is not an error");
-    assert_eq!(specs.len(), fleet_verify::GATES.len());
-    for (got, want) in specs.iter().zip(fleet_verify::GATES) {
+    assert_eq!(specs.len(), verify::GATES.len());
+    for (got, want) in specs.iter().zip(verify::GATES) {
         assert_eq!((got.id, argv(got), got.probe), (want.id, argv(want), want.probe));
     }
 }
@@ -55,7 +55,7 @@ fn an_unknown_gate_id_is_an_environment_fault_not_a_no_op() {
     let repo = tempfile::tempdir().unwrap();
     write_config(repo.path(), "[gates.\"unit-tests\"]\ncommand = [\"npm\", \"test\"]\n");
     let fault = err(repo.path(), "a typo'd id must not be ignored");
-    assert_eq!(fault.exit_code(), fleet_types::ExitCode::Env);
+    assert_eq!(fault.exit_code(), types::ExitCode::Env);
     let text = fault.to_string();
     assert!(text.contains("unit-tests"), "must name the offending id: {text}");
     assert!(text.contains("\"unit tests\""), "must list the known ids: {text}");

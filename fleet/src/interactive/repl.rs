@@ -17,6 +17,17 @@ pub async fn run_loop(state_dir: &Path, cap: ConcurrencyCap) {
     let mut history: Vec<String> = Vec::new();
 
     render_banner(color, &model, lanes);
+
+    // Path check is synchronous and fast (filesystem only).
+    if let Some(warn) = super::path_check::check(color) {
+        println!("{warn}");
+    }
+    // Update check is async (network). Both run before the status bar so the user sees a settled
+    // screen before the first prompt. The 2-second timeout is inside update_check::check itself.
+    if let Some(notice) = super::update_check::check(color).await {
+        println!("{notice}");
+    }
+
     render_status_bar(color, &model, lanes, auto_mode);
 
     loop {

@@ -3,7 +3,7 @@
 use crate::cli::args_core::RoleCheckArgs;
 use crate::dispatch::error::DispatchError;
 use crate::print::human;
-use fleet_types::Role;
+use types::Role;
 
 #[derive(serde::Serialize)]
 struct RoleReport {
@@ -35,13 +35,13 @@ struct RoleCheckReport {
 
 pub fn role_check(args: RoleCheckArgs) -> Result<(), DispatchError> {
     let role = Role::parse(&args.role).map_err(|e| DispatchError::Refusal(e.to_string()))?;
-    let check = fleet_router::RoleCheck {
+    let check = route::RoleCheck {
         role,
         diff_adds_code: false,
         builder_model: None,
         verifier_model: None,
     };
-    fleet_router::evaluate_role_check(&check).map_err(|e| DispatchError::RoleCheck(e.reason()))?;
+    route::evaluate_role_check(&check).map_err(|e| DispatchError::RoleCheck(e.reason()))?;
     if args.json {
         crate::print::json::print_pretty(&RoleCheckReport { role: args.role, passed: true });
     } else {

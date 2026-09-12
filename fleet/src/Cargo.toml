@@ -2,6 +2,7 @@
 name = "fleet-cli"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 
 [[bin]]
 name = "fleet"
@@ -12,33 +13,32 @@ path = "main.rs"
 clap = { version = "4", features = ["derive"] }
 clap_complete = "4"
 figment = { version = "0.10", features = ["env"] }
-tokio = { version = "1", features = ["io-std", "macros", "rt", "rt-multi-thread", "sync", "time"] }
+tokio = { version = "1", features = ["io-std", "macros", "process", "rt", "rt-multi-thread", "sync", "time"] }
 rayon = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
 toml = "0.8"
 libc = "0.2"
-fleet-types = { path = "../crates/fleet-types" }
-fleet-lifecycle = { path = "../crates/fleet-lifecycle" }
-fleet-store = { path = "../crates/fleet-store" }
-fleet-router = { path = "../crates/fleet-router" }
-fleet-scan = { path = "../crates/fleet-scan" }
-fleet-plan = { path = "../crates/fleet-plan" }
-fleet-context = { path = "../crates/fleet-context" }
-fleet-verify = { path = "../crates/fleet-verify" }
-fleet-merge = { path = "../crates/fleet-merge" }
-fleet-memory = { path = "../crates/fleet-memory" }
-fleet-govern = { path = "../crates/fleet-govern" }
-fleet-stream = { path = "../crates/fleet-stream" }
-fleet-worker = { path = "../crates/fleet-worker" }
-fleet-judge = { path = "../crates/fleet-judge" }
+types    = { path = "../crates/types" }
+control  = { path = "../crates/control" }
+store    = { path = "../crates/store" }
+route    = { path = "../crates/route" }
+scan     = { path = "../crates/scan" }
+planner  = { path = "../crates/planner" }
+context  = { path = "../crates/context" }
+verify   = { path = "../crates/verify" }
+integrate = { path = "../crates/integrate" }
+knowledge = { path = "../crates/knowledge" }
+notify   = { path = "../crates/notify" }
+builder  = { path = "../crates/builder" }
+review   = { path = "../crates/review" }
 
 [features]
-# Passthrough to `fleet-judge`'s own `llm7` feature (real keyless HTTP adapter). OFF by
+# Passthrough to `review`'s own `llm7` feature (real keyless HTTP adapter). OFF by
 # default: `fleet adjudicate` with this feature off fails with a typed "no judge model
 # configured" error rather than silently defaulting to a fake or network-backed judge.
-llm7 = ["fleet-judge/llm7"]
+llm7 = ["review/llm7"]
 
 [dev-dependencies]
 tempfile = "3"

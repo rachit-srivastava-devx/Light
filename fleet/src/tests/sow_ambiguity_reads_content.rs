@@ -1,7 +1,7 @@
 //! `fleet sow`'s violation list used to come only from structural section-heading checks, so a
 //! one-line vague prompt and a fully-specified spec produced byte-for-byte identical output --
 //! the check never actually read what the text said. `plan_cmd::sow` now also runs
-//! `fleet_scan::assess` over the raw text; this drives the real binary and asserts a detailed
+//! `scan::assess` over the raw text; this drives the real binary and asserts a detailed
 //! spec yields strictly fewer ambiguity findings (and different output overall) than a vague one.
 
 mod support;

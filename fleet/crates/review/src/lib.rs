@@ -1,3 +1,7 @@
+//! Code review — model-gated review verdict.
+//! Re-exports fleet-judge for backward compat while new implementation matures.
+pub use fleet_judge::*;
+
 use serde::{Deserialize, Serialize};
 
 pub use crate::decision::assemble_reviewed_candidate;

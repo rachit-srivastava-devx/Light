@@ -1,10 +1,10 @@
 //! `Classify`'s wiring, split out of `stages.rs` to stay under the 80-line file gate. Turns the
-//! `--task` text into a `fleet_router::TaskClass` (the one piece of decision logic this
+//! `--task` text into a `route::TaskClass` (the one piece of decision logic this
 //! composition layer legitimately owns -- `fleet-router` takes a `TaskClass` as input, it does
-//! not derive one from free text itself) and runs it through the real `fleet_router::decide`
+//! not derive one from free text itself) and runs it through the real `route::decide`
 //! path so the result is an auditable `Decision`, not a discarded `Ok(())`.
 
-use fleet_router::{Decision, TaskClass};
+use route::{Decision, TaskClass};
 
 /// `HumanOnly` keywords mirror the A15/D4 doctrine already named in this repo's `CLAUDE.md`:
 /// contracts, migrations, and money moves are human-merge always. Anything else that names a
@@ -24,6 +24,6 @@ fn task_class(task_text: &str) -> TaskClass {
 /// Classification never fails the pipeline on its own -- `decide`'s `refusal` field (no capable
 /// adapter, no role assigned yet) is part of the returned `Decision`, not an error here; `Dispatch`
 /// is the stage that actually needs a selected adapter and owns failing on that.
-pub fn classify(task_text: &str, runtime: &fleet_router::RuntimeState) -> Decision {
-    fleet_router::decide(None, task_class(task_text), None, runtime)
+pub fn classify(task_text: &str, runtime: &route::RuntimeState) -> Decision {
+    route::decide(None, task_class(task_text), None, runtime)
 }

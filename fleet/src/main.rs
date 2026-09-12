@@ -22,7 +22,7 @@ fn main() {
     print::style::set_no_color_flag(cli.no_color);
     let config = runtime::load_config().unwrap_or_else(|e| {
         eprintln!("config load failed: {e}");
-        std::process::exit(fleet_types::ExitCode::Env.as_i32());
+        std::process::exit(types::ExitCode::Env.as_i32());
     });
     let state_dir = config.state_dir.clone();
     // Only work-spawning commands may be refused for capacity (see `cli::capacity_scope`):
@@ -38,7 +38,7 @@ fn main() {
                 reason: format!("system capacity check failed: {refusal}"),
             };
             print::human_stream::emit(&event, &print::style::Style::detect());
-            std::process::exit(fleet_types::ExitCode::Refusal.as_i32());
+            std::process::exit(types::ExitCode::Refusal.as_i32());
         }
         (Err(_), false) => runtime::ConcurrencyCap::minimum(),
     };
@@ -63,7 +63,7 @@ fn main() {
         })
     });
     match outcome {
-        Ok(()) => std::process::exit(fleet_types::ExitCode::Ok.as_i32()),
+        Ok(()) => std::process::exit(types::ExitCode::Ok.as_i32()),
         Err(e) => {
             eprintln!("fleet: {e}");
             std::process::exit(e.exit_code().as_i32());

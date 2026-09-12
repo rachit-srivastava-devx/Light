@@ -1,14 +1,14 @@
-//! `RealMemory` -- the real, wired-in `fleet_scan::MemoryPort` read-side adapter for `fleet
+//! `RealMemory` -- the real, wired-in `scan::MemoryPort` read-side adapter for `fleet
 //! sow`: recalls prior refusals whose text is similar to the current requirement, via
-//! `fleet_memory::retrieve`'s real fusion/scoring. The write side lives in `memory_write.rs`
+//! `knowledge::retrieve`'s real fusion/scoring. The write side lives in `memory_write.rs`
 //! (kept separate to hold this file under the ≤80-line rule).
 
 use super::clock::now;
 use super::embed::embed_text;
 use super::ports::InMemoryPorts;
 use super::store::SowMemoryStore;
-use fleet_memory::{MemoryId, MemoryItem, RetrieveError, ScoreWeights};
-use fleet_scan::{EnvFault, MemoryHit, MemoryPort};
+use knowledge::{MemoryId, MemoryItem, RetrieveError, ScoreWeights};
+use scan::{EnvFault, MemoryHit, MemoryPort};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -33,7 +33,7 @@ impl MemoryPort for RealMemory {
         let query_embedding = embed_text(query);
         let ports = InMemoryPorts { items: &items };
         let weights = ScoreWeights { alpha: 0.0, beta: 0.0, gamma: 1.0 };
-        let ranked = fleet_memory::retrieve(query, &query_embedding, &map, now(), limit, weights, &ports, &ports)
+        let ranked = knowledge::retrieve(query, &query_embedding, &map, now(), limit, weights, &ports, &ports)
             .map_err(|RetrieveError(e)| EnvFault::Internal(e))?;
         // `retrieve`'s RRF-fused `relevance` decides ranking/selection; the score reported
         // outward is the item's raw cosine similarity (a real magnitude `fleet-scan`'s 0.75

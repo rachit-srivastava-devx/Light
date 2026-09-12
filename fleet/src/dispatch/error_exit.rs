@@ -1,7 +1,7 @@
 //! `DispatchError::exit_code` -- split out of `error.rs` to keep that file ≤80 lines.
 
 use super::error::DispatchError;
-use fleet_types::ExitCode;
+use types::ExitCode;
 
 impl DispatchError {
     pub fn exit_code(&self) -> ExitCode {

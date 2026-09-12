@@ -2,7 +2,7 @@
 //! `fleet-govern::FileMeterStore`'s read-or-empty / write-whole-file pattern (no daemon, no
 //! lock manager: `sow` is a fast one-shot CLI command, not a long-running server).
 
-use fleet_memory::MemoryItem;
+use knowledge::MemoryItem;
 use std::fs;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};

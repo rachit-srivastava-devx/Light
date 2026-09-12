@@ -18,7 +18,7 @@ pub struct AgentArgs {
     pub model: Option<String>,
 }
 
-/// `fleet __spawn_probe`: drives `fleet_worker::spawn`/`join`'s REAL parent-side path (real
+/// `fleet __spawn_probe`: drives `builder::spawn`/`join`'s REAL parent-side path (real
 /// worktree, real `socketpair`, a real re-exec of THIS binary as `__agent`) end to end through
 /// the compiled binary -- the only way to test that path without either running inside the test
 /// harness process (whose `current_exe()` is the harness, not `fleet`) or reaching for the

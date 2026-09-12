@@ -1,11 +1,11 @@
 //! `blueprint_q` -> (on Locked) -> `build_q`. **Divergence from BLUEPRINT §4**: the blueprint's
-//! gate type `fleet_lifecycle::Task<Locked>` names a state that does not exist in the real
+//! gate type `control::Task<Locked>` names a state that does not exist in the real
 //! `fleet-lifecycle` state list (`Intake..Refused`, no `Locked`); the nearest real proof that a
-//! task has cleared its lease and is eligible to build is `Task<fleet_lifecycle::Building>`
+//! task has cleared its lease and is eligible to build is `Task<control::Building>`
 //! (reachable only via `Task<Leased>::build(..)`, i.e. only after the lease gate). This module
 //! uses that real marker instead -- flagged for Opus, not silently renamed.
 
-use fleet_lifecycle::{Building, Task};
+use control::{Building, Task};
 use tokio::sync::mpsc;
 
 /// One unit of dispatchable work, carrying proof (the `Task<Building>` value itself) that it

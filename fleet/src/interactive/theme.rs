@@ -14,12 +14,9 @@ pub const GRAY: &str = "\x1b[90m";
 pub const WHITE: &str = "\x1b[97m";
 
 pub const MASCOT: &[&str] = &[
-    "    ▄█▄    ",
-    "  ▄█████▄  ",
-    "▄█████████▄",
-    " ▀██ █ ██▀ ",
-    "  ██ █ ██  ",
-    "   ▀   ▀   ",
+    "    ┏━━━━━━━━━━━┓    ",
+    "━━━━┛           ┗━━━━",
+    "    ┗━━━━━━━━━━━┛    ",
 ];
 
 pub fn paint(color: bool, code: &str, text: &str) -> String {

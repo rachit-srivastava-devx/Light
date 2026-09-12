@@ -32,7 +32,7 @@ pub fn agent(args: &[&str]) -> Output {
     cmd().arg("__agent").args(args).output().expect("binary runs")
 }
 
-/// A throwaway repo with one committed file, so `fleet_merge::create` has something real to
+/// A throwaway repo with one committed file, so `integrate::create` has something real to
 /// branch a worktree from.
 pub fn scratch_repo(dir: &Path) {
     let run = |args: &[&str]| {
