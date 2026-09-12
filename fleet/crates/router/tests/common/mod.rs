@@ -2,7 +2,7 @@
 //! own compiled binary, so a helper unused by one binary is expected -- not dead code.
 #![allow(dead_code)]
 
-use fleet_router::{Decision, RuntimeState, ORDER};
+use router::{Decision, RuntimeState, ORDER};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub fn full_runtime() -> RuntimeState {

@@ -1,7 +1,7 @@
 //! Mutation-testing targets named in §9 of blueprints/fleet-router/BLUEPRINT.md: the D50
 //! reachability regression and the `ORDER` ordering it depends on.
 
-use fleet_router::{decide, CandidateSpec, RuntimeState, TaskClass, Tier, ORDER};
+use router::{decide, CandidateSpec, RuntimeState, TaskClass, Tier, ORDER};
 use types::Role;
 use std::collections::{BTreeMap, BTreeSet};
 

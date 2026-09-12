@@ -1,4 +1,4 @@
-use fleet_plan::{submission_eligible, validate_review_contract, verdict_decision, RoleContract, VerdictDecision, VerdictName, VerdictRefusal};
+use plan::{submission_eligible, validate_review_contract, verdict_decision, RoleContract, VerdictDecision, VerdictName, VerdictRefusal};
 use types::{LifecycleState, TaskId};
 use std::collections::BTreeSet;
 

@@ -3,12 +3,12 @@
 mod common;
 
 use common::init_repo;
-use fleet_merge::{create, invalidate_build_cache, merge_lane, remove};
+use merge::{create, invalidate_build_cache, merge_lane, remove};
 
 #[test]
 fn merge_lane_happy_path_reports_real_staged_and_changed_counts() {
     let (_guard, repo) = init_repo();
-    let name = fleet_merge::unique_name("happy");
+    let name = merge::unique_name("happy");
     let wt = create(&repo, &name).expect("create");
     std::fs::write(wt.path.join("a.txt"), b"a").unwrap();
     std::fs::write(wt.path.join("b.txt"), b"b").unwrap();

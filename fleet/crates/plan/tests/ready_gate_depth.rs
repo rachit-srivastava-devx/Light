@@ -1,4 +1,4 @@
-use fleet_plan::{check_and_evaluate, depth_evidence, evaluate, evaluate_with, EntryOutcome, GateRefs, Outcome};
+use plan::{check_and_evaluate, depth_evidence, evaluate, evaluate_with, EntryOutcome, GateRefs, Outcome};
 use serde_json::json;
 
 fn complete_refs() -> GateRefs {

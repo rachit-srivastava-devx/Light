@@ -1,4 +1,4 @@
-use fleet_plan::build_walkthrough;
+use plan::build_walkthrough;
 use serde_json::{json, Value};
 
 fn brief(node_id: &str, open_questions: &[&str]) -> Value {

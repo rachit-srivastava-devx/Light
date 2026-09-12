@@ -3,7 +3,7 @@
 mod common;
 
 use common::{assert_mutually_exclusive, empty_runtime, full_runtime};
-use fleet_router::{decide, TaskClass};
+use router::{decide, TaskClass};
 use types::Role;
 use std::collections::BTreeMap;
 

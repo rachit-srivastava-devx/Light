@@ -1,5 +1,5 @@
-use fleet_plan::review::VerdictName;
-use fleet_plan::{build_pr_walkthrough, AcceptanceResult, AttestationSummary, DiffSummary, FileChange};
+use plan::review::VerdictName;
+use plan::{build_pr_walkthrough, AcceptanceResult, AttestationSummary, DiffSummary, FileChange};
 use serde_json::{json, Value};
 
 fn brief() -> Value {

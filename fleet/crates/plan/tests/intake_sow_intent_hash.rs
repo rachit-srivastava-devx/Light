@@ -4,7 +4,7 @@
 //! refused again. The gate compares the SOW body's own declared line against the supplied hash,
 //! and the message must name BOTH sides.
 
-use fleet_plan::validate_sow_text;
+use plan::validate_sow_text;
 
 fn sow(hash_line: &str) -> String {
     format!(
@@ -19,7 +19,7 @@ request: build the thing\n\
     )
 }
 
-fn hash_reason(v: &[fleet_plan::StageViolation]) -> Option<String> {
+fn hash_reason(v: &[plan::StageViolation]) -> Option<String> {
     v.iter().find(|e| e.0.contains("source_intent_hash")).map(|e| e.0.clone())
 }
 

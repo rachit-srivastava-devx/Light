@@ -1,6 +1,6 @@
 //! Pure unit tests for the D31 gate -- no git process spawned.
 
-use fleet_merge::{check_files_changed, check_head_moved, check_stage_nonempty, MergeRefusal};
+use merge::{check_files_changed, check_head_moved, check_stage_nonempty, MergeRefusal};
 use types::ExitCode;
 
 #[test]

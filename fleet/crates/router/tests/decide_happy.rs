@@ -3,7 +3,7 @@
 mod common;
 
 use common::full_runtime;
-use fleet_router::{decide, TaskClass};
+use router::{decide, TaskClass};
 use types::Role;
 
 #[test]

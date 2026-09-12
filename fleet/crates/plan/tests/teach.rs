@@ -1,4 +1,4 @@
-use fleet_plan::{derive_lesson, validate_challenge_rows, ChallengeRow, LessonSource, TaughtOutcome};
+use plan::{derive_lesson, validate_challenge_rows, ChallengeRow, LessonSource, TaughtOutcome};
 use types::{NodeId, Role};
 use std::collections::BTreeSet;
 

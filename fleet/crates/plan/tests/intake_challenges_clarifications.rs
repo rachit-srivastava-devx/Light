@@ -1,4 +1,4 @@
-use fleet_plan::{validate_challenge_rows, validate_clarification_rows, ChallengeRow, ClarificationKind, ClarificationRow};
+use plan::{validate_challenge_rows, validate_clarification_rows, ChallengeRow, ClarificationKind, ClarificationRow};
 use std::collections::BTreeSet;
 
 #[test]

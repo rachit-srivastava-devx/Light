@@ -3,12 +3,12 @@
 mod common;
 
 use common::{init_repo, rev_parse_head, run};
-use fleet_merge::{create, merge_lane, remove, MergeRefusal};
+use merge::{create, merge_lane, remove, MergeRefusal};
 
 #[test]
 fn merge_lane_refuses_when_worktree_is_untouched() {
     let (_guard, repo) = init_repo();
-    let name = fleet_merge::unique_name("untouched");
+    let name = merge::unique_name("untouched");
     let wt = create(&repo, &name).expect("create");
     let before = rev_parse_head(&repo);
 
@@ -44,7 +44,7 @@ fn merge_lane_refuses_on_repeat_merge_of_an_already_merged_branch() {
 #[test]
 fn merge_lane_reports_conflict_without_corrupting_the_target_repo() {
     let (_guard, repo) = init_repo();
-    let name = fleet_merge::unique_name("conflict");
+    let name = merge::unique_name("conflict");
     let wt = create(&repo, &name).expect("create");
 
     std::fs::write(repo.join("f.txt"), b"y").unwrap();

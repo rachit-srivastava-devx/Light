@@ -1,4 +1,4 @@
-use fleet_plan::{assemble_acceptance_checks_draft, assemble_blueprint_doc, assemble_summary_doc};
+use plan::{assemble_acceptance_checks_draft, assemble_blueprint_doc, assemble_summary_doc};
 
 #[test]
 fn assemble_blueprint_doc_has_five_sections() {

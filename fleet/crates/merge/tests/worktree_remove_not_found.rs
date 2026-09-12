@@ -5,7 +5,7 @@
 mod common;
 
 use common::init_repo;
-use fleet_merge::{create, remove, unique_name, Worktree, WorktreeError};
+use merge::{create, remove, unique_name, Worktree, WorktreeError};
 
 #[test]
 fn remove_reports_not_found_on_an_already_removed_worktree() {

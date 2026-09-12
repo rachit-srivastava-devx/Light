@@ -3,7 +3,7 @@
 mod common;
 
 use common::init_repo;
-use fleet_merge::{create, remove, unique_name, WorktreeError};
+use merge::{create, remove, unique_name, WorktreeError};
 
 #[test]
 fn create_and_remove_round_trips_cleanly() {

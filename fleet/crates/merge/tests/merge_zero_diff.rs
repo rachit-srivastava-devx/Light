@@ -5,12 +5,12 @@
 mod common;
 
 use common::{init_repo, run};
-use fleet_merge::{create, merge_lane, remove, MergeRefusal};
+use merge::{create, merge_lane, remove, MergeRefusal};
 
 #[test]
 fn merge_lane_refuses_on_head_move_with_zero_file_diff() {
     let (_guard, repo) = init_repo();
-    let name = fleet_merge::unique_name("zerodiff");
+    let name = merge::unique_name("zerodiff");
     let wt = create(&repo, &name).expect("create");
 
     // Repo side: f.txt "x" -> "y", committed directly on repo's own branch.

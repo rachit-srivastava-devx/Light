@@ -1,4 +1,4 @@
-use fleet_plan::{canonical_json, content_hash, validate_module_brief};
+use plan::{canonical_json, content_hash, validate_module_brief};
 use serde_json::json;
 
 fn minimal_brief() -> serde_json::Value {

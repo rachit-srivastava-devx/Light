@@ -1,4 +1,4 @@
-use fleet_plan::{derive_questions, intake_gate, open_questions, GateDecision, QuestionId, StageReadiness, Trigger};
+use plan::{derive_questions, intake_gate, open_questions, GateDecision, QuestionId, StageReadiness, Trigger};
 use std::collections::BTreeSet;
 
 #[test]

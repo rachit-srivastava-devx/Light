@@ -4,7 +4,7 @@
 //! normal verdict, never a panic. Every body below carries an em-dash, curly quotes, an accented
 //! character and an emoji, so the crash is reachable from more than one line shape.
 
-use fleet_plan::validate_sow_text;
+use plan::validate_sow_text;
 
 /// The exact shape that crashed: a heading whose 8th byte falls inside U+2014.
 const EM_DASH_HEADING: &str = "# SOW — Shopify customer order history";

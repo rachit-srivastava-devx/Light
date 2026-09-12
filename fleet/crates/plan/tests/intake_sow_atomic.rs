@@ -1,4 +1,4 @@
-use fleet_plan::{validate_atomic_rows, validate_sow_text, AtomicRow, AtomicTier};
+use plan::{validate_atomic_rows, validate_sow_text, AtomicRow, AtomicTier};
 
 fn sow_body() -> String {
     "source_intent_hash: abc123\n\
