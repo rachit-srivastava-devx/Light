@@ -9,7 +9,7 @@ pub fn render_banner(color: bool, model: &str, lanes: usize) {
         .unwrap_or_else(|_| ".".into());
     let version = env!("CARGO_PKG_VERSION");
 
-    let mascot_colored: Vec<String> = MASCOT.iter().map(|line| paint(color, CYAN, line)).collect();
+    let mascot_colored: Vec<String> = MASCOT.iter().map(|line| paint(color, PURPLE, line)).collect();
     let title = format!("{} {}", paint(color, BOLD, "Fleet"), paint(color, GRAY, &format!("v{version}")));
     let meta = paint(color, GRAY, &format!("{model} · Local Orchestration"));
     let path = paint(color, DIM, &cwd);
