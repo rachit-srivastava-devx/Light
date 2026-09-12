@@ -13,6 +13,7 @@ sha2       = "0.10"
 blake3     = "1.8"
 fs2        = "0.4"
 redb       = "2"
+hex        = "0.4"
 types = { path = "../types" }
 
 [dev-dependencies]

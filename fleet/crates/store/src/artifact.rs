@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 use crate::StoreError;
 
 fn sha256_hex(data: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(data))
+    hex::encode(Sha256::digest(data))
 }
 
 /// Publish a blob atomically.

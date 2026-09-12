@@ -42,11 +42,7 @@ pub fn canonical_json(value: &Value) -> Result<String, NumericLeafError> {
 }
 
 fn hex_encode(bytes: &[u8]) -> String {
-    let mut s = String::with_capacity(bytes.len() * 2);
-    for b in bytes {
-        s.push_str(&format!("{b:02x}"));
-    }
-    s
+    hex::encode(bytes)
 }
 
 pub(crate) fn hash_canonical_string(canonical: &str) -> String {
