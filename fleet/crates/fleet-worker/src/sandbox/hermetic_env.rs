@@ -17,6 +17,9 @@ pub struct HermeticEnv {
     pub path: String,
     pub lang: Option<String>,
     pub cargo_target_dir: Option<String>,
+    // Test/dev override: if set in the parent, forward to the child so integration tests can
+    // substitute a fast-failing stub script instead of hitting the real llm7.io endpoint.
+    pub freelane_root: Option<String>,
 }
 
 /// Allocate a fresh per-lane tempdir (never the user's real `$HOME`) and build the allowlisted
@@ -39,6 +42,7 @@ pub fn build(root: &Path) -> HermeticEnv {
         // Shared build cache, not a credential -- passed through only when the parent set it
         // (never hardcoded), same reasoning as `main.rs:3060-3066`.
         cargo_target_dir: env::var("CARGO_TARGET_DIR").ok(),
+        freelane_root: env::var("FLEET_FREELANE_ROOT").ok(),
     }
 }
 
@@ -57,6 +61,9 @@ impl HermeticEnv {
         }
         if let Some(dir) = &self.cargo_target_dir {
             command.env("CARGO_TARGET_DIR", dir);
+        }
+        if let Some(root) = &self.freelane_root {
+            command.env("FLEET_FREELANE_ROOT", root);
         }
     }
 }

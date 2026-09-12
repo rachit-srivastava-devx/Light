@@ -8,6 +8,7 @@ pub mod gates;
 pub mod m4;
 
 use std::fs;
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, Output};
 
@@ -45,6 +46,18 @@ pub fn scratch_repo(dir: &Path) {
     fs::write(dir.join("f.txt"), "hello").unwrap();
     run(&["add", "f.txt"]);
     run(&["commit", "-q", "-m", "init"]);
+}
+
+/// Creates a temp dir containing a minimal `freelane.sh` stub that exits 3 (all lanes
+/// unavailable) immediately, so integration tests that exercise the fd-3 round-trip are
+/// deterministic in CI without hitting the real llm7.io network endpoint.
+/// Returns the `TempDir` — the caller must keep it alive for the duration of the test.
+pub fn stub_freelane_root() -> tempfile::TempDir {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let script = dir.path().join("freelane.sh");
+    fs::write(&script, "#!/bin/sh\n# stub: immediately refuse all lanes\nexit 3\n").expect("write stub");
+    fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).expect("chmod stub");
+    dir
 }
 
 /// Same as `scratch_repo`, but stops after `git add` -- `Merge`'s real `check_stage_nonempty`

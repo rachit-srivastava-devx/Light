@@ -9,7 +9,7 @@
 
 mod support;
 
-use support::{agent, cmd, scratch_repo};
+use support::{agent, cmd, scratch_repo, stub_freelane_root};
 
 /// TASK 4(a): `FLEET_WORKER_TEST_CHILD_EXE` is a fault-injection-only seam (see
 /// `crates/fleet-worker/src/spawn/util.rs`); this whole file exists to close the hole where the
@@ -37,11 +37,16 @@ fn agent_subcommand_is_recognized_by_the_real_binary() {
 /// re-exec of the real binary) end to end, WITHOUT `FLEET_WORKER_TEST_CHILD_EXE`. A `refused`
 /// or `done` line proves a receipt genuinely came back over fd 3; the probe only reports "no
 /// receipt" if `join` sees `EnvironmentFault`, and turns that into a nonzero exit.
+///
+/// `FLEET_FREELANE_ROOT` is set to a stub that exits 3 (all lanes unavailable) so the test
+/// is deterministic in CI — the fd-3 wire is what's under test, not llm7.io reachability.
 #[test]
 fn a_real_spawn_gets_a_real_fd3_receipt_back() {
     let repo = tempfile::tempdir().unwrap();
     scratch_repo(repo.path());
+    let freelane = stub_freelane_root();
     let out = cmd()
+        .env("FLEET_FREELANE_ROOT", freelane.path())
         .args(["__spawn_probe", "--repo"])
         .arg(repo.path())
         .output()
