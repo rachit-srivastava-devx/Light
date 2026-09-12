@@ -6,7 +6,7 @@
 use super::states::*;
 use super::task::Task;
 use super::task_id::TaskId;
-use types::GateRefusal;
+use ::types::GateRefusal;
 use std::marker::PhantomData;
 
 /// Every state, erased to a single enum so a caller that only knows a task's state as a

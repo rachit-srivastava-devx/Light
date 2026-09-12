@@ -1,7 +1,7 @@
 //! One lane's TSV row: `lane\twindow\tused\treservations\tresolved_model\tunknown_observed`.
 //! Split out of `meter_codec.rs` to hold the 80-line-per-file rule.
 
-use types::Tokens;
+use ::types::Tokens;
 
 use super::reservation_codec::parse_reservation;
 use super::types::{LaneState, MeterIoError};

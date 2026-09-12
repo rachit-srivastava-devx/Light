@@ -8,7 +8,7 @@ use std::fs::{self};
 use std::io::{ErrorKind, Write};
 use std::path::PathBuf;
 
-use types::{LaneId, Tokens};
+use ::types::{LaneId, Tokens};
 
 use super::file_lock::with_exclusive_lock;
 use super::meter_codec::{decode_lanes, encode_lanes};

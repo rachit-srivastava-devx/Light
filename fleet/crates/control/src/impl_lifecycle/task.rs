@@ -4,7 +4,7 @@
 use super::receipt::{ReceiptLedger, TransitionReceipt};
 use super::states::State;
 use super::task_id::TaskId;
-use types::GateRefusal;
+use ::types::GateRefusal;
 use std::marker::PhantomData;
 
 /// A task whose legal operations are determined entirely by `S`. Fields are private to this

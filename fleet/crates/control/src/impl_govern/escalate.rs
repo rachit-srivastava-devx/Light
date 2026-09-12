@@ -3,7 +3,7 @@
 
 use std::time::Duration;
 
-use types::Tokens;
+use ::types::Tokens;
 
 /// Ascending token-count thresholds on a lane's *window* at which the caller should take the
 /// next, more drastic action. Compared `>=`, highest first, so a degenerate policy with equal

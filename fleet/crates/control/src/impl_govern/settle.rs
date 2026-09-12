@@ -2,7 +2,7 @@
 //! `used` moves by `checked_sub(estimated)` then `checked_add(actual)`, never re-derived from
 //! scratch, so a concurrent lane's own usage is never clobbered.
 
-use types::Tokens;
+use ::types::Tokens;
 
 use super::store::MeterStore;
 use super::types::{LaneState, Reservation, SettleError};

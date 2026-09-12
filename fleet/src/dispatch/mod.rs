@@ -2,7 +2,7 @@
 
 mod adjudicate_cmd; mod adjudicate_cmd_error; mod adjudicate_render;
 pub mod agent_cmd;
-mod agent_cmd_error; mod agent_cmd_run;
+mod agent_cmd_error; pub(crate) mod agent_cmd_run;
 pub mod agents_cmd;
 pub mod capacity_probe_cmd;
 pub mod context_cmd;

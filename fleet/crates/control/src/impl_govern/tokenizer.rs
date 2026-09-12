@@ -1,7 +1,7 @@
 //! Real token estimation -- never `chars/4`. `TiktokenTokenizer` wraps `tiktoken-rs`'s
 //! `cl100k_base`/`o200k_base` BPE encoding; tests may inject a fixed-count fake instead.
 
-use types::Tokens;
+use ::types::Tokens;
 
 /// A loaded tokenizer. Pure (same text always yields the same count) but still a port, not
 /// called directly, so a tokenizer-version bump is a caller decision, not a hidden constant.

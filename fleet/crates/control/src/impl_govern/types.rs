@@ -1,7 +1,7 @@
 //! Ledger state and typed errors: `LaneState`, `Reservation`, `ReservationId`, `AdmitError`,
 //! `SettleError`, `MeterIoError`.
 
-use types::{LaneId, Tokens, TokensOverflow};
+use ::types::{LaneId, Tokens, TokensOverflow};
 
 /// One lane's measured state. `window`/`used` are `None` exactly when unmeasured -- never
 /// coerced to zero.

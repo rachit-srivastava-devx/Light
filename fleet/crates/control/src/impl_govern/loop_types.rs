@@ -2,7 +2,7 @@
 //! sequence of work units (one feature/module per session) plus how far a prior run got.
 
 use router::TaskClass;
-use types::{Role, Tokens};
+use ::types::{Role, Tokens};
 
 /// Identifies one unit of work in a `LoopPlan` (one feature/module the loop builds per session).
 /// A thin `String` newtype, local to this crate -- not a `fleet_types` identifier, since a unit

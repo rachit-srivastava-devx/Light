@@ -1,7 +1,7 @@
 //! `AutonomousRun::complete_unit`/`lane_used` -- the other half of the `tick`/`complete_unit`
 //! two-phase protocol (split from `loop_run.rs` purely to hold the 80-line file cap).
 
-use types::{LaneId, Tokens};
+use ::types::{LaneId, Tokens};
 
 use super::loop_error::LoopError;
 use super::loop_run::AutonomousRun;

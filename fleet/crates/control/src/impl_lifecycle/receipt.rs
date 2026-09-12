@@ -2,7 +2,7 @@
 //! `fleet/keel/fleet/src/lifecycle.rs:119-131`.
 
 use super::task_id::TaskId;
-use types::GateRefusal;
+use ::types::GateRefusal;
 
 /// A transition receipt awaiting the caller's own timestamp/actor stamping. `from`/`to` are
 /// the `'static` type names of the marker structs (`std::any::type_name::<S>()`), never a

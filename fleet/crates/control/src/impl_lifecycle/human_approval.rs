@@ -1,6 +1,6 @@
 //! `HumanApproval`. Ported from `fleet/keel/fleet/src/lifecycle.rs:169-186`.
 
-use types::GateRefusal;
+use ::types::GateRefusal;
 
 /// Proof that a human, rather than an agent, approved a gated edge (`review`, `accept`).
 /// Only code in this crate can mint one -- the daemon's human-approval boundary in `src/`

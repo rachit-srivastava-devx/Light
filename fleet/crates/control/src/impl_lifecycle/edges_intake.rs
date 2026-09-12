@@ -5,7 +5,7 @@ use super::receipt::ReceiptLedger;
 use super::states::{Intake, Refused, Specified};
 use super::task::Task;
 use super::task_id::TaskId;
-use types::GateRefusal;
+use ::types::GateRefusal;
 use std::marker::PhantomData;
 
 impl Task<Intake> {

@@ -5,7 +5,7 @@ use super::proposal_types::{ChangeEmitter, ProposalRequest, ProposedChange};
 use super::receipt::ReceiptLedger;
 use super::states::{Accepted, Proposed};
 use super::task::Task;
-use types::GateRefusal;
+use ::types::GateRefusal;
 
 impl Task<Accepted> {
     /// `Accepted -> Proposed`: emit a real pull request carrying the attested diff. The

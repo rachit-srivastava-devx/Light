@@ -3,7 +3,7 @@
 
 use super::loop_types::LoopIoError;
 use super::types::{AdmitError, MeterIoError, SettleError};
-use types::EmptyIdentifier;
+use ::types::EmptyIdentifier;
 
 #[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum LoopError {

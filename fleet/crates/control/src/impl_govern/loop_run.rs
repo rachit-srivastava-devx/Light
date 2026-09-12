@@ -8,7 +8,7 @@
 use std::collections::BTreeSet;
 use std::time::{Duration, SystemTime};
 
-use types::LaneId;
+use ::types::LaneId;
 
 use super::admit::admit;
 use super::escalate::{escalate, Escalation, EscalationPolicy};

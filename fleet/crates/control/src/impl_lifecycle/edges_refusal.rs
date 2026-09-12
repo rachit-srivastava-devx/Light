@@ -4,7 +4,7 @@
 use super::receipt::ReceiptLedger;
 use super::states::{Accepted, Attested, Building, Built, Refused, Verifying};
 use super::task::Task;
-use types::GateRefusal;
+use ::types::GateRefusal;
 
 macro_rules! refusal_edge {
     ($from:ident) => {

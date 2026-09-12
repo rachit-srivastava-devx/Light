@@ -5,7 +5,7 @@ use super::human_approval::HumanApproval;
 use super::receipt::ReceiptLedger;
 use super::states::{Refused, Reviewed, Specified};
 use super::task::Task;
-use types::GateRefusal;
+use ::types::GateRefusal;
 
 impl Task<Specified> {
     /// Requires a `HumanApproval` -- an agent cannot self-review (`non_human_review`

@@ -1,6 +1,6 @@
 //! `TaskId`. Ported from `fleet/keel/fleet/src/lifecycle.rs:96-117`.
 
-use types::GateRefusal;
+use ::types::GateRefusal;
 use std::fmt;
 
 /// Stable identifier carried through every transition. Never empty.

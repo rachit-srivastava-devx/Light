@@ -4,7 +4,7 @@
 use std::collections::BTreeMap;
 use std::time::{Duration, SystemTime};
 
-use types::{LaneId, Tokens};
+use ::types::{LaneId, Tokens};
 
 use super::types::{LaneState, MeterIoError};
 

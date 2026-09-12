@@ -55,11 +55,19 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
 /// before ever spawning this child, so invoke it for real with the task as its argument.
 fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
     let binary = adapter.cli_binary_name().unwrap_or("true");
-    let output = Command::new(binary)
-        .arg(task)
-        .current_dir(worktree)
-        .stdin(Stdio::null())
-        .output();
+    let mut cmd = Command::new(binary);
+    // Claude CLI requires --print for non-interactive (batch) mode; without it, it tries
+    // to start an interactive session and fails when stdin is null.
+    if matches!(adapter, CliAdapter::Claude) {
+        cmd.arg("--print");
+    }
+    cmd.arg(task);
+    if let Some(m) = model {
+        if matches!(adapter, CliAdapter::Claude) {
+            cmd.args(["--model", m]);
+        }
+    }
+    let output = cmd.current_dir(worktree).stdin(Stdio::null()).output();
     match output {
         Ok(out) if out.status.success() => AgentOutcome::Done {
             body: json!({

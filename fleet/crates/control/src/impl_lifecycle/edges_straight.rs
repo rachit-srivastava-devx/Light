@@ -7,7 +7,7 @@ use super::states::{
     Proposed, Reviewed, Verified, Verifying,
 };
 use super::task::Task;
-use types::GateRefusal;
+use ::types::GateRefusal;
 
 macro_rules! edge {
     ($from:ident, $method:ident, $to:ident) => {

@@ -1,7 +1,7 @@
 //! One `id:estimated` reservation field, split out of `meter_codec.rs` to hold the 80-line
 //! rule.
 
-use types::{LaneId, Tokens};
+use ::types::{LaneId, Tokens};
 
 use super::types::{MeterIoError, Reservation, ReservationId};
 

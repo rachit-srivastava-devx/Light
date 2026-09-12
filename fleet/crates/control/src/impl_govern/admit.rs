@@ -2,7 +2,7 @@
 //! atomicity comes entirely from running inside `MeterStore::with_lane_locked`'s exclusive lock,
 //! which `meter.rs::save`'s unconditional `rename` never provided.
 
-use types::{LaneId, Tokens};
+use ::types::{LaneId, Tokens};
 
 use super::store::MeterStore;
 use super::types::{AdmitError, LaneState, Reservation, ReservationId};

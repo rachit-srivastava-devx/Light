@@ -4,7 +4,7 @@ use super::human_approval::HumanApproval;
 use super::receipt::ReceiptLedger;
 use super::states::{Accepted, Attested};
 use super::task::Task;
-use types::GateRefusal;
+use ::types::GateRefusal;
 
 impl Task<Attested> {
     /// Requires a `HumanApproval` (`accept` is a human-only gate, symmetric with `review`).

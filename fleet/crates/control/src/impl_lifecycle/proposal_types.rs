@@ -1,7 +1,7 @@
 //! `ChangeEmitter`, `ProposalRequest`, `ProposedChange`. Ported from
 //! `fleet/keel/fleet/src/lifecycle.rs:296-333`.
 
-use types::GateRefusal;
+use ::types::GateRefusal;
 use std::path::PathBuf;
 
 /// Push `request.head` and open a pull request. MUST return the real PR URL on success --

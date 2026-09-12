@@ -3,7 +3,7 @@
 use super::human_approval::HumanApproval;
 use super::receipt::ReceiptLedger;
 use super::resume::AnyTask;
-use types::GateRefusal;
+use ::types::GateRefusal;
 
 /// Advance `any` exactly one step along its single canonical forward edge, using
 /// `HumanApproval::recorded` internally for the two human-gated edges (`review`, `accept`) --

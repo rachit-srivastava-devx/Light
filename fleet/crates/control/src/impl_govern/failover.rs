@@ -7,7 +7,7 @@ use std::collections::BTreeSet;
 use std::time::SystemTime;
 
 use router::{decide, Decision, RuntimeState, TaskClass, ORDER};
-use types::{Role, Tokens};
+use ::types::{Role, Tokens};
 
 use super::store::{CooldownStore, MeterStore};
 use super::types::MeterIoError;
