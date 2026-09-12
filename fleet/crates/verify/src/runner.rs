@@ -5,7 +5,7 @@ pub trait GateRunner: Send + Sync {
 }
 
 pub trait CoverageProvider: Send + Sync {
-    fn coverage_percent(&self, tree_digest: &str) -> Result<f64, VerifyError>;
+    fn coverage_percent(&self, tree_digest: &str) -> Result<u64, VerifyError>;
 }
 
 pub struct FakeGateRunner { exit_code: i32 }
@@ -32,14 +32,14 @@ impl GateRunner for FakeGateRunner {
     }
 }
 
-pub struct FakeCoverageProvider { percent: f64 }
+pub struct FakeCoverageProvider { percent: u64 }
 
 impl FakeCoverageProvider {
-    pub fn with(percent: f64) -> Self { Self { percent } }
+    pub fn with(percent: u64) -> Self { Self { percent } }
 }
 
 impl CoverageProvider for FakeCoverageProvider {
-    fn coverage_percent(&self, _tree_digest: &str) -> Result<f64, VerifyError> {
+    fn coverage_percent(&self, _tree_digest: &str) -> Result<u64, VerifyError> {
         Ok(self.percent)
     }
 }
@@ -59,14 +59,14 @@ pub fn evaluate_coverage(
     provider: &dyn CoverageProvider,
 ) -> Result<GateResult, VerifyError> {
     let percent = provider.coverage_percent(tree_digest)?;
-    let passed = percent >= floor as f64;
+    let passed = percent >= floor;
     let failure_message = if passed { None } else {
-        Some(format!("coverage {:.1}% is below floor {}%", percent, floor))
+        Some(format!("coverage {}% is below floor {}%", percent, floor))
     };
     Ok(GateResult {
         id: "coverage".to_string(),
         exit_code: if passed { 0 } else { 6 },
-        stdout_digest: format!("coverage:{:.1}", percent),
+        stdout_digest: format!("coverage:{}", percent),
         stderr_digest: String::new(),
         input_digest: format!("floor:{}", floor),
         passed,

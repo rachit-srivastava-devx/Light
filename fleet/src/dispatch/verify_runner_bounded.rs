@@ -51,7 +51,12 @@ pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessO
             Ok(None) => {
                 if Instant::now() >= deadline {
                     let _ = child.kill();
-                    let _ = child.wait();
+                    // Do NOT block on child.wait() here: cargo (and similar tools) acquire
+                    // the cargo build lock via flock(), which puts the process in uninterruptible
+                    // sleep (D state). SIGKILL is queued but not delivered until flock() wakes,
+                    // which can take many seconds while other cargo processes hold the lock.
+                    // Reap the zombie on a background thread so we return immediately.
+                    std::thread::spawn(move || { let _ = child.wait(); });
                     report::timed_out(&bin);
                     return timeout_output(command, remaining);
                 }

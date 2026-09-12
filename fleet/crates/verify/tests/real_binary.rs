@@ -21,7 +21,7 @@ fn verify_crate_public_api_accessible() {
         &candidate,
         &verify::FakeGateRunner::passing(),
         &verify::FakeFindingsProvider::empty(),
-        &verify::FakeCoverageProvider::with(100.0),
+        &verify::FakeCoverageProvider::with(100),
     )
     .unwrap();
     assert!(ev.passed);
