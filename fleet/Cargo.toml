@@ -14,7 +14,6 @@ members = [
     "crates/probe-learn",
     "crates/fleet-plan",
     "crates/fleet-context",
-    "crates/fleet-verify",
     "crates/fleet-merge",
     "crates/fleet-memory",
     "crates/fleet-govern",

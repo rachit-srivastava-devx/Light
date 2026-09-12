@@ -1,3 +1,4 @@
+mod impl_;
 mod receipt;
 mod runner;
 mod secret;
@@ -9,16 +10,15 @@ pub use runner::{
     GateRunner,
 };
 pub use secret::{FakeFindingsProvider, FindingsProvider, normalize_findings};
-// Internal canonical types (new implementations — distinct from fleet-verify's GateSpec/GateResult)
+// Internal canonical types (new implementations — distinct from impl_'s GateSpec/GateResult)
 pub use types::{
     GateEvidence, ReviewedCandidate, SecretFinding, Status, VerifyError,
 };
 pub use types::GateResult as CanonicalGateResult;
 pub use types::GateSpec as CanonicalGateSpec;
 
-// Fleet-verify backward-compat re-exports: GateSpec, GateResult, Verdict, etc.
-// src/ uses these through `verify::*` after the fleet_verify→verify rename.
-pub use fleet_verify::{
+// Re-exports from the inlined implementation (formerly fleet-verify).
+pub use impl_::{
     FailReason, GateAssetError, GateCommand, GateResult, GateSpec, GatesRoot,
     ProbeTool, ProcessOutput, ProcessRunner, Report, Requirement, ToolProbe, Verdict,
     GATES, run_all, run_gate,

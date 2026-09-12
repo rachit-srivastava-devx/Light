@@ -1,6 +1,6 @@
 //! Verdict and per-gate result -- the outcome of orchestrating one `GateSpec`.
 
-use crate::denominator::Denominator;
+use super::denominator::Denominator;
 
 /// Why a gate's stdout could not be trusted as a `Pass` even though the wrapped process exited 0.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

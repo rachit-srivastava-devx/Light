@@ -1,12 +1,12 @@
 //! Orchestration -- the only two fns that touch the injected traits.
 
-use crate::classify::classify;
-use crate::gates::GatesRoot;
-use crate::ports::{ProcessRunner, ToolProbe};
-use crate::report::Report;
-use crate::requirement::Requirement;
-use crate::spec::{GateCommand, GateSpec};
-use crate::verdict::{GateResult, Verdict};
+use super::classify::classify;
+use super::gates::GatesRoot;
+use super::ports::{ProcessRunner, ToolProbe};
+use super::report::Report;
+use super::requirement::Requirement;
+use super::spec::{GateCommand, GateSpec};
+use super::verdict::{GateResult, Verdict};
 
 fn skip(spec: &GateSpec, reason: String) -> GateResult {
     GateResult {

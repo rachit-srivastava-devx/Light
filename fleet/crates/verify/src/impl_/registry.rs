@@ -2,9 +2,9 @@
 //! call list, retyped as data. Each entry maps one gate family from the reuse map (§5) to its
 //! `ProbeTool`, requirement level, and stdout parser.
 
-use crate::parsers;
-use crate::requirement::{ProbeTool, Requirement};
-use crate::spec::{GateCommand, GateSpec};
+use super::parsers;
+use super::requirement::{ProbeTool, Requirement};
+use super::spec::{GateCommand, GateSpec};
 
 pub const GATES: &[GateSpec] = &[
     GateSpec {

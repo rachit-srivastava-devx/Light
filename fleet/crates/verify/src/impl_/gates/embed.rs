@@ -8,10 +8,10 @@
 
 use include_dir::{include_dir, Dir};
 
-pub(super) const SEMGREP_GATE_SH: &str = include_str!("../../gates/semgrep-gate.sh");
-pub(super) const TRIVY_GATE_SH: &str = include_str!("../../gates/trivy-gate.sh");
-pub(super) const RECUR_GATE_SH: &str = include_str!("../../gates/recur-gate.sh");
-pub(super) const DETECTOR_INTEGRITY_SH: &str = include_str!("../../gates/detector-integrity.sh");
+pub(super) const SEMGREP_GATE_SH: &str = include_str!("../../../gates/semgrep-gate.sh");
+pub(super) const TRIVY_GATE_SH: &str = include_str!("../../../gates/trivy-gate.sh");
+pub(super) const RECUR_GATE_SH: &str = include_str!("../../../gates/recur-gate.sh");
+pub(super) const DETECTOR_INTEGRITY_SH: &str = include_str!("../../../gates/detector-integrity.sh");
 
 pub(super) static POLICY_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/gates/policy");
 pub(super) static CORPUS_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/gates/corpus");

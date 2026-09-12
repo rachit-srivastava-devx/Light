@@ -2,8 +2,8 @@
 //! are normalized to "higher numerator is better" (clean-of-total) so every `GateSpec` in the
 //! registry shares one reading direction.
 
-use crate::denominator::DenominatorResult as D;
-use crate::digits::{after, before};
+use super::denominator::DenominatorResult as D;
+use super::digits::{after, before};
 
 /// `mutants-gate.sh:106-111` -- `"mutants: caught=%d total=%d floor=%s"`.
 pub fn mutants(stdout: &str, _stderr: &str) -> D {

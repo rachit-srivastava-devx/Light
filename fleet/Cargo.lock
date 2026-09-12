@@ -1115,16 +1115,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fleet-verify"
-version = "0.1.0"
-dependencies = [
- "fleet-types",
- "include_dir",
- "tempfile",
- "thiserror 2.0.20",
-]
-
-[[package]]
 name = "fleet-worker"
 version = "0.1.0"
 dependencies = [
@@ -4292,8 +4282,10 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "verify"
 version = "0.1.0"
 dependencies = [
- "fleet-verify",
+ "fleet-types",
+ "include_dir",
  "serde",
+ "tempfile",
  "thiserror 2.0.20",
 ]
 

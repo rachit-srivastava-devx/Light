@@ -1,8 +1,8 @@
 //! One committed gate's identity and policy -- mirrors one `stage "name" ...` line in
 //! `verify.sh`.
 
-use crate::denominator::DenominatorResult;
-use crate::requirement::{ProbeTool, Requirement};
+use super::denominator::DenominatorResult;
+use super::requirement::{ProbeTool, Requirement};
 
 /// One gate's identity and policy, as committed data.
 #[derive(Clone, Copy)]

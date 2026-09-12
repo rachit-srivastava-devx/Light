@@ -3,7 +3,7 @@
 
 use fleet_types::ExitCode;
 
-use crate::verdict::{GateResult, Verdict};
+use super::verdict::{GateResult, Verdict};
 
 #[derive(Clone, Debug)]
 pub struct Report {

@@ -1,10 +1,10 @@
 //! `classify` -- the private helper that enforces the crate's one invariant: a gate that
 //! measured nothing is a `Fail`, never a `Pass`, no matter what its exit code was.
 
-use crate::denominator::{Denominator, DenominatorResult};
-use crate::ports::ProcessOutput;
-use crate::spec::GateSpec;
-use crate::verdict::{FailReason, Verdict};
+use super::denominator::{Denominator, DenominatorResult};
+use super::ports::ProcessOutput;
+use super::spec::GateSpec;
+use super::verdict::{FailReason, Verdict};
 
 pub(crate) fn classify(spec: &GateSpec, out: &ProcessOutput) -> Verdict {
     if out.exit_code != 0 {
@@ -23,7 +23,7 @@ pub(crate) fn classify(spec: &GateSpec, out: &ProcessOutput) -> Verdict {
         // flags a REQUIRED gate that skipped, so this cannot quietly vanish from a summary.
         DenominatorResult::NotApplicable => Verdict::Skip {
             reason: format!("{}: no applicable input in this repo", spec.id),
-            was_required: matches!(spec.requirement, crate::requirement::Requirement::Required),
+            was_required: matches!(spec.requirement, super::requirement::Requirement::Required),
         },
         DenominatorResult::Unparseable => Verdict::Fail {
             reason: FailReason::Unparseable,

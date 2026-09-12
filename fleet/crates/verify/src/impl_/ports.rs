@@ -1,7 +1,7 @@
 //! Injected IO boundaries: `ToolProbe` and `ProcessRunner`. This crate never calls
 //! `std::process::Command` or `command -v` itself -- both are supplied by the caller.
 
-use crate::requirement::ProbeTool;
+use super::requirement::ProbeTool;
 
 /// Injected IO boundary #1: "is this tool usable on this machine right now."
 pub trait ToolProbe {
