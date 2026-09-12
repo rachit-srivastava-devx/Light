@@ -28,8 +28,8 @@ pub struct GateReason {
 pub struct DepthScore {
     pub checks_total: u32,
     pub checks_passed: u32,
-    /// `round(passed/total, 3)` -- report data, never a decision input.
-    pub ratio: f64,
+    /// `passed * 1000 / total` (per-mille, integer) -- report data, never a decision input.
+    pub ratio_milli: u32,
     pub failed_check_ids: Vec<String>,
 }
 
