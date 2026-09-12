@@ -12,7 +12,9 @@ tokio       = { version = "1", features = ["rt-multi-thread", "process", "macros
 
 # fleet-internal
 fleet-plan  = { path = "../../crates/fleet-plan" }
-fleet-judge = { path = "../fleet-judge" }
+
+# formerly fleet-judge optional deps (used by the llm7 feature)
+reqwest     = { version = "0.12", features = ["blocking", "json"], optional = true }
 
 [features]
-llm7 = ["fleet-judge/llm7"]
+llm7 = ["dep:reqwest"]

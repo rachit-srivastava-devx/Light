@@ -1,6 +1,6 @@
 //! Knowledge — repo memory and lesson retrieval.
-//! Re-exports fleet-memory for backward compat while new implementation matures.
-pub use fleet_memory::*;
+mod impl_;
+pub use impl_::*;
 
 pub mod clock;
 pub mod filter;

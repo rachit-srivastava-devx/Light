@@ -1,6 +1,6 @@
 //! Code review — model-gated review verdict.
-//! Re-exports fleet-judge for backward compat while new implementation matures.
-pub use fleet_judge::*;
+mod impl_;
+pub use impl_::*;
 
 use serde::{Deserialize, Serialize};
 
