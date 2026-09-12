@@ -1,13 +1,13 @@
-//! Kills Decision-is-never-read mutations: verdict_to_digest must derive
-//! `approved` from Decision::Approved, not from a caller-supplied literal.
+//! Kills Decision-is-never-read mutations: emit_walkthrough must derive
+//! `approved` from Decision::Accept, not from a caller-supplied literal.
 use plan_review::{
-    Decision, ReviewInput, ReviewVerdict, verdict_to_digest,
+    Decision, PlanProposal, ReviewVerdict, ReviewEvent, ReviewedPlanDigest,
+    emit_walkthrough,
 };
 
-fn input(plan_digest: &str) -> ReviewInput {
-    ReviewInput {
+fn proposal(plan_digest: &str) -> PlanProposal {
+    PlanProposal {
         plan_digest: plan_digest.into(),
-        reviewer_id: "r1".into(),
         worker_id: "w1".into(),
         evidence_digest: "e1".into(),
     }
@@ -24,35 +24,45 @@ fn verdict(decision: Decision) -> ReviewVerdict {
     }
 }
 
-// Kills: verdict_to_digest body → approved = true (constant)
-#[test]
-fn approved_decision_yields_approved_digest() {
-    let d = verdict_to_digest(&input("p1"), &verdict(Decision::Approved), "r1");
-    assert!(d.approved, "Decision::Approved must set approved=true");
+fn get_digest(evs: &[ReviewEvent]) -> &ReviewedPlanDigest {
+    evs.iter().find_map(|e| {
+        if let ReviewEvent::Digest(d) = e { Some(d) } else { None }
+    }).unwrap()
 }
 
-// Kills: verdict_to_digest body → approved = false (constant) by the complementary case
+// Kills: emit_walkthrough body → approved = true (constant)
+#[test]
+fn approved_decision_yields_approved_digest() {
+    let evs = emit_walkthrough(&proposal("p1"), "r1", &verdict(Decision::Accept));
+    let d = get_digest(&evs);
+    assert!(d.approved, "Decision::Accept must set approved=true");
+}
+
+// Kills: emit_walkthrough body → approved = false (constant) by the complementary case
 // Also kills: approved = true (by catching both as exact-value pins)
 #[test]
 fn rejected_decision_yields_not_approved_digest() {
-    let d = verdict_to_digest(&input("p1"), &verdict(Decision::Rejected), "r1");
-    assert!(!d.approved, "Decision::Rejected must set approved=false");
+    let evs = emit_walkthrough(&proposal("p1"), "r1", &verdict(Decision::Reject));
+    let d = get_digest(&evs);
+    assert!(!d.approved, "Decision::Reject must set approved=false");
 }
 
 // Kills: plan_digest field copied from wrong source
 #[test]
 fn digest_plan_digest_matches_input() {
-    let d = verdict_to_digest(&input("my-plan-hash"), &verdict(Decision::Approved), "r1");
+    let evs = emit_walkthrough(&proposal("my-plan-hash"), "r1", &verdict(Decision::Accept));
+    let d = get_digest(&evs);
     assert_eq!(d.plan_digest, "my-plan-hash");
 }
 
 // Kills: checked/total fields stubbed to 0
 #[test]
 fn checked_total_propagated_from_verdict() {
-    let mut v = verdict(Decision::Approved);
+    let mut v = verdict(Decision::Accept);
     v.checked = 5;
     v.total = 7;
-    let d = verdict_to_digest(&input("p1"), &v, "r1");
+    let evs = emit_walkthrough(&proposal("p1"), "r1", &v);
+    let d = get_digest(&evs);
     assert_eq!(d.checked, 5);
     assert_eq!(d.total, 7);
 }

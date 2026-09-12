@@ -3,7 +3,7 @@
 mod common;
 use common::{input, qw, FixedProbe, SequentialRunner};
 
-use fleet_scan::{assess, Assessment, ConcurrentRunner, EnvFault, GapSeverity, ProbeJob, ProbeKind, ProbeOutcome, ProbeRun, ProbeSet};
+use scan::{assess, Assessment, ConcurrentRunner, EnvFault, GapSeverity, ProbeJob, ProbeKind, ProbeOutcome, ProbeRun, ProbeSet};
 
 #[test]
 fn one_faulted_probe_never_blocks_the_others() {

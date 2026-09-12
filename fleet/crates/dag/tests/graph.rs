@@ -34,7 +34,10 @@ fn zero_node_graph_is_refused() {
 
 #[test]
 fn stale_revision_refused() {
-    let store = VersionStore::new();
-    store.check_revision(1).unwrap();
-    assert_eq!(store.check_revision(0), Err(DagError::StaleRevision));
+    let mut store = dag::MemoryVersionStore::default();
+    let v1 = ver(vec![node("A", &[])]);
+    store.check_revision(&v1).unwrap();
+    store.store(&v1).unwrap();
+    let v0 = GraphVersion { id: "test".to_string(), revision: 0, nodes: vec![node("A", &[])] };
+    assert_eq!(store.check_revision(&v0), Err(DagError::StaleRevision));
 }

@@ -62,3 +62,7 @@ pub trait AuthorityStore {
 pub mod reducer;
 pub mod scheduler;
 pub mod supervisor;
+
+pub use reducer::reduce;
+pub use scheduler::{cas_guard, ReadyHeap};
+pub use supervisor::{commit_then_decide, validate_generation, SpawnDecision};

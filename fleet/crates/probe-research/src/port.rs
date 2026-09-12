@@ -31,7 +31,6 @@ pub enum ResearchError {
 /// Read-only port that performs an external research lookup for a query string.
 ///
 /// Implementations must be `Send + Sync` so they can run in async contexts.
-/// The `deadline_ms` bound must be honoured by implementations.
 pub trait ResearchPort: Send + Sync {
     /// Search for `query` within `deadline_ms` and return retrieved sources, or an error.
     fn search(&self, query: &str, deadline_ms: u64) -> Result<Vec<Source>, ResearchError>;

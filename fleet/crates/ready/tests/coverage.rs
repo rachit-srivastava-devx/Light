@@ -11,6 +11,7 @@ fn passing() -> ReadyInput {
         grants_cover: true,
         write_scope_exclusive: true,
         resources_available: true,
+        resource_profile: "default".to_string(),
         checked: 7,
         total: 7,
     }
@@ -41,20 +42,21 @@ fn checked_partial_mismatch_is_zero_coverage() {
     assert_eq!(v.status, Status::ZeroCoverage);
 }
 
-/// Status::Incomplete must be constructible — prevents dead-code elimination of the variant.
+/// Status::ZeroCoverage must be constructible — prevents dead-code elimination of the variant.
 #[test]
 fn incomplete_status_variant_is_constructible() {
-    let s = Status::Incomplete;
-    assert_eq!(format!("{s:?}"), "Incomplete");
+    let s = Status::ZeroCoverage;
+    assert_eq!(format!("{s:?}"), "ZeroCoverage");
 }
 
-/// Receipt::to_json must produce non-empty, non-trivial JSON.
-/// Kills the `to_json -> String::new()` and `to_json -> "xyzzy".into()` mutations.
+/// Receipt serialised must produce non-empty output containing the status.
+/// Kills the stubbed-status and empty-serialisation mutations.
 #[test]
 fn receipt_to_json_contains_status() {
-    let verdict = evaluate(&passing());
-    let receipt = Receipt::from_verdict(&verdict);
-    let json = receipt.to_json();
-    assert!(!json.is_empty(), "to_json must not be empty");
-    assert!(json.contains("Ready"), "to_json must contain the status; got: {json}");
+    let input = passing();
+    let verdict = evaluate(&input);
+    let receipt = Receipt::from_verdict(&input, &verdict);
+    let json = serde_json::to_string(&receipt).unwrap();
+    assert!(!json.is_empty(), "serialised receipt must not be empty");
+    assert!(json.contains("Ready"), "serialised receipt must contain the status; got: {json}");
 }

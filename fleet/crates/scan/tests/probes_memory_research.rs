@@ -3,7 +3,7 @@
 mod common;
 use common::input;
 
-use fleet_scan::{EnvFault, MemoryHit, MemoryPort, MemoryProbe, Probe, ProbeKind, ProbeOutcome, ResearchPort, ResearchProbe};
+use scan::{EnvFault, MemoryHit, MemoryPort, MemoryProbe, Probe, ProbeKind, ProbeOutcome, ResearchPort, ResearchProbe};
 
 struct MockMemory(Vec<MemoryHit>);
 impl MemoryPort for MockMemory {

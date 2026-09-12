@@ -25,7 +25,6 @@ pub struct ProbeResult {
 ///
 /// On a `Timeout` error the probe returns a fallback question rather than propagating
 /// the error, so the result is always `Ok(..)` with exactly one question.
-/// `InvalidSource` and `EmptyQuery` are surfaced to the caller unchanged.
 pub fn probe(input: &ResearchInput, port: &dyn ResearchPort) -> Result<ProbeResult, ResearchError> {
     if input.text.is_empty() || input.unknown.is_empty() {
         return Err(ResearchError::EmptyQuery);

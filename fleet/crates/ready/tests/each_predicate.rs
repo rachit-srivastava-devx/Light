@@ -11,6 +11,7 @@ fn passing() -> ReadyInput {
         grants_cover: true,
         write_scope_exclusive: true,
         resources_available: true,
+        resource_profile: "default".to_string(),
         checked: 7,
         total: 7,
     }
@@ -27,7 +28,7 @@ fn empty_acceptance_list_causes_not_ready() {
 fn open_questions_cause_not_ready() {
     let v = evaluate(&ReadyInput { questions_open: 1, ..passing() });
     assert_eq!(v.status, Status::NotReady);
-    assert!(v.violations.contains(&Violation::OpenQuestions));
+    assert!(v.violations.iter().any(|viol| matches!(viol, Violation::OpenQuestions(_))));
 }
 
 #[test]
@@ -48,7 +49,7 @@ fn grants_not_covered_causes_not_ready() {
 fn write_conflict_causes_not_ready() {
     let v = evaluate(&ReadyInput { write_scope_exclusive: false, ..passing() });
     assert_eq!(v.status, Status::NotReady);
-    assert!(v.violations.contains(&Violation::WriteConflict));
+    assert!(v.violations.contains(&Violation::WriteNotExclusive));
 }
 
 #[test]

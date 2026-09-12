@@ -3,7 +3,7 @@
 mod common;
 use common::q;
 
-use fleet_scan::{jaccard_similarity, GapSeverity, OpenQuestionsError, ProbeKind, Question};
+use scan::{jaccard_similarity, GapSeverity, OpenQuestionsError, ProbeKind, Question};
 
 #[test]
 fn jaccard_similarity_is_symmetric_and_bounded() {
@@ -16,13 +16,13 @@ fn jaccard_similarity_is_symmetric_and_bounded() {
 
 #[test]
 fn open_questions_rejects_empty() {
-    assert_eq!(fleet_scan::OpenQuestions::new(vec![]), Err(OpenQuestionsError::Empty));
+    assert_eq!(scan::OpenQuestions::new(vec![]), Err(OpenQuestionsError::Empty));
 }
 
 #[test]
 fn open_questions_rejects_more_than_four() {
     let items = vec![q("a", "w", GapSeverity::Low, ProbeKind::Business); 5];
-    assert_eq!(fleet_scan::OpenQuestions::new(items), Err(OpenQuestionsError::TooMany(5)));
+    assert_eq!(scan::OpenQuestions::new(items), Err(OpenQuestionsError::TooMany(5)));
 }
 
 #[test]
@@ -31,6 +31,6 @@ fn open_questions_accepts_one_to_four() {
         let items: Vec<Question> = (0..n)
             .map(|i| q(&format!("q{i}"), "w", GapSeverity::Low, ProbeKind::Business))
             .collect();
-        assert!(fleet_scan::OpenQuestions::new(items).is_ok());
+        assert!(scan::OpenQuestions::new(items).is_ok());
     }
 }

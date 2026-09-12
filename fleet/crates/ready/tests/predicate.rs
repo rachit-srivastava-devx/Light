@@ -12,6 +12,7 @@ fn passing_input() -> ReadyInput {
         grants_cover: true,
         write_scope_exclusive: true,
         resources_available: true,
+        resource_profile: "default".to_string(),
         checked: 7,
         total: 7,
     }
@@ -33,7 +34,7 @@ fn one_false_predicate_refuses() {
     );
     assert_eq!(
         verdict.violations,
-        vec![Violation::ReviewerRejected],
+        vec![Violation::ReviewerNotAccepted],
         "exactly the ReviewerRejected violation must be raised"
     );
 }

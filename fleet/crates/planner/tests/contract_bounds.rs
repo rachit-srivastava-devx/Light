@@ -21,12 +21,16 @@ fn two_module_draft() -> PlanDraft {
         version: 1,
         modules: vec![
             ModuleDraft {
-                id: "module-a".into(), title: "Module A".into(),
-                description: "First module".into(), dependencies: vec![],
+                id: "module-a".into(),
+                dependencies: vec![],
+                write_set: vec![],
+                acceptance_refs: vec!["ac1".into()],
             },
             ModuleDraft {
-                id: "module-b".into(), title: "Module B".into(),
-                description: "Second module".into(), dependencies: vec!["module-a".into()],
+                id: "module-b".into(),
+                dependencies: vec!["module-a".into()],
+                write_set: vec![],
+                acceptance_refs: vec!["ac2".into()],
             },
         ],
         explanation: "Two modules for the blueprint-planner contract test".into(),

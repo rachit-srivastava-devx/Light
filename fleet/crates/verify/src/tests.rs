@@ -1,7 +1,8 @@
 use crate::{
-    verify, FakeCoverageProvider, FakeFindingsProvider, FakeGateRunner, GateSpec,
+    verify, FakeCoverageProvider, FakeFindingsProvider, FakeGateRunner,
     ReviewedCandidate, Status,
 };
+use crate::types::GateSpec;
 
 fn candidate(gates: Vec<GateSpec>) -> ReviewedCandidate {
     ReviewedCandidate {

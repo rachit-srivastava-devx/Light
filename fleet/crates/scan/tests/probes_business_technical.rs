@@ -3,7 +3,7 @@
 mod common;
 use common::input;
 
-use fleet_scan::{BusinessProbe, CodebasePort, EnvFault, Probe, ProbeKind, ProbeOutcome, TechnicalProbe};
+use scan::{BusinessProbe, CodebasePort, EnvFault, Probe, ProbeKind, ProbeOutcome, TechnicalProbe};
 
 #[test]
 fn business_probe_flags_missing_metric_and_audience() {

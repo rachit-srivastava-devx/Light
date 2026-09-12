@@ -3,7 +3,7 @@
 mod common;
 use common::{input, qw, FixedProbe, SequentialRunner};
 
-use fleet_scan::{assess, merge_questions, Assessment, GapSeverity, ProbeKind, ProbeOutcome, ProbeSet};
+use scan::{assess, merge_questions, Assessment, GapSeverity, ProbeKind, ProbeOutcome, ProbeSet};
 
 #[test]
 fn all_four_clear_yields_clear() {

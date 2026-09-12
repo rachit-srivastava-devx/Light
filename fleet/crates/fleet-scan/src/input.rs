@@ -16,7 +16,7 @@ pub struct RequirementInput {
 /// Which of the 4 fixed probes produced a `Question` or `EnvFault`. Fixed set, not extensible at
 /// runtime -- adding a 5th probe is a change to this enum and to `ProbeSet`, reviewed like any
 /// other API change, not a runtime plugin registration.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ProbeKind {
     Business,

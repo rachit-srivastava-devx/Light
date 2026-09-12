@@ -18,9 +18,9 @@ fn one_module_draft() -> PlanDraft {
         version: 1,
         modules: vec![ModuleDraft {
             id: "m1".into(),
-            title: "Module 1".into(),
-            description: "desc".into(),
             dependencies: vec![],
+            write_set: vec![],
+            acceptance_refs: vec!["ac1".into()],
         }],
         explanation: "ok".into(),
     }

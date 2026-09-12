@@ -16,8 +16,8 @@ fn cycle_in_modules_is_rejected() {
     let draft = PlanDraft {
         version: 1,
         modules: vec![
-            ModuleDraft { id: "a".into(), title: "A".into(), description: "A".into(), dependencies: vec!["b".into()] },
-            ModuleDraft { id: "b".into(), title: "B".into(), description: "B".into(), dependencies: vec!["a".into()] },
+            ModuleDraft { id: "a".into(), dependencies: vec!["b".into()], write_set: vec![], acceptance_refs: vec![] },
+            ModuleDraft { id: "b".into(), dependencies: vec!["a".into()], write_set: vec![], acceptance_refs: vec![] },
         ],
         explanation: "cycle".into(),
     };
@@ -34,9 +34,9 @@ fn draft_exceeds_max_modules_is_rejected() {
     let draft = PlanDraft {
         version: 1,
         modules: vec![
-            ModuleDraft { id: "a".into(), title: "A".into(), description: "".into(), dependencies: vec![] },
-            ModuleDraft { id: "b".into(), title: "B".into(), description: "".into(), dependencies: vec![] },
-            ModuleDraft { id: "c".into(), title: "C".into(), description: "".into(), dependencies: vec![] },
+            ModuleDraft { id: "a".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![] },
+            ModuleDraft { id: "b".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![] },
+            ModuleDraft { id: "c".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![] },
         ],
         explanation: "too many".into(),
     };

@@ -76,6 +76,7 @@ never made — the most valuable class) · **BLUEPRINT-RIGHT** · **BLUEPRINT-TO
 | D54 | three concurrency races, stacked, found by running eight dispatches at once | — | see §D54 below | — | — |
 | D55 | the parity harness predated the SOW gate, and the skip had no reason attached | — | see §D55 below | — | — |
 | D57 | attempt six: the harness is right, the lane is not, and that is now the honest answer | — | see §D57 below | — | — |
+| D61 | route command capability evidence | router caller assembles live RuntimeState | route_cmd default_runtime marks every ORDER entry capable, without probes | IMPL-WRONG at this CLI boundary | Recorded only; live snapshot wiring is separate implementation work. |
 
 ## D20 — a 10/10 green gate over a suite it never ran, and a test that asserted the forgery
 
@@ -1281,3 +1282,20 @@ skipped. Mutation-tested by hiding `plan` again — it goes red naming the comma
 nothing reachable may be undocumented. That pairing is the general fix for a class that produced
 `D58`, `D59` and this one in a single sweep — three findings, all in the layer between the working
 code and the person trying to use it.
+
+## D61 — route command advertises a candidate table, not live capability evidence
+
+Observed 2026-09-11 at `82454636847ddd2bc8b2e8aa6dc463a822f14bf6` during design research.
+`docs/blueprints/fleet-router/BLUEPRINT.md` assigns live capability/quota snapshot assembly to
+the caller. `src/dispatch/route_cmd.rs:10-18` instead fills `capable` and `preference` from
+`fleet_router::ORDER`, leaves quota/cooldown empty, and sets required_tokens to zero. The public
+route function at lines 25-42 uses that snapshot for TaskClass::General and prints only the
+selected adapter. This route command alone therefore cannot establish installed/authenticated
+availability or explain the six-stage decision. Other dispatch paths were not audited here.
+
+Verdict: **IMPL-WRONG at this CLI evidence boundary**; source inspection only, not a live-provider
+failure measurement. No runtime repair or acceptance-test change was made. Proposed correction:
+assemble a real versioned capability snapshot outside the pure router, preserve unknown values,
+and expose the decision evidence. The separate dynamic model catalog proposal in
+`docs/design/fleet-harness/LLD.md` is a future blueprint evolution, not evidence of a defect in
+the intentionally static ORDER contract.

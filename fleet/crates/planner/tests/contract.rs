@@ -15,8 +15,8 @@ fn rejects_duplicate_ids() {
     let draft = PlanDraft {
         version: 1,
         modules: vec![
-            ModuleDraft { id: "dup".into(), title: "A".into(), description: "A".into(), dependencies: vec![] },
-            ModuleDraft { id: "dup".into(), title: "B".into(), description: "B".into(), dependencies: vec![] },
+            ModuleDraft { id: "dup".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![] },
+            ModuleDraft { id: "dup".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![] },
         ],
         explanation: "duplicate ids".into(),
     };
@@ -32,8 +32,10 @@ fn rejects_unknown_dependency() {
     let draft = PlanDraft {
         version: 1,
         modules: vec![ModuleDraft {
-            id: "a".into(), title: "A".into(), description: "A".into(),
+            id: "a".into(),
             dependencies: vec!["nonexistent".into()],
+            write_set: vec![],
+            acceptance_refs: vec![],
         }],
         explanation: "bad dep".into(),
     };
@@ -56,7 +58,7 @@ fn rejects_empty_acceptance() {
     let draft = PlanDraft {
         version: 1,
         modules: vec![ModuleDraft {
-            id: "a".into(), title: "A".into(), description: "A".into(), dependencies: vec![],
+            id: "a".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![],
         }],
         explanation: "no acceptance refs".into(),
     };

@@ -1,49 +1,42 @@
 use context::{
-    compile, CompileInput, ContextError, ContextManifest, Evidence,
-    RetrievalQuery, Retriever, Span,
+    compile, CompileInput, ContextError, ContextManifest,
+    Evidence, RetrievalQuery, Retriever, Span, TokenCounter,
 };
 
-struct MockCounter;
-impl context::TokenCounter for MockCounter {
-    fn count(&self, text: &str) -> u64 {
-        (text.len() as u64).div_ceil(4)
-    }
+struct Tok;
+impl TokenCounter for Tok {
+    fn count(&self, t: &str) -> u64 { (t.len() as u64).div_ceil(4) }
 }
 
-struct MockRetriever {
-    indexed_base: String,
-    items: Vec<Evidence>,
-}
-
-impl Retriever for MockRetriever {
-    fn retrieve(&self, _q: &RetrievalQuery) -> Result<Vec<Evidence>, ContextError> {
-        Ok(self.items.clone())
-    }
-    fn indexed_base(&self) -> &str {
-        &self.indexed_base
-    }
+struct Fixed { digest: String, items: Vec<Evidence> }
+impl Retriever for Fixed {
+    fn retrieve(&self, _: &RetrievalQuery) -> Result<Vec<Evidence>, ContextError> { Ok(self.items.clone()) }
+    fn index_digest(&self) -> &str { &self.digest }
 }
 
 fn ev(id: &str) -> Evidence {
-    Evidence { source_digest: id.into(), start: 0, end: 5, text: format!("text {id}"), trust: 0.9 }
+    Evidence { source_digest: id.into(), content: format!("content-{id}"), tokens: 0 }
+}
+
+fn mandatory_span(id: &str) -> Span {
+    Span { source_digest: id.into(), start: 0, end: 10, label: "mandatory".into() }
+}
+
+fn input(base: &str) -> CompileInput {
+    CompileInput {
+        task_digest: "t1".into(),
+        plan_digest: "p1".into(),
+        base_digest: base.into(),
+        mandatory: vec![mandatory_span("m1")],
+        budget: 1000,
+        reserve: 100,
+    }
 }
 
 #[test]
-fn knowledge_to_context_manifest() {
-    let span = Span { source_digest: "abc".into(), start: 0, end: 10, text: "mandatory".into() };
-    let input = CompileInput {
-        task_digest: "t1".into(),
-        plan_digest: "p1".into(),
-        base_digest: "b1".into(),
-        mandatory: vec![span],
-        budget: 1000,
-        reserve: 100,
-    };
-    let r = MockRetriever {
-        indexed_base: "b1".into(),
-        items: vec![ev("ev1"), ev("ev2")],
-    };
-    let m = compile(&input, &r, &MockCounter).expect("compile should succeed");
+fn compile_produces_manifest_with_checked_total() {
+    let r = Fixed { digest: "b1".into(), items: vec![ev("ev1"), ev("ev2")] };
+    let m = compile(&input("b1"), &r, &Tok).expect("compile should succeed");
     assert!(m.checked > 0, "checked must be nonzero");
     assert!(m.total > 0, "total must be nonzero");
     assert!(!m.digest.is_empty(), "digest must be non-empty");
@@ -51,63 +44,42 @@ fn knowledge_to_context_manifest() {
 }
 
 #[test]
-fn context_to_builder() {
-    let span = Span { source_digest: "abc".into(), start: 0, end: 10, text: "mandatory".into() };
-    let input = CompileInput {
-        task_digest: "t1".into(),
-        plan_digest: "p1".into(),
-        base_digest: "b1".into(),
-        mandatory: vec![span],
-        budget: 1000,
-        reserve: 100,
-    };
-    let r = MockRetriever { indexed_base: "b1".into(), items: vec![ev("ev1")] };
-    let manifest = compile(&input, &r, &MockCounter).expect("compile should succeed");
+fn manifest_is_json_roundtrippable() {
+    let r = Fixed { digest: "b1".into(), items: vec![ev("ev1")] };
+    let manifest = compile(&input("b1"), &r, &Tok).expect("compile");
     let json = serde_json::to_string(&manifest).expect("serialize");
     let roundtrip: ContextManifest = serde_json::from_str(&json).expect("deserialize");
     assert_eq!(manifest, roundtrip);
-    assert!(!roundtrip.digest.is_empty());
 }
 
+// Kills: simple_digest → constant "xyzzy" (two different evidence sets → same digest)
 #[test]
-fn digest_changes_when_input_changes() {
-    // Kills: `compute_digest -> "xyzzy"` (both calls return "xyzzy", equal)
-    // Kills: `^= with &=` in fnv1a (hash degrades, both inputs collapse to same value)
-    // Kills: `^ 0xff with | 0xff` and `& 0xff` (alters mixing, breaks uniqueness)
-    let span = Span { source_digest: "abc".into(), start: 0, end: 10, text: "m".into() };
-    let base = CompileInput {
-        task_digest: "task-A".into(),
-        plan_digest: "plan-1".into(),
-        base_digest: "b1".into(),
-        mandatory: vec![span.clone()],
-        budget: 1000,
-        reserve: 100,
-    };
-    let r1 = MockRetriever { indexed_base: "b1".into(), items: vec![ev("ev1")] };
-    let m1 = compile(&base, &r1, &MockCounter).unwrap();
-
-    let changed = CompileInput { task_digest: "task-B".into(), ..base };
-    let r2 = MockRetriever { indexed_base: "b1".into(), items: vec![ev("ev1")] };
-    let m2 = compile(&changed, &r2, &MockCounter).unwrap();
-
-    assert_ne!(m1.digest, m2.digest, "digest must change when task_digest changes");
+fn digest_changes_when_evidence_changes() {
+    let r1 = Fixed { digest: "b1".into(), items: vec![ev("ev-A")] };
+    let r2 = Fixed { digest: "b1".into(), items: vec![ev("ev-B")] };
+    let m1 = compile(&input("b1"), &r1, &Tok).unwrap();
+    let m2 = compile(&input("b1"), &r2, &Tok).unwrap();
+    assert_ne!(m1.digest, m2.digest, "digest must change when evidence changes");
     assert_eq!(m1.digest.len(), 16, "digest must be a 16-char hex string");
 }
 
+// Kills: stale guard removed — base_digest mismatch must return Stale
 #[test]
-fn stale_knowledge_ref_refused() {
-    let input = CompileInput {
-        task_digest: "t1".into(),
-        plan_digest: "p1".into(),
-        base_digest: "b-mismatch".into(),
-        mandatory: vec![],
-        budget: 1000,
-        reserve: 100,
-    };
-    let r = MockRetriever { indexed_base: "b-real".into(), items: vec![ev("ev1")] };
-    let result = compile(&input, &r, &MockCounter);
+fn stale_index_refused() {
+    let r = Fixed { digest: "b-real".into(), items: vec![ev("ev1")] };
+    let inp = CompileInput { base_digest: "b-mismatch".into(), ..input("b-mismatch") };
+    let result = compile(&inp, &r, &Tok);
     assert!(
-        matches!(result, Err(ContextError::Stale)),
-        "expected Stale, got {result:?}",
+        matches!(result, Err(ContextError::Stale { .. })),
+        "expected Stale, got {:?}", result,
     );
+}
+
+// Kills: empty-mandatory guard removed
+#[test]
+fn empty_mandatory_refused() {
+    let r = Fixed { digest: "b1".into(), items: vec![ev("ev1")] };
+    let inp = CompileInput { mandatory: vec![], ..input("b1") };
+    let result = compile(&inp, &r, &Tok);
+    assert!(matches!(result, Err(ContextError::ZeroCoverage)));
 }

@@ -23,15 +23,12 @@ pub fn merge(candidates: Vec<Question>, max: NonZeroU8) -> Result<QuestionSet, M
             .then(a.text.cmp(&b.text))
     });
 
-    let mut seen_texts = HashSet::new();
-    valid.retain(|q| seen_texts.insert(q.text.clone()));
+    let mut seen = HashSet::new();
+    valid.retain(|q| seen.insert(q.text.clone()));
 
     valid.truncate(max.get() as usize);
 
-    Ok(QuestionSet {
-        revision: 1,
-        items: valid,
-    })
+    Ok(QuestionSet { revision: 1, items: valid })
 }
 
 pub fn merge_probes(

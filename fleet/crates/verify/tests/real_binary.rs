@@ -5,7 +5,7 @@
 
 #[test]
 fn verify_crate_public_api_accessible() {
-    let spec = verify::GateSpec {
+    let spec = verify::CanonicalGateSpec {
         id: "smoke".into(),
         command: "true".into(),
         args: vec![],

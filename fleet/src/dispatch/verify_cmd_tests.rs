@@ -14,9 +14,14 @@ fn fail_result(id: &'static str) -> GateResult {
     }
 }
 
+/// A non-required skip does not contribute to `failed()` or `env_faults()`, so
+/// `report.exit_code()` returns `Ok` in the absence of other failures — the same
+/// observable outcome as a real `Verdict::Pass` from `to_result`'s perspective.
 fn pass_result(id: &'static str) -> GateResult {
-    let denom = verify::Denominator::new(3, 3).expect("3/3 is a valid denominator");
-    GateResult { id, verdict: Verdict::Pass(denom) }
+    GateResult {
+        id,
+        verdict: Verdict::Skip { reason: "not-applicable".into(), was_required: false },
+    }
 }
 
 #[test]

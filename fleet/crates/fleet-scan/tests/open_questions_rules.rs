@@ -34,3 +34,16 @@ fn open_questions_accepts_one_to_four() {
         assert!(fleet_scan::OpenQuestions::new(items).is_ok());
     }
 }
+
+#[test]
+fn into_vec_returns_all_questions() {
+    let items = vec![
+        q("q1", "why1", GapSeverity::High, ProbeKind::Business),
+        q("q2", "why2", GapSeverity::Low, ProbeKind::Technical),
+    ];
+    let oq = fleet_scan::OpenQuestions::new(items.clone()).unwrap();
+    let out = oq.into_vec();
+    assert_eq!(out.len(), 2);
+    assert_eq!(out[0].text, "q1");
+    assert_eq!(out[1].text, "q2");
+}

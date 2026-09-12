@@ -1,7 +1,7 @@
 //! Shared test helpers (not a test binary itself -- `tests/common/` is excluded from discovery).
 #![allow(dead_code)]
 
-use fleet_scan::{ConcurrentRunner, GapSeverity, Probe, ProbeJob, ProbeKind, ProbeOutcome, ProbeRun, Question, RequirementInput};
+use scan::{ConcurrentRunner, GapSeverity, Probe, ProbeJob, ProbeKind, ProbeOutcome, ProbeRun, Question, RequirementInput};
 
 pub fn input(text: &str) -> RequirementInput {
     RequirementInput { text: text.into(), task_id: None }

@@ -3,7 +3,7 @@
 mod common;
 use common::q;
 
-use fleet_scan::{merge_questions, Assessment, GapSeverity, ProbeKind, Question};
+use scan::{merge_questions, Assessment, GapSeverity, ProbeKind, Question};
 
 #[test]
 fn merge_drops_empty_why() {

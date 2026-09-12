@@ -1,4 +1,4 @@
-use verify::{assemble_gate_evidence, GateResult, ReviewedCandidate, SecretFinding};
+use verify::{assemble_gate_evidence, CanonicalGateResult, ReviewedCandidate, SecretFinding};
 
 fn candidate() -> ReviewedCandidate {
     ReviewedCandidate {
@@ -10,8 +10,8 @@ fn candidate() -> ReviewedCandidate {
     }
 }
 
-fn gate_result(id: &str, exit_code: i32, stdout_digest: &str) -> GateResult {
-    GateResult {
+fn gate_result(id: &str, exit_code: i32, stdout_digest: &str) -> CanonicalGateResult {
+    CanonicalGateResult {
         id: id.into(),
         exit_code,
         stdout_digest: stdout_digest.into(),
