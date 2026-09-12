@@ -19,7 +19,7 @@ export FLEET_TARGET_REPO="$(pwd)"
 # The fleet-ness test is deliberately narrow: inside fleet's own tree a missing anchor file must
 # still be CAUGHT, not excused as "not applicable" -- that is the M4 defect (a detector that
 # skipped itself when its own source moved, masking real breakage) and it must not come back.
-is_fleet_tree() { [ -r "$FLEET_TARGET_REPO/crates/fleet-verify/src/registry.rs" ]; }
+is_fleet_tree() { [ -r "$FLEET_TARGET_REPO/crates/verify/src/impl_/registry.rs" ]; }
 m_excluded=0
 
 checked=0

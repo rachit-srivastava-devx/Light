@@ -10,7 +10,7 @@ implementation is evidence.
 1. **NEVER edit a pre-authored acceptance test to make it pass.** The lead authors the suite before
    implementation; changing it to go green is the failure this whole system exists to prevent. The
    suites live with their crates (`crates/*/tests/`) and with the composition root (`src/tests/`).
-2. **NEVER edit `crates/fleet-types/contracts/*.json`** without an ADR in `docs/adr/`.
+2. **NEVER edit `crates/types/contracts/*.json`** without an ADR in `docs/adr/`.
 3. **`$?` after a pipe reads the WRONG command.** Do not do it. (Violated 6× in the predecessor,
    twice more in zsh where `PIPESTATUS` silently expands empty.)
 4. **`mktemp -d` for any path later `rm -rf`'d** — never derive it from a content digest.
