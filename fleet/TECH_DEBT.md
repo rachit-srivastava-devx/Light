@@ -29,6 +29,7 @@
 | FD-4 | P2 | pipeline | `FLEET_STREAM_DIR` writes nothing; parent dir never created | S | fixed 2026-09-10 |
 | FD-9 | P1 | pipeline | `fleet run` never passes a role, so classification always refuses while the stage reports pass | S | **open** |
 | FD-7 | P2 | dispatch | `cargo` reported missing when installed outside `PATH` | S | fixed 2026-09-10 |
+| FD-10 | P0 | fleet-worker | Hermetic env (`env_clear()`) strips the credentials the `claude`/`codex` CLIs need to authenticate, so no real Claude/Codex lane can reach the model end-to-end | M | **open** — adapter shape shipped 2026-09-12 (`feat/claude-adapter-rich-invocation`); once an env allowlist unblocks auth the Claude lane produces Grade A− output on Frido CSAT |
 
 Severity: **P0** blocks the stated use case · **P1** will cost a user a debugging cycle ·
 **P2** wrong-but-survivable
