@@ -10,6 +10,16 @@
 
 mod adapter;
 pub mod freelane;
+
+/// Tuned system prompt appended to `claude -p` invocations by
+/// `fleet/src/dispatch/agent_cmd_run.rs`. Encodes the five named idioms Fleet has seen
+/// Claude miss (React `useState`-initializer-once, explicit `Set<>` dedup, Safari
+/// `revokeObjectURL` deferral, CSV formula-injection guard, stable sort tiebreak) plus
+/// the "Fleet expects / anti-patterns / when you are done" discipline. Verbatim source
+/// lives at `crates/fleet-worker/assets/claude-system-prompt.md`; re-test against a
+/// benchmark task if you edit it.
+pub const CLAUDE_SYSTEM_PROMPT: &str =
+    include_str!("../assets/claude-system-prompt.md");
 mod outcome;
 mod probe;
 mod reap;
