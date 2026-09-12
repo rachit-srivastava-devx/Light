@@ -3,6 +3,10 @@
 //!
 //! **Module-level parallel execution**: Extended to support running multiple modules in parallel
 //! using worktrees, with each module merging to main when complete.
+//!
+//! Multi-repo (`--repo a --repo b ...`): `run` loops sequentially over the repos, delegating each
+//! to `run_pipeline_on` -- one task_id, N repos, one aggregated verdict. The final exit code is
+//! the worst of the set. Sequential is intentional (single-machine concurrency cap).
 
 use crate::cli::args_ops::RunArgs;
 use crate::dispatch::error::DispatchError;
@@ -24,14 +28,10 @@ fn healthy_runtime() -> route::RuntimeState {
     route::RuntimeState { capable, remaining, cooldown: BTreeSet::new(), required_tokens: 0, preference }
 }
 
-pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
-    run_pipeline_on(state_dir, args.repo, args.task, args.json)
-}
-
-/// Shared entrypoint for the verify pipeline. `run` is the CLI-invoked path; `swarm_cmd`'s
-/// `--then-verify` reuses this same function so the two never drift (BLUEPRINT §5: one
-/// composition root per subcommand -- verify's one place is here, not duplicated in swarm).
-/// `json` mirrors `RunArgs::json` so callers can request either the machine or human report.
+/// Shared entrypoint for the verify pipeline. `run` is the CLI-invoked path (looping per
+/// `--repo`); `swarm_cmd`'s `--then-verify` reuses this same function so the two never drift
+/// (BLUEPRINT §5: one composition root per subcommand). String args match `swarm_cmd`'s call
+/// site; `json` mirrors `RunArgs::json`.
 pub(crate) fn run_pipeline_on(
     state_dir: &Path,
     repo: String,
@@ -53,6 +53,48 @@ pub(crate) fn run_pipeline_on(
     match outcome.result {
         Ok(()) => Ok(()),
         Err(e) => Err(DispatchError::Refusal(e.to_string())),
+    }
+}
+
+pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
+    // Preflight EVERY --repo first via the existing intake helper (typed refusal on
+    // nonexistent/unreadable paths). Refuse before running anything so a bad path in position 3
+    // doesn't leave repos 1-2 with completed receipts.
+    for r in &args.repos {
+        super::verify_repo::ensure_repo(r)?;
+    }
+    // Sequential loop -- single-machine concurrency cap governs per-repo work; per-PR-scope
+    // this stays serial. Same task_id across all repos so the ledger correlates the set.
+    let mut first_err: Option<DispatchError> = None;
+    let mut passed = 0usize;
+    let total = args.repos.len();
+    for repo in &args.repos {
+        match run_pipeline_on(state_dir, repo.clone(), args.task.clone(), args.json) {
+            Ok(()) => {
+                passed += 1;
+                if !args.json {
+                    eprintln!("PASS {repo}");
+                }
+            }
+            Err(e) => {
+                if !args.json {
+                    eprintln!("FAIL {repo}: {e}");
+                }
+                if first_err.is_none() {
+                    first_err = Some(e);
+                }
+            }
+        }
+    }
+    if !args.json && total > 1 {
+        let failed = total - passed;
+        eprintln!("rollup: {passed}/{total} passed, {failed} failed");
+    }
+    // Aggregated verdict: worst of the set. With one collected error, its exit code wins
+    // (Refusal here; `main` maps that via `DispatchError::exit_code`).
+    match first_err {
+        Some(e) => Err(e),
+        None => Ok(()),
     }
 }
 
