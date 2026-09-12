@@ -8,7 +8,8 @@ use serde::{Deserialize, Serialize};
 pub struct BadBlake3Hash(pub String);
 
 pub(crate) fn is_lowercase_hex(value: &str) -> bool {
-    value.len() == 64 && value.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
+    hex::decode(value).map(|v| v.len() == 32).unwrap_or(false)
+        && !value.chars().any(|c| c.is_ascii_uppercase())
 }
 
 /// A blake3 digest in the ledger's wire format: `"blake3:"` followed by 64 lowercase hex chars.

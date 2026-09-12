@@ -3,6 +3,8 @@
 //! This module provides the core types for representing modules in a parallel SDLC workflow,
 //! including dependency tracking, state machine for parallel execution, and module graphs.
 
+use petgraph::algo::toposort;
+use petgraph::graph::{DiGraph, NodeIndex};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -152,83 +154,79 @@ impl ModuleGraph {
             .collect()
     }
 
-    /// Perform topological sort using Kahn's algorithm
-    /// Returns a vector of module IDs in execution order
-    pub fn topological_sort(&self) -> Result<Vec<String>, TopologicalSortError> {
-        // Calculate in-degree for each module
-        let mut in_degree: HashMap<String, usize> = HashMap::new();
-        for module in self.modules.values() {
-            in_degree.insert(module.id.clone(), module.depends_on.len());
+    /// Build a petgraph DiGraph from the module graph.
+    /// Nodes are added in sorted ID order for deterministic traversal.
+    /// Returns the graph and a map from module ID to NodeIndex.
+    fn build_digraph(&self) -> (DiGraph<String, ()>, HashMap<String, NodeIndex>) {
+        let mut graph: DiGraph<String, ()> = DiGraph::new();
+        let mut id_to_idx: HashMap<String, NodeIndex> = HashMap::new();
+
+        // Insert nodes in sorted order so DFS visits them deterministically.
+        let mut ids: Vec<&String> = self.modules.keys().collect();
+        ids.sort();
+        for id in &ids {
+            let idx = graph.add_node((*id).clone());
+            id_to_idx.insert((*id).clone(), idx);
         }
 
-        // Start with modules that have no dependencies
-        let mut queue: Vec<String> = in_degree
-            .iter()
-            .filter(|(_, &degree)| degree == 0)
-            .map(|(id, _)| id.clone())
-            .collect();
-
-        // Sort for determinism
-        queue.sort();
-
-        let mut result = Vec::new();
-
-        while !queue.is_empty() {
-            // Take the first module (deterministic order)
-            let current = queue.remove(0);
-            result.push(current.clone());
-
-            // Reduce in-degree for dependents
-            if let Some(dep_list) = self.dependents.get(&current) {
-                for dep in dep_list {
-                    if let Some(degree) = in_degree.get_mut(dep) {
-                        *degree -= 1;
-                        if *degree == 0 {
-                            queue.push(dep.clone());
-                            queue.sort(); // Keep sorted for determinism
-                        }
-                    }
+        // Add directed edges: dependency → dependent (dep must precede module).
+        for module in self.modules.values() {
+            for dep in &module.depends_on {
+                if let (Some(&dep_idx), Some(&mod_idx)) =
+                    (id_to_idx.get(dep.as_str()), id_to_idx.get(module.id.as_str()))
+                {
+                    graph.add_edge(dep_idx, mod_idx, ());
                 }
             }
         }
 
-        // Check for cycles
-        if result.len() != self.modules.len() {
-            return Err(TopologicalSortError::CycleDetected);
-        }
-
-        Ok(result)
+        (graph, id_to_idx)
     }
 
-    /// Get modules in batches for parallel execution
-    /// Each batch contains modules that can be executed in parallel
+    /// Perform topological sort using petgraph.
+    /// Returns a vector of module IDs in dependency order.
+    pub fn topological_sort(&self) -> Result<Vec<String>, TopologicalSortError> {
+        let (graph, _) = self.build_digraph();
+
+        toposort(&graph, None)
+            .map(|indices| indices.iter().map(|&idx| graph[idx].clone()).collect())
+            .map_err(|_| TopologicalSortError::CycleDetected)
+    }
+
+    /// Get modules in batches for parallel execution.
+    /// Each batch contains modules that can be executed in parallel.
     pub fn batches(&self) -> Result<Vec<Vec<String>>, TopologicalSortError> {
-        let sorted = self.topological_sort()?;
+        let (graph, _) = self.build_digraph();
 
-        let mut result: Vec<Vec<String>> = Vec::new();
-        let mut processed = std::collections::HashSet::new();
+        // Detect cycles and obtain a toposort order in one call.
+        let sorted_indices =
+            toposort(&graph, None).map_err(|_| TopologicalSortError::CycleDetected)?;
 
-        for module_id in sorted {
-            let module = self.modules.get(&module_id).unwrap();
-
-            // Find the earliest batch this module can be in
-            let mut earliest_batch = 0;
-            for dep in &module.depends_on {
-                for (batch_idx, batch) in result.iter().enumerate() {
-                    if batch.contains(dep) {
-                        earliest_batch = earliest_batch.max(batch_idx + 1);
-                    }
-                }
-            }
-
-            // Extend result if needed
-            while result.len() <= earliest_batch {
-                result.push(Vec::new());
-            }
-
-            result[earliest_batch].push(module_id.clone());
-            processed.insert(module_id);
+        // BFS-level assignment: level[node] = max(level[pred] + 1) over predecessors.
+        let mut levels: HashMap<NodeIndex, usize> = HashMap::new();
+        for &idx in &sorted_indices {
+            let level = graph
+                .neighbors_directed(idx, petgraph::Direction::Incoming)
+                .map(|pred| levels.get(&pred).copied().unwrap_or(0) + 1)
+                .max()
+                .unwrap_or(0);
+            levels.insert(idx, level);
         }
+
+        // Group node IDs by level.
+        let max_level = levels.values().copied().max().unwrap_or(0);
+        let mut result: Vec<Vec<String>> = vec![Vec::new(); max_level + 1];
+        for (&idx, &level) in &levels {
+            result[level].push(graph[idx].clone());
+        }
+
+        // Sort within each batch for determinism.
+        for batch in &mut result {
+            batch.sort();
+        }
+
+        // Drop any empty buckets (shouldn't occur, but be safe).
+        result.retain(|b| !b.is_empty());
 
         Ok(result)
     }

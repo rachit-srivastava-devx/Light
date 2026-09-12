@@ -16,7 +16,8 @@ pub enum DeliveryTier {
 }
 
 fn is_lowercase_hex(value: &str) -> bool {
-    value.len() == 64 && value.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
+    hex::decode(value).map(|v| v.len() == 32).unwrap_or(false)
+        && !value.chars().any(|c| c.is_ascii_uppercase())
 }
 
 /// A 64-lowercase-hex blake3 digest with NO `"blake3:"` prefix -- distinct from `Blake3Hash`.
