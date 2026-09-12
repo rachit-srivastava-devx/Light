@@ -6,7 +6,7 @@ mod stats;
 mod worker;
 mod worker_cycle;
 
-pub use config::{PumpConfig, RetryBackoff};
+pub use config::PumpConfig;
 pub use orchestrate::pump;
 pub use stats::SinkStats;
 pub use worker::run_sink;
