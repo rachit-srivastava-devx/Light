@@ -58,7 +58,14 @@ pub fn policy(stdout: &str, _stderr: &str) -> D {
 }
 
 /// `gates/corpus/run.sh` -- `"DENOMINATOR checked=%d total=%d ... caught=%d ..."`.
+/// Also honours the explicit not-applicable marker the script emits on a
+/// foreign (non-fleet) checkout: every detector under `gates/corpus/` asserts
+/// invariants about fleet's own source, so a `fleet run` against a user repo
+/// has nothing to examine there. Same `NotApplicable` treatment as `recur`.
 pub fn corpus(stdout: &str, _stderr: &str) -> D {
+    if stdout.contains("corpus-gate: not-applicable") {
+        return D::NotApplicable;
+    }
     let fields = after(stdout, "checked=")
         .zip(after(stdout, "total="))
         .zip(after(stdout, "caught="));
