@@ -2,8 +2,8 @@
 //! of each stage reaching into ambient state (env vars, `std::env::current_dir`, ...). Read-only,
 //! borrowed -- the pipeline graph owns everything named here.
 
-use types::TaskId;
 use std::path::Path;
+use types::TaskId;
 
 pub struct StageCtx<'a> {
     /// Where `StepLog` and the ledger live for this run.

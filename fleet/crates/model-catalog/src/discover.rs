@@ -1,4 +1,4 @@
-use crate::{CatalogError, Candidate};
+use crate::{Candidate, CatalogError};
 
 #[derive(Clone, Debug)]
 pub struct DiscoveryConfig {

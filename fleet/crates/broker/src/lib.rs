@@ -1,3 +1,5 @@
+//! STATUS: `reconcile` + the 4 `EffectState` variants + `BrokerError::Conflict` are unwired,
+//! matching `docs/LLD/LLD.md` §13 — not dead code, no caller yet.
 //! Broker — the only parent-authorized path for external effects.
 pub mod authorize;
 pub mod effect;
@@ -22,7 +24,12 @@ pub fn execute(
     // Idempotency: return existing Acked state without re-dispatching.
     if let Some(state) = store.load(&key) {
         if state == EffectState::Acked {
-            return Ok(Receipt { key, state: EffectState::Acked, checked: 1, total: 1 });
+            return Ok(Receipt {
+                key,
+                state: EffectState::Acked,
+                checked: 1,
+                total: 1,
+            });
         }
     }
     // Grant validation — must succeed before any store write or provider call.
@@ -33,11 +40,21 @@ pub fn execute(
     match p.dispatch(&e) {
         Ok(_ack) => {
             store.save(&key, EffectState::Acked)?;
-            Ok(Receipt { key, state: EffectState::Acked, checked: 1, total: 1 })
+            Ok(Receipt {
+                key,
+                state: EffectState::Acked,
+                checked: 1,
+                total: 1,
+            })
         }
         Err(BrokerError::Provider(_)) => {
             store.save(&key, EffectState::Unknown)?;
-            Ok(Receipt { key, state: EffectState::Unknown, checked: 1, total: 1 })
+            Ok(Receipt {
+                key,
+                state: EffectState::Unknown,
+                checked: 1,
+                total: 1,
+            })
         }
         Err(err) => Err(err),
     }

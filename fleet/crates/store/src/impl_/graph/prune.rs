@@ -9,16 +9,21 @@ use std::fs;
 
 use rusqlite::{params, OptionalExtension};
 
-use super::types::GraphError;
-use super::GraphStore;
 use super::super::io_fault::IoFault;
 use super::super::retention::{PruneReport, RetentionPolicy, UsageReport};
+use super::types::GraphError;
+use super::GraphStore;
 
 impl GraphStore {
     /// Current number of projects and the sqlite file's byte size.
     pub fn usage(&self) -> Result<UsageReport, GraphError> {
-        let row_count: i64 = self.conn.query_row("SELECT count(*) FROM projects", [], |r| r.get(0))?;
-        Ok(UsageReport { row_count: row_count as u64, byte_size: self.file_bytes()? })
+        let row_count: i64 = self
+            .conn
+            .query_row("SELECT count(*) FROM projects", [], |r| r.get(0))?;
+        Ok(UsageReport {
+            row_count: row_count as u64,
+            byte_size: self.file_bytes()?,
+        })
     }
 
     /// Delete whole projects (and only whole projects) until every applicable limit in `policy`
@@ -33,18 +38,27 @@ impl GraphStore {
             if !over_rows && !over_bytes {
                 break;
             }
-            let Some(id) = self.oldest_project()? else { break };
+            let Some(id) = self.oldest_project()? else {
+                break;
+            };
             removed += 1;
             self.delete_project(&id)?;
         }
         let after = self.file_bytes()?;
         let reclaimed = before.saturating_sub(after);
-        Ok(PruneReport { rows_removed: removed, bytes_reclaimed: reclaimed })
+        Ok(PruneReport {
+            rows_removed: removed,
+            bytes_reclaimed: reclaimed,
+        })
     }
 
     fn oldest_project(&self) -> Result<Option<String>, GraphError> {
         self.conn
-            .query_row("SELECT project_id FROM projects ORDER BY project_id LIMIT 1", [], |r| r.get(0))
+            .query_row(
+                "SELECT project_id FROM projects ORDER BY project_id LIMIT 1",
+                [],
+                |r| r.get(0),
+            )
             .optional()
             .map_err(GraphError::from)
     }
@@ -65,7 +79,10 @@ impl GraphStore {
             return Ok(0);
         }
         Ok(fs::metadata(&self.db_path)
-            .map_err(|e| IoFault::Read { path: self.db_path.clone(), source: e })?
+            .map_err(|e| IoFault::Read {
+                path: self.db_path.clone(),
+                source: e,
+            })?
             .len())
     }
 }

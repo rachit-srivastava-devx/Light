@@ -34,7 +34,10 @@ pub fn scaffold_fleet_dir(repo: &Path) -> Result<(), ScaffoldError> {
 fn check_absent(fleet_dir: &Path, name: &'static str) -> Result<(), ScaffoldError> {
     let path = fleet_dir.join(name);
     if path.exists() {
-        return Err(ScaffoldError::AlreadyExists(name, path.display().to_string()));
+        return Err(ScaffoldError::AlreadyExists(
+            name,
+            path.display().to_string(),
+        ));
     }
     Ok(())
 }

@@ -29,8 +29,13 @@ const FACTS: [(&str, u64, u64, &str, bool); 5] = [
 
 impl Role {
     /// All five roles, in the fixed dashboard/receipt order.
-    pub const ALL: [Role; 5] =
-        [Role::Lead, Role::Builder, Role::Verifier, Role::Designer, Role::Meter];
+    pub const ALL: [Role; 5] = [
+        Role::Lead,
+        Role::Builder,
+        Role::Verifier,
+        Role::Designer,
+        Role::Meter,
+    ];
 
     fn facts(self) -> (&'static str, u64, u64, &'static str, bool) {
         FACTS[self as usize]

@@ -7,9 +7,9 @@ use std::path::Path;
 
 use types::Receipt;
 
+use super::super::io_fault::IoFault;
 use super::canon::recompute_hash;
 use super::types::LedgerError;
-use super::super::io_fault::IoFault;
 
 const CHUNK: u64 = 8192;
 
@@ -17,9 +17,12 @@ const CHUNK: u64 = 8192;
 /// tip row's own content hash, so appending never extends a tampered tip -- `verify()` remains
 /// the only path that walks the whole chain.
 pub(super) fn read_tail(path: &Path) -> Result<Option<Receipt>, LedgerError> {
-    let Some(line) = last_line(path)? else { return Ok(None) };
-    let receipt: Receipt = serde_json::from_str(&line)
-        .map_err(|e| LedgerError::CorruptTail { reason: e.to_string() })?;
+    let Some(line) = last_line(path)? else {
+        return Ok(None);
+    };
+    let receipt: Receipt = serde_json::from_str(&line).map_err(|e| LedgerError::CorruptTail {
+        reason: e.to_string(),
+    })?;
     let expected = recompute_hash(&receipt);
     if receipt.hash.as_str() != expected {
         return Err(LedgerError::Tampered { seq: receipt.seq });
@@ -36,9 +39,21 @@ fn last_line(path: &Path) -> Result<Option<String>, LedgerError> {
     let mut file = match File::open(path) {
         Ok(f) => f,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-        Err(source) => return Err(IoFault::Open { path: path.to_path_buf(), source }.into()),
+        Err(source) => {
+            return Err(IoFault::Open {
+                path: path.to_path_buf(),
+                source,
+            }
+            .into())
+        }
     };
-    let len = file.metadata().map_err(|source| IoFault::Read { path: path.to_path_buf(), source })?.len();
+    let len = file
+        .metadata()
+        .map_err(|source| IoFault::Read {
+            path: path.to_path_buf(),
+            source,
+        })?
+        .len();
     if len == 0 {
         return Ok(None);
     }
@@ -47,9 +62,17 @@ fn last_line(path: &Path) -> Result<Option<String>, LedgerError> {
     loop {
         let take = CHUNK.min(pos);
         pos -= take;
-        file.seek(SeekFrom::Start(pos)).map_err(|source| IoFault::Read { path: path.to_path_buf(), source })?;
+        file.seek(SeekFrom::Start(pos))
+            .map_err(|source| IoFault::Read {
+                path: path.to_path_buf(),
+                source,
+            })?;
         let mut chunk = vec![0u8; take as usize];
-        file.read_exact(&mut chunk).map_err(|source| IoFault::Read { path: path.to_path_buf(), source })?;
+        file.read_exact(&mut chunk)
+            .map_err(|source| IoFault::Read {
+                path: path.to_path_buf(),
+                source,
+            })?;
         chunk.extend_from_slice(&buf);
         buf = chunk;
         if pos == 0 || buf.iter().filter(|&&b| b == b'\n').count() >= 2 {
@@ -67,9 +90,13 @@ fn last_line(path: &Path) -> Result<Option<String>, LedgerError> {
         None => content,
     };
     if line.is_empty() {
-        return Err(LedgerError::CorruptTail { reason: "last row is a blank line".into() });
+        return Err(LedgerError::CorruptTail {
+            reason: "last row is a blank line".into(),
+        });
     }
     String::from_utf8(line.to_vec())
         .map(Some)
-        .map_err(|e| LedgerError::CorruptTail { reason: e.to_string() })
+        .map_err(|e| LedgerError::CorruptTail {
+            reason: e.to_string(),
+        })
 }

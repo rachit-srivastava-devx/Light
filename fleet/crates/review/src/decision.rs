@@ -1,11 +1,11 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-use crate::{
-    CandidateObservation, ContextManifest, Decision, Finding, FindingsProvider,
-    ReviewError, ReviewResult, ReviewedCandidate,
-};
 use crate::findings::apply_scope_filter;
+use crate::{
+    CandidateObservation, ContextManifest, Decision, Finding, FindingsProvider, ReviewError,
+    ReviewResult, ReviewedCandidate,
+};
 
 fn quick_hash(s: &str) -> String {
     let mut h = DefaultHasher::new();
@@ -22,10 +22,7 @@ fn populate_output_digest(findings: &[Finding]) -> String {
     quick_hash(if s.is_empty() { "empty" } else { &s })
 }
 
-pub fn check_reviewer_independence(
-    worker_id: &str,
-    reviewer_id: &str,
-) -> Result<(), ReviewError> {
+pub fn check_reviewer_independence(worker_id: &str, reviewer_id: &str) -> Result<(), ReviewError> {
     if worker_id == reviewer_id {
         return Err(ReviewError::NotIndependent);
     }
@@ -60,10 +57,21 @@ pub fn assemble_reviewed_candidate(
     let passed = !findings
         .iter()
         .any(|f| f.severity == "WARNING" || f.severity == "ERROR");
-    let decision = if passed { Decision::Approved } else { Decision::ChangesRequested };
+    let decision = if passed {
+        Decision::Approved
+    } else {
+        Decision::ChangesRequested
+    };
 
     Ok(ReviewedCandidate {
         passed,
-        result: ReviewResult { decision, findings, checked, total, input_digest, output_digest },
+        result: ReviewResult {
+            decision,
+            findings,
+            checked,
+            total,
+            input_digest,
+            output_digest,
+        },
     })
 }

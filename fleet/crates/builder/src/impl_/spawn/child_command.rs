@@ -8,7 +8,11 @@ use std::process::{Command, Stdio};
 
 use super::util::CHILD_EXE_OVERRIDE;
 
-pub fn build(request: &SpawnRequest, worktree_path: &Path, hermetic: &HermeticEnv) -> Result<Command, SpawnError> {
+pub fn build(
+    request: &SpawnRequest,
+    worktree_path: &Path,
+    hermetic: &HermeticEnv,
+) -> Result<Command, SpawnError> {
     let executable = std::env::var_os(CHILD_EXE_OVERRIDE)
         .map(PathBuf::from)
         .or_else(|| std::env::current_exe().ok())
@@ -19,7 +23,10 @@ pub fn build(request: &SpawnRequest, worktree_path: &Path, hermetic: &HermeticEn
     if let Some(model) = &request.requested_model {
         command.arg(model);
     }
-    command.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+    command
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
     hermetic.apply(&mut command);
     Ok(command)
 }

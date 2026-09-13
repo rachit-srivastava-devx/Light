@@ -1,8 +1,8 @@
 //! Typed errors, mapping to fleet's `ExitCode` taxonomy instead of a 15th redeclaration of it.
 //! `MergeRefusal` lives in `merge_refusal.rs` -- kept separate so this file stays small.
 
-use types::ExitCode;
 use std::path::PathBuf;
+use types::ExitCode;
 
 pub use crate::merge_refusal::MergeRefusal;
 
@@ -33,7 +33,9 @@ pub enum WorktreeError {
     /// point: `remove`'s fs fallback is a recursive delete, so before this guard existed
     /// `fleet rollback --repo <any repo> --worktree /any/path` destroyed that path and printed
     /// "ok: worktree removed" with exit 0. Proven against a scratch dir, 2026-09-08.
-    #[error("refusing to remove {path}: not inside {root} -- fleet only removes worktrees it owns")]
+    #[error(
+        "refusing to remove {path}: not inside {root} -- fleet only removes worktrees it owns"
+    )]
     OutsideWorktreeRoot { path: PathBuf, root: PathBuf },
     /// The recursive fallback delete itself failed. Previously `let _ = remove_dir_all(..)`, so a
     /// partial delete was silently ignored.

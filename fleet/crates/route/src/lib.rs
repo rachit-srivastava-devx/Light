@@ -1,11 +1,15 @@
+//! STATUS: this crate's second `admit` pipeline is unwired scaffolding matching
+//! `docs/LLD/LLD.md` §8 — not dead code, no caller yet.
 mod explain;
 mod filter;
 mod policy;
 mod score;
 
 // Fleet-router backward-compat re-exports for src/ (Decision, TaskClass, etc.)
-pub use router::{decide, evaluate_role_check, RoleCheck, RoleRefusal,
-    CandidateSpec, TaskClass, Tier, ORDER, Decision, Refusal, RuntimeState, Stage};
+pub use router::{
+    decide, evaluate_role_check, CandidateSpec, Decision, Refusal, RoleCheck, RoleRefusal,
+    RuntimeState, Stage, TaskClass, Tier, ORDER,
+};
 
 pub use explain::{CandidateId, ReservationRequest, RouteDecision, RouteRefusal, StageEvidence};
 pub use filter::{BudgetSnapshot, Candidate, CatalogSnapshot, IntentSpec};
@@ -49,8 +53,7 @@ pub fn admit(
         stages: vec![cap_ev, pol_ev, bud_ev, score_ev],
         reservation: ReservationRequest {
             candidate_id: selected.id.clone(),
-            reserved_until: std::time::Instant::now()
-                + std::time::Duration::from_secs(60),
+            reserved_until: std::time::Instant::now() + std::time::Duration::from_secs(60),
         },
         snapshot_digest: snapshot.digest.clone(),
     })

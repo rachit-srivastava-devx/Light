@@ -5,16 +5,18 @@ use std::path::Path;
 
 use rusqlite::Connection;
 
+use super::super::io_fault::IoFault;
 use super::types::GraphError;
 use super::GraphStore;
-use super::super::io_fault::IoFault;
 
 impl GraphStore {
     /// Open (creating if absent) and ensure the schema exists.
     pub fn open(path: &Path) -> Result<Self, GraphError> {
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|source| IoFault::Open { path: path.to_path_buf(), source })?;
+            fs::create_dir_all(parent).map_err(|source| IoFault::Open {
+                path: path.to_path_buf(),
+                source,
+            })?;
         }
         let conn = Connection::open(path)?;
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
@@ -46,6 +48,9 @@ impl GraphStore {
              );
              CREATE INDEX IF NOT EXISTS aliases_name ON aliases(project_id, name);",
         )?;
-        Ok(Self { conn, db_path: path.to_path_buf() })
+        Ok(Self {
+            conn,
+            db_path: path.to_path_buf(),
+        })
     }
 }

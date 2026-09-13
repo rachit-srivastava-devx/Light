@@ -60,8 +60,14 @@ mod tests {
         let d = repo();
         let victim = tempfile::tempdir().unwrap();
         let err = ensure_owned_worktree(d.path(), victim.path()).unwrap_err();
-        assert!(matches!(err, WorktreeError::OutsideWorktreeRoot { .. }), "{err:?}");
-        assert!(victim.path().exists(), "guard must not delete anything itself");
+        assert!(
+            matches!(err, WorktreeError::OutsideWorktreeRoot { .. }),
+            "{err:?}"
+        );
+        assert!(
+            victim.path().exists(),
+            "guard must not delete anything itself"
+        );
     }
 
     /// A bare `starts_with` on unresolved paths would accept this.
@@ -71,7 +77,10 @@ mod tests {
     fn refuses_traversal_the_root_itself_and_unresolvable_paths() {
         let d = repo();
         for p in [".worktrees/lane-a/../../..", ".worktrees"] {
-            assert!(ensure_owned_worktree(d.path(), &d.path().join(p)).is_err(), "{p}");
+            assert!(
+                ensure_owned_worktree(d.path(), &d.path().join(p)).is_err(),
+                "{p}"
+            );
         }
         assert!(ensure_owned_worktree(d.path(), Path::new("/definitely/not/here")).is_err());
     }

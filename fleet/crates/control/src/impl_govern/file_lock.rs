@@ -25,7 +25,9 @@ pub(crate) fn with_exclusive_lock<T>(
         .write(true)
         .open(lock_path_for(data_path))
         .map_err(|e| MeterIoError(format!("open lock: {e}")))?;
-    lock_file.lock_exclusive().map_err(|e| MeterIoError(format!("lock: {e}")))?;
+    lock_file
+        .lock_exclusive()
+        .map_err(|e| MeterIoError(format!("lock: {e}")))?;
     let result = body();
     let _ = lock_file.unlock();
     result

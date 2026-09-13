@@ -16,7 +16,13 @@ pub use intake::{
     ClarificationKind, ClarificationRow, GateDecision, IntakeQuestion, QuestionId, StageReadiness,
     StageViolation, Trigger, UnknownQuestionId,
 };
-pub use lld_draft::{assemble_acceptance_checks_draft, assemble_blueprint_doc, assemble_summary_doc};
+pub use lld_draft::{
+    assemble_acceptance_checks_draft, assemble_blueprint_doc, assemble_summary_doc,
+};
+pub use pr_walkthrough::{
+    build_pr_walkthrough, AcceptanceResult, AttestationSummary, DiffSummary, FileChange,
+    PrWalkthrough, PrWalkthroughError, VerifiedItem,
+};
 pub use ready_gate::{
     canonical_json, check_and_evaluate, content_hash, depth_evidence, evaluate, evaluate_with,
     validate_lld_v1, validate_module_brief, Check, DepthScore, EntryOutcome, GateReason, GateRefs,
@@ -27,10 +33,6 @@ pub use review::{
     RoleContract, SubmissionRefusal, VerdictDecision, VerdictName, VerdictRefusal,
 };
 pub use teach::{derive_lesson, Lesson, LessonSource, TaughtOutcome};
-pub use pr_walkthrough::{
-    build_pr_walkthrough, AcceptanceResult, AttestationSummary, DiffSummary, FileChange,
-    PrWalkthrough, PrWalkthroughError, VerifiedItem,
-};
 pub use walkthrough::{
     build_walkthrough, AcceptancePreviewItem, BuildItem, DecisionItem, RiskItem, Walkthrough,
     WalkthroughError, WorkOrderItem,

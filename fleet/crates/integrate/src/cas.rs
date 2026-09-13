@@ -11,7 +11,9 @@ pub fn cas_predicate(req: &MergeRequest) -> Result<String, IntegrateError> {
         .output()
         .map_err(|e| IntegrateError::Git { msg: e.to_string() })?;
     if !out.status.success() {
-        return Err(IntegrateError::Git { msg: "rev-parse HEAD failed".into() });
+        return Err(IntegrateError::Git {
+            msg: "rev-parse HEAD failed".into(),
+        });
     }
     let actual = String::from_utf8_lossy(&out.stdout).trim().to_string();
     if actual != req.expected_head {
@@ -47,16 +49,24 @@ pub fn check_grant(req: &MergeRequest) -> Result<(), IntegrateError> {
         .unwrap_or_default()
         .as_secs();
     if req.grant.expires_at <= now {
-        return Err(IntegrateError::Grant { msg: "grant expired".into() });
+        return Err(IntegrateError::Grant {
+            msg: "grant expired".into(),
+        });
     }
     if req.grant.target_ref != req.lane_head {
-        return Err(IntegrateError::Grant { msg: "target ref mismatch".into() });
+        return Err(IntegrateError::Grant {
+            msg: "target ref mismatch".into(),
+        });
     }
     if req.grant.candidate_digest != req.candidate_digest {
-        return Err(IntegrateError::Grant { msg: "digest mismatch".into() });
+        return Err(IntegrateError::Grant {
+            msg: "digest mismatch".into(),
+        });
     }
     if req.checked == 0 || req.checked != req.total {
-        return Err(IntegrateError::Grant { msg: "checked/total invariant violated".into() });
+        return Err(IntegrateError::Grant {
+            msg: "checked/total invariant violated".into(),
+        });
     }
     Ok(())
 }

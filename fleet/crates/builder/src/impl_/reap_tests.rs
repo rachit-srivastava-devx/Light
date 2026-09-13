@@ -61,7 +61,10 @@ fn leaves_a_lane_alone_whose_name_does_not_fit_the_shape() {
 fn leaves_alone_a_directory_that_is_not_actually_a_git_worktree() {
     let repo = repo();
     let dead = dead_pid();
-    let dir = repo.path().join(".worktrees").join(format!("builder-{dead}-0"));
+    let dir = repo
+        .path()
+        .join(".worktrees")
+        .join(format!("builder-{dead}-0"));
     fs::create_dir_all(&dir).unwrap();
     record_worker_pid(&dir, dead);
     assert!(find_dead_lanes(repo.path()).is_empty());

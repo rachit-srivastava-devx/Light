@@ -52,7 +52,11 @@ pub fn wire(command: &mut Command) -> Option<Fd3Channel> {
                 return Err(std::io::Error::last_os_error());
             }
             super::parent_watch::spawn_parent_death_watchdog(fleet_pid)?;
-            let _ = setrlimit(Resource::RLIMIT_AS, LANE_RLIMIT_AS_BYTES, LANE_RLIMIT_AS_BYTES);
+            let _ = setrlimit(
+                Resource::RLIMIT_AS,
+                LANE_RLIMIT_AS_BYTES,
+                LANE_RLIMIT_AS_BYTES,
+            );
             if child_fd != 3 && libc::dup2(child_fd, 3) < 0 {
                 return Err(std::io::Error::last_os_error());
             }
@@ -62,5 +66,8 @@ pub fn wire(command: &mut Command) -> Option<Fd3Channel> {
             Ok(())
         });
     }
-    Some(Fd3Channel { parent_fd, child_fd })
+    Some(Fd3Channel {
+        parent_fd,
+        child_fd,
+    })
 }

@@ -1,7 +1,7 @@
+use crate::StoreError;
+use sha2::{Digest, Sha256};
 use std::io::Write;
 use std::path::Path;
-use sha2::{Digest, Sha256};
-use crate::StoreError;
 
 fn sha256_hex(data: &[u8]) -> String {
     hex::encode(Sha256::digest(data))
@@ -26,7 +26,8 @@ pub fn publish_blob(payload: &[u8], ref_id: &str, dir: &Path) -> Result<(), Stor
     let dst = dir.join(ref_id);
     {
         let mut f = std::fs::File::create(&tmp).map_err(|e| StoreError::Io(e.to_string()))?;
-        f.write_all(payload).map_err(|e| StoreError::Io(e.to_string()))?;
+        f.write_all(payload)
+            .map_err(|e| StoreError::Io(e.to_string()))?;
         f.sync_all().map_err(|e| StoreError::Io(e.to_string()))?;
     }
     std::fs::rename(&tmp, &dst).map_err(|e| StoreError::Io(e.to_string()))?;

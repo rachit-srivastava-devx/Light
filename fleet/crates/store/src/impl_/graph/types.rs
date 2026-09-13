@@ -64,4 +64,3 @@ pub struct AliasRecord {
     pub to_commit: String,
     pub symbol_id: String,
 }
-

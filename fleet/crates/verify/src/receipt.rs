@@ -54,7 +54,11 @@ pub fn assemble_gate_evidence(
     }
 
     let passed = failures.is_empty();
-    let status = if passed { Status::Passed } else { Status::Failed };
+    let status = if passed {
+        Status::Passed
+    } else {
+        Status::Failed
+    };
 
     GateEvidence {
         gate_results: results,

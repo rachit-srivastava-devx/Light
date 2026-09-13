@@ -8,17 +8,29 @@
 use super::error::ApplyError;
 use std::path::{Component, Path, PathBuf};
 
-pub fn resolve_target(worktree: &Path, fence_index: usize, raw: &str) -> Result<PathBuf, ApplyError> {
+pub fn resolve_target(
+    worktree: &Path,
+    fence_index: usize,
+    raw: &str,
+) -> Result<PathBuf, ApplyError> {
     let rel = Path::new(raw);
     if rel.is_absolute() {
-        return Err(ApplyError::AbsolutePath { index: fence_index, path: raw.to_string() });
+        return Err(ApplyError::AbsolutePath {
+            index: fence_index,
+            path: raw.to_string(),
+        });
     }
     for component in rel.components() {
         match component {
             Component::Normal(_) | Component::CurDir => {}
             // ParentDir (`..`), RootDir, and Prefix are all refused as traversal -- a relative
             // path has no business containing any of them.
-            _ => return Err(ApplyError::PathTraversal { index: fence_index, path: raw.to_string() }),
+            _ => {
+                return Err(ApplyError::PathTraversal {
+                    index: fence_index,
+                    path: raw.to_string(),
+                })
+            }
         }
     }
     let worktree_c = worktree
@@ -33,7 +45,12 @@ pub fn resolve_target(worktree: &Path, fence_index: usize, raw: &str) -> Result<
 /// exists) and canonicalises that. A symlinked directory on the way down, or the target itself
 /// already existing as a symlink, resolves to its real location here even though the plain path
 /// string never contained `..`.
-fn ensure_no_escape(worktree_c: &Path, candidate: &Path, fence_index: usize, raw: &str) -> Result<(), ApplyError> {
+fn ensure_no_escape(
+    worktree_c: &Path,
+    candidate: &Path,
+    fence_index: usize,
+    raw: &str,
+) -> Result<(), ApplyError> {
     let mut existing = candidate.to_path_buf();
     while !existing.exists() {
         if !existing.pop() {
@@ -42,10 +59,16 @@ fn ensure_no_escape(worktree_c: &Path, candidate: &Path, fence_index: usize, raw
     }
     let Ok(existing_c) = existing.canonicalize() else {
         // Unresolvable ancestor: fail closed, not open.
-        return Err(ApplyError::EscapesWorktree { index: fence_index, path: raw.to_string() });
+        return Err(ApplyError::EscapesWorktree {
+            index: fence_index,
+            path: raw.to_string(),
+        });
     };
     if existing_c != *worktree_c && !existing_c.starts_with(worktree_c) {
-        return Err(ApplyError::EscapesWorktree { index: fence_index, path: raw.to_string() });
+        return Err(ApplyError::EscapesWorktree {
+            index: fence_index,
+            path: raw.to_string(),
+        });
     }
     Ok(())
 }

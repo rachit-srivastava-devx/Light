@@ -56,7 +56,11 @@ fn git_dirty() -> String {
 /// non-zero or produced non-UTF8 output. Empty-but-successful stdout is `Some(String::new())`,
 /// distinct from failure -- callers decide what an empty answer means for their own command.
 fn run_git(args: &[&str]) -> Option<String> {
-    let out = Command::new("git").args(args).current_dir(env!("CARGO_MANIFEST_DIR")).output().ok()?;
+    let out = Command::new("git")
+        .args(args)
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .ok()?;
     if !out.status.success() {
         return None;
     }

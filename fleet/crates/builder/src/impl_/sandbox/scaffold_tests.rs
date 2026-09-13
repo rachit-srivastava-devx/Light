@@ -1,5 +1,5 @@
-use super::*;
 use super::super::super::sandbox::agent_registry::load_agent;
+use super::*;
 
 #[test]
 fn scaffold_writes_files_that_then_parse() {
@@ -22,7 +22,10 @@ fn scaffold_refuses_to_overwrite_existing_config() {
     std::fs::write(dir.path().join(".fleet/agents.toml"), "custom").unwrap();
 
     let err = scaffold_fleet_dir(dir.path()).unwrap_err();
-    assert!(matches!(err, ScaffoldError::AlreadyExists("agents.toml", _)));
+    assert!(matches!(
+        err,
+        ScaffoldError::AlreadyExists("agents.toml", _)
+    ));
 
     // Untouched: scaffold must not have written skills.toml either.
     assert!(!dir.path().join(".fleet/skills.toml").exists());

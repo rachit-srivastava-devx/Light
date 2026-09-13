@@ -6,9 +6,13 @@ Status: **proposed design for review, not an implementation or production-readin
 
 **User-selected default:** build and verify autonomously; stop before any external publication. A draft PR, push, central-learning upload, email and external notification all count as external effects and need a configured grant or user approval. Local preparation and local verification proceed. Approval binds the exact action, destination and content digest; unrelated later edits invalidate it.
 
-Read sections 1–4 for the main decisions; sections 5–21 specify implementation contracts; sections 22–26 cover research, rollout, requirements trace and verification. The accompanying [interactive graph](../design/fleet-harness/system-graph.html) is an overview; [`lld-full-detail.html`](lld-full-detail.html) is the full component-level companion (32 nodes, matches §3/§4 1:1). The diagrams and contracts below are the detailed authority for this proposal.
+Read sections 1–4 for the main decisions; sections 5–21 specify implementation contracts; sections 22–26 cover research, rollout, requirements trace and verification. [`lld-full-detail.html`](lld-full-detail.html) is the full component-level diagram (37 nodes, matches §3/§4 1:1; the separate simplified overview graph that used to live at `docs/design/fleet-harness/` was removed 2026-09-13). The diagrams and contracts below are the detailed authority for this proposal.
 
 **Rigor-gap closure, 2026-09-11:** an owner review found that several gating decisions used an undefined qualitative term ("material," "risk low," "demonstrated performance") as the actual admission test, with no threshold, formula, or independent check behind it. §6 (×2), §7, §9, §12, §16 (×2), §17 (×2), §18 and §19 (×2) below each now carry a marked **Gap closure** paragraph giving the concrete rule. A second, independent multi-agent review on the same date checked this closure and the document's own §24 trace for remaining thin spots and one outright wrong claim (an earlier version of this note misattributed one closure to §9 when it was in §7 — fixed here, and a real §9 closure added below since none existed). This does not change the document's overall proposal status — these are still design-level rules, not measured or implemented.
+
+**Workflow-rigor closure, 2026-09-13:** an L8 review comparing this design against an external self-orchestration technique (`GVS5H`) found the *authority* model sound but the *repair loop* thin — a verify failure had no path back into the build loop with the actual failing case attached, no mechanism switched approach after repeated failure short of asking a human, and no tier escalation existed at all. The same pass also closed two authority gaps independent of that comparison (no named approver for central-standards promotion; no freshness check on the context a reviewed plan was built against). [`LLD-META-L8-ADDENDUM-2.md`](LLD-META-L8-ADDENDUM-2.md) (I–P plus a central-standards CRUD contract) is normative alongside this document on the same terms as Addendum 1; §7, §8, §11, §17 and §18 below each carry a pointer to the relevant letter. Still proposal-status, not implemented.
+
+**OS-correctness closure, 2026-09-13:** a further review checked this design's concurrency and recovery mechanisms against standard operating-systems and database correctness literature (ARIES write-ahead logging, seL4's formal-verification model, backpressure/flow-control design, the Coffman conditions for deadlock) and found several places stating a mechanism with confidence but never the correctness property it depends on — plus one real tension: lease expansion (§8) blocks a worker that already holds its original reservation, which is hold-and-wait reintroduced through the one path the atomic-upfront admission model didn't cover. [`LLD-META-L8-ADDENDUM-3.md`](LLD-META-L8-ADDENDUM-3.md) (Q–U) is normative alongside this document on the same terms as Addenda 1 and 2; §5, §8 and §16 below each carry a pointer. This closes design-level gaps; it does not make Fleet an operating system — it remains a userspace CLI harness that runs under one, and none of Q–U changes that scope.
 
 ## 1. Product boundaries and decisions to debate
 
@@ -62,7 +66,9 @@ flowchart TB
   Ingest --> Control[Local controller: state reducer + scheduler]
   Control --> Store[(SQLite events / leases / reservations)]
   Control --> Intent[Intent agent: typed proposal]
-  Intent --> Route[Deterministic route admission]
+  Intent --> Route[Deterministic route admission: ranks by cost + effort profile]
+  Discovery[CLI / adapter discovery: PATH probe, capability report] --> Catalog[(Model / adapter catalog)]
+  Catalog --> Route
   Route --> Scan{Material ambiguity?}
   Scan -->|yes| Business[Business-context agent]
   Scan -->|yes| Tech[Technical-context agent]
@@ -75,27 +81,46 @@ flowchart TB
   Questions --> User
   Scan -->|no or resolved| DAG[Versioned workflow DAG]
   DAG --> Planner[Module planning agent]
-  Planner --> PlanReview[Higher-capability plan reviewer]
-  PlanReview --> Ready[Ready contract gate]
-  Ready --> Builder[Builder agent in private worktree]
+  Planner -->|investigate/feature/refactor only| Ideation[Approach ideation: 2-3 distinct candidates]
+  Ideation --> PlanReview[Higher-capability plan reviewer]
+  Planner -->|small-change: skip ideation| PlanReview
+  PlanReview --> Ready[Ready contract gate: plan + fresh bearings]
+  Ready --> FanOut[Fan-out scheduler: ready-heap, conflict-check, N parallel leases]
   Ready --> NextPlan[Next-module planning agent]
+  NextPlan --> PlanReview
+  FanOut --> Builder[Builder agent in private worktree]
   Builder --> Review[Independent code-review agent]
   Review --> Verify[Deterministic tests / secret scan / policy]
+  Verify --> QualityLedger[(Quality / trial ledger: per-task outcome, pass@k)]
+  QualityLedger --> Route
+  Verify -->|fail, within repair budget: retry/switch/escalate decision| Control
+  Control -->|retry or switch approach| Builder
+  Control -->|repair + switch both exhausted: re-score next cost tier| Route
+  Route -->|escalated candidate + failing case| Builder
+  Control -->|3rd distinct plateau| Questions
   Verify --> Integrate[Serialized local integration]
   Integrate --> Post[Post-merge verification]
-  Post -->|pass| Approval[External publication approval]
+  Post -->|pass| Approval[External publication approval + central-standards maintainer]
   Post -->|fail| Rollback[Guarded revert / reconciliation]
   Approval --> Broker[External action broker]
+  Approval --> CentralSync[Central standards CRUD: pull/propose/promote/retire]
   Context[Context compiler: exact rules + evidence slices] --> Planner
   Context --> Builder
   Context --> Review
   Knowledge[(Repo memory + pinned central standards)] --> Context
   Verify --> Candidate[Learning candidate]
   Candidate --> Offline[Offline evaluator and promotion gate]
-  Offline --> Knowledge
+  Offline --> CentralSync
+  CentralSync --> Knowledge
 ```
 
-Each agent box is a role instance, not a mandatory separate resident model. Fan-out is available at any DAG layer but bounded by dependencies, resources and useful parallel work. The simplified interactive graph shows principal roles; this graph includes ambiguity and learning lanes.
+Ideation, the repair/switch/escalate loop and central-standards CRUD are 2026-09-13 additions closing gaps found in an L8 review against an external self-orchestration technique (`GVS5H`) plus two independent authority gaps; see [`LLD-META-L8-ADDENDUM-2.md`](LLD-META-L8-ADDENDUM-2.md) letters I, J, K, L, N, O and the central-standards CRUD section. They do not change the trust boundary below: `Control` still never touches the worker's fd-3 channel, and `Route`'s escalation can never cross below §17's risk floor.
+
+**Gap closure — discovery, fan-out and quality measurement were prose, never diagram nodes (2026-09-13):** §9 already specifies a discovery probe, §8 already specifies a ready-heap fan-out loop, and §18 already specifies a per-task trial record — but none had its own place in this graph, which made the pipeline look like it discovers nothing, runs one builder at a time, and never measures a model against another. Three nodes close this: `Discovery` runs §9's `probe(executable, timeout) -> CapabilityReport` and populates the `Catalog`, which `Route` reads before ranking (`Route`'s label now says what it actually does: rank by expected cost — §17 — and pick an effort profile by risk tier, not merely "admit or refuse"). `FanOut` is §8's `while ready_heap not empty` loop made visible: it is the reason `Builder` is a role instance that can run as N simultaneous leases, one per independent DAG node, bounded by §8's concurrency formula — not a single resident process. `QualityLedger` is §18's trial record made visible: every `Verify` outcome (`checked/total`, terminal class, pass@k) is recorded here and feeds back into `Route`'s cost-scoring cohort and §7's reviewer-qualification floor, closing the loop between "did this model do a good job" and "should Route pick it again." None of the three adds a new authority — Discovery and FanOut remain deterministic (`fleet-router`, `fleet-worker`), and QualityLedger is an append-only record (`fleet-memory`), not a decision-maker.
+
+**Gap closure — Next-Module Planner was a dead end in the diagram (2026-09-13):** §7 already says "Planner N+1 may run while Builder N executes" — N+1's draft is a plan like any other and must clear the same `PlanReview` gate before its own `Ready`/`FanOut`/`Builder` lease, not vanish once drafted. The graph now shows `NextPlan --> PlanReview`, closing the loop so module-by-module planning is visibly a cycle through the same reviewer-independence bar, not a one-shot side node.
+
+Each agent box is a role instance, not a mandatory separate resident model. Fan-out is available at any DAG layer but bounded by dependencies, resources and useful parallel work. This graph includes the ambiguity and learning lanes alongside the principal roles.
 
 Trust zones: (1) operator-approved controller/config/grants; (2) immutable observed evidence; (3) untrusted worker and retrieved content; (4) external providers. Models cannot write the controller database, ledger, credential store, approved policy, integration Git metadata or acceptance authority. Worker result claims are observations until the parent validates them.
 
@@ -107,18 +132,18 @@ Existing Cargo workspace names are useful seams, not evidence that this entire d
 
 | Component | Responsibility | Input → output | Owned effects |
 |---|---|---|---|
-| fleet-types | Versioned envelopes, typed IDs, integer units | Validated JSON → domain values | None; contract edits need ADR |
+| fleet-types | Versioned envelopes, typed IDs, integer units, `AttemptOutcome` terminal taxonomy (Addendum 2-P) | Validated JSON → domain values | None; contract edits need ADR |
 | fleet-events | Poll/webhook normalization, replay guard | Connector envelope → accepted event | Through store transaction only |
 | fleet-lifecycle | Pure transition reducer | State + event → state + effect intents | None |
-| fleet-router | Capability/policy/budget eligibility and ranked decision | Immutable runtime snapshot → decision/refusal | None |
+| fleet-router / fleet-govern (`control`) | Capability/policy/budget eligibility and ranked decision; owns the repair/switch/escalate decision on a Verify failure (Addendum 2-K/L) | Immutable runtime snapshot → decision/refusal | None |
 | fleet-scan | Conditional ambiguity probes and evidence coverage | Intent + unknowns → ambiguity records | Bounded read/research jobs |
-| fleet-plan | Typed blueprints, readiness, walkthroughs | Requirements + evidence → plan proposal | Versioned draft artifacts |
+| fleet-plan | Typed blueprints, readiness (now including context-freshness, Addendum 2-J), walkthroughs; owns pre-plan approach ideation for investigate/feature/refactor (Addendum 2-N) | Requirements + evidence → plan proposal | Versioned draft artifacts |
 | fleet-context | Retrieval, dependency expansion, packing | Query + source snapshot + budget → manifest | Derived indexes via store ports |
-| fleet-worker | Protocol adapters, launch, cancel and result normalization | Lease + compiled context → observations | Sandboxed children only |
-| fleet-govern | Admission, grants, quotas, retry state and runtime health | Snapshot + requested effect → permit/refusal | Parent-mediated effects |
-| fleet-verify / fleet-judge | Deterministic checks / advisory model critique | Exact candidate digest → evidence | Isolated verification jobs |
+| fleet-worker | Protocol adapters, launch, cancel and result normalization; summarizes a token/time-cutoff-truncated attempt instead of discarding it (Addendum 2-M) | Lease + compiled context → observations | Sandboxed children only |
+| fleet-govern | Admission, grants, quotas, retry state and runtime health; failure-triggered tier escalation re-scores at `route` on repair+switch exhaustion (Addendum 2-O) | Snapshot + requested effect → permit/refusal | Parent-mediated effects |
+| fleet-verify / fleet-judge | Deterministic checks / advisory model critique; `GateEvidence.failures` is now `Vec<FailingCase>`, reinjected into the next repair lease's context (Addendum 2-K) | Exact candidate digest → evidence | Isolated verification jobs |
 | fleet-merge | Worktree ownership, integration serialization, rollback | Verified candidate + expected HEAD → integration receipt | Controller-owned Git operations |
-| fleet-memory | Lessons, applicability, proposals and offline score snapshots | Evidence → candidate → validated learning | No direct policy activation |
+| fleet-memory | Lessons, applicability, proposals and offline score snapshots; central-standards CRUD (pull/propose/promote/retire, Addendum 2) gated by a human-only `StandardMaintainerGrant` (Addendum 2-I) | Evidence → candidate → validated learning | No direct policy activation |
 | fleet-store | SQLite transactions, artifacts, retention and backup | Typed records → durable references | Sole authority writer |
 | fleet-stream / src | Human CLI, progress projection and composition | Commands/events → presentation | Wiring, not business decisions |
 
@@ -150,6 +175,8 @@ RouteDecision {id, snapshot_digest, candidates[], rejection_reasons[],
 
 Worker schemas exclude authoritative actor, timestamp, resolved model, approval and budget settlement fields. If a worker sends them, reject the frame rather than ignore ambiguous authority claims. Protocol frame: version, sequence, kind, payload length, JSON; maximum 1 MiB/frame, 8 MiB queued per worker, larger data goes through a bounded artifact intake operation. Unexpected sequence gaps or duplicate terminal frames are protocol faults with receipts.
 
+**Gap closure — the 8 MiB cap named no overflow policy (2026-09-13):** stating a bound without stating what happens at it leaves three different correctness properties (block, drop, error) unresolved as "whatever the code currently does." The policy is `BlockProducer`: a worker at the cap blocks on its next write until the parent drains it, the same contract as a full TCP receive window — never a silent drop, which would corrupt the frame-sequence invariant this same paragraph already relies on. A worker that cannot block on overflow produces a `ProtocolFault` receipt, the same category already used for sequence gaps above. See [`LLD-META-L8-ADDENDUM-3.md`](LLD-META-L8-ADDENDUM-3.md)-S.
+
 Proposed SQLite schema, expressed compactly for review; real migration DDL needs foreign keys, CHECK constraints, indexes and migration tests:
 
 ```sql
@@ -175,6 +202,8 @@ CREATE TABLE outbox(id TEXT PRIMARY KEY, effect_id TEXT UNIQUE NOT NULL,
 Also store repo_heads, gates, usage_observations, model_snapshots, learning_candidates, policy_versions, artifacts and pins. Index events(run_id,seq), nodes(run_id,state), outbox(next_attempt_at), memory(scope,task_type,status,expires_at). Lease generation fences stale workers even if an old process returns after timeout.
 
 Each transition uses one transaction: validate expected revision → reserve budget/resources → append event → update projection → create effect/outbox row → commit. Only then launch side effects. Materialize large blobs first into a temporary file, hash and fsync, publish atomically without replacing an existing content address, verify any existing blob has the expected digest, fsync the destination directory, then commit references. Readers acquire transactional artifact pins before resolving a reference and release them after closing the file; GC rechecks pin generation before deletion. A crash can leave an unreferenced blob, which GC may remove; it must never leave a referenced incomplete blob.
+
+**Gap closure — replay was a latency target, not a correctness property (2026-09-13):** N08's 30-second recovery budget says how fast replay finishes, never that replaying the same log twice, or from an interrupted midpoint, converges to the same projection state — the actual property ARIES-style recovery depends on. Every projection row now carries the `seq` of the last event it applied; replay compares each event's `seq` against that before reapplying and skips if already applied, checked per entity so two projections at different replay progress during a partial crash both stay correct independently. The 30-second SLA is a target on top of this, not the mechanism that makes it safe. See Addendum 3-R.
 
 ## 6. Intent, ambiguity and workflow selection
 
@@ -218,9 +247,15 @@ ready(module) = acceptance_nonempty
   AND grants_cover_effects
   AND write_scope_exclusive
   AND budget_and_resources_available
+  AND context_manifest_digest == last_reviewed_context_digest
+  AND context_manifest_source_commit == current_base_commit
 ```
 
+**Gap closure — a reviewed plan can go stale between review and build (2026-09-13):** the last two clauses close a gap independent of any external comparison: nothing previously checked that the context a plan was reviewed against was still current by the time a lease issued. A source-commit or context-digest drift after review invalidates readiness; the module returns to `PLANNING` for a fresh manifest and re-review rather than building against stale bearings. See [`LLD-META-L8-ADDENDUM-2.md`](LLD-META-L8-ADDENDUM-2.md)-J.
+
 Planner N+1 may run while Builder N executes if N's contract is immutable and N+1 cannot write anything N builds or measures. If feedback changes a shared contract, create plan version V+1 and mark affected descendants stale. Stop dependent admission, preserve existing patches, rebase/replan only affected work. Approval and review of V do not automatically apply to V+1.
+
+**Gap closure — approach ideation before plan commit (2026-09-13):** for workflow kinds `investigate`, `feature` and `refactor` (§6's table) — never `small-change`, where planning is already skippable — the planner first proposes 2-3 distinct candidate approaches (prose only, no code) before `PlanReview` selects one to carry into a `PlanVersion`, closing a gap an L8 review found by comparison against an external self-orchestration technique (`GVS5H`): fleet previously went straight from evidence to a single committed plan with no recorded alternative. Selection uses this section's existing reviewer-independence bar, not a separate weaker one. See Addendum 2-N.
 
 Teach-back is a structured projection: what changes, why, key trade-off, concrete example, evidence, unresolved decision. At module readiness and PR preparation, explain before/after behavior and how tests establish it. Stream milestone updates, not raw reasoning or token chatter. User corrections create versioned feedback events and new validation work; never overwrite prior explanations to hide a changed decision.
 
@@ -244,9 +279,15 @@ while ready_heap not empty:
 
 Conflict predicate: for distinct live nodes i,j, Wi∩Wj, Wi∩Rj and Wj∩Ri must all be empty for mutable shared inputs. Immutable commit snapshots can be read concurrently. Integration refs, lockfiles, generated schemas and shared build caches are resources too; separate worktrees alone do not make them independent. Dynamic discovery outside the lease stops the worker for lease expansion and re-evaluation.
 
+**Gap closure — lease expansion was hold-and-wait wearing the atomic-upfront model's clothes (2026-09-13):** the scheduling loop above eliminates hold-and-wait (a Coffman deadlock condition) by reserving every resource atomically before launch — but "stops the worker for lease expansion" describes a worker that already holds its original reservation, blocking for more, which is hold-and-wait reintroduced through the one path atomic-upfront admission didn't cover. Expansion is now an atomic *replace*: the worker's current reservation is released in the same transaction that requests the enlarged one, never held alongside a pending request. A replacement that cannot be granted immediately returns the node to `READY` for ordinary re-admission, or `Deferred` under the same wait-queue discipline as first admission — never a worker parked holding partial resources. This is a different, and separately proven, discipline than §15's sorted repo-ID lock ordering for the multi-repo saga (breaking circular-wait, not hold-and-wait); the two compose by forbidding a lease in `Deferred` expansion from simultaneously being a saga lock participant, not by a general proof both hold everywhere. See [`LLD-META-L8-ADDENDUM-3.md`](LLD-META-L8-ADDENDUM-3.md)-Q.
+
 Concurrency = min(user lane cap, adapter cap, RAM admission, CPU admission, available independent nodes, review capacity). At 2 GiB child budget, two measured 600 MiB agent trees leave 848 MiB; a 1.2 GiB build cannot run alongside both. Either reduce to one agent or defer the build. Use historical P95 demand plus margin; on first use start serially and measure. Controller state memory scales with active frontier, not total history.
 
 Retries: environment repair budget two attempts for classified transient faults; verification repair budget two attempts; the third recurrence of the same failure signature stops automatic guessing and asks one diagnostic question. Provider retry-after and exponential backoff with bounded jitter govern quota/network retries. A non-idempotent action with unknown completion is reconciled before another attempt.
+
+**Gap closure — a repair attempt was blind, and nothing tried a different approach before asking a human (2026-09-13):** an L8 review comparing this design against an external self-orchestration technique (`GVS5H`) found two concrete thinness points here. First, a verify-failure repair attempt carried no structured record of *what* failed — `GateEvidence.failures` was free text nothing downstream reused — so a repair lease was a blind re-run, not meaningfully different from the first attempt; it now reinjects the exact failing case (input/expected/actual) into the repair lease's compiled context ahead of optional retrieval. Second, between the 1st repair attempt and the 3rd-recurrence human question above, nothing tried a genuinely different approach automatically: the 2nd recurrence of the same failure signature now excludes the prior plan digest and requires a different algorithm/data structure/reduction, not a patch of the stuck one; only a 3rd recurrence of a *different* signature that also plateaus reaches the human question. An infra-classified failure (timeout, malformed provider response) does not count toward this recurrence counter — retrying infrastructure is not evidence the approach is wrong. See Addendum 2-K, 2-L, 2-P.
+
+**Gap closure — no path existed from a repeatedly-failing tier to a more capable one (2026-09-13):** the same review found `route`'s candidate selection picks once and never revisits it on failure. When repair budget and the approach-switch above are both exhausted without success, `route` now re-scores at the next cost tier up, carrying the exhausted tier's last candidate and its failing case forward as a "verify and redo" hint rather than starting the new tier blind. This can never cross below §17's computed risk-tier floor, and the escalated attempt's cost is attributed separately from the original tier's estimate. See Addendum 2-O.
 
 ## 9. Agent discovery, model catalog and compatibility
 
@@ -310,6 +351,8 @@ Memory tiers: active working set; durable run checkpoint; repo-specific lessons;
 **Gap closure — user corrections also feed this pipeline:** §7's "user corrections create versioned feedback events" was never wired to the lesson pipeline below, which as written only ingests *observed failures* (a verification-caught defect), not corrections a human catches that no gate flagged. A feedback event enters this same pipeline as its own candidate-lesson source, alongside observed failure: the correction stands in for "reproduced root cause" (the user's correction is the evidence), still requires a regression fixture and local validation before promotion, and is never promoted merely because a user said so once — the same evidence-count and counterexample bar applies regardless of source.
 
 Promotion workflow: observed failure → reproduced root cause → candidate lesson plus regression fixture → local validation → approved central proposal → externally authorized publication. Pull central manifests by pinned revision/signature or configured trust root, validate schema, apply repository applicability, and record central/repo conflicts. Transport may be Git or MCP; central availability is not required for local work against a still-valid pinned snapshot. Expired critical standards block affected work; noncritical offline staleness is visible.
+
+**Gap closure — "approved central proposal" named no approver, and "Git or MCP" named no operation set (2026-09-13):** neither gap depends on any external comparison — both are authority omissions in this document's own text. "Approved" now means exactly one `StandardMaintainerGrant{decision: Approved}` bound to the candidate's content digest, issued by a human identity — never a model — under the same `approval` capability-grant machinery that already gates PR/push/email publication; a later edit to the candidate invalidates the grant, matching §1's existing approval-binding rule. The transport is now a concrete four-operation contract (`Pull`, `Propose`, `Promote`, `Retire`) regardless of whether the wire is Git or MCP: `Promote` requires the bound grant above, `Retire` writes a tombstone `CentralRecord` rather than a hard delete (consistent with this section's own tombstone rule two paragraphs below), and `knowledge` never speaks either transport directly — Git goes through `integrate`, MCP goes through `broker` (§12), the same as every other effect in this document. See [`LLD-META-L8-ADDENDUM-2.md`](LLD-META-L8-ADDENDUM-2.md)-I and its central-standards CRUD section.
 
 No silent self-training on secrets, untrusted external commands, user personal details or another repo's private content. Imported memory remains data and cannot increase capability grants. Retiring evidence updates dependent summaries/indexes and preserves a tombstone; deleting a lesson does not leave it retrievable from an old embedding cache.
 
@@ -400,6 +443,10 @@ Use expand/contract compatibility: producer first exposes backward-compatible in
 
 Run states: RECEIVED, CLASSIFYING, WAITING_INPUT, PLANNING, READY, RUNNING, VERIFYING, INTEGRATING, WAITING_PUBLICATION, PAUSING, PAUSED, WAITING_QUOTA, NEEDS_RECONCILIATION, COMPLETED, FAILED, CANCELLED. Nodes have independent substates so one waiting question need not freeze unrelated work. Reducer rejects illegal transitions and emits typed refusals.
 
+**Gap closure — the transition table was example-tested, never proven over the reachable state space (2026-09-13):** [`LLD-META-L8-ADDENDUM.md`](LLD-META-L8-ADDENDUM.md)-D requires "one acceptance test for every legal row," which checks that each documented edge behaves as described — it proves nothing about the state space those edges generate together. Testing every edge of a graph is not proving a property at every node reachable through it, the distinction that separates ordinary test suites from a formally verified system. This full state machine now requires, in addition, a model-checked (exhaustive or bounded explicit-state search; a full TLA+ spec is not required) proof of: no reachable state holds two active leases with overlapping write-sets; `COMPLETED`/`FAILED`/`CANCELLED` have no outgoing edges in the reachable graph; every path from `PAUSING` reaches `PAUSED` or is preempted by `CANCELLED`; `WAITING_QUOTA` admits no zero-wait cycle. See [`LLD-META-L8-ADDENDUM-3.md`](LLD-META-L8-ADDENDUM-3.md)-T.
+
+**Gap closure — N15 covers the store re-reading old events, not live consumers reading new ones (2026-09-13):** N15 requires backward-readable event records across one schema migration, which is about `store` parsing rows written under an older schema. It says nothing about `route`, `control` and `offline` — the live consumers of the event stream — encountering a schema version their own build predates during a rolling deployment. Every consumer now declares the schema-version range it can read; a migration that would produce an event outside any currently-registered consumer's declared range is refused (a typed refusal) until every consumer has migrated, checked at the same admission boundary N15's migration test already exercises. See Addendum 3-U.
+
 Pause sets a durable admission barrier first, then requests cooperative checkpoints from all active workers. Acknowledge PAUSING immediately; report PAUSED only after children stop or are safely detached with no remaining effect capability. Hard cancellation kills descendants and revokes leases. Resume revalidates repository heads, grants, policy versions, credentials, provider availability and artifact digests before issuing new generations. Native session resume is optional optimization; Fleet checkpoints remain authoritative.
 
 Quota failure closes an adapter circuit until retry-after/reset observation. Select another already authorized eligible agent, reserve its budget, regenerate context and restart only safe work. Exhausting all routes enters WAITING_QUOTA with next known wakeup or user action, never an infinite hot retry. Subscription percentage is shared account evidence and may lack a precise reset or per-run attribution.
@@ -425,6 +472,8 @@ Store prices as integer currency microunits per one million tokens with effectiv
 A route passes capability, authorization, availability, identity/independence and budget filters before scoring. Then choose the lowest expected total task cost whose task-class quality lower bound and latency estimate meet the profile. Cold-start or sparse data uses a conservative configured baseline with “insufficient evidence,” not invented scores. Expected cost includes failure-repair costs; cheap first calls may make expensive accepted changes.
 
 **Gap closure — the cost-scoring formula:** for each eligible route, `expected_cost(route) = base_price(route, expected_tokens) + P(first_attempt_fails | route, task_class) × expected_repair_cost(route)`. `base_price` uses this section's per-million-token tables and the task's expected token count from the context manifest. `P(first_attempt_fails | route, task_class)` and `expected_repair_cost` come from that route's task-class cohort (§18's trial record); with no cohort yet, both fall back to the conservative configured baseline named above, never to zero or an invented figure. The route scoring picks the minimum `expected_cost` among routes whose task-class quality lower bound and latency estimate still clear the active profile (below).
+
+**Gap closure — tier-escalation cost is a separate attempt, not a revision of the first estimate (2026-09-13):** §8's failure-triggered escalation (Addendum 2-O) re-scores a repeatedly-failing task at the next cost tier up. That escalated attempt's `expected_cost` is computed fresh against the new tier and recorded as its own reservation/settlement (§17's usage-observation model above); it is never folded backward into the original tier's `expected_cost` or reported as if the cheaper tier had succeeded at that price. A task's total cost is the sum of every attempted tier's settled spend, not the cost of whichever tier eventually succeeded.
 
 Profiles: fast (small scope, one builder attempt before escalation), balanced (default bounded repair), thorough (extra independent review and adversarial tests). None relaxes mandatory safety/gates. Effort budget is adapter-supported reasoning setting plus max tokens, calls, wall time and retries. If the adapter cannot enforce a setting, report unsupported; do not pretend an arbitrary prompt changes provider accounting.
 
@@ -456,6 +505,8 @@ Freeze task fixtures, acceptance and evaluator version before agent execution. B
 | Docs / research | Requirement and factual source coverage | Dead-link/version/staleness checks; unresolved claims labelled |
 
 Trial record includes task and attempt IDs, repo commit, harness revision, plan/policy/acceptance digests, model requested/resolved, adapter version, seed if supported, terminal class, checked/total, evidence, elapsed milliseconds and usage coverage. Separate environment fault, refusal, timeout, agent failure and verification mismatch. Publish operational accepted/scheduled and model accepted/eligible-executed, with exclusions and missing results; neither alone describes the whole system.
+
+**Gap closure — "terminal class" named no fixed vocabulary (2026-09-13):** an L8 review comparing this design against an external self-orchestration technique (`GVS5H`) found this section's terminal class undefined against the actual failure modes a provider call can produce, and specifically could not distinguish "no clean model response after every retry" from "the model answered and was simply wrong" — two cases §8's repair/switch/escalate logic must branch on differently. Terminal class is now the fixed enum `{Ok, InfraExhausted, ProtocolFault, Truncated, EmptyStop}`; `InfraExhausted` does not count toward §8's same-signature recurrence counter (retrying infrastructure is not evidence the approach is wrong), and `Truncated` routes to the truncated-attempt summarizer (Addendum 2-M) before any other repair action. See Addendum 2-P.
 
 For n independent fresh trials, c successes and k≤n, pass@k is `1 - C(n-c,k)/C(n,k)`. First-attempt acceptance and all-k consistency answer different questions and must be reported separately. Store rational counts and use checked arithmetic or offline analysis for large combinations. Bootstrap by task/family rather than tool call; shared task difficulty makes calls non-independent.
 

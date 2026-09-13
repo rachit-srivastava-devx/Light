@@ -11,7 +11,10 @@ use super::verdict::{GateResult, Verdict};
 fn skip(spec: &GateSpec, reason: String) -> GateResult {
     GateResult {
         id: spec.id,
-        verdict: Verdict::Skip { reason, was_required: spec.requirement == Requirement::Required },
+        verdict: Verdict::Skip {
+            reason,
+            was_required: spec.requirement == Requirement::Required,
+        },
     }
 }
 
@@ -26,7 +29,10 @@ fn resolve_argv(spec: &GateSpec, gates: &GatesRoot) -> Result<Vec<String>, GateR
                 argv.extend(args.iter().map(|s| s.to_string()));
                 Ok(argv)
             }
-            Err(e) => Err(skip(spec, format!("{} gate asset unavailable: {e}", spec.id))),
+            Err(e) => Err(skip(
+                spec,
+                format!("{} gate asset unavailable: {e}", spec.id),
+            )),
         },
     }
 }
@@ -40,7 +46,10 @@ pub fn run_gate(
     gates: &GatesRoot,
 ) -> GateResult {
     if !probe.available(spec.probe) {
-        return skip(spec, format!("{} {}", spec.id, probe.unavailable_reason(spec.probe)));
+        return skip(
+            spec,
+            format!("{} {}", spec.id, probe.unavailable_reason(spec.probe)),
+        );
     }
     let argv = match resolve_argv(spec, gates) {
         Ok(argv) => argv,
@@ -48,7 +57,10 @@ pub fn run_gate(
     };
     let argv: Vec<&str> = argv.iter().map(String::as_str).collect();
     let out = runner.run(&argv);
-    GateResult { id: spec.id, verdict: classify(spec, &out) }
+    GateResult {
+        id: spec.id,
+        verdict: classify(spec, &out),
+    }
 }
 
 /// Run every committed gate in order, in a fresh `Report`. Gates are independent -- nothing here
@@ -60,6 +72,9 @@ pub fn run_all(
     gates: &GatesRoot,
 ) -> Report {
     Report {
-        results: specs.iter().map(|s| run_gate(s, probe, runner, gates)).collect(),
+        results: specs
+            .iter()
+            .map(|s| run_gate(s, probe, runner, gates))
+            .collect(),
     }
 }

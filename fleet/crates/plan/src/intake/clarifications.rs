@@ -19,8 +19,12 @@ pub struct ClarificationRow {
     pub answer: String,
 }
 
-const GENERIC_PREFIXES: [&str; 4] =
-    ["what do you want", "tell me more", "provide more detail", "any other requirements"];
+const GENERIC_PREFIXES: [&str; 4] = [
+    "what do you want",
+    "tell me more",
+    "provide more detail",
+    "any other requirements",
+];
 
 fn is_generic(question: &str) -> bool {
     let lc = question.to_lowercase();
@@ -38,13 +42,22 @@ pub fn validate_clarification_rows(
     }
     for row in rows {
         if !ref_known(&row.gap_ref) {
-            out.push(StageViolation(format!("clarification {} has an untraceable gap: {}", row.id, row.gap_ref)));
+            out.push(StageViolation(format!(
+                "clarification {} has an untraceable gap: {}",
+                row.id, row.gap_ref
+            )));
         }
         if is_generic(&row.question) {
-            out.push(StageViolation(format!("clarification {} is generic noise; tie it to {}", row.id, row.gap_ref)));
+            out.push(StageViolation(format!(
+                "clarification {} is generic noise; tie it to {}",
+                row.id, row.gap_ref
+            )));
         }
         if !row.blocking && row.answer.is_empty() {
-            out.push(StageViolation(format!("non-blocking clarification {} still needs an answer", row.id)));
+            out.push(StageViolation(format!(
+                "non-blocking clarification {} still needs an answer",
+                row.id
+            )));
         }
     }
     out

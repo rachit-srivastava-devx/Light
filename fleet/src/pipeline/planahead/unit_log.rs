@@ -9,7 +9,9 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
 pub enum UnitPhase {
     Planned,
     Built,
@@ -22,11 +24,16 @@ pub struct UnitLog {
 
 impl UnitLog {
     pub fn open(state_dir: &Path, run_id: &str) -> Self {
-        Self { path: state_dir.join(format!("{run_id}.planahead.json")), lock: Mutex::new(()) }
+        Self {
+            path: state_dir.join(format!("{run_id}.planahead.json")),
+            lock: Mutex::new(()),
+        }
     }
 
     fn load(&self) -> BTreeSet<(String, UnitPhase)> {
-        let Ok(text) = std::fs::read_to_string(&self.path) else { return BTreeSet::new() };
+        let Ok(text) = std::fs::read_to_string(&self.path) else {
+            return BTreeSet::new();
+        };
         serde_json::from_str(&text).unwrap_or_default()
     }
 

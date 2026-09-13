@@ -34,8 +34,8 @@ pub fn with_edit_contract(task: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::with_edit_contract;
     use super::super::super::freelane::apply::extract_fences;
+    use super::with_edit_contract;
 
     #[test]
     fn the_task_survives_verbatim() {
@@ -49,9 +49,14 @@ mod tests {
     fn contract_names_the_syntax_the_parser_accepts() {
         let text = with_edit_contract("t");
         let fences = extract_fences(&text);
-        assert!(!fences.is_empty(), "the contract must show at least one example fence");
-        let declared: Vec<&str> =
-            fences.iter().filter_map(|f| f.declared_path.as_deref()).collect();
+        assert!(
+            !fences.is_empty(),
+            "the contract must show at least one example fence"
+        );
+        let declared: Vec<&str> = fences
+            .iter()
+            .filter_map(|f| f.declared_path.as_deref())
+            .collect();
         assert!(
             declared.contains(&"src/lib.rs"),
             "the parser did not recognise the contract's own example: {declared:?}"

@@ -10,7 +10,10 @@ pub fn redact_pii(payload: &str) -> String {
     while let Some(ch) = chars.next() {
         let in_word = ch.is_alphanumeric() || ch == '_' || ch == '-' || ch == '.';
         if ch == '@' {
-            let next_is_word = chars.peek().map(|c| c.is_alphanumeric() || *c == '_').unwrap_or(false);
+            let next_is_word = chars
+                .peek()
+                .map(|c| c.is_alphanumeric() || *c == '_')
+                .unwrap_or(false);
             if next_is_word && !word.is_empty() {
                 while let Some(&dc) = chars.peek() {
                     if dc.is_alphanumeric() || dc == '.' || dc == '-' || dc == '_' {

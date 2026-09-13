@@ -5,10 +5,10 @@ use std::path::Path;
 
 use types::Receipt;
 
-use super::types::LedgerError;
-use super::Ledger;
 use super::super::io_fault::IoFault;
 use super::super::lock::FileLock;
+use super::types::LedgerError;
+use super::Ledger;
 
 impl Ledger {
     /// Every row in chain order. `allow_empty = false` treats "never initialized" as an
@@ -29,17 +29,20 @@ pub(super) fn read_rows(path: &Path) -> Result<Vec<Receipt>, LedgerError> {
     if !path.exists() {
         return Ok(Vec::new());
     }
-    let text = fs::read_to_string(path)
-        .map_err(|source| IoFault::Read { path: path.to_path_buf(), source })?;
+    let text = fs::read_to_string(path).map_err(|source| IoFault::Read {
+        path: path.to_path_buf(),
+        source,
+    })?;
     let mut rows = Vec::new();
     for (idx, line) in text.lines().enumerate() {
         if line.trim().is_empty() {
             continue;
         }
-        let receipt: Receipt = serde_json::from_str(line).map_err(|e| LedgerError::MalformedRow {
-            seq: idx as u64,
-            reason: e.to_string(),
-        })?;
+        let receipt: Receipt =
+            serde_json::from_str(line).map_err(|e| LedgerError::MalformedRow {
+                seq: idx as u64,
+                reason: e.to_string(),
+            })?;
         rows.push(receipt);
     }
     Ok(rows)

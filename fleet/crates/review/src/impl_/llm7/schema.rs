@@ -2,8 +2,8 @@
 //! `submit_verdict`, whose schema is the only channel the model has to answer -- no prose
 //! parsing.
 
-use super::types::{Candidate, Criteria};
 use super::llm7::MODEL;
+use super::types::{Candidate, Criteria};
 use serde_json::{json, Value};
 
 pub fn build_request(criteria: &Criteria, candidate: &Candidate) -> Value {

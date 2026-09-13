@@ -1,7 +1,7 @@
 //! Tuning for one sink's worker loop. Every sink gets its own `PumpConfig`.
 
-use std::time::Duration;
 use backon::ExponentialBuilder;
+use std::time::Duration;
 
 #[derive(Clone, Debug)]
 pub struct PumpConfig {

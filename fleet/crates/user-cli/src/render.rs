@@ -1,5 +1,5 @@
-use serde::Serialize;
 use crate::CliError;
+use serde::Serialize;
 
 pub fn render<T: Serialize>(value: &T, json: bool) -> Result<String, CliError> {
     if json {

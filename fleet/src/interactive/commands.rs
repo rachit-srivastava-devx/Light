@@ -2,7 +2,7 @@
 
 use super::help::print_help;
 use super::theme::*;
-use crate::runtime::ConcurrencyCap;
+use runtime::ConcurrencyCap;
 
 pub enum CommandOutcome {
     Continue,
@@ -35,16 +35,28 @@ pub fn execute_slash(cmd: &str, cap: ConcurrencyCap, model: &str, color: bool) -
                     verify::Requirement::Required => "required",
                     verify::Requirement::Advisory => "advisory",
                 };
-                println!("    {} {:<6} {}", paint(color, CYAN, "•"), gate.id, paint(color, GRAY, req));
+                println!(
+                    "    {} {:<6} {}",
+                    paint(color, CYAN, "•"),
+                    gate.id,
+                    paint(color, GRAY, req)
+                );
             }
             CommandOutcome::Continue
         }
         "/model" => {
             if let Some(new_m) = parts.get(1) {
-                println!("  {} Model switched to: {}", paint(color, GREEN, "✓"), paint(color, BOLD, new_m));
+                println!(
+                    "  {} Model switched to: {}",
+                    paint(color, GREEN, "✓"),
+                    paint(color, BOLD, new_m)
+                );
                 CommandOutcome::SetModel((*new_m).to_string())
             } else {
-                println!("  Active model: {} (pass `/model <name>` to switch)", paint(color, CYAN, model));
+                println!(
+                    "  Active model: {} (pass `/model <name>` to switch)",
+                    paint(color, CYAN, model)
+                );
                 CommandOutcome::Continue
             }
         }
@@ -52,7 +64,11 @@ pub fn execute_slash(cmd: &str, cap: ConcurrencyCap, model: &str, color: bool) -
         "/clear" => CommandOutcome::Clear,
         "/exit" | "/quit" => CommandOutcome::Exit,
         unknown => {
-            println!("  {} Unknown command: {unknown}. Type {} for available commands.", paint(color, RED, "error:"), paint(color, CYAN, "/help"));
+            println!(
+                "  {} Unknown command: {unknown}. Type {} for available commands.",
+                paint(color, RED, "error:"),
+                paint(color, CYAN, "/help")
+            );
             CommandOutcome::Continue
         }
     }

@@ -1,8 +1,8 @@
 //! The canonical byte form a receipt (minus its own `hash`) hashes over. Shared by `append`
 //! (which computes a fresh hash) and `verify` (which recomputes one to compare).
 
-use types::{ExitCode, PrevHash, Receipt, ReceiptEvent, SchemaV1};
 use serde_json::{json, Map, Value};
+use types::{ExitCode, PrevHash, Receipt, ReceiptEvent, SchemaV1};
 
 /// Recompute a receipt's content hash from its own fields (schema/seq/prev_hash/ts/event/actor/
 /// resolved_model/exit_code/body), the same formula `append` uses to mint a hash and `verify`
@@ -55,9 +55,9 @@ pub(super) fn canonical_bytes(
     );
     map.insert(
         "exit_code".into(),
-        exit_code
-            .as_ref()
-            .map_or(Value::Null, |c| serde_json::to_value(c).expect("ExitCode always serializes")),
+        exit_code.as_ref().map_or(Value::Null, |c| {
+            serde_json::to_value(c).expect("ExitCode always serializes")
+        }),
     );
     map.insert("body".into(), body.clone());
     serde_json::to_vec(&Value::Object(map)).expect("a map of pure JSON values always serializes")

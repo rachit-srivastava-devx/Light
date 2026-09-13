@@ -17,7 +17,10 @@ pub struct DashboardSink {
 
 impl DashboardSink {
     pub fn new() -> Self {
-        Self { bus: EventBus::new(256), addr: None }
+        Self {
+            bus: EventBus::new(256),
+            addr: None,
+        }
     }
 
     /// The bound address, once the server has started (after the first `deliver`).
@@ -43,11 +46,14 @@ impl Sink for DashboardSink {
 
     fn deliver(&mut self, event: &StreamEvent) -> Result<(), SinkError> {
         if self.addr.is_none() {
-            self.addr = Some(server::spawn(self.bus.clone()).map_err(|err| SinkError::Permanent {
-                sink: "dashboard",
-                seq: event.seq(),
-                reason: format!("failed to bind dashboard server: {err}"),
-            })?);
+            self.addr =
+                Some(
+                    server::spawn(self.bus.clone()).map_err(|err| SinkError::Permanent {
+                        sink: "dashboard",
+                        seq: event.seq(),
+                        reason: format!("failed to bind dashboard server: {err}"),
+                    })?,
+                );
         }
         self.bus.publish(event.clone());
         Ok(())

@@ -1,14 +1,28 @@
-//! Module-level data structures for parallel SOW/blueprint creation and worktree orchestration.
-//!
-//! This module provides the core types for representing modules in a parallel SDLC workflow,
-//! including dependency tracking, state machine for parallel execution, and module graphs.
+//! Module-level data structures for parallel SOW/blueprint creation and worktree orchestration:
+//! dependency tracking, a state machine for parallel execution, and module graphs. Split across
+//! sibling `#[path]` files to stay under the 80-line-per-file convention -- `ModuleGraph`'s small
+//! `impl` blocks are legal split across files since Rust allows several inherent impls per type.
 
-use petgraph::algo::toposort;
-use petgraph::graph::{DiGraph, NodeIndex};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use crate::ident::TaskId;
+
+#[path = "module_impl.rs"]
+mod module_impl;
+#[path = "module_graph.rs"]
+mod module_graph;
+#[path = "module_graph_ready.rs"]
+mod module_graph_ready;
+#[path = "module_graph_sort.rs"]
+mod module_graph_sort;
+#[path = "module_graph_batches.rs"]
+mod module_graph_batches;
+#[cfg(test)]
+#[path = "module_tests.rs"]
+mod tests;
+
+pub use module_graph::ModuleGraph;
+pub use module_graph_sort::TopologicalSortError;
 
 /// A module represents a unit of work in the parallel SDLC workflow.
 /// Each module has its own SOW, blueprint, and worktree for parallel execution.
@@ -42,7 +56,10 @@ pub enum ModuleState {
     /// Module is ready for parallel execution
     Ready,
     /// Module is currently executing
-    Executing { branch: String, worktree_path: String },
+    Executing {
+        branch: String,
+        worktree_path: String,
+    },
     /// Module has executed successfully
     Executed { commit_count: usize },
     /// Module has been merged to main
@@ -58,263 +75,4 @@ pub struct Blueprint {
     pub acceptance: Vec<String>,
     /// Files that will be modified
     pub affected_files: Vec<String>,
-}
-
-/// A module graph for dependency management and topological sorting.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ModuleGraph {
-    /// Map of module_id to Module
-    pub modules: HashMap<String, Module>,
-    /// Map of module_id to list of dependent module_ids (reverse dependencies)
-    pub dependents: HashMap<String, Vec<String>>,
-}
-
-impl Module {
-    /// Create a new module with pending state
-    pub fn new(id: impl Into<String>, name: impl Into<String>, sow_text: impl Into<String>) -> Self {
-        Self {
-            id: id.into(),
-            name: name.into(),
-            sow_text: sow_text.into(),
-            depends_on: Vec::new(),
-            state: ModuleState::Pending,
-        }
-    }
-
-    /// Set dependencies for this module
-    pub fn with_dependencies(mut self, depends_on: Vec<String>) -> Self {
-        self.depends_on = depends_on;
-        self
-    }
-
-    /// Check if this module is ready to be SOWed (all dependencies are Sowed)
-    pub fn can_be_sowed(&self, state_map: &HashMap<String, ModuleState>) -> bool {
-        self.depends_on
-            .iter()
-            .all(|dep_id| matches!(state_map.get(dep_id), Some(ModuleState::Sowed { .. })))
-    }
-
-    /// Check if this module is ready for execution (all dependencies are Executed or Merged)
-    pub fn can_be_executed(&self, state_map: &HashMap<String, ModuleState>) -> bool {
-        self.depends_on
-            .iter()
-            .all(|dep_id| matches!(state_map.get(dep_id), Some(ModuleState::Executed { .. } | ModuleState::Merged { .. })))
-    }
-}
-
-impl Default for ModuleGraph {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ModuleGraph {
-    /// Create a new empty module graph
-    pub fn new() -> Self {
-        Self {
-            modules: HashMap::new(),
-            dependents: HashMap::new(),
-        }
-    }
-
-    /// Add a module to the graph
-    pub fn add_module(&mut self, module: Module) {
-        let id = module.id.clone();
-        self.modules.insert(id.clone(), module);
-
-        // Update reverse dependency map
-        for dep in &self.modules.get(&id).unwrap().depends_on {
-            self.dependents
-                .entry(dep.clone())
-                .or_default()
-                .push(id.clone());
-        }
-    }
-
-    /// Get a module by ID
-    pub fn get(&self, id: &str) -> Option<&Module> {
-        self.modules.get(id)
-    }
-
-    /// Get all modules that are ready to be SOWed (all dependencies satisfied)
-    pub fn ready_for_sow(&self) -> Vec<&Module> {
-        let state_map: HashMap<_, _> = self.modules.iter().map(|(k, v)| (k.clone(), v.state.clone())).collect();
-        self.modules
-            .values()
-            .filter(|m| m.state == ModuleState::Pending && m.can_be_sowed(&state_map))
-            .collect()
-    }
-
-    /// Get all modules that are ready for execution
-    pub fn ready_for_execution(&self) -> Vec<&Module> {
-        let state_map: HashMap<_, _> = self.modules.iter().map(|(k, v)| (k.clone(), v.state.clone())).collect();
-        self.modules
-            .values()
-            .filter(|m| m.state == ModuleState::Ready && m.can_be_executed(&state_map))
-            .collect()
-    }
-
-    /// Build a petgraph DiGraph from the module graph.
-    /// Nodes are added in sorted ID order for deterministic traversal.
-    /// Returns the graph and a map from module ID to NodeIndex.
-    fn build_digraph(&self) -> (DiGraph<String, ()>, HashMap<String, NodeIndex>) {
-        let mut graph: DiGraph<String, ()> = DiGraph::new();
-        let mut id_to_idx: HashMap<String, NodeIndex> = HashMap::new();
-
-        // Insert nodes in sorted order so DFS visits them deterministically.
-        let mut ids: Vec<&String> = self.modules.keys().collect();
-        ids.sort();
-        for id in &ids {
-            let idx = graph.add_node((*id).clone());
-            id_to_idx.insert((*id).clone(), idx);
-        }
-
-        // Add directed edges: dependency → dependent (dep must precede module).
-        for module in self.modules.values() {
-            for dep in &module.depends_on {
-                if let (Some(&dep_idx), Some(&mod_idx)) =
-                    (id_to_idx.get(dep.as_str()), id_to_idx.get(module.id.as_str()))
-                {
-                    graph.add_edge(dep_idx, mod_idx, ());
-                }
-            }
-        }
-
-        (graph, id_to_idx)
-    }
-
-    /// Perform topological sort using petgraph.
-    /// Returns a vector of module IDs in dependency order.
-    pub fn topological_sort(&self) -> Result<Vec<String>, TopologicalSortError> {
-        let (graph, _) = self.build_digraph();
-
-        toposort(&graph, None)
-            .map(|indices| indices.iter().map(|&idx| graph[idx].clone()).collect())
-            .map_err(|_| TopologicalSortError::CycleDetected)
-    }
-
-    /// Get modules in batches for parallel execution.
-    /// Each batch contains modules that can be executed in parallel.
-    pub fn batches(&self) -> Result<Vec<Vec<String>>, TopologicalSortError> {
-        let (graph, _) = self.build_digraph();
-
-        // Detect cycles and obtain a toposort order in one call.
-        let sorted_indices =
-            toposort(&graph, None).map_err(|_| TopologicalSortError::CycleDetected)?;
-
-        // BFS-level assignment: level[node] = max(level[pred] + 1) over predecessors.
-        let mut levels: HashMap<NodeIndex, usize> = HashMap::new();
-        for &idx in &sorted_indices {
-            let level = graph
-                .neighbors_directed(idx, petgraph::Direction::Incoming)
-                .map(|pred| levels.get(&pred).copied().unwrap_or(0) + 1)
-                .max()
-                .unwrap_or(0);
-            levels.insert(idx, level);
-        }
-
-        // Group node IDs by level.
-        let max_level = levels.values().copied().max().unwrap_or(0);
-        let mut result: Vec<Vec<String>> = vec![Vec::new(); max_level + 1];
-        for (&idx, &level) in &levels {
-            result[level].push(graph[idx].clone());
-        }
-
-        // Sort within each batch for determinism.
-        for batch in &mut result {
-            batch.sort();
-        }
-
-        // Drop any empty buckets (shouldn't occur, but be safe).
-        result.retain(|b| !b.is_empty());
-
-        Ok(result)
-    }
-
-    /// Get the number of modules in the graph
-    pub fn len(&self) -> usize {
-        self.modules.len()
-    }
-
-    /// Check if the graph is empty
-    pub fn is_empty(&self) -> bool {
-        self.modules.is_empty()
-    }
-}
-
-/// Error types for topological sort operations
-#[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
-pub enum TopologicalSortError {
-    /// A cycle was detected in the module dependencies
-    #[error("cycle detected in module dependencies")]
-    CycleDetected,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_module_creation() {
-        let module = Module::new("module-1", "First Module", "SOW text here");
-        assert_eq!(module.id, "module-1");
-        assert_eq!(module.name, "First Module");
-        assert_eq!(module.sow_text, "SOW text here");
-        assert_eq!(module.depends_on, Vec::<String>::new());
-        assert!(matches!(module.state, ModuleState::Pending));
-    }
-
-    #[test]
-    fn test_module_with_dependencies() {
-        let module = Module::new("module-1", "First Module", "SOW text")
-            .with_dependencies(vec!["dep-1".to_string(), "dep-2".to_string()]);
-        assert_eq!(module.depends_on, vec!["dep-1", "dep-2"]);
-    }
-
-    #[test]
-    fn test_module_graph_topological_sort() {
-        let mut graph = ModuleGraph::new();
-
-        // Create modules with dependencies: A -> B -> C
-        graph.add_module(Module::new("C", "C", "SOW C").with_dependencies(vec!["B".to_string()]));
-        graph.add_module(Module::new("B", "B", "SOW B").with_dependencies(vec!["A".to_string()]));
-        graph.add_module(Module::new("A", "A", "SOW A").with_dependencies(vec![]));
-
-        let sorted = graph.topological_sort().unwrap();
-        assert_eq!(sorted, vec!["A", "B", "C"]);
-    }
-
-    #[test]
-    fn test_module_graph_batches() {
-        let mut graph = ModuleGraph::new();
-
-        // Create modules: A (independent), B depends on A, C depends on A, D depends on B and C
-        graph.add_module(Module::new("A", "A", "SOW A").with_dependencies(vec![]));
-        graph.add_module(Module::new("B", "B", "SOW B").with_dependencies(vec!["A".to_string()]));
-        graph.add_module(Module::new("C", "C", "SOW C").with_dependencies(vec!["A".to_string()]));
-        graph.add_module(Module::new("D", "D", "SOW D").with_dependencies(vec!["B".to_string(), "C".to_string()]));
-
-        let batches = graph.batches().unwrap();
-        // Batch 0: A (no deps)
-        // Batch 1: B, C (depend only on A)
-        // Batch 2: D (depends on B and C)
-        assert_eq!(batches.len(), 3);
-        assert_eq!(batches[0], vec!["A"]);
-        assert!(batches[1].contains(&"B".to_string()));
-        assert!(batches[1].contains(&"C".to_string()));
-        assert_eq!(batches[2], vec!["D"]);
-    }
-
-    #[test]
-    fn test_module_graph_cycle_detection() {
-        let mut graph = ModuleGraph::new();
-
-        // Create a cycle: A -> B -> C -> A
-        graph.add_module(Module::new("A", "A", "SOW A").with_dependencies(vec!["C".to_string()]));
-        graph.add_module(Module::new("B", "B", "SOW B").with_dependencies(vec!["A".to_string()]));
-        graph.add_module(Module::new("C", "C", "SOW C").with_dependencies(vec!["B".to_string()]));
-
-        let result = graph.topological_sort();
-        assert!(matches!(result, Err(TopologicalSortError::CycleDetected)));
-    }
 }

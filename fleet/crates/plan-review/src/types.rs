@@ -11,7 +11,11 @@ pub struct ReviewInput {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub enum Decision { Accept, Reject, Revise }
+pub enum Decision {
+    Accept,
+    Reject,
+    Revise,
+}
 
 /// A single finding produced by the reviewer.
 #[derive(Clone, Debug, Serialize, Deserialize)]

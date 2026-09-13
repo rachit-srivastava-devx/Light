@@ -32,3 +32,4 @@ coverage/
 
 # fleet migration workspace build artifacts
 fleet/target/
+.aider*

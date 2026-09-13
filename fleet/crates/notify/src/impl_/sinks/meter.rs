@@ -4,12 +4,12 @@
 
 use std::sync::{Arc, Mutex};
 
-use types::ReceiptEvent;
 use serde_json::Value;
+use types::ReceiptEvent;
 
-use super::meter_types::{MeterSample, MeterSnapshot};
 use super::super::event::StreamEvent;
 use super::super::sink::{Sink, SinkError};
+use super::meter_types::{MeterSample, MeterSnapshot};
 
 pub struct MeterSink {
     window_capacity: Option<u64>,
@@ -22,7 +22,10 @@ impl MeterSink {
     pub fn new(window_capacity: Option<u64>) -> (Self, Arc<Mutex<MeterSnapshot>>) {
         let snapshot = Arc::new(Mutex::new(MeterSnapshot::default()));
         (
-            Self { window_capacity, snapshot: Arc::clone(&snapshot) },
+            Self {
+                window_capacity,
+                snapshot: Arc::clone(&snapshot),
+            },
             snapshot,
         )
     }
@@ -56,7 +59,12 @@ impl Sink for MeterSink {
             .window_capacity
             .filter(|cap| *cap > 0)
             .map(|cap| ((estimated_tokens.min(cap) * 100) / cap) as u8);
-        let sample = MeterSample { seq: event.seq(), estimated_tokens, window_pct, labelled_cost_cents };
+        let sample = MeterSample {
+            seq: event.seq(),
+            estimated_tokens,
+            window_pct,
+            labelled_cost_cents,
+        };
         let mut guard = self.snapshot.lock().map_err(|_| SinkError::Permanent {
             sink: "meter",
             seq: event.seq(),

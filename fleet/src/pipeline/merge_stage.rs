@@ -12,7 +12,9 @@ use std::process::Command;
 
 pub fn merge(repo: &Path) -> Result<(), PipelineError> {
     if !is_work_tree(repo) {
-        return Err(PipelineError::Merge(MergeRefusal::NoWorktree(repo.to_path_buf())));
+        return Err(PipelineError::Merge(MergeRefusal::NoWorktree(
+            repo.to_path_buf(),
+        )));
     }
     let staged = git(repo, &["diff", "--cached", "--name-only"])?;
     let staged_files = staged.lines().filter(|l| !l.trim().is_empty()).count();

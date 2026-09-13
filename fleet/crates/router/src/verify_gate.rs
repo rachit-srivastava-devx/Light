@@ -18,7 +18,12 @@ pub(crate) fn safety_refusal(
             "assign the money, contract, or migration decision to a human",
         )),
         (Some(Role::Lead), TaskClass::Implementation) => {
-            let check = RoleCheck { role: Role::Lead, diff_adds_code: true, builder_model: None, verifier_model: None };
+            let check = RoleCheck {
+                role: Role::Lead,
+                diff_adds_code: true,
+                builder_model: None,
+                verifier_model: None,
+            };
             evaluate_role_check(&check)
                 .err()
                 .map(|reason| (reason.reason(), "route implementation with --role builder"))

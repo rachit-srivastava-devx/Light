@@ -28,13 +28,22 @@ pub fn validate_challenge_rows(
     }
     for row in rows {
         if !corpus_known(&row.source) {
-            out.push(StageViolation(format!("challenge {} cites no known corpus row: {}", row.id, row.source)));
+            out.push(StageViolation(format!(
+                "challenge {} cites no known corpus row: {}",
+                row.id, row.source
+            )));
         }
         if !atomic_ids.contains(&row.affected_leaf) {
-            out.push(StageViolation(format!("challenge {} points at unknown atomic leaf: {}", row.id, row.affected_leaf)));
+            out.push(StageViolation(format!(
+                "challenge {} points at unknown atomic leaf: {}",
+                row.id, row.affected_leaf
+            )));
         }
         if row.risk.is_empty() || row.trigger.is_empty() || row.mitigation.is_empty() {
-            out.push(StageViolation(format!("challenge {} needs risk, trigger, and mitigation", row.id)));
+            out.push(StageViolation(format!(
+                "challenge {} needs risk, trigger, and mitigation",
+                row.id
+            )));
         }
     }
     out

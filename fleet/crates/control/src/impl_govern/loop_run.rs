@@ -34,7 +34,11 @@ impl<'a> AutonomousRun<'a> {
     /// Advance the run by (at most) one unit. Idempotent to call repeatedly with the same `now`
     /// while no `complete_unit` has landed yet -- it re-reads persisted progress and re-decides
     /// every time, never caching a stale "current unit" in `self`.
-    pub fn tick(&self, now: SystemTime, capable: BTreeSet<&'static str>) -> Result<TickOutcome, LoopError> {
+    pub fn tick(
+        &self,
+        now: SystemTime,
+        capable: BTreeSet<&'static str>,
+    ) -> Result<TickOutcome, LoopError> {
         let progress = self.progress.load(&self.plan.id)?.unwrap_or_default();
         let Some(unit) = self.plan.units.get(progress.completed.len()) else {
             return Ok(TickOutcome::Done);
@@ -50,16 +54,24 @@ impl<'a> AutonomousRun<'a> {
         };
         let decision = next_provider(self.meter, self.cooldowns, &inputs)?;
         let Some(adapter) = decision.selected_adapter else {
-            return Ok(TickOutcome::Paused { until: now + self.retry_after });
+            return Ok(TickOutcome::Paused {
+                until: now + self.retry_after,
+            });
         };
 
         let lane = LaneId::parse(adapter)?;
         let used = self.lane_used(&lane)?;
         if let Escalation::Pause = escalate(used, &self.policy, self.retry_after) {
-            return Ok(TickOutcome::Exhausted { until: now + self.retry_after });
+            return Ok(TickOutcome::Exhausted {
+                until: now + self.retry_after,
+            });
         }
 
         let reservation = admit(self.meter, &lane, self.plan.tokens_per_unit)?;
-        Ok(TickOutcome::Advanced { unit: unit.clone(), decision: Box::new(decision), reservation })
+        Ok(TickOutcome::Advanced {
+            unit: unit.clone(),
+            decision: Box::new(decision),
+            reservation,
+        })
     }
 }

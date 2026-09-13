@@ -3,8 +3,8 @@
 
 use super::receipt::ReceiptLedger;
 use super::states::{
-    Attested, Briefed, Building, Built, Contracted, Decomposed, Intake, Leased, Observed,
-    Proposed, Reviewed, Verified, Verifying,
+    Attested, Briefed, Building, Built, Contracted, Decomposed, Intake, Leased, Observed, Proposed,
+    Reviewed, Verified, Verifying,
 };
 use super::task::Task;
 use ::types::GateRefusal;

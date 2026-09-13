@@ -37,7 +37,9 @@ pub fn escalate(used: Tokens, policy: &EscalationPolicy, throttle_delay: Duratio
     } else if used >= policy.downgrade_at {
         Escalation::Downgrade
     } else if used >= policy.throttle_at {
-        Escalation::Throttle { delay: throttle_delay }
+        Escalation::Throttle {
+            delay: throttle_delay,
+        }
     } else {
         Escalation::Continue
     }

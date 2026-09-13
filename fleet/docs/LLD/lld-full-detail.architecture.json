@@ -7,7 +7,7 @@
     "quality_profile": "standard",
     "viewBox": [
       1560,
-      3050
+      3210
     ]
   },
   "components": [
@@ -59,7 +59,7 @@
       "id": "store",
       "type": "database",
       "label": "SQLite WAL Store",
-      "sublabel": "events, leases, outbox · SQLite WAL",
+      "sublabel": "events, leases, outbox · SQLite WAL (3-R)",
       "tag": "deterministic",
       "pos": [
         830,
@@ -74,7 +74,7 @@
       "id": "control",
       "type": "backend",
       "label": "Controller",
-      "sublabel": "state reducer + scheduler",
+      "sublabel": "state reducer + scheduler; repair decision (2-K/L, 3-Q)",
       "tag": "deterministic",
       "pos": [
         480,
@@ -104,7 +104,7 @@
       "id": "route",
       "type": "security",
       "label": "Route Admission",
-      "sublabel": "capability, budget, policy — a filter, not a model call",
+      "sublabel": "ranks by cost + risk-tier effort profile (§17)",
       "tag": "deterministic",
       "pos": [
         480,
@@ -119,7 +119,7 @@
       "id": "model_catalog",
       "type": "database",
       "label": "Model / Adapter Catalog",
-      "sublabel": "probation to qualified · ACP probe",
+      "sublabel": "probation to qualified; fed by discovery",
       "tag": "deterministic",
       "pos": [
         830,
@@ -254,7 +254,7 @@
       "id": "planner",
       "type": "backend",
       "label": "Module Planner",
-      "sublabel": "drafts a blueprint: modules, tasks, dependencies",
+      "sublabel": "drafts atomic, acceptance-checkable tasks",
       "tag": "model, ungated",
       "pos": [
         480,
@@ -288,7 +288,7 @@
       "tag": "model, gated",
       "pos": [
         480,
-        1620
+        1780
       ],
       "size": [
         210,
@@ -299,11 +299,11 @@
       "id": "ready",
       "type": "backend",
       "label": "Ready Contract",
-      "sublabel": "checks a fixed predicate before work starts",
+      "sublabel": "acceptance+grants+budget+fresh bearings (2-J)",
       "tag": "deterministic",
       "pos": [
         350,
-        1780
+        1940
       ],
       "size": [
         190,
@@ -318,7 +318,7 @@
       "tag": "model, ungated",
       "pos": [
         590,
-        1780
+        1940
       ],
       "size": [
         190,
@@ -329,11 +329,11 @@
       "id": "builder",
       "type": "external",
       "label": "Builder Agent",
-      "sublabel": "writes the actual code, sandboxed",
+      "sublabel": "private worktree; summarizes on cutoff (2-M, 3-S)",
       "tag": "model, gated",
       "pos": [
         350,
-        1940
+        2100
       ],
       "size": [
         190,
@@ -348,7 +348,7 @@
       "tag": "model, gated",
       "pos": [
         480,
-        2100
+        2260
       ],
       "size": [
         210,
@@ -359,11 +359,11 @@
       "id": "verify",
       "type": "security",
       "label": "Verify + Secret Scan",
-      "sublabel": "runs real tests + a two-tier secret scanner",
+      "sublabel": "tests / secret scan/policy; reinject on repair (2-K)",
       "tag": "deterministic",
       "pos": [
         475,
-        2260
+        2420
       ],
       "size": [
         220,
@@ -378,7 +378,7 @@
       "tag": "deterministic",
       "pos": [
         1060,
-        2260
+        2420
       ],
       "size": [
         210,
@@ -393,7 +393,7 @@
       "tag": "deterministic",
       "pos": [
         480,
-        2420
+        2580
       ],
       "size": [
         210,
@@ -408,7 +408,7 @@
       "tag": "deterministic",
       "pos": [
         1060,
-        2420
+        2580
       ],
       "size": [
         210,
@@ -423,7 +423,7 @@
       "tag": "deterministic",
       "pos": [
         480,
-        2580
+        2740
       ],
       "size": [
         210,
@@ -434,11 +434,11 @@
       "id": "approval",
       "type": "backend",
       "label": "Publication Approval",
-      "sublabel": "grant required — checks a permission, not a judgment",
+      "sublabel": "publication + central-standards maintainer gate (2-I)",
       "tag": "deterministic",
       "pos": [
         350,
-        2740
+        2900
       ],
       "size": [
         200,
@@ -453,7 +453,7 @@
       "tag": "deterministic",
       "pos": [
         590,
-        2740
+        2900
       ],
       "size": [
         180,
@@ -468,7 +468,7 @@
       "tag": "deterministic",
       "pos": [
         355,
-        2900
+        3060
       ],
       "size": [
         190,
@@ -483,11 +483,86 @@
       "tag": "deterministic",
       "pos": [
         590,
-        2900
+        3060
       ],
       "size": [
         200,
         60
+      ]
+    },
+    {
+      "id": "ideation",
+      "type": "backend",
+      "label": "Approach ideation",
+      "sublabel": "2-3 distinct candidates, prose only (Addendum 2-N)",
+      "tag": "model, ungated",
+      "pos": [
+        480,
+        1620
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "central_sync",
+      "type": "backend",
+      "label": "Central standards CRUD",
+      "sublabel": "pull/propose/promote/retire (Addendum 2)",
+      "tag": "deterministic",
+      "pos": [
+        1060,
+        2740
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "cli_discovery",
+      "type": "backend",
+      "label": "CLI / Adapter Discovery",
+      "sublabel": "probes PATH; capability report per candidate (§9)",
+      "tag": "deterministic",
+      "pos": [
+        830,
+        540
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "fan_out_scheduler",
+      "type": "backend",
+      "label": "Fan-out Scheduler",
+      "sublabel": "ready-heap: conflict-check, reserve; N parallel (§8)",
+      "tag": "deterministic",
+      "pos": [
+        580,
+        2100
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "quality_ledger",
+      "type": "database",
+      "label": "Quality / Trial Ledger",
+      "sublabel": "per-task outcome, checked/total, pass@k (§18)",
+      "tag": "deterministic",
+      "pos": [
+        760,
+        2580
+      ],
+      "size": [
+        220,
+        64
       ]
     }
   ],
@@ -495,70 +570,52 @@
     {
       "from": "user_cli",
       "to": "ingest",
-      "label": "request / pause / feedback",
-      "payload": "InputEnvelope",
-      "test": "ingest::tests::user_request_normalizes"
+      "label": "request / pause / feedback"
     },
     {
       "from": "connectors",
       "to": "ingest",
-      "label": "authorized event",
-      "payload": "ConnectorEnvelope",
-      "test": "ingest::tests::connector_event_deduplicates"
+      "label": "authorized event"
     },
     {
       "from": "ingest",
       "to": "store",
-      "label": "append durable",
-      "payload": "DurableEvent",
-      "test": "store::tests::append_event_idempotent"
+      "label": "append durable"
     },
     {
       "from": "ingest",
       "to": "control",
       "label": "normalized event",
-      "labelDy": 24,
-      "payload": "NormalizedEvent",
-      "test": "control::tests::normalized_event_transitions_state"
+      "labelDy": 24
     },
     {
       "from": "control",
       "to": "store",
-      "label": "read/write state",
-      "payload": "StoreCommand",
-      "test": "store::tests::cas_revision_increment"
+      "label": "read/write state"
     },
     {
       "from": "control",
       "to": "intent",
       "label": "dispatch",
-      "labelDy": 24,
-      "payload": "DispatchRequest",
-      "test": "intent::tests::dispatch_request_emits_intent_spec"
+      "labelDy": 24
     },
     {
       "from": "intent",
       "to": "route",
       "label": "typed IntentSpec",
-      "labelDy": 24,
-      "payload": "IntentSpec",
-      "test": "route::tests::intent_spec_admitted_on_capability_match"
+      "labelDy": 24
     },
     {
       "from": "model_catalog",
       "to": "route",
       "label": "capability snapshot",
-      "variant": "dashed",
-      "payload": "CatalogSnapshot",
-      "test": "route::tests::catalog_snapshot_filters_unavailable_candidates"
+      "variant": "dashed"
     },
     {
       "from": "route",
       "to": "scan",
       "label": "admitted",
-      "labelDy": 24,
-      "payload": "RouteDecision",
-      "test": "scan::tests::route_decision_triggers_ambiguity_probes"
+      "labelDy": 24
     },
     {
       "from": "scan",
@@ -566,9 +623,7 @@
       "label": "if unknown",
       "variant": "dashed",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "AmbiguityRequest",
-      "test": "probe_business::tests::ambiguity_request_produces_question"
+      "toSide": "top"
     },
     {
       "from": "scan",
@@ -576,9 +631,7 @@
       "label": "if unknown",
       "variant": "dashed",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "AmbiguityRequest",
-      "test": "probe_tech::tests::ambiguity_request_produces_question"
+      "toSide": "top"
     },
     {
       "from": "scan",
@@ -586,9 +639,7 @@
       "label": "if unknown",
       "variant": "dashed",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "AmbiguityRequest",
-      "test": "probe_learn::tests::ambiguity_request_retrieves_scoped_lessons"
+      "toSide": "top"
     },
     {
       "from": "scan",
@@ -596,41 +647,31 @@
       "label": "if unknown",
       "variant": "dashed",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "AmbiguityRequest",
-      "test": "probe_research::tests::ambiguity_request_produces_research_question"
+      "toSide": "top"
     },
     {
       "from": "probe_business",
       "to": "questions",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "Vec<Question>",
-      "test": "questions::tests::business_probe_output_merges"
+      "toSide": "top"
     },
     {
       "from": "probe_tech",
       "to": "questions",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "Vec<Question>",
-      "test": "questions::tests::tech_probe_output_merges"
+      "toSide": "top"
     },
     {
       "from": "probe_learn",
       "to": "questions",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "Vec<Question>",
-      "test": "questions::tests::learn_probe_output_merges"
+      "toSide": "top"
     },
     {
       "from": "probe_research",
       "to": "questions",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "Vec<Question>",
-      "test": "questions::tests::research_probe_output_merges"
+      "toSide": "top"
     },
     {
       "from": "questions",
@@ -652,9 +693,7 @@
           145,
           100
         ]
-      ],
-      "payload": "QuestionSet",
-      "test": "questions::tests::output_capped_at_three"
+      ]
     },
     {
       "from": "scan",
@@ -676,17 +715,13 @@
           585,
           1275
         ]
-      ],
-      "payload": "WorkflowSelection",
-      "test": "dag::tests::workflow_selection_produces_recipe"
+      ]
     },
     {
       "from": "dag",
       "to": "planner",
       "label": "recipe",
-      "labelDy": 24,
-      "payload": "WorkflowRecipe",
-      "test": "planner::tests::recipe_drives_module_plan"
+      "labelDy": 24
     },
     {
       "from": "dag",
@@ -694,100 +729,69 @@
       "label": "skip: risk=low, scope bounded (§7/§17)",
       "variant": "dashed",
       "fromSide": "top",
-      "toSide": "bottom",
-      "via": [
-        [
-          585,
-          1250
-        ],
-        [
-          1200,
-          1250
-        ],
-        [
-          1200,
-          1900
-        ],
-        [
-          445,
-          1900
-        ]
-      ],
-      "payload": "SkipPlanningSignal",
-      "test": "ready::tests::low_risk_scope_skips_planning"
+      "toSide": "top"
     },
     {
       "from": "plan_review",
       "to": "user_cli",
       "label": "walkthrough + feedback",
       "variant": "dashed",
-      "fromSide": "left",
-      "toSide": "top",
       "via": [
         [
-          25,
-          1652
+          20,
+          1812
         ],
         [
-          25,
-          5
-        ],
-        [
-          145,
-          5
+          20,
+          62
         ]
-      ],
-      "payload": "PlanWalkthrough",
-      "test": "plan_review::tests::walkthrough_emitted_before_ready"
+      ]
     },
     {
       "from": "approval",
       "to": "user_cli",
       "label": "PR + explanation",
-      "variant": "dashed",
-      "fromSide": "left",
-      "toSide": "top",
-      "via": [
-        [
-          45,
-          2770
-        ],
-        [
-          45,
-          20
-        ],
-        [
-          145,
-          20
-        ]
-      ],
-      "payload": "PublicationRequest",
-      "test": "approval::tests::publication_request_awaits_user_grant"
+      "variant": "dashed"
     },
     {
       "from": "planner",
       "to": "plan_review",
-      "label": "draft blueprint",
-      "labelDy": 24,
-      "payload": "PlanProposal",
-      "test": "plan_review::tests::proposal_reviewed_by_independent_model"
+      "label": "small-change: skip ideation",
+      "via": [
+        [
+          585,
+          1560
+        ],
+        [
+          710,
+          1560
+        ],
+        [
+          710,
+          1740
+        ],
+        [
+          585,
+          1740
+        ]
+      ],
+      "labelAt": [
+        710,
+        1616
+      ]
     },
     {
       "from": "plan_review",
       "to": "ready",
       "label": "accepted digest",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "ReviewedPlanDigest",
-      "test": "ready::tests::reviewed_digest_enables_builder_lease"
+      "toSide": "top"
     },
     {
       "from": "ready",
-      "to": "builder",
-      "label": "lease + module",
-      "labelDy": 24,
-      "payload": "Lease",
-      "test": "builder::tests::lease_scopes_private_worktree"
+      "to": "fan_out_scheduler",
+      "label": "N eligible nodes",
+      "labelDy": -18
     },
     {
       "from": "ready",
@@ -797,49 +801,37 @@
       "labelAt": [
         565,
         1858
-      ],
-      "payload": "NextPlanSignal",
-      "test": "next_plan::tests::n1_plan_starts_while_n_builds"
+      ]
     },
     {
       "from": "builder",
       "to": "review",
       "label": "candidate observation",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "CandidateObservation",
-      "test": "review::tests::candidate_observation_triggers_code_review"
+      "toSide": "top"
     },
     {
       "from": "review",
       "to": "verify",
       "label": "reviewed candidate",
-      "labelDy": 24,
-      "payload": "ReviewedCandidate",
-      "test": "verify::tests::reviewed_candidate_runs_deterministic_gates"
+      "labelDy": 24
     },
     {
       "from": "verify",
       "to": "integrate",
       "label": "pass",
-      "labelDy": 24,
-      "payload": "GateEvidence",
-      "test": "integrate::tests::gate_evidence_passes_integration"
+      "labelDy": 24
     },
     {
       "from": "integrate",
-      "to": "post",
-      "payload": "IntegrationReceipt",
-      "test": "post::tests::integration_receipt_triggers_post_verify"
+      "to": "post"
     },
     {
       "from": "post",
       "to": "approval",
       "label": "pass",
       "fromSide": "bottom",
-      "toSide": "top",
-      "payload": "PostVerifyEvidence",
-      "test": "approval::tests::post_verify_pass_requests_publication"
+      "toSide": "top"
     },
     {
       "from": "post",
@@ -847,27 +839,13 @@
       "label": "fail",
       "variant": "dashed",
       "fromSide": "right",
-      "toSide": "right",
-      "via": [
-        [
-          900,
-          2610
-        ],
-        [
-          900,
-          2930
-        ]
-      ],
-      "payload": "PostVerifyFailure",
-      "test": "rollback::tests::post_verify_failure_triggers_rollback"
+      "toSide": "right"
     },
     {
       "from": "approval",
       "to": "broker",
       "label": "PR draft",
-      "labelDy": 24,
-      "payload": "PublicationGrant",
-      "test": "broker::tests::publication_grant_dispatches_pr_draft"
+      "labelDy": 24
     },
     {
       "from": "approval",
@@ -879,9 +857,7 @@
       "labelAt": [
         570,
         2814
-      ],
-      "payload": "StateChangeEvent",
-      "test": "notify::tests::state_change_emits_redacted_notification"
+      ]
     },
     {
       "from": "rollback",
@@ -893,72 +869,46 @@
       "via": [
         [
           1450,
-          2930
+          3090
         ],
         [
           1450,
-          1235
+          1260
         ],
         [
           585,
-          1235
+          1260
         ]
-      ],
-      "payload": "RepairSignal",
-      "test": "dag::tests::repair_signal_requeues_failed_module"
+      ]
     },
     {
       "from": "verify",
       "to": "candidate",
-      "label": "evidence",
-      "payload": "GateEvidence",
-      "test": "candidate::tests::gate_evidence_creates_lesson_candidate"
+      "label": "evidence"
     },
     {
       "from": "candidate",
-      "to": "offline",
-      "payload": "LessonCandidate",
-      "test": "offline::tests::lesson_candidate_evaluated_in_paired_trial"
+      "to": "offline"
     },
     {
       "from": "offline",
-      "to": "knowledge",
-      "label": "promote",
+      "to": "central_sync",
+      "label": "promote (via central standards CRUD)",
       "variant": "dashed",
       "fromSide": "right",
-      "toSide": "bottom",
-      "via": [
-        [
-          1400,
-          2450
-        ],
-        [
-          1400,
-          1390
-        ],
-        [
-          935,
-          1390
-        ]
-      ],
-      "payload": "ValidatedLesson",
-      "test": "knowledge::tests::validated_lesson_promoted_to_store"
+      "toSide": "bottom"
     },
     {
       "from": "knowledge",
       "to": "context",
       "label": "manifest source",
-      "labelDy": 24,
-      "payload": "KnowledgeManifest",
-      "test": "context::tests::knowledge_manifest_bounds_retrieval"
+      "labelDy": 24
     },
     {
       "from": "context",
       "to": "planner",
       "label": "compiled manifest",
-      "variant": "dashed",
-      "payload": "ContextManifest",
-      "test": "planner::tests::context_manifest_scopes_plan_generation"
+      "variant": "dashed"
     },
     {
       "from": "context",
@@ -966,15 +916,17 @@
       "label": "compiled manifest",
       "variant": "dashed",
       "fromSide": "bottom",
-      "toSide": "right",
+      "toSide": "bottom",
       "via": [
         [
           935,
-          1972
+          2240
+        ],
+        [
+          445,
+          2240
         ]
-      ],
-      "payload": "ContextManifest",
-      "test": "builder::tests::context_manifest_scopes_build_context"
+      ]
     },
     {
       "from": "context",
@@ -985,16 +937,124 @@
       "toSide": "right",
       "via": [
         [
-          1165,
+          1120,
           1490
         ],
         [
-          1165,
-          2130
+          1120,
+          2290
+        ]
+      ]
+    },
+    {
+      "from": "central_sync",
+      "to": "knowledge",
+      "label": "promoted standard",
+      "via": [
+        [
+          1400,
+          2772
+        ],
+        [
+          1400,
+          1330
+        ]
+      ]
+    },
+    {
+      "from": "planner",
+      "to": "ideation",
+      "label": "investigate/feature/refactor",
+      "labelDy": 24
+    },
+    {
+      "from": "ideation",
+      "to": "plan_review",
+      "label": "selected candidate",
+      "labelDy": 24
+    },
+    {
+      "from": "verify",
+      "to": "control",
+      "label": "fail, within repair budget: retry/switch/escalate decision",
+      "via": [
+        [
+          585,
+          2400
+        ],
+        [
+          1400,
+          2400
+        ],
+        [
+          1400,
+          372
+        ],
+        [
+          585,
+          372
         ]
       ],
-      "payload": "ContextManifest",
-      "test": "review::tests::context_manifest_scopes_review_evidence"
+      "labelDy": -18
+    },
+    {
+      "from": "cli_discovery",
+      "to": "model_catalog",
+      "label": "capability report",
+      "labelDy": 24
+    },
+    {
+      "from": "fan_out_scheduler",
+      "to": "builder",
+      "label": "lease, one per node",
+      "labelAt": [
+        560,
+        2178
+      ]
+    },
+    {
+      "from": "verify",
+      "to": "quality_ledger",
+      "label": "outcome + terminal class",
+      "labelDy": 24
+    },
+    {
+      "from": "quality_ledger",
+      "to": "route",
+      "label": "cohort feeds cost-scoring + qualification (§7/§17)",
+      "via": [
+        [
+          760,
+          2670
+        ],
+        [
+          1400,
+          2670
+        ],
+        [
+          1400,
+          630
+        ],
+        [
+          690,
+          630
+        ]
+      ]
+    },
+    {
+      "from": "next_plan",
+      "to": "plan_review",
+      "label": "module N+1 draft — same review gate",
+      "via": [
+        [
+          750,
+          1972
+        ],
+        [
+          750,
+          1812
+        ]
+      ]
     }
   ],
   "cards": [
@@ -1043,6 +1103,122 @@
         "Multi-repo ChangeSet: dag routes to a separate saga coordinator for the multi-repo workflow kind (§15) — PREPARING/VERIFIED/PUBLISHING/PARTIAL/COMPLETE/COMPENSATING",
         "Pause/resume state machine (§16) — 15 named states, omitted to keep the primary flow legible"
       ]
+    },
+    {
+      "dot": "orange",
+      "title": "Addendum 2, 2026-09-13: repair loop, ideation, central-standards CRUD",
+      "items": [
+        "Verify -> Control -> {retry, switch approach, escalate tier, ask} closes a blind-repair gap found comparing this design against GVS5H (Addendum 2-K/L/O)",
+        "Approach ideation runs before PlanReview, but only for investigate/feature/refactor — small-change still skips straight to review (Addendum 2-N)",
+        "Central standards CRUD (pull/propose/promote/retire) replaces the old unstructured offline->knowledge edge; promote requires a human-only StandardMaintainerGrant via Approval (Addendum 2-I, central-standards CRUD section)",
+        "Ready now also requires the reviewed plan's context manifest to still be current at lease time (Addendum 2-J)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Addendum 3, 2026-09-13: OS-correctness closure",
+      "items": [
+        "Lease expansion (Control) now releases-then-reacquires atomically instead of blocking while still holding the original reservation — that was hold-and-wait reintroduced through the one path atomic-upfront admission didn't cover (3-Q)",
+        "Store's projection replay is now idempotent by construction: each row's applied seq is compared before reapplying, not just fast (3-R)",
+        "The 8 MiB fd-3 queue cap now has a stated overflow policy — block the producer, never silently drop a frame (3-S)",
+        "The 16-state run lifecycle now requires a model-checked safety/liveness proof over its reachable states, not just one test per legal row (3-T)",
+        "Event schema compatibility now covers live consumers mid-migration, not just the store re-reading old rows (3-U)"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Intake",
+      "wraps": [
+        "user_cli",
+        "connectors",
+        "ingest",
+        "store"
+      ],
+      "pad": 20
+    },
+    {
+      "kind": "region",
+      "label": "Classification & Routing",
+      "wraps": [
+        "control",
+        "intent",
+        "route",
+        "model_catalog",
+        "cli_discovery"
+      ],
+      "pad": 18
+    },
+    {
+      "kind": "region",
+      "label": "Ambiguity Resolution",
+      "wraps": [
+        "scan",
+        "probe_business",
+        "probe_tech",
+        "probe_learn",
+        "probe_research",
+        "questions"
+      ],
+      "pad": 18
+    },
+    {
+      "kind": "region",
+      "label": "Planning",
+      "wraps": [
+        "dag",
+        "knowledge",
+        "planner",
+        "context",
+        "ideation",
+        "plan_review",
+        "ready",
+        "next_plan"
+      ],
+      "pad": 20
+    },
+    {
+      "kind": "region",
+      "label": "Execution",
+      "wraps": [
+        "builder",
+        "fan_out_scheduler"
+      ],
+      "pad": 20
+    },
+    {
+      "kind": "region",
+      "label": "Verification",
+      "wraps": [
+        "review",
+        "verify",
+        "quality_ledger"
+      ],
+      "pad": 18
+    },
+    {
+      "kind": "region",
+      "label": "Integration & Publication",
+      "wraps": [
+        "integrate",
+        "post",
+        "approval",
+        "notify",
+        "broker",
+        "rollback"
+      ],
+      "pad": 18
+    },
+    {
+      "kind": "region",
+      "label": "Learning & Central Standards",
+      "wraps": [
+        "candidate",
+        "offline",
+        "central_sync"
+      ],
+      "pad": 18
     }
   ]
 }

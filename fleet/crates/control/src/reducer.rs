@@ -58,7 +58,9 @@ pub fn reduce(
 
     // 4. Legal transition: commit receipt + state, then emit intents.
     let intents = if event.to_state == TaskState::Running {
-        vec![IntentSpec { task_id: event.task_id.clone() }]
+        vec![IntentSpec {
+            task_id: event.task_id.clone(),
+        }]
     } else {
         vec![]
     };

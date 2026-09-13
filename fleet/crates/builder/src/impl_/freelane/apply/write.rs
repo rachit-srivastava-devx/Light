@@ -10,11 +10,17 @@ use std::path::PathBuf;
 pub fn write_all(files: &[(PathBuf, String)]) -> Result<Vec<PathBuf>, ApplyError> {
     for (path, _) in files {
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).map_err(|source| ApplyError::Write { path: path.clone(), source })?;
+            std::fs::create_dir_all(parent).map_err(|source| ApplyError::Write {
+                path: path.clone(),
+                source,
+            })?;
         }
     }
     for (path, content) in files {
-        std::fs::write(path, content).map_err(|source| ApplyError::Write { path: path.clone(), source })?;
+        std::fs::write(path, content).map_err(|source| ApplyError::Write {
+            path: path.clone(),
+            source,
+        })?;
     }
     Ok(files.iter().map(|(p, _)| p.clone()).collect())
 }

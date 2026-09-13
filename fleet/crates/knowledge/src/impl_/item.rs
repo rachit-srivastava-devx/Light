@@ -8,7 +8,9 @@ use super::ident::{MemoryId, MemoryKind};
 /// `SystemTime::now()`.
 /// Also derives `Serialize`/`Deserialize` beyond §3's snippet, for the same `MemoryItem`
 /// compile-requirement reason as `MemoryId` (see `ident.rs`).
-#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 pub struct Timestamp(u64);
 impl Timestamp {
     pub fn from_unix_secs(secs: u64) -> Self {

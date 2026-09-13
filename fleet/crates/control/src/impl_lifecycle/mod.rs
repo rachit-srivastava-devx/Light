@@ -1,4 +1,3 @@
-
 mod advance;
 mod attestation;
 mod attestation_checks;
@@ -23,8 +22,8 @@ pub use proposal_types::{ChangeEmitter, ProposalRequest, ProposedChange};
 pub use receipt::{ReceiptLedger, TransitionReceipt};
 pub use resume::{resume, AnyTask};
 pub use states::{
-    Accepted, Attested, Briefed, Building, Built, Contracted, Decomposed, Intake, Leased,
-    Observed, Proposed, Refused, Reviewed, Specified, State, Verified, Verifying,
+    Accepted, Attested, Briefed, Building, Built, Contracted, Decomposed, Intake, Leased, Observed,
+    Proposed, Refused, Reviewed, Specified, State, Verified, Verifying,
 };
 pub use task::Task;
 pub use task_id::TaskId;

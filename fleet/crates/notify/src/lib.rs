@@ -30,7 +30,11 @@ pub struct Notification {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum DeliveryStatus { Delivered, Failed, Unknown }
+pub enum DeliveryStatus {
+    Delivered,
+    Failed,
+    Unknown,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeliveryReceipt {
@@ -43,10 +47,16 @@ pub struct DeliveryReceipt {
 
 #[derive(Debug, thiserror::Error)]
 pub enum NotifyError {
-    #[error("conflict: duplicate idempotency key")] Conflict,
-    #[error("grant check failed")] Grant,
-    #[error("redaction error")] Redaction,
-    #[error("unknown delivery outcome")] Unknown,
-    #[error("zero denominator: total_recipients must be nonzero")] ZeroDenominator,
-    #[error("transport error: {0}")] Transport(String),
+    #[error("conflict: duplicate idempotency key")]
+    Conflict,
+    #[error("grant check failed")]
+    Grant,
+    #[error("redaction error")]
+    Redaction,
+    #[error("unknown delivery outcome")]
+    Unknown,
+    #[error("zero denominator: total_recipients must be nonzero")]
+    ZeroDenominator,
+    #[error("transport error: {0}")]
+    Transport(String),
 }

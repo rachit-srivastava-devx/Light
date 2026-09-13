@@ -22,12 +22,11 @@ pub struct Observation {
 /// An absent or empty frame is `Err(Protocol)` — success requires a well-formed
 /// result frame; an empty fd-3 is not valid proof of a completed build.
 pub(crate) fn parse_fd3_frame(data: Option<&[u8]>) -> Result<String, BuilderError> {
-    let bytes = data
-        .filter(|b| !b.is_empty())
-        .ok_or_else(|| BuilderError::Protocol(
-            "fd-3 frame absent or empty; a well-formed frame is required for success"
-                .to_string(),
-        ))?;
+    let bytes = data.filter(|b| !b.is_empty()).ok_or_else(|| {
+        BuilderError::Protocol(
+            "fd-3 frame absent or empty; a well-formed frame is required for success".to_string(),
+        )
+    })?;
     std::str::from_utf8(bytes)
         .map(str::to_string)
         .map_err(|e| BuilderError::Protocol(format!("fd-3 frame is not valid UTF-8: {e}")))

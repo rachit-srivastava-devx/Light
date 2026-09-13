@@ -61,7 +61,9 @@ pub fn run_json(state_dir: &Path, repo: &Path, task: &str) -> serde_json::Value 
         .expect("binary runs");
     let stdout = String::from_utf8_lossy(&out.stdout);
     serde_json::from_str(&stdout).unwrap_or_else(|e| {
-        panic!("`fleet run --json` did not print JSON ({e}):\nstdout={stdout}\nstderr={}",
-            String::from_utf8_lossy(&out.stderr))
+        panic!(
+            "`fleet run --json` did not print JSON ({e}):\nstdout={stdout}\nstderr={}",
+            String::from_utf8_lossy(&out.stderr)
+        )
     })
 }

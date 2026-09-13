@@ -7,13 +7,13 @@
 //! `merge::remove` -- `remove` destroys the worktree the merge reads from. Teardown still
 //! runs unconditionally regardless of what the merge attempt did.
 
+use super::super::outcome::LaneOutcome;
+use super::super::request::{JoinError, LaneHandle};
+use super::super::{scorecard_io, MergeOutcome, ScorecardOutcome};
 use super::change_detect::enforce_change_honesty;
 use super::interpret::interpret_fd3;
 use super::lane_merge::{maybe_merge, MergePolicy};
 use super::process_group::{wait_with_deadline, WaitOutcome};
-use super::super::outcome::LaneOutcome;
-use super::super::request::{JoinError, LaneHandle};
-use super::super::{scorecard_io, MergeOutcome, ScorecardOutcome};
 
 pub fn join(
     mut handle: LaneHandle,

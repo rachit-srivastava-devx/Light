@@ -27,7 +27,9 @@ pub use jaccard::jaccard_similarity;
 pub use memory::MemoryProbe;
 pub use merge::merge_questions;
 pub use open_questions::{Assessment, OpenQuestions, OpenQuestionsError};
-pub use ports::{CodebasePort, ConcurrentRunner, MemoryHit, MemoryPort, ProbeJob, ProbeRun, ResearchPort};
+pub use ports::{
+    CodebasePort, ConcurrentRunner, MemoryHit, MemoryPort, ProbeJob, ProbeRun, ResearchPort,
+};
 pub use probe::{GapSeverity, Probe, ProbeOutcome, Question};
 pub use research::ResearchProbe;
 pub use technical::TechnicalProbe;

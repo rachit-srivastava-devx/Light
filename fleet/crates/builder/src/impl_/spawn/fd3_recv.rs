@@ -9,7 +9,12 @@ use std::os::raw::c_int;
 pub fn recv(parent_fd: c_int) -> Option<(Vec<u8>, bool)> {
     let mut packet = vec![0u8; 65536];
     let received = unsafe {
-        libc::recv(parent_fd, packet.as_mut_ptr() as *mut libc::c_void, packet.len(), 0)
+        libc::recv(
+            parent_fd,
+            packet.as_mut_ptr() as *mut libc::c_void,
+            packet.len(),
+            0,
+        )
     };
     unsafe {
         libc::close(parent_fd);
@@ -24,7 +29,9 @@ pub fn recv(parent_fd: c_int) -> Option<(Vec<u8>, bool)> {
 
 /// Checks `schema_version=="1.0"`, `kind` in `{note,done,refuse}`, `body` is an object.
 pub fn validate_submission(value: &serde_json::Value) -> bool {
-    let Some(object) = value.as_object() else { return false };
+    let Some(object) = value.as_object() else {
+        return false;
+    };
     if object.get("schema_version") != Some(&serde_json::Value::String("1.0".to_string())) {
         return false;
     }

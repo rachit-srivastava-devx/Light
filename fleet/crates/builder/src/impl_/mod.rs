@@ -11,7 +11,7 @@ mod scorecard_io;
 mod spawn;
 
 pub use adapter::{CliAdapter, UnknownAgentKind};
-pub use types::Role;
+pub use merge::MergeOutcome;
 pub use outcome::{LaneOutcome, NoAmbientProbeResult};
 pub use probe::probe_no_ambient;
 pub use reap::find_dead_lanes;
@@ -22,6 +22,6 @@ pub use sandbox::{
     HermeticProvision, ProvisionError,
 };
 pub use scorecard::{Scorecard, ScorecardOutcome};
-pub use scorecard_io::{scorecard_path, record_scorecard_outcome};
-pub use merge::MergeOutcome;
+pub use scorecard_io::{record_scorecard_outcome, scorecard_path};
 pub use spawn::{fd3, join, spawn, MergePolicy};
+pub use types::Role;

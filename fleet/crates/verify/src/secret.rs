@@ -9,7 +9,9 @@ pub struct FakeFindingsProvider {
 }
 
 impl FakeFindingsProvider {
-    pub fn empty() -> Self { Self { findings: vec![] } }
+    pub fn empty() -> Self {
+        Self { findings: vec![] }
+    }
 
     pub fn with_critical(file: &str) -> Self {
         Self {
@@ -30,5 +32,10 @@ impl FindingsProvider for FakeFindingsProvider {
 }
 
 pub fn normalize_findings(raw: Vec<SecretFinding>) -> Vec<SecretFinding> {
-    raw.into_iter().map(|mut f| { f.redacted = true; f }).collect()
+    raw.into_iter()
+        .map(|mut f| {
+            f.redacted = true;
+            f
+        })
+        .collect()
 }

@@ -1,9 +1,9 @@
 //! `SpawnRequest`/`LaneHandle` and the `SpawnError`/`JoinError` taxonomies. Data only -- no IO.
 
 use super::adapter::CliAdapter;
-use types::{LaneId, Role, TaskId};
 use std::path::PathBuf;
 use std::time::Duration;
+use types::{LaneId, Role, TaskId};
 
 /// Everything needed to spawn one lane. The caller already resolved which adapter/model to use
 /// (via `fleet-router`'s `Decision`); this crate does not re-derive that.

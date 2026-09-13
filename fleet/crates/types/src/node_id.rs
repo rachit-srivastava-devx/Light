@@ -20,7 +20,10 @@ fn matches_node_id_pattern(value: &str) -> bool {
         return false;
     }
     let first_ok = matches!(bytes[0], b'a'..=b'z' | b'0'..=b'9');
-    first_ok && bytes.iter().all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'-'))
+    first_ok
+        && bytes
+            .iter()
+            .all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'-'))
 }
 
 impl NodeId {

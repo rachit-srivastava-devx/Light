@@ -31,7 +31,11 @@ pub fn run_through_merge(
         let result = run_one(stage, ctx, &mut out.gates);
         let elapsed = started.elapsed();
         stage_report::finished(stage, started, result.is_ok());
-        out.stage(stage, if result.is_ok() { "pass" } else { "fail" }, Some(elapsed));
+        out.stage(
+            stage,
+            if result.is_ok() { "pass" } else { "fail" },
+            Some(elapsed),
+        );
         match result {
             Ok(StageOutput::Classified(decision)) => out.classification = Some(decision),
             Ok(StageOutput::None) => {}

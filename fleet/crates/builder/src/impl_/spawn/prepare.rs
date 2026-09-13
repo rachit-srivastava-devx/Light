@@ -30,5 +30,10 @@ pub(super) fn prepare(repo: &std::path::Path, role_name: &str) -> Result<Prepare
     }
     let sandbox_root = worktree.path.join(".fleet-sandbox");
     let hermetic = hermetic_env::build(&sandbox_root);
-    Ok(Prepared { worktree, base_commit, sandbox_root, hermetic })
+    Ok(Prepared {
+        worktree,
+        base_commit,
+        sandbox_root,
+        hermetic,
+    })
 }

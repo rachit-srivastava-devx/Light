@@ -3,12 +3,9 @@
 //! rules (BLUEPRINT §2). **Restate deferred** -- see `pipeline/graph.rs`'s doc comment.
 
 mod build_info;
-mod cli;
 mod dispatch;
 mod interactive;
 mod pipeline;
-mod print;
-mod runtime;
 
 use clap::{CommandFactory, FromArgMatches};
 use std::io::IsTerminal;
@@ -27,9 +24,15 @@ fn main() {
     let state_dir = config.state_dir.clone();
     // Only work-spawning commands may be refused for capacity (see `cli::capacity_scope`):
     // gating `completions`/`doctor`/`__agent` broke the installer and killed spawned children.
-    let preflight_cfg = runtime::capacity::PreflightConfig::from_env(config.review_cap, config.ram_lanes);
-    let measured = runtime::capacity::preflight(&runtime::capacity::StdCapacityProbe, &preflight_cfg);
-    let is_gated = cli.command.as_ref().map(|c| c.is_capacity_gated()).unwrap_or(false);
+    let preflight_cfg =
+        runtime::capacity::PreflightConfig::from_env(config.review_cap, config.ram_lanes);
+    let measured =
+        runtime::capacity::preflight(&runtime::capacity::StdCapacityProbe, &preflight_cfg);
+    let is_gated = cli
+        .command
+        .as_ref()
+        .map(|c| c.is_capacity_gated())
+        .unwrap_or(false);
     let cap = match (measured, is_gated) {
         (Ok(cap), _) => cap,
         (Err(refusal), true) => {

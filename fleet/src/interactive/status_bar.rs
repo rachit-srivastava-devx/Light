@@ -15,9 +15,17 @@ pub fn render_status_bar(color: bool, model: &str, lanes: usize, auto_mode: bool
     );
 
     let mode_indicator = if auto_mode {
-        format!("{} {}", paint(color, BRIGHT_AMBER, "⏩"), paint(color, BRIGHT_AMBER, "auto mode on"))
+        format!(
+            "{} {}",
+            paint(color, BRIGHT_AMBER, "⏩"),
+            paint(color, BRIGHT_AMBER, "auto mode on")
+        )
     } else {
-        format!("{} {}", paint(color, CYAN, "⏸ "), paint(color, CYAN, "review mode on"))
+        format!(
+            "{} {}",
+            paint(color, CYAN, "⏸ "),
+            paint(color, CYAN, "review mode on")
+        )
     };
 
     let line2 = format!(

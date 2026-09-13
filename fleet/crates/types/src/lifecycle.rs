@@ -26,8 +26,22 @@ pub enum LifecycleState {
 
 /// The wire name + allowed-next table, indexed in declaration order.
 const NAMES: [&str; 16] = [
-    "Intake", "Specified", "Reviewed", "Decomposed", "Contracted", "Briefed", "Leased", "Building",
-    "Built", "Verifying", "Verified", "Attested", "Accepted", "Proposed", "Observed", "Refused",
+    "Intake",
+    "Specified",
+    "Reviewed",
+    "Decomposed",
+    "Contracted",
+    "Briefed",
+    "Leased",
+    "Building",
+    "Built",
+    "Verifying",
+    "Verified",
+    "Attested",
+    "Accepted",
+    "Proposed",
+    "Observed",
+    "Refused",
 ];
 
 impl LifecycleState {

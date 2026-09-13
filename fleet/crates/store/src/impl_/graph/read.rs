@@ -53,16 +53,21 @@ impl GraphStore {
                 line: row.get::<_, i64>(5)? as u64,
             })
         })?;
-        rows.collect::<Result<Vec<_>, _>>().map_err(GraphError::from)
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(GraphError::from)
     }
 
     /// Resolve a name or bare symbol-id to every matching current symbol-id, folding in alias
     /// history.
-    pub fn symbol_ids_for(&self, project_id: &str, symbol: &str) -> Result<Vec<String>, GraphError> {
+    pub fn symbol_ids_for(
+        &self,
+        project_id: &str,
+        symbol: &str,
+    ) -> Result<Vec<String>, GraphError> {
         let mut ids = HashSet::new();
-        let mut stmt = self
-            .conn
-            .prepare("SELECT symbol_id FROM symbols WHERE project_id=?1 AND (name=?2 OR symbol_id=?2)")?;
+        let mut stmt = self.conn.prepare(
+            "SELECT symbol_id FROM symbols WHERE project_id=?1 AND (name=?2 OR symbol_id=?2)",
+        )?;
         for row in stmt.query_map(params![project_id, symbol], |r| r.get::<_, String>(0))? {
             ids.insert(row?);
         }

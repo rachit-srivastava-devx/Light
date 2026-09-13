@@ -1,7 +1,9 @@
 use super::*;
 use std::fs;
 
-fn worktree() -> tempfile::TempDir { tempfile::tempdir().unwrap() }
+fn worktree() -> tempfile::TempDir {
+    tempfile::tempdir().unwrap()
+}
 
 #[test]
 fn single_fence_with_clear_target_is_applied() {
@@ -11,7 +13,10 @@ fn single_fence_with_clear_target_is_applied() {
     // `apply` returns CANONICAL paths (that resolution IS the containment guard), so must we: on macOS `/var` symlinks to `/private/var`.
     let expected = wt.path().canonicalize().unwrap().join("src/foo.rs");
     assert_eq!(applied, vec![expected]);
-    assert_eq!(fs::read_to_string(wt.path().join("src/foo.rs")).unwrap(), "fn main() {}\n");
+    assert_eq!(
+        fs::read_to_string(wt.path().join("src/foo.rs")).unwrap(),
+        "fn main() {}\n"
+    );
 }
 
 #[test]
@@ -26,7 +31,10 @@ fn fence_with_no_target_is_refused_naming_the_ambiguity() {
     let wt = worktree();
     let reply = "```rust\nfn main() {}\n```\n";
     let err = apply(wt.path(), reply).unwrap_err();
-    assert!(matches!(err, ApplyError::AmbiguousTarget { index: 1 }), "{err:?}");
+    assert!(
+        matches!(err, ApplyError::AmbiguousTarget { index: 1 }),
+        "{err:?}"
+    );
     assert!(err.to_string().contains("fence #1"), "{err}");
 }
 
@@ -50,7 +58,11 @@ fn parent_traversal_is_refused_and_nothing_written_outside() {
     let reply = "```path:../victim.txt\nhacked\n```\n";
     let err = apply(&wt_path, reply).unwrap_err();
     assert!(matches!(err, ApplyError::PathTraversal { .. }), "{err:?}");
-    assert_eq!(fs::read_to_string(&sentinel).unwrap(), "untouched", "sentinel must be untouched");
+    assert_eq!(
+        fs::read_to_string(&sentinel).unwrap(),
+        "untouched",
+        "sentinel must be untouched"
+    );
 }
 
 #[test]
@@ -75,5 +87,8 @@ fn one_bad_file_among_several_applies_nothing() {
     let reply = "```path:src/good.rs\nfn ok() {}\n```\n```path:/abs/bad.rs\nfn bad() {}\n```\n";
     let err = apply(wt.path(), reply).unwrap_err();
     assert!(matches!(err, ApplyError::AbsolutePath { .. }), "{err:?}");
-    assert!(!wt.path().join("src/good.rs").exists(), "nothing must be written on a refused batch");
+    assert!(
+        !wt.path().join("src/good.rs").exists(),
+        "nothing must be written on a refused batch"
+    );
 }

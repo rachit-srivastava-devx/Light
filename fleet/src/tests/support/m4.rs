@@ -21,12 +21,17 @@ pub fn command_module_names(mod_rs: &str) -> Vec<String> {
         .lines()
         .filter_map(|line| {
             let line = line.trim();
-            let rest = line.strip_prefix("pub mod ").or_else(|| line.strip_prefix("mod "))?;
+            let rest = line
+                .strip_prefix("pub mod ")
+                .or_else(|| line.strip_prefix("mod "))?;
             let name = rest.strip_suffix(';')?;
             name.ends_with("_cmd").then(|| name.to_string())
         })
         .collect();
-    assert!(!names.is_empty(), "found no `*_cmd` module declarations -- measuring nothing");
+    assert!(
+        !names.is_empty(),
+        "found no `*_cmd` module declarations -- measuring nothing"
+    );
     names.sort();
     names.dedup();
     names
@@ -36,7 +41,9 @@ pub fn command_module_names(mod_rs: &str) -> Vec<String> {
 /// depth line by line so a struct-shaped variant's own fields (e.g. `Skills { check: bool }`)
 /// are never mistaken for sibling top-level variants.
 pub fn commands_variants(root_rs: &str) -> Vec<String> {
-    let enum_src = &root_rs[root_rs.find("pub enum Commands {").expect("Commands enum present")..];
+    let enum_src = &root_rs[root_rs
+        .find("pub enum Commands {")
+        .expect("Commands enum present")..];
     let mut depth = 0i32;
     let mut names = Vec::new();
     for line in enum_src.lines() {
@@ -51,7 +58,10 @@ pub fn commands_variants(root_rs: &str) -> Vec<String> {
             break;
         }
     }
-    assert!(!names.is_empty(), "found no `Commands` variants -- measuring nothing");
+    assert!(
+        !names.is_empty(),
+        "found no `Commands` variants -- measuring nothing"
+    );
     names
 }
 
@@ -61,6 +71,9 @@ pub fn commands_variants(root_rs: &str) -> Vec<String> {
 pub fn mentions_variant(haystack: &str, name: &str) -> bool {
     let needle = format!("Commands::{name}");
     haystack.match_indices(&needle).any(|(i, _)| {
-        haystack[i + needle.len()..].chars().next().is_none_or(|c| !c.is_alphanumeric() && c != '_')
+        haystack[i + needle.len()..]
+            .chars()
+            .next()
+            .is_none_or(|c| !c.is_alphanumeric() && c != '_')
     })
 }

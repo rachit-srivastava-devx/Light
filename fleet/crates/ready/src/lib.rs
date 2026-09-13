@@ -1,5 +1,8 @@
 //! `ready` — deterministic readiness gate for fleet modules.
 //!
+//! STATUS: no workspace member depends on this crate yet, matching `docs/LLD/LLD.md` §7/§8's
+//! not-yet-wired scheduling design — not dead code.
+//!
 //! Evaluates seven fixed boolean predicates and a checked/total denominator.
 //! No model call, no IO, no panic. A zero-input gate always fails.
 //! Blueprint: docs/blueprints-next/ready/BLUEPRINT.md

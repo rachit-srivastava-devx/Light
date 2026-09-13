@@ -16,7 +16,10 @@ pub struct NewMemory {
 
 /// The injected nearest-neighbor port `write` consults before deciding.
 pub trait NearestNeighborLookup {
-    fn nearest(&self, embedding: &Embedding) -> Result<Option<(MemoryId, CosineSimilarity)>, RetrieveError>;
+    fn nearest(
+        &self,
+        embedding: &Embedding,
+    ) -> Result<Option<(MemoryId, CosineSimilarity)>, RetrieveError>;
 }
 
 /// The dedup threshold tau: a `nearest` hit with similarity `>= tau` is a duplicate to merge.
@@ -41,7 +44,12 @@ pub enum WriteDecision {
     /// Existing item at `into` is within `tau` — merge, don't append. `observed_*` describe THIS
     /// observation, never the merged result (the port exposes only `(id, similarity)`): the caller
     /// folds them in as `importance.max(observed_importance)` and `count + observation_count`.
-    Merge { into: MemoryId, similarity: CosineSimilarity, observed_importance: Importance, observation_count: u32 },
+    Merge {
+        into: MemoryId,
+        similarity: CosineSimilarity,
+        observed_importance: Importance,
+        observation_count: u32,
+    },
 }
 
 /// Pure and total. Looks up `existing.nearest(&candidate.embedding)`; `sim >= tau` merges,

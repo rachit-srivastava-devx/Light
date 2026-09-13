@@ -7,7 +7,10 @@ use super::reservation_codec::parse_reservation;
 use super::types::{LaneState, MeterIoError};
 
 pub(crate) fn encode_row(name: &str, state: &LaneState) -> String {
-    let window = state.window.map(|t| t.get().to_string()).unwrap_or_default();
+    let window = state
+        .window
+        .map(|t| t.get().to_string())
+        .unwrap_or_default();
     let used = state.used.map(|t| t.get().to_string()).unwrap_or_default();
     let reservations = state
         .reservations
@@ -41,7 +44,17 @@ pub(crate) fn decode_row(fields: &[&str]) -> Result<LaneState, MeterIoError> {
             .map(|entry| parse_reservation(fields[0], entry))
             .collect::<Result<Vec<_>, MeterIoError>>()?
     };
-    let resolved_model = if fields[4].is_empty() { None } else { Some(fields[4].to_string()) };
+    let resolved_model = if fields[4].is_empty() {
+        None
+    } else {
+        Some(fields[4].to_string())
+    };
     let unknown_observed = fields[5] == "1";
-    Ok(LaneState { window, used, reservations, resolved_model, unknown_observed })
+    Ok(LaneState {
+        window,
+        used,
+        reservations,
+        resolved_model,
+        unknown_observed,
+    })
 }

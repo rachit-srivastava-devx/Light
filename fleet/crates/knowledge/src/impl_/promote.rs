@@ -64,12 +64,18 @@ pub fn promote_lesson(
         return Err(PromotionRefusal::EmptyCategory);
     }
     if item.confirmed_count < min_confirmations {
-        return Err(PromotionRefusal::NotConfirmedEnough { required: min_confirmations, actual: item.confirmed_count });
+        return Err(PromotionRefusal::NotConfirmedEnough {
+            required: min_confirmations,
+            actual: item.confirmed_count,
+        });
     }
     Ok(PromotedLesson {
         category: category.to_string(),
         pattern: DiffPattern::parse(pattern).map_err(|_| PromotionRefusal::EmptyPattern)?,
         scope,
-        message: format!("lesson from memory {} violated by an added line", item.id.as_str()),
+        message: format!(
+            "lesson from memory {} violated by an added line",
+            item.id.as_str()
+        ),
     })
 }

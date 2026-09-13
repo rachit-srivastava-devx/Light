@@ -16,7 +16,10 @@ pub fn resolve() -> PathBuf {
         return PathBuf::from(dir);
     }
     let home = std::env::var("HOME").unwrap_or_else(|_| std::env::temp_dir().display().to_string());
-    PathBuf::from(home).join(".local").join("state").join("fleet")
+    PathBuf::from(home)
+        .join(".local")
+        .join("state")
+        .join("fleet")
 }
 
 #[cfg(test)]
@@ -33,7 +36,13 @@ mod tests {
 
         std::env::remove_var(ENV_STATE_DIR);
         let resolved = resolve();
-        assert!(resolved.is_absolute(), "default state dir must be absolute: {resolved:?}");
-        assert!(!resolved.ends_with(".fleet"), "must not reuse the repo-local .fleet/ shape");
+        assert!(
+            resolved.is_absolute(),
+            "default state dir must be absolute: {resolved:?}"
+        );
+        assert!(
+            !resolved.ends_with(".fleet"),
+            "must not reuse the repo-local .fleet/ shape"
+        );
     }
 }

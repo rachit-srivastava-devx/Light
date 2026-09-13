@@ -48,5 +48,9 @@ pub fn resolve_hermetic_provision(
         "agent={agent_id} skills={skill_ids:?} capabilities={:?}",
         agent.capabilities
     );
-    Ok(HermeticProvision { skill_ids, mcp_tool_manifest, system_prompt })
+    Ok(HermeticProvision {
+        skill_ids,
+        mcp_tool_manifest,
+        system_prompt,
+    })
 }

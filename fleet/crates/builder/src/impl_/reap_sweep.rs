@@ -23,9 +23,17 @@ pub fn reap_dead_lanes(repo: &Path) -> Vec<(PathBuf, Result<(), WorktreeError>)>
 }
 
 fn remove_one(repo: &Path, path: &Path) -> Result<(), WorktreeError> {
-    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string();
+    let name = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or_default()
+        .to_string();
     let branch = format!("fleet/{name}");
-    let worktree = merge::Worktree { path: path.to_path_buf(), branch, name };
+    let worktree = merge::Worktree {
+        path: path.to_path_buf(),
+        branch,
+        name,
+    };
     merge::remove(repo, &worktree)
 }
 

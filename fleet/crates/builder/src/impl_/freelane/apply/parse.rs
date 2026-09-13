@@ -26,7 +26,8 @@ pub fn extract_fences(reply: &str) -> Vec<ProposedFile> {
             continue;
         };
         fence_index += 1;
-        let declared_path = info_string_path(info.trim()).or_else(|| last_nonblank.and_then(line_path));
+        let declared_path =
+            info_string_path(info.trim()).or_else(|| last_nonblank.and_then(line_path));
         let mut content = String::new();
         i += 1;
         while i < lines.len() && !lines[i].trim_start().starts_with("```") {
@@ -35,7 +36,11 @@ pub fn extract_fences(reply: &str) -> Vec<ProposedFile> {
             i += 1;
         }
         i += 1; // skip the closing fence (or step past EOF harmlessly)
-        out.push(ProposedFile { fence_index, declared_path, content });
+        out.push(ProposedFile {
+            fence_index,
+            declared_path,
+            content,
+        });
         last_nonblank = None;
     }
     out

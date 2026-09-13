@@ -8,21 +8,30 @@
 
 use std::time::SystemTime;
 
+use super::super::retention::{PruneReport, RetentionPolicy, UsageReport};
 use super::types::MemoryError;
 use super::MemoryStore;
-use super::super::retention::{PruneReport, RetentionPolicy, UsageReport};
 
 impl MemoryStore {
     /// Current number of memories and the sqlite file's byte size.
     pub fn usage(&self) -> Result<UsageReport, MemoryError> {
-        let row_count: i64 = self.conn.query_row("SELECT count(*) FROM memories", [], |r| r.get(0))?;
-        Ok(UsageReport { row_count: row_count as u64, byte_size: self.file_bytes()? })
+        let row_count: i64 = self
+            .conn
+            .query_row("SELECT count(*) FROM memories", [], |r| r.get(0))?;
+        Ok(UsageReport {
+            row_count: row_count as u64,
+            byte_size: self.file_bytes()?,
+        })
     }
 
     /// Delete memories (and their dependent rows) until every applicable limit in `policy` is
     /// satisfied. The injected `now` anchors `max_age_secs`; rows older than the cutoff are
     /// removed first, then row-count and byte limits are enforced on the remainder.
-    pub fn prune(&mut self, policy: &RetentionPolicy, now: SystemTime) -> Result<PruneReport, MemoryError> {
+    pub fn prune(
+        &mut self,
+        policy: &RetentionPolicy,
+        now: SystemTime,
+    ) -> Result<PruneReport, MemoryError> {
         let before = self.file_bytes()?;
         let mut removed = 0u64;
         if let Some(max_age) = policy.max_age_secs {
@@ -45,7 +54,9 @@ impl MemoryStore {
             if !over_rows && !over_bytes {
                 break;
             }
-            let Some(id) = self.oldest_memory_id()? else { break };
+            let Some(id) = self.oldest_memory_id()? else {
+                break;
+            };
             if let Some(row) = self.row_by_id(&id)? {
                 self.delete_memory(&id, row)?;
                 removed += 1;
@@ -53,6 +64,9 @@ impl MemoryStore {
         }
         let after = self.file_bytes()?;
         let reclaimed = before.saturating_sub(after);
-        Ok(PruneReport { rows_removed: removed, bytes_reclaimed: reclaimed })
+        Ok(PruneReport {
+            rows_removed: removed,
+            bytes_reclaimed: reclaimed,
+        })
     }
 }

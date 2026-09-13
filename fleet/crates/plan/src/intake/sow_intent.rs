@@ -12,7 +12,13 @@
 fn declared_intent_hash(text: &str) -> Option<String> {
     text.lines()
         .find(|l| l.to_lowercase().starts_with("source_intent_hash:"))
-        .map(|l| l.split_once(':').map(|x| x.1).unwrap_or("").trim().to_string())
+        .map(|l| {
+            l.split_once(':')
+                .map(|x| x.1)
+                .unwrap_or("")
+                .trim()
+                .to_string()
+        })
 }
 
 /// `None` when the gate passes. Both sides are always named in the failure text, so a reader can

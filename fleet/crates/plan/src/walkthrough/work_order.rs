@@ -11,14 +11,21 @@ pub(crate) struct WorkOrderStep {
 
 /// `Err` carries every node_id that never reached indegree 0 -- the modules involved in (or
 /// downstream of) the cycle, reported in a stable sorted order.
-pub(crate) fn compute_work_order(modules: &[ModuleSummary]) -> Result<Vec<WorkOrderStep>, Vec<String>> {
+pub(crate) fn compute_work_order(
+    modules: &[ModuleSummary],
+) -> Result<Vec<WorkOrderStep>, Vec<String>> {
     let ids: BTreeSet<&str> = modules.iter().map(|m| m.node_id.as_str()).collect();
     let mut internal_deps: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
     let mut reverse: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
     let mut indeg: BTreeMap<&str, usize> = BTreeMap::new();
 
     for m in modules {
-        let deps: Vec<&str> = m.deps.iter().map(String::as_str).filter(|d| ids.contains(d)).collect();
+        let deps: Vec<&str> = m
+            .deps
+            .iter()
+            .map(String::as_str)
+            .filter(|d| ids.contains(d))
+            .collect();
         indeg.insert(m.node_id.as_str(), deps.len());
         for &d in &deps {
             reverse.entry(d).or_default().push(m.node_id.as_str());
@@ -26,13 +33,19 @@ pub(crate) fn compute_work_order(modules: &[ModuleSummary]) -> Result<Vec<WorkOr
         internal_deps.insert(m.node_id.as_str(), deps);
     }
 
-    let mut ready: BTreeSet<&str> = indeg.iter().filter(|(_, &d)| d == 0).map(|(&k, _)| k).collect();
+    let mut ready: BTreeSet<&str> = indeg
+        .iter()
+        .filter(|(_, &d)| d == 0)
+        .map(|(&k, _)| k)
+        .collect();
     let mut order: Vec<&str> = Vec::with_capacity(modules.len());
     while let Some(&next) = ready.iter().next() {
         ready.remove(next);
         order.push(next);
         for &dependent in reverse.get(next).unwrap_or(&Vec::new()) {
-            let e = indeg.get_mut(dependent).expect("dependent was inserted above");
+            let e = indeg
+                .get_mut(dependent)
+                .expect("dependent was inserted above");
             *e -= 1;
             if *e == 0 {
                 ready.insert(dependent);
@@ -42,7 +55,11 @@ pub(crate) fn compute_work_order(modules: &[ModuleSummary]) -> Result<Vec<WorkOr
 
     if order.len() != modules.len() {
         let placed: BTreeSet<&str> = order.iter().copied().collect();
-        let cycle: Vec<String> = ids.iter().filter(|id| !placed.contains(*id)).map(|s| s.to_string()).collect();
+        let cycle: Vec<String> = ids
+            .iter()
+            .filter(|id| !placed.contains(*id))
+            .map(|s| s.to_string())
+            .collect();
         return Err(cycle);
     }
 
@@ -55,7 +72,10 @@ pub(crate) fn compute_work_order(modules: &[ModuleSummary]) -> Result<Vec<WorkOr
             } else {
                 format!("after: {}", deps.join(", "))
             };
-            WorkOrderStep { node_id: node_id.to_string(), because }
+            WorkOrderStep {
+                node_id: node_id.to_string(),
+                because,
+            }
         })
         .collect())
 }

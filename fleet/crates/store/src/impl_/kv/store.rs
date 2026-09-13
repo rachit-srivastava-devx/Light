@@ -13,7 +13,10 @@ pub struct KvStore {
 
 impl KvStore {
     pub fn open(path: &Path) -> Result<Self, KvError> {
-        Ok(Self { db: Database::create(path)?, db_path: path.to_path_buf() })
+        Ok(Self {
+            db: Database::create(path)?,
+            db_path: path.to_path_buf(),
+        })
     }
 
     pub fn get(&self, table: &str, key: &[u8]) -> Result<Option<Vec<u8>>, KvError> {
@@ -52,7 +55,11 @@ impl KvStore {
     }
 
     #[allow(clippy::type_complexity)]
-    pub fn list_prefix(&self, table: &str, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>, KvError> {
+    pub fn list_prefix(
+        &self,
+        table: &str,
+        prefix: &[u8],
+    ) -> Result<Vec<(Vec<u8>, Vec<u8>)>, KvError> {
         let def: TableDefinition<&[u8], &[u8]> = TableDefinition::new(table);
         let read_txn = self.db.begin_read()?;
         let t = match read_txn.open_table(def) {

@@ -88,5 +88,8 @@ impl LaneId {
 
 /// Shared artifact-id shape check: exactly 64 lowercase hex characters.
 pub fn valid_artifact_id(id: &str) -> bool {
-    id.len() == 64 && id.bytes().all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+    id.len() == 64
+        && id
+            .bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
 }

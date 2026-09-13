@@ -1,31 +1,25 @@
-use std::sync::OnceLock;
-use regex::Regex;
-use serde_json::{Map, Value};
 use crate::types::{IngestError, RedactedCategory, RedactionReceipt, MAX_JSON_DEPTH, MAX_JSON_LEAVES};
+use serde_json::{Map, Value};
 
-static PATTERNS: OnceLock<Vec<(Regex, RedactedCategory)>> = OnceLock::new();
+#[path = "redact_patterns.rs"]
+mod redact_patterns;
+use redact_patterns::{typed_category, SECRET_FIELDS};
 
-fn patterns() -> &'static [(Regex, RedactedCategory)] {
-    PATTERNS.get_or_init(|| vec![
-        (Regex::new(r"sk-[A-Za-z0-9]{20,}").unwrap(),                RedactedCategory::ApiKey),
-        (Regex::new(r"Bearer [A-Za-z0-9\-._~+/]+=*").unwrap(),       RedactedCategory::BearerToken),
-        (Regex::new(r"-----BEGIN .{1,30} PRIVATE KEY-----").unwrap(), RedactedCategory::PrivateKey),
-    ])
-}
-
-const SECRET_FIELDS: &[&str] = &["api_key", "secret", "token", "password", "private_key", "authorization"];
-
-/// Match value against typed patterns; returns `None` if no pattern matches.
-fn typed_category(s: &str) -> Option<RedactedCategory> {
-    patterns().iter().find(|(p, _)| p.is_match(s)).map(|(_, c)| *c)
-}
-
-fn walk(v: Value, depth: usize, leaves: &mut usize, r: &mut RedactionReceipt) -> Result<Value, IngestError> {
-    if depth > MAX_JSON_DEPTH { return Err(IngestError::JsonTooDeep); }
+fn walk(
+    v: Value,
+    depth: usize,
+    leaves: &mut usize,
+    r: &mut RedactionReceipt,
+) -> Result<Value, IngestError> {
+    if depth > MAX_JSON_DEPTH {
+        return Err(IngestError::JsonTooDeep);
+    }
     match v {
         Value::String(s) => {
             *leaves += 1;
-            if *leaves > MAX_JSON_LEAVES { return Err(IngestError::JsonTooComplex); }
+            if *leaves > MAX_JSON_LEAVES {
+                return Err(IngestError::JsonTooComplex);
+            }
             if let Some(cat) = typed_category(&s) {
                 r.categories.push(cat);
                 r.field_count += 1;
@@ -40,7 +34,9 @@ fn walk(v: Value, depth: usize, leaves: &mut usize, r: &mut RedactionReceipt) ->
                 if is_secret {
                     // Redact entire subtree regardless of type (D1: {"password":["hunter2"]} was leaking).
                     *leaves += 1;
-                    if *leaves > MAX_JSON_LEAVES { return Err(IngestError::JsonTooComplex); }
+                    if *leaves > MAX_JSON_LEAVES {
+                        return Err(IngestError::JsonTooComplex);
+                    }
                     // Use typed category when value is a string and matches a known pattern (D3).
                     let cat = if let Value::String(ref s) = v_inner {
                         typed_category(s).unwrap_or(RedactedCategory::GenericSecret)
@@ -58,7 +54,9 @@ fn walk(v: Value, depth: usize, leaves: &mut usize, r: &mut RedactionReceipt) ->
         }
         Value::Array(arr) => {
             let mut out = Vec::with_capacity(arr.len());
-            for item in arr { out.push(walk(item, depth + 1, leaves, r)?); }
+            for item in arr {
+                out.push(walk(item, depth + 1, leaves, r)?);
+            }
             Ok(Value::Array(out))
         }
         other => Ok(other),
@@ -66,11 +64,14 @@ fn walk(v: Value, depth: usize, leaves: &mut usize, r: &mut RedactionReceipt) ->
 }
 
 pub fn redact_secrets(payload: Value) -> Result<(Value, RedactionReceipt), IngestError> {
-    let mut receipt = RedactionReceipt { event_id: String::new(), categories: vec![], field_count: 0 };
-    let scrubbed = walk(payload, 0, &mut 0, &mut receipt)
-        .map_err(|e| match e {
-            IngestError::JsonTooDeep | IngestError::JsonTooComplex => e,
-            other => IngestError::RedactionFailed(other.to_string()),
-        })?;
+    let mut receipt = RedactionReceipt {
+        event_id: String::new(),
+        categories: vec![],
+        field_count: 0,
+    };
+    let scrubbed = walk(payload, 0, &mut 0, &mut receipt).map_err(|e| match e {
+        IngestError::JsonTooDeep | IngestError::JsonTooComplex => e,
+        other => IngestError::RedactionFailed(other.to_string()),
+    })?;
     Ok((scrubbed, receipt))
 }

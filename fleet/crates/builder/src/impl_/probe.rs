@@ -6,11 +6,14 @@
 use super::outcome::{LaneOutcome, NoAmbientProbeResult};
 use super::request::{SpawnError, SpawnRequest};
 use super::{join, spawn, CliAdapter, MergePolicy, Role};
-use types::TaskId;
 use std::path::Path;
 use std::time::Duration;
+use types::TaskId;
 
-pub fn probe_no_ambient(adapter: CliAdapter, repo: &Path) -> Result<NoAmbientProbeResult, SpawnError> {
+pub fn probe_no_ambient(
+    adapter: CliAdapter,
+    repo: &Path,
+) -> Result<NoAmbientProbeResult, SpawnError> {
     let request = SpawnRequest {
         repo: repo.to_path_buf(),
         role: Role::Builder,
@@ -28,7 +31,9 @@ pub fn probe_no_ambient(adapter: CliAdapter, repo: &Path) -> Result<NoAmbientPro
         LaneOutcome::EnvironmentFault { detail } => NoAmbientProbeResult::CleanlyBlocked { detail },
         LaneOutcome::Refused { reason } => NoAmbientProbeResult::CleanlyBlocked { detail: reason },
         LaneOutcome::Done { body, .. } => NoAmbientProbeResult::UnexpectedSuccess {
-            detail: format!("adapter {adapter:?} produced Done with no ambient credentials: {body}"),
+            detail: format!(
+                "adapter {adapter:?} produced Done with no ambient credentials: {body}"
+            ),
             evidence_paths: vec![sandbox_evidence],
         },
     })

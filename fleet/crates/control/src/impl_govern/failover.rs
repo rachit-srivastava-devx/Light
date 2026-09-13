@@ -6,8 +6,8 @@
 use std::collections::BTreeSet;
 use std::time::SystemTime;
 
-use router::{decide, Decision, RuntimeState, TaskClass, ORDER};
 use ::types::{Role, Tokens};
+use router::{decide, Decision, RuntimeState, TaskClass, ORDER};
 
 use super::store::{CooldownStore, MeterStore};
 use super::types::MeterIoError;
@@ -36,7 +36,9 @@ pub fn next_provider(
     let mut cooldown = BTreeSet::new();
     let mut checked = BTreeSet::new();
     for candidate in ORDER {
-        if checked.insert(candidate.adapter) && cooldowns.is_cooling_down(candidate.adapter, inputs.now)? {
+        if checked.insert(candidate.adapter)
+            && cooldowns.is_cooling_down(candidate.adapter, inputs.now)?
+        {
             cooldown.insert(candidate.adapter.to_string());
         }
     }
@@ -49,5 +51,10 @@ pub fn next_provider(
         preference: ORDER.iter().map(|c| c.id).collect(),
     };
 
-    Ok(decide(inputs.role, inputs.class, inputs.builder_resolved_model, &runtime))
+    Ok(decide(
+        inputs.role,
+        inputs.class,
+        inputs.builder_resolved_model,
+        &runtime,
+    ))
 }

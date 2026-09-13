@@ -1,6 +1,6 @@
 //! Injected gate execution port — the only IO boundary for gate dispatch.
-use std::path::Path;
 use crate::{GateResult, GateSpec, PostError};
+use std::path::Path;
 
 /// Injected boundary: execute one gate against the integrated repo tree.
 ///

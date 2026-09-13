@@ -1,6 +1,6 @@
+use crate::{CliCommand, CliError};
 use clap::{Parser, Subcommand};
 use std::ffi::OsString;
-use crate::{CliCommand, CliError};
 
 const MAX_BYTES: usize = 65536;
 

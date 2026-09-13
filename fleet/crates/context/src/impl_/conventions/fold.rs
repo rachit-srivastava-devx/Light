@@ -4,21 +4,22 @@
 //! preferentially keeps the nearest/most-specific doc and trims the lowest-precedence one(s) when
 //! the budget is tight, and every trim is recorded rather than silently dropped.
 
-use super::fold_types::{ConventionFold, PlacedConventionDoc, TrimmedConventionDoc};
-use super::types::{ConventionDoc, ConventionSet, DocKind};
 use super::super::compact::compact_to_budget;
 use super::super::error::ContextError;
 use super::super::tokens::TokenModel;
 use super::super::types::{ScoredChunk, SymbolId};
-use types::Tokens;
+use super::fold_types::{ConventionFold, PlacedConventionDoc, TrimmedConventionDoc};
+use super::types::{ConventionDoc, ConventionSet, DocKind};
 use std::collections::BTreeMap;
+use types::Tokens;
 
 pub fn fold_conventions(
     set: &ConventionSet,
     budget: Tokens,
     model: TokenModel,
 ) -> Result<ConventionFold, ContextError> {
-    let by_id: BTreeMap<SymbolId, &ConventionDoc> = set.docs.iter().map(|d| (doc_id(d), d)).collect();
+    let by_id: BTreeMap<SymbolId, &ConventionDoc> =
+        set.docs.iter().map(|d| (doc_id(d), d)).collect();
     let candidates: Vec<ScoredChunk> = set
         .docs
         .iter()

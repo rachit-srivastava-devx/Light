@@ -23,13 +23,27 @@ pub(crate) fn oracle_independence_is_complete(value: &Value) -> bool {
     object.len() == 6
         && object.get("o1_author").and_then(Value::as_str).is_some()
         && object.get("o2_author").and_then(Value::as_str).is_some()
-        && object.get("o1_hash").and_then(Value::as_str).is_some_and(is_valid_artifact_id)
-        && object.get("o2_hash").and_then(Value::as_str).is_some_and(is_valid_artifact_id)
+        && object
+            .get("o1_hash")
+            .and_then(Value::as_str)
+            .is_some_and(is_valid_artifact_id)
+        && object
+            .get("o2_hash")
+            .and_then(Value::as_str)
+            .is_some_and(is_valid_artifact_id)
         && object.get("distinct") == Some(&Value::Bool(true))
-        && object.get("quadrant").and_then(Value::as_str).is_some_and(|quadrant| {
-            ["ACCEPT", "ORACLE_INADEQUATE", "ORACLE_OVERCONSTRAINED", "BUILDER_FAULT"]
+        && object
+            .get("quadrant")
+            .and_then(Value::as_str)
+            .is_some_and(|quadrant| {
+                [
+                    "ACCEPT",
+                    "ORACLE_INADEQUATE",
+                    "ORACLE_OVERCONSTRAINED",
+                    "BUILDER_FAULT",
+                ]
                 .contains(&quadrant)
-        })
+            })
 }
 
 pub(crate) fn blind_suite_is_complete(value: &Value) -> bool {
@@ -37,8 +51,14 @@ pub(crate) fn blind_suite_is_complete(value: &Value) -> bool {
         return false;
     };
     object.len() == 5
-        && object.get("in_worktree_tree").and_then(Value::as_bool).is_some()
-        && object.get("in_object_store").and_then(Value::as_bool).is_some()
+        && object
+            .get("in_worktree_tree")
+            .and_then(Value::as_bool)
+            .is_some()
+        && object
+            .get("in_object_store")
+            .and_then(Value::as_bool)
+            .is_some()
         && object.get("in_env").and_then(Value::as_bool).is_some()
         && object.get("on_any_fd").and_then(Value::as_bool).is_some()
         && object.get("suite_hash").and_then(Value::as_str).is_some()
@@ -47,5 +67,8 @@ pub(crate) fn blind_suite_is_complete(value: &Value) -> bool {
 /// Mirrors `main.rs`'s `valid_artifact_id`: two lines of format checking, not a second
 /// attestation validator.
 pub(crate) fn is_valid_artifact_id(id: &str) -> bool {
-    id.len() == 64 && id.bytes().all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+    id.len() == 64
+        && id
+            .bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
 }

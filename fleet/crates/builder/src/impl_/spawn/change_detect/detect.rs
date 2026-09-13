@@ -19,23 +19,39 @@ pub(super) fn lane_changed(worktree: &Path, base_commit: &str) -> Result<bool, C
 }
 
 fn dirty_file_count(worktree: &Path) -> Result<usize, ChangeDetectError> {
-    let output = git(worktree, &["status", "--porcelain", "--untracked-files=all"])
-        .map_err(|detail| ChangeDetectError::StatusUnavailable { path: worktree.to_path_buf(), detail })?;
+    let output = git(
+        worktree,
+        &["status", "--porcelain", "--untracked-files=all"],
+    )
+    .map_err(|detail| ChangeDetectError::StatusUnavailable {
+        path: worktree.to_path_buf(),
+        detail,
+    })?;
     if !output.status.success() {
         let detail = String::from_utf8_lossy(&output.stderr).into_owned();
-        return Err(ChangeDetectError::StatusUnavailable { path: worktree.to_path_buf(), detail });
+        return Err(ChangeDetectError::StatusUnavailable {
+            path: worktree.to_path_buf(),
+            detail,
+        });
     }
     let stdout = String::from_utf8_lossy(&output.stdout);
     Ok(stdout.lines().filter(|l| !l.trim().is_empty()).count())
 }
 
 fn current_head(worktree: &Path) -> Result<String, ChangeDetectError> {
-    let output = git(worktree, &["rev-parse", "HEAD"])
-        .map_err(|detail| ChangeDetectError::HeadUnreadable { path: worktree.to_path_buf(), detail })?;
+    let output = git(worktree, &["rev-parse", "HEAD"]).map_err(|detail| {
+        ChangeDetectError::HeadUnreadable {
+            path: worktree.to_path_buf(),
+            detail,
+        }
+    })?;
     let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
     if !output.status.success() || sha.is_empty() {
         let detail = String::from_utf8_lossy(&output.stderr).into_owned();
-        return Err(ChangeDetectError::HeadUnreadable { path: worktree.to_path_buf(), detail });
+        return Err(ChangeDetectError::HeadUnreadable {
+            path: worktree.to_path_buf(),
+            detail,
+        });
     }
     Ok(sha)
 }
@@ -48,5 +64,11 @@ const GIT_OVERRIDE_ENV: &str = "FLEET_WORKER_TEST_CHANGE_DETECT_GIT";
 
 fn git(worktree: &Path, args: &[&str]) -> Result<std::process::Output, String> {
     let program = std::env::var(GIT_OVERRIDE_ENV).unwrap_or_else(|_| "git".to_string());
-    Command::new(program).arg("-C").arg(worktree).args(args).stdin(Stdio::null()).output().map_err(|e| e.to_string())
+    Command::new(program)
+        .arg("-C")
+        .arg(worktree)
+        .args(args)
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|e| e.to_string())
 }

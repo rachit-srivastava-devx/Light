@@ -1,13 +1,24 @@
-use crate::{IntentError, IntentInput, IntentSpec, ModelProposal, PolicySnapshot};
 use crate::gate::independent_kind;
+use crate::{IntentError, IntentInput, IntentSpec, ModelProposal, PolicySnapshot};
 
 const ALLOWED_KINDS: &[&str] = &[
-    "answer", "investigate", "review-only", "small-change", "feature",
-    "refactor", "incident", "multi-repo-change", "research-design",
+    "answer",
+    "investigate",
+    "review-only",
+    "small-change",
+    "feature",
+    "refactor",
+    "incident",
+    "multi-repo-change",
+    "research-design",
 ];
 
 const AUTHORITY_FIELDS: &[&str] = &[
-    "actor_id", "approval", "settlement", "authorization", "time",
+    "actor_id",
+    "approval",
+    "settlement",
+    "authorization",
+    "time",
 ];
 
 pub fn validate(
@@ -44,10 +55,21 @@ pub fn validate(
 fn conservative(model: &str, det: &str) -> String {
     let rank = |k: &str| -> u8 {
         match k {
-            "answer" => 0, "review-only" => 1, "investigate" => 2,
-            "small-change" => 3, "research-design" => 4, "refactor" => 5,
-            "feature" => 6, "incident" => 7, "multi-repo-change" => 8, _ => 9,
+            "answer" => 0,
+            "review-only" => 1,
+            "investigate" => 2,
+            "small-change" => 3,
+            "research-design" => 4,
+            "refactor" => 5,
+            "feature" => 6,
+            "incident" => 7,
+            "multi-repo-change" => 8,
+            _ => 9,
         }
     };
-    if rank(det) <= rank(model) { det.to_string() } else { model.to_string() }
+    if rank(det) <= rank(model) {
+        det.to_string()
+    } else {
+        model.to_string()
+    }
 }

@@ -30,10 +30,15 @@ impl FileCooldownStore {
 
     fn write(&self, table: &BTreeMap<String, (u64, u64)>) -> Result<(), MeterIoError> {
         let tmp = self.path.with_extension("tmp");
-        let text: String = table.iter().map(|(a, (s, d))| format!("{a}\t{s}\t{d}\n")).collect();
+        let text: String = table
+            .iter()
+            .map(|(a, (s, d))| format!("{a}\t{s}\t{d}\n"))
+            .collect();
         let mut file = fs::File::create(&tmp).map_err(|e| MeterIoError(format!("create: {e}")))?;
-        file.write_all(text.as_bytes()).map_err(|e| MeterIoError(format!("write: {e}")))?;
-        file.sync_all().map_err(|e| MeterIoError(format!("sync: {e}")))?;
+        file.write_all(text.as_bytes())
+            .map_err(|e| MeterIoError(format!("write: {e}")))?;
+        file.sync_all()
+            .map_err(|e| MeterIoError(format!("sync: {e}")))?;
         drop(file);
         fs::rename(&tmp, &self.path).map_err(|e| MeterIoError(format!("rename: {e}")))
     }
@@ -41,11 +46,16 @@ impl FileCooldownStore {
 
 fn parse_row(line: &str) -> Option<(String, (u64, u64))> {
     let mut f = line.split('\t');
-    Some((f.next()?.to_string(), (f.next()?.parse().ok()?, f.next()?.parse().ok()?)))
+    Some((
+        f.next()?.to_string(),
+        (f.next()?.parse().ok()?, f.next()?.parse().ok()?),
+    ))
 }
 
 fn epoch_secs(t: SystemTime) -> u64 {
-    t.duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+    t.duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 impl CooldownStore for FileCooldownStore {
@@ -59,6 +69,8 @@ impl CooldownStore for FileCooldownStore {
 
     fn is_cooling_down(&self, adapter: &str, now: SystemTime) -> Result<bool, MeterIoError> {
         let table = self.read()?;
-        Ok(table.get(adapter).is_some_and(|(at, dur)| epoch_secs(now) < at + dur))
+        Ok(table
+            .get(adapter)
+            .is_some_and(|(at, dur)| epoch_secs(now) < at + dur))
     }
 }

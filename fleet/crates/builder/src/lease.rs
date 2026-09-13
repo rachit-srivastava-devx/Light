@@ -36,10 +36,7 @@ fn validate_scope(paths: &[String], write_scope: &[String]) -> Result<(), Builde
 /// Returns `Err(ScopeViolation)` when:
 /// - `changed` is empty (no-op worker stub)
 /// - any entry in `changed` falls outside `write_scope`
-pub(crate) fn validate_observation(
-    o: &Observation,
-    lease: &Lease,
-) -> Result<(), BuilderError> {
+pub(crate) fn validate_observation(o: &Observation, lease: &Lease) -> Result<(), BuilderError> {
     if o.changed.is_empty() {
         return Err(BuilderError::ScopeViolation(
             "empty write set is not a valid candidate".to_string(),

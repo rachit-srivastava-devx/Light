@@ -14,7 +14,10 @@ pub fn parse_response(body: &Value) -> Result<RawVerdict, ModelError> {
         .map_err(|e| ModelError::new(format!("tool_call arguments not valid JSON: {e}")))?;
     Ok(RawVerdict {
         label: str_field(&args, "label"),
-        confidence_pct: args.get("confidence_pct").and_then(Value::as_u64).map(|v| v as u8),
+        confidence_pct: args
+            .get("confidence_pct")
+            .and_then(Value::as_u64)
+            .map(|v| v as u8),
         because: str_field(&args, "because"),
         abstain_why: str_field(&args, "abstain_why"),
     })

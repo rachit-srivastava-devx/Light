@@ -11,7 +11,9 @@ pub struct OpenQuestions(Vec<Question>);
 pub enum OpenQuestionsError {
     #[error("cannot construct OpenQuestions with 0 items -- use Assessment::Clear instead")]
     Empty,
-    #[error("cannot construct OpenQuestions with more than 4 items ({0} given) -- caller must cap")]
+    #[error(
+        "cannot construct OpenQuestions with more than 4 items ({0} given) -- caller must cap"
+    )]
     TooMany(usize),
 }
 

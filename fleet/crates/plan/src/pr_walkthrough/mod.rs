@@ -9,5 +9,5 @@ mod types;
 
 pub use build::build_pr_walkthrough;
 pub use error::PrWalkthroughError;
-pub use types::{AttestationSummary, DiffSummary, FileChange, PrWalkthrough, VerifiedItem};
 pub use types::AcceptanceResult;
+pub use types::{AttestationSummary, DiffSummary, FileChange, PrWalkthrough, VerifiedItem};

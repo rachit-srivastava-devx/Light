@@ -31,7 +31,10 @@ impl GraphStore {
         )?;
         tx.execute("DELETE FROM edges WHERE project_id=?1", params![project_id])?;
         tx.execute("DELETE FROM files WHERE project_id=?1", params![project_id])?;
-        tx.execute("DELETE FROM symbols WHERE project_id=?1", params![project_id])?;
+        tx.execute(
+            "DELETE FROM symbols WHERE project_id=?1",
+            params![project_id],
+        )?;
         for file in &batch.files {
             tx.execute(
                 "INSERT INTO files(project_id, path, language, digest) VALUES(?1, ?2, ?3, ?4)",

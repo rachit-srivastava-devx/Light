@@ -6,10 +6,15 @@ use crate::types::Refusal;
 
 /// Walk `ORDER` (equivalently `runtime.preference`'s committed order) and take the first id
 /// both listed in `preference` and still alive after stage 5.
-pub(crate) fn pick(candidates: &[CandidateSpec], preference: &[&'static str]) -> Option<CandidateSpec> {
+pub(crate) fn pick(
+    candidates: &[CandidateSpec],
+    preference: &[&'static str],
+) -> Option<CandidateSpec> {
     ORDER
         .iter()
-        .find(|ordered| preference.contains(&ordered.id) && candidates.iter().any(|c| c.id == ordered.id))
+        .find(|ordered| {
+            preference.contains(&ordered.id) && candidates.iter().any(|c| c.id == ordered.id)
+        })
         .copied()
 }
 

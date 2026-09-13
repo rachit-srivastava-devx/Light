@@ -14,9 +14,9 @@ use super::stage::PipelineStage;
 use super::stage_loop::run_through_merge;
 use super::stages;
 use super::step_log::StepLog;
-use types::{NodeId, Role, TaskId};
 use std::path::Path;
 use std::time::Instant;
+use types::{NodeId, Role, TaskId};
 
 /// Advance one pipeline run through every stage in order, skipping any stage the step log
 /// already marked done (crash-resume) and always running `Teach` last regardless of outcome.
@@ -28,7 +28,13 @@ pub fn run_pipeline(
     verify_gates: &[verify::GateSpec],
 ) -> PipelineOutcome {
     let log = StepLog::open(state_dir, task.as_str());
-    let ctx = StageCtx { state_dir, repo, task: &task, runtime, verify_gates };
+    let ctx = StageCtx {
+        state_dir,
+        repo,
+        task: &task,
+        runtime,
+        verify_gates,
+    };
     let mut records = RunRecords::new();
     let result = run_through_merge(&log, &ctx, &mut records);
 

@@ -9,13 +9,13 @@ use super::ledger_events;
 use super::records::{label, GateRecord};
 use crate::dispatch::verify_ports::{resolve_gates_root, RealRunner};
 use crate::dispatch::which_probe::WhichProbe;
-use crate::print::human_stream::emit;
-use crate::print::render_event::Event;
-use crate::print::style::Style;
-use crate::print::verify_report::line_for;
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
+use print::verify_report::line_for;
+use std::path::Path;
 use types::ReceiptEvent;
 use verify::{GateSpec, Verdict};
-use std::path::Path;
 
 /// `repo` is the same `--repo` the pipeline was invoked with (`StageCtx::repo`) -- the S1 fix:
 /// this stage used to run every gate against the `fleet` process's own cwd instead of the repo
@@ -38,7 +38,10 @@ pub fn verify(
         }
     }
     if !failed.is_empty() {
-        return Err(PipelineError::Verify(format!("gate(s) failed: {}", failed.join("; "))));
+        return Err(PipelineError::Verify(format!(
+            "gate(s) failed: {}",
+            failed.join("; ")
+        )));
     }
     Ok(())
 }
@@ -49,7 +52,16 @@ pub fn verify(
 fn report_gate(state_dir: &Path, r: &verify::GateResult, out: &mut Vec<GateRecord>) {
     let event = line_for(r);
     emit(&event, &Style::detect());
-    let Event::GateVerdict { id, outcome, checked, total, detail } = &event else { return };
+    let Event::GateVerdict {
+        id,
+        outcome,
+        checked,
+        total,
+        detail,
+    } = &event
+    else {
+        return;
+    };
     let body = serde_json::json!({
         "id": id, "outcome": format!("{outcome:?}"), "checked": checked, "total": total, "detail": detail,
     });
@@ -60,6 +72,12 @@ fn report_gate(state_dir: &Path, r: &verify::GateResult, out: &mut Vec<GateRecor
         checked: *checked,
         total: *total,
         detail: detail.clone(),
-        env_fault: matches!(r.verdict, Verdict::Skip { was_required: true, .. }),
+        env_fault: matches!(
+            r.verdict,
+            Verdict::Skip {
+                was_required: true,
+                ..
+            }
+        ),
     });
 }

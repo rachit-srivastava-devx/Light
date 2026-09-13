@@ -15,10 +15,15 @@ pub enum VerdictName {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum VerdictDecision {
     Accept,
-    Revise { reentered_state: &'static str },
+    Revise {
+        reentered_state: &'static str,
+    },
     Reject,
     /// The retry ceiling was already hit when a `Revise` was requested (`review.sh:153-159`).
-    Escalate { attempts: u32, limit: u32 },
+    Escalate {
+        attempts: u32,
+        limit: u32,
+    },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
@@ -59,9 +64,13 @@ pub fn verdict_decision(
                 return Ok(VerdictDecision::Escalate { attempts, limit });
             }
             if reenter_state != "plan" {
-                return Err(VerdictRefusal::ReenterStateUnsupported(reenter_state.to_string()));
+                return Err(VerdictRefusal::ReenterStateUnsupported(
+                    reenter_state.to_string(),
+                ));
             }
-            Ok(VerdictDecision::Revise { reentered_state: "plan" })
+            Ok(VerdictDecision::Revise {
+                reentered_state: "plan",
+            })
         }
     }
 }

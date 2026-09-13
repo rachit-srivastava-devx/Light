@@ -12,7 +12,10 @@ pub(crate) fn verify_removal(path: &Path) -> Result<String, RollbackError> {
     }
 }
 
-pub fn verify_action(result: &Result<RollbackReceipt, RollbackError>, expected_status: &str) -> bool {
+pub fn verify_action(
+    result: &Result<RollbackReceipt, RollbackError>,
+    expected_status: &str,
+) -> bool {
     match result {
         Ok(r) => r.status == expected_status,
         Err(_) => false,

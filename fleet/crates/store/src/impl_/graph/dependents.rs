@@ -1,7 +1,7 @@
 //! `dependents()`: the recursive-CTE "who transitively calls this" query, `graph.rs:1202-1249`.
 
-use rusqlite::types::Value as SqlValue;
 use rusqlite::params_from_iter;
+use rusqlite::types::Value as SqlValue;
 
 use super::batch::DependentRecord;
 use super::types::GraphError;
@@ -50,6 +50,7 @@ impl GraphStore {
                 depth: row.get::<_, i64>(6)? as u64,
             })
         })?;
-        rows.collect::<Result<Vec<_>, _>>().map_err(GraphError::from)
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(GraphError::from)
     }
 }

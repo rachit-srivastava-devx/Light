@@ -10,7 +10,11 @@ type Counts = Arc<Mutex<HashMap<String, u32>>>;
 
 fn counting_step(counts: Counts) -> super::UnitStep {
     Arc::new(move |unit| {
-        *counts.lock().unwrap_or_else(|p| p.into_inner()).entry(unit.to_string()).or_insert(0) += 1;
+        *counts
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .entry(unit.to_string())
+            .or_insert(0) += 1;
         Ok(())
     })
 }
@@ -25,21 +29,50 @@ async fn a_restart_never_replans_or_rebuilds_an_already_finished_unit() {
     // the run stopping (a real crash would look identical from `UnitLog`'s point of view: some
     // units marked Built on disk, nothing else).
     let first = vec!["1".to_string(), "2".to_string()];
-    run_plan_ahead(first, dir.path().to_path_buf(), "resume-run", 1, counting_step(plan_counts.clone()), counting_step(build_counts.clone()))
-        .await
-        .unwrap();
+    run_plan_ahead(
+        first,
+        dir.path().to_path_buf(),
+        "resume-run",
+        1,
+        counting_step(plan_counts.clone()),
+        counting_step(build_counts.clone()),
+    )
+    .await
+    .unwrap();
 
     // "Run 2": a fresh call (new channels, new tokio tasks -- the same shape a restarted process
     // would take) against the SAME state_dir/run_id, now with two more units to do.
-    let second = vec!["1".to_string(), "2".to_string(), "3".to_string(), "4".to_string()];
-    run_plan_ahead(second, dir.path().to_path_buf(), "resume-run", 1, counting_step(plan_counts.clone()), counting_step(build_counts.clone()))
-        .await
-        .unwrap();
+    let second = vec![
+        "1".to_string(),
+        "2".to_string(),
+        "3".to_string(),
+        "4".to_string(),
+    ];
+    run_plan_ahead(
+        second,
+        dir.path().to_path_buf(),
+        "resume-run",
+        1,
+        counting_step(plan_counts.clone()),
+        counting_step(build_counts.clone()),
+    )
+    .await
+    .unwrap();
 
     let plans = plan_counts.lock().unwrap();
     let builds = build_counts.lock().unwrap();
     for unit in ["1", "2", "3", "4"] {
-        assert_eq!(plans.get(unit).copied().unwrap_or(0), 1, "unit {unit} was planned {:?} times", plans.get(unit));
-        assert_eq!(builds.get(unit).copied().unwrap_or(0), 1, "unit {unit} was built {:?} times", builds.get(unit));
+        assert_eq!(
+            plans.get(unit).copied().unwrap_or(0),
+            1,
+            "unit {unit} was planned {:?} times",
+            plans.get(unit)
+        );
+        assert_eq!(
+            builds.get(unit).copied().unwrap_or(0),
+            1,
+            "unit {unit} was built {:?} times",
+            builds.get(unit)
+        );
     }
 }

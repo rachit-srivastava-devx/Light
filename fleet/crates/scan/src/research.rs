@@ -26,8 +26,7 @@ impl Probe for ResearchProbe<'_> {
                 probe: ProbeKind::Research,
                 text: "No external reference found for this requirement -- is it well-known?"
                     .into(),
-                why: "External research returned nothing to ground the requirement's claim"
-                    .into(),
+                why: "External research returned nothing to ground the requirement's claim".into(),
                 gap: GapSeverity::Low,
                 evidence: None,
             }]);

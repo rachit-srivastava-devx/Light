@@ -7,7 +7,7 @@
 //! `run_records.rs` holds the accumulator that gathers them.
 
 use super::stage::PipelineStage;
-use crate::print::render_event::Outcome;
+use print::render_event::Outcome;
 
 /// One stage's outcome. `outcome` is `"pass"`, `"fail"`, or `"resumed"` -- the third is a stage
 /// the step log had already marked done, so this invocation ran nothing for it.

@@ -1,7 +1,7 @@
 //! `LaneOutcome`/`NoAmbientProbeResult` -- results read off the fd-3 channel. Data only.
 
-use types::Tokens;
 use std::path::PathBuf;
+use types::Tokens;
 
 /// The authoritative outcome of one lane, read off fd-3. Stdout/stderr are NEVER consulted.
 #[derive(Clone, Debug)]

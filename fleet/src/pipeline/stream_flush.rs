@@ -7,9 +7,9 @@
 
 use super::ledger_events;
 use super::ledger_log_source::LedgerLogSource;
-use crate::print::human_stream::emit;
-use crate::print::render_event::Event;
-use crate::print::style::Style;
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
 use notify::sinks::FileSink;
 use notify::{CursorStore, FileCursorStore, LogSource, Sink, SinkError, StreamEvent};
 use std::path::Path;
@@ -19,13 +19,21 @@ pub const FLEET_STREAM_DIR: &str = "FLEET_STREAM_DIR";
 /// The one call site `dispatch::run_cmd` invokes after every pipeline run. Reads the env var
 /// itself so every caller gets the same off-by-default gate for free.
 pub fn maybe_flush(state_dir: &Path) {
-    let Ok(dir) = std::env::var(FLEET_STREAM_DIR) else { return };
+    let Ok(dir) = std::env::var(FLEET_STREAM_DIR) else {
+        return;
+    };
     if let Err(reason) = flush(state_dir, Path::new(&dir)) {
         // Name the directory AND the env var that named it: the failure used to surface as a bare
         // `No such file or directory (os error 2)` with no path in it, which reads as noise rather
         // than as "your FLEET_STREAM_DIR could not be written".
         let text = format!("{FLEET_STREAM_DIR}={dir}: {reason}");
-        emit(&Event::Note { source: "fleet-stream".to_string(), text }, &Style::detect());
+        emit(
+            &Event::Note {
+                source: "fleet-stream".to_string(),
+                text,
+            },
+            &Style::detect(),
+        );
     }
 }
 

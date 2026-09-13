@@ -4,7 +4,9 @@
 
 use super::error::PrWalkthroughError;
 use super::risk::{reviewer_focus, riskiest_part};
-use super::types::{AcceptanceResult, AttestationSummary, DiffSummary, PrWalkthrough, VerifiedItem};
+use super::types::{
+    AcceptanceResult, AttestationSummary, DiffSummary, PrWalkthrough, VerifiedItem,
+};
 use crate::ready_gate::validate_module_brief;
 use crate::walkthrough::extract::extract_module_summary;
 use serde_json::Value;
@@ -25,9 +27,12 @@ pub fn build_pr_walkthrough(
     if !violations.is_empty() {
         return Err(PrWalkthroughError::InvalidModuleBrief { violations });
     }
-    let summary = extract_module_summary(module_brief).ok_or(PrWalkthroughError::IncompleteModuleBrief)?;
+    let summary =
+        extract_module_summary(module_brief).ok_or(PrWalkthroughError::IncompleteModuleBrief)?;
 
-    let (added, removed) = diff.files.iter().fold((0u32, 0u32), |(a, r), f| (a + f.lines_added, r + f.lines_removed));
+    let (added, removed) = diff.files.iter().fold((0u32, 0u32), |(a, r), f| {
+        (a + f.lines_added, r + f.lines_removed)
+    });
     let what_changed = format!(
         "{}: {} file(s) changed, +{added}/-{removed} lines",
         summary.node_id,
@@ -40,13 +45,26 @@ pub fn build_pr_walkthrough(
     let verified = acceptance_results
         .iter()
         .filter(|a| a.passed)
-        .map(|a| VerifiedItem { check_name: a.check_name.clone(), detail: a.detail.clone() })
+        .map(|a| VerifiedItem {
+            check_name: a.check_name.clone(),
+            detail: a.detail.clone(),
+        })
         .collect();
     let not_verified = acceptance_results
         .iter()
         .filter(|a| !a.passed)
-        .map(|a| VerifiedItem { check_name: a.check_name.clone(), detail: a.detail.clone() })
+        .map(|a| VerifiedItem {
+            check_name: a.check_name.clone(),
+            detail: a.detail.clone(),
+        })
         .collect();
 
-    Ok(PrWalkthrough { what_changed, why, riskiest_part: riskiest, verified, not_verified, reviewer_focus: focus })
+    Ok(PrWalkthrough {
+        what_changed,
+        why,
+        riskiest_part: riskiest,
+        verified,
+        not_verified,
+        reviewer_focus: focus,
+    })
 }

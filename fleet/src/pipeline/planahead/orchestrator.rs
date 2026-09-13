@@ -52,8 +52,12 @@ pub async fn run_plan_ahead(
     let planner = tokio::spawn(plan_units(units, Arc::clone(&log), tx, plan_fn));
     let builder = tokio::spawn(build_units(Arc::clone(&log), rx, build_fn));
 
-    let plan_result = planner.await.map_err(|e| PlanAheadError::WorkerPanicked(e.to_string()))?;
-    let build_result = builder.await.map_err(|e| PlanAheadError::WorkerPanicked(e.to_string()))?;
+    let plan_result = planner
+        .await
+        .map_err(|e| PlanAheadError::WorkerPanicked(e.to_string()))?;
+    let build_result = builder
+        .await
+        .map_err(|e| PlanAheadError::WorkerPanicked(e.to_string()))?;
     plan_result?;
     build_result
 }

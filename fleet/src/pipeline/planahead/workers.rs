@@ -23,7 +23,9 @@ pub(super) async fn plan_units(
         }
         // Blocks here (backpressure) once `queue_capacity` planned units are awaiting build --
         // this is the overlap point: everything above already ran while the builder was busy.
-        tx.send(unit).await.map_err(|_| PlanAheadError::BuildSideGone)?;
+        tx.send(unit)
+            .await
+            .map_err(|_| PlanAheadError::BuildSideGone)?;
     }
     Ok(())
 }
@@ -50,7 +52,13 @@ async fn run_step(step: &UnitStep, unit: &str, phase: &'static str) -> Result<()
         .await
         .map_err(|e| PlanAheadError::WorkerPanicked(format!("{phase}: {e}")))?;
     outcome.map_err(|message| match phase {
-        "plan" => PlanAheadError::Plan { unit: unit.to_string(), message },
-        _ => PlanAheadError::Build { unit: unit.to_string(), message },
+        "plan" => PlanAheadError::Plan {
+            unit: unit.to_string(),
+            message,
+        },
+        _ => PlanAheadError::Build {
+            unit: unit.to_string(),
+            message,
+        },
     })
 }

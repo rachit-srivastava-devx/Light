@@ -9,7 +9,9 @@ pub fn pack(
     reserve: u64,
     counter: &dyn TokenCounter,
 ) -> Result<(Vec<EvidenceRef>, Vec<String>), ContextError> {
-    let available = budget.checked_sub(reserve).ok_or(ContextError::BudgetExceeded)?;
+    let available = budget
+        .checked_sub(reserve)
+        .ok_or(ContextError::BudgetExceeded)?;
     // mandatory tokens are always included; reject if they alone overflow
     let mandatory_tokens: u64 = mandatory.iter().map(|s| counter.count(&s.label)).sum();
     if mandatory_tokens > available {
@@ -28,7 +30,9 @@ pub fn pack(
             continue; // dedup
         }
         let tokens = counter.count(&ev.content);
-        let new_used = used.checked_add(tokens).ok_or(ContextError::BudgetExceeded)?;
+        let new_used = used
+            .checked_add(tokens)
+            .ok_or(ContextError::BudgetExceeded)?;
         if new_used <= available {
             used = new_used;
             refs.push(EvidenceRef {

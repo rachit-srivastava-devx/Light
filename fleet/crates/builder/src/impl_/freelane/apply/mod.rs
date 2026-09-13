@@ -32,7 +32,12 @@ pub fn apply(worktree: &Path, reply: &str) -> Result<Vec<PathBuf>, ApplyError> {
     }
     let mut resolved: Vec<(PathBuf, String)> = Vec::with_capacity(fences.len());
     for fence in &fences {
-        let raw = fence.declared_path.as_deref().ok_or(ApplyError::AmbiguousTarget { index: fence.fence_index })?;
+        let raw = fence
+            .declared_path
+            .as_deref()
+            .ok_or(ApplyError::AmbiguousTarget {
+                index: fence.fence_index,
+            })?;
         let target = guard::resolve_target(worktree, fence.fence_index, raw)?;
         resolved.push((target, fence.content.clone()));
     }
