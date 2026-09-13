@@ -5,14 +5,14 @@
 //! A run with no failure has nothing to teach: `teach` is a no-op then, not a fabricated lesson.
 //!
 //! **S2 fix**: the derived `Lesson` used to be bound to `_lesson` and dropped -- computed, never
-//! taught. It is now persisted via `dispatch::memory::record_sow_refusal`, the same real,
+//! taught. It is now persisted via `sow_memory::record_sow_refusal`, the same real,
 //! already-wired `fleet-memory` write path a `sow` refusal uses (`memory/sow.json` under
 //! `state_dir`), rather than inventing a second store. `lesson_text` renders every field so a
 //! reader (human or a later `sow` recall) sees the whole lesson, not just the failing check's id.
 
 use super::event::PipelineError;
 use super::stage::PipelineStage;
-use crate::dispatch::memory::record_sow_refusal;
+use sow_memory::record_sow_refusal;
 use planner::{derive_lesson, Lesson, LessonSource, TaughtOutcome};
 use std::path::Path;
 use types::{NodeId, Role};

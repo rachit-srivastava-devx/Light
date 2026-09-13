@@ -5,9 +5,9 @@
 //! run that would otherwise have succeeded (the append still surfaces on stderr, never silently
 //! swallowed -- see `PRINCIPLES.md` on checks cheaper to fake than to satisfy).
 
-use crate::print::human_stream::emit;
-use crate::print::render_event::Event;
-use crate::print::style::Style;
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
 use serde_json::Value;
 use std::path::Path;
 use store::ledger::LedgerPaths;

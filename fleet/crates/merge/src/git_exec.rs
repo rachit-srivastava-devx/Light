@@ -4,6 +4,7 @@
 //! why: the invariants this crate protects are properties of real git output, so a mock git
 //! would let a bug in the actual invocation slip through untested.
 
+use crate::error::MergeRefusal;
 use std::path::Path;
 use std::process::{Command, Output, Stdio};
 
@@ -37,6 +38,12 @@ pub fn count_lines(stdout: &[u8]) -> usize {
         .lines()
         .filter(|l| !l.trim().is_empty())
         .count()
+}
+
+/// `git rev-parse HEAD`, trimmed. Shared by `merge.rs`'s before/after `MergeOutcome` capture.
+pub fn rev_parse_head(repo: &Path) -> Result<String, MergeRefusal> {
+    let out = run_git(repo, &["rev-parse", "HEAD"]).map_err(MergeRefusal::Spawn)?;
+    Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
 }
 
 /// Dependency-free retry jitter (pid/attempt/timestamp mix), accepted `SystemTime::now()`

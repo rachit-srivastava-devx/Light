@@ -2,9 +2,9 @@
 //! print. The actual admission/settlement arithmetic is `fleet-govern`'s; this only wires args
 //! to it and prints the result.
 
-use crate::cli::args_core::MeterArgs;
+use cli::args_core::MeterArgs;
 use crate::dispatch::error::DispatchError;
-use crate::print::human;
+use print::human;
 use control::FileMeterStore;
 use std::path::Path;
 use types::{LaneId, Tokens};
@@ -30,7 +30,7 @@ pub fn meter(state_dir: &Path, args: MeterArgs) -> Result<(), DispatchError> {
     };
 
     if args.json {
-        crate::print::json::print_pretty(&MeterReport {
+        print::json::print_pretty(&MeterReport {
             reservation: reservation_id,
             settled,
         });

@@ -5,26 +5,17 @@
 use super::denominator::DenominatorResult as D;
 use super::digits::{after, before};
 
+#[path = "parsers_suite.rs"]
+mod parsers_suite;
+#[path = "parsers_scanners.rs"]
+mod parsers_scanners;
+pub use parsers_scanners::{semgrep, trivy};
+pub use parsers_suite::unit_tests;
+
 /// `mutants-gate.sh:106-111` -- `"mutants: caught=%d total=%d floor=%s"`.
 pub fn mutants(stdout: &str, _stderr: &str) -> D {
     match after(stdout, "caught=").zip(after(stdout, "total=")) {
         Some((c, t)) => D::Counted(c, t),
-        None => D::Unparseable,
-    }
-}
-
-/// `semgrep-gate.sh:100-108` -- `"<N> files scanned, <M> findings"`, normalized to clean/scanned.
-pub fn semgrep(stdout: &str, _stderr: &str) -> D {
-    match before(stdout, " files scanned").zip(before(stdout, " findings")) {
-        Some((scanned, findings)) => D::Counted(scanned.saturating_sub(findings), scanned),
-        None => D::Unparseable,
-    }
-}
-
-/// `trivy-gate.sh:61-67` -- `"<total> secret findings across <N> reported targets"`.
-pub fn trivy(stdout: &str, _stderr: &str) -> D {
-    match before(stdout, " secret findings").zip(before(stdout, " reported targets")) {
-        Some((total, targets)) => D::Counted(targets.saturating_sub(total), targets),
         None => D::Unparseable,
     }
 }
@@ -82,47 +73,4 @@ pub fn corpus(stdout: &str, _stderr: &str) -> D {
     }
 }
 
-/// A repo's unit-test suite. Handles three summary shapes so `.fleet/gates.toml` can point at
-/// any of them without a per-repo parser:
-///
-/// * **libtest** (Rust) -- `"test result: ok. N passed; M failed; ..."` (semicolons).
-/// * **Jest / npm test** -- `"Tests:       N passed, T total"` (commas; may include `failed`
-///   and/or `skipped` counts before `passed`).
-/// * **Vitest** -- `"      Tests  N passed (T)"` (parens; may include `failed | passed`).
-///
-/// `libtest` is tried first because its `passed;` / `failed;` markers are unambiguous. `Jest`
-/// then `Vitest` share the `passed` keyword but disambiguate on the trailing punctuation. This
-/// closes FD-8 (posx-first-external-use.md) -- gate result parsers were libtest-shaped, so a
-/// configured Jest/Vitest gate could never publish a denominator.
-pub fn unit_tests(stdout: &str, stderr: &str) -> D {
-    // libtest: "N passed; M failed;" -- always on stdout.
-    if let Some((p, f)) = before(stdout, " passed;").zip(before(stdout, " failed;")) {
-        return D::Counted(p, p + f);
-    }
-    // Jest and Vitest print their summary to STDERR (verified against posx-frido-backend's
-    // `npm run --silent test:unit`). Scan both so the parser does not depend on which stream a
-    // runner happens to use.
-    for stream in [stdout, stderr] {
-        // Jest: `Tests:       N passed, T total`. Anchor on the `Tests:` prefix so a
-        // `Test Suites:` line's own "N passed, M total" is not mistaken for the test count.
-        if let Some(line) = stream
-            .lines()
-            .find(|l| l.trim_start().starts_with("Tests:") && l.contains(" total"))
-        {
-            if let Some((p, t)) = before(line, " passed,").zip(before(line, " total")) {
-                return D::Counted(p, t);
-            }
-        }
-        // Vitest: `Tests  N passed (T)`. Anchor on `Tests ` (with the whitespace, not a colon)
-        // so the earlier `Test Files ` line's own `passed (` is not picked up.
-        if let Some(line) = stream
-            .lines()
-            .find(|l| l.trim_start().starts_with("Tests ") && l.contains(" passed ("))
-        {
-            if let Some((p, t)) = before(line, " passed (").zip(after(line, " passed (")) {
-                return D::Counted(p, t);
-            }
-        }
-    }
-    D::Unparseable
-}
+// `unit_tests` (a repo's own test-runner summary, three formats) lives in `parsers_suite.rs`.

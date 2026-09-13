@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests {
     use crate::interactive::commands::{execute_slash, CommandOutcome};
-    use crate::runtime::ConcurrencyCap;
+    use runtime::ConcurrencyCap;
 
     #[test]
     fn slash_exit_and_quit_return_exit() {

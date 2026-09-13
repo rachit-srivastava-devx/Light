@@ -1,31 +1,8 @@
-use crate::explain::{CandidateId, StageEvidence};
-use crate::policy::PolicySnapshot;
+use crate::{explain::StageEvidence, policy::PolicySnapshot};
 
-#[derive(Clone, Debug)]
-pub struct Candidate {
-    pub id: CandidateId,
-    pub capabilities: Vec<String>,
-    pub historical_cost: Option<u64>,
-    pub provider: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct IntentSpec {
-    pub required_capabilities: Vec<String>,
-    pub task_class: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct CatalogSnapshot {
-    pub candidates: Vec<Candidate>,
-    pub digest: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct BudgetSnapshot {
-    pub limit: u64,
-    pub spent: u64,
-}
+#[path = "filter_types.rs"]
+mod filter_types;
+pub use filter_types::{BudgetSnapshot, Candidate, CatalogSnapshot, IntentSpec};
 
 pub fn capability_filter(
     intent: &IntentSpec,

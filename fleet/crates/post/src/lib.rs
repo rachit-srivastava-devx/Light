@@ -1,4 +1,7 @@
 //! Post-merge verification — exact HEAD revalidation and gate evidence.
+//!
+//! STATUS: `Grant::run_local_tests` is unwired scaffolding matching `docs/LLD/LLD.md` §14 — not
+//! dead code, no caller yet.
 mod port;
 mod receipt;
 mod verify;

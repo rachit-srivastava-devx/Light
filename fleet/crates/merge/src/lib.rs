@@ -23,7 +23,9 @@ mod git_exec;
 mod invariant;
 mod lane_manager;
 mod merge;
+mod merge_outcome;
 mod merge_refusal;
+mod pr;
 mod worktree;
 mod worktree_guard;
 
@@ -31,5 +33,7 @@ pub use cache::invalidate_build_cache;
 pub use error::{MergeRefusal, PrError, WorktreeError};
 pub use invariant::{check_files_changed, check_head_moved, check_stage_nonempty};
 pub use lane_manager::{Lane, LaneManager, LaneOutcome};
-pub use merge::{merge_lane, pr_emit, MergeOutcome};
+pub use merge::merge_lane;
+pub use merge_outcome::MergeOutcome;
+pub use pr::{pr_emit, PrOutcome};
 pub use worktree::{create, remove, unique_name, Worktree};

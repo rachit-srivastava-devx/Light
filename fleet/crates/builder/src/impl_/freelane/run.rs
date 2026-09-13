@@ -11,6 +11,10 @@ use super::error::FreelaneAssetError;
 use super::output::{parse_resolved_model, parse_tokens, FreelaneOutput};
 use super::root::FreelaneRoot;
 
+#[path = "run_interpret.rs"]
+mod run_interpret;
+use run_interpret::interpret;
+
 /// freelane.sh's own exit codes (see `crates/fleet-worker/assets/freelane.sh`): 0 ok, 3 every
 /// configured lane unavailable, 7 a usage error (missing/empty prompt). Any other code, an asset
 /// resolution failure, or a launch failure is folded into the same typed refusal here -- an
@@ -52,29 +56,7 @@ pub fn run(
         .output()
         .map_err(|e| FreelaneRunError(format!("freelane: cannot launch keyless lane: {e}")))?;
 
-    let log = String::from_utf8_lossy(&output.stderr).trim().to_string();
-    match output.status.code() {
-        Some(0) => {}
-        Some(code) => {
-            return Err(FreelaneRunError(if log.is_empty() {
-                format!("freelane: worker exited {code}")
-            } else {
-                log
-            }))
-        }
-        None => {
-            return Err(FreelaneRunError(
-                "freelane: worker terminated without an exit code".into(),
-            ))
-        }
-    }
-    let response = String::from_utf8(output.stdout)
-        .map_err(|_| FreelaneRunError("freelane: response was not UTF-8".into()))?;
-    if response.trim().is_empty() {
-        return Err(FreelaneRunError(
-            "freelane: successful invocation returned an empty response".into(),
-        ));
-    }
+    let (log, response) = interpret(output)?;
     let (applied_files, apply_note) = apply::try_apply(worktree, &response);
     Ok(FreelaneOutput {
         resolved_model: parse_resolved_model(&log),

@@ -1,47 +1,9 @@
-use crate::types::{
-    IngestError, RedactedCategory, RedactionReceipt, MAX_JSON_DEPTH, MAX_JSON_LEAVES,
-};
-use regex::Regex;
+use crate::types::{IngestError, RedactedCategory, RedactionReceipt, MAX_JSON_DEPTH, MAX_JSON_LEAVES};
 use serde_json::{Map, Value};
-use std::sync::OnceLock;
 
-static PATTERNS: OnceLock<Vec<(Regex, RedactedCategory)>> = OnceLock::new();
-
-fn patterns() -> &'static [(Regex, RedactedCategory)] {
-    PATTERNS.get_or_init(|| {
-        vec![
-            (
-                Regex::new(r"sk-[A-Za-z0-9]{20,}").unwrap(),
-                RedactedCategory::ApiKey,
-            ),
-            (
-                Regex::new(r"Bearer [A-Za-z0-9\-._~+/]+=*").unwrap(),
-                RedactedCategory::BearerToken,
-            ),
-            (
-                Regex::new(r"-----BEGIN .{1,30} PRIVATE KEY-----").unwrap(),
-                RedactedCategory::PrivateKey,
-            ),
-        ]
-    })
-}
-
-const SECRET_FIELDS: &[&str] = &[
-    "api_key",
-    "secret",
-    "token",
-    "password",
-    "private_key",
-    "authorization",
-];
-
-/// Match value against typed patterns; returns `None` if no pattern matches.
-fn typed_category(s: &str) -> Option<RedactedCategory> {
-    patterns()
-        .iter()
-        .find(|(p, _)| p.is_match(s))
-        .map(|(_, c)| *c)
-}
+#[path = "redact_patterns.rs"]
+mod redact_patterns;
+use redact_patterns::{typed_category, SECRET_FIELDS};
 
 fn walk(
     v: Value,

@@ -6,9 +6,9 @@
 use super::event::PipelineError;
 use super::ledger_events;
 use super::stage::PipelineStage;
-use crate::print::human_stream::emit;
-use crate::print::render_event::Event;
-use crate::print::style::Style;
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
 use std::path::Path;
 use types::{ReceiptEvent, TaskId};
 

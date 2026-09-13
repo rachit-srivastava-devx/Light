@@ -1,13 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/cli",
     "crates/dag",
     "crates/store",
     "crates/types",
     "crates/router",
     "crates/scan",
-    "crates/probe-business",
-    "crates/probe-learn",
     "crates/plan",
     "crates/merge",
     "crates/intent",
@@ -15,9 +14,6 @@ members = [
     "crates/model-catalog",
     "crates/control",
     "crates/route",
-    "crates/questions",
-    "crates/probe-tech",
-    "crates/probe-research",
     "crates/connectors",
     "crates/context",
     "crates/knowledge",
@@ -35,7 +31,10 @@ members = [
     "crates/post",
     "crates/offline",
     "crates/integrate",
+    "crates/print",
     "crates/rollback",
+    "crates/runtime",
+    "crates/sow-memory",
     "crates/user-cli",
     "src",
 ]

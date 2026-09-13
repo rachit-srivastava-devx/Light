@@ -1,5 +1,8 @@
 //! `dag` — versioned workflow DAG: cycle detection, ready ordering, CAS port.
 //! Blueprint: docs/blueprints-next/dag/BLUEPRINT.md
+//!
+//! STATUS: no workspace member depends on this crate yet, matching `docs/LLD/LLD.md` §7/§8's
+//! not-yet-wired scheduling design — not dead code.
 
 mod graph;
 pub mod port;

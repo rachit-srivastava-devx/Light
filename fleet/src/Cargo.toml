@@ -12,7 +12,6 @@ path = "main.rs"
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 clap_complete = "4"
-figment = { version = "0.10", features = ["env"] }
 tokio = { version = "1", features = ["io-std", "macros", "process", "rt", "rt-multi-thread", "sync", "time"] }
 rayon = "1"
 reedline = { version = "0.51", default-features = false }
@@ -20,7 +19,6 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
 toml = "0.8"
-libc = "0.2"
 types    = { path = "../crates/types" }
 control  = { path = "../crates/control" }
 store    = { path = "../crates/store" }
@@ -34,6 +32,10 @@ knowledge = { path = "../crates/knowledge" }
 notify   = { path = "../crates/notify" }
 builder  = { path = "../crates/builder" }
 review   = { path = "../crates/review" }
+sow-memory = { path = "../crates/sow-memory" }
+cli      = { path = "../crates/cli" }
+runtime  = { path = "../crates/runtime" }
+print    = { path = "../crates/print" }
 
 [features]
 # Passthrough to `review`'s own `llm7` feature (real keyless HTTP adapter). OFF by

@@ -1,0 +1,12 @@
+[package]
+name = "runtime"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+
+[dependencies]
+figment = { version = "0.10", features = ["env"] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+tokio = { version = "1", features = ["io-std", "macros", "process", "rt", "rt-multi-thread", "sync", "time"] }
+rayon = "1"

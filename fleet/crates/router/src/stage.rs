@@ -6,6 +6,10 @@ use crate::table::{CandidateSpec, ORDER};
 use crate::types::{Refusal, RuntimeState, Stage};
 use types::Role;
 
+#[path = "stage_quota.rs"]
+mod stage_quota;
+pub(crate) use stage_quota::{filter_quota, refusal_quota};
+
 /// Build one auditable `Stage` record: how many candidates survived, out of the total that
 /// started, and their ids.
 pub(crate) fn stage(number: usize, name: &'static str, candidates: &[CandidateSpec]) -> Stage {
@@ -55,33 +59,3 @@ pub(crate) fn refusal_capability(candidates: &[CandidateSpec]) -> Option<Refusal
     })
 }
 
-/// Stage 4: drop candidates whose adapter is cooling down or lacks enough measured quota. An
-/// unmeasured (`None`) window is never treated as available.
-pub(crate) fn filter_quota(candidates: &mut Vec<CandidateSpec>, runtime: &RuntimeState) {
-    candidates.retain(|c| {
-        !runtime.cooldown.contains(c.adapter)
-            && runtime
-                .remaining
-                .get(c.adapter)
-                .copied()
-                .flatten()
-                .is_some_and(|r| r >= runtime.required_tokens)
-    });
-}
-
-/// Stage 4's refusal, if `candidates` came back empty.
-pub(crate) fn refusal_quota(
-    candidates: &[CandidateSpec],
-    runtime: &RuntimeState,
-) -> Option<Refusal> {
-    candidates.is_empty().then(|| Refusal {
-        stage: 4,
-        stage_name: "availability/quota",
-        reason: "all eligible lanes are cooling down or lack a sufficient known quota window"
-            .into(),
-        fix: format!(
-            "wait for cooldown/reset or configure a measured window of at least {} tokens",
-            runtime.required_tokens
-        ),
-    })
-}

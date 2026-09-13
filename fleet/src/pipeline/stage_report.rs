@@ -4,9 +4,9 @@
 //! testable with a fixed `Duration` instead of a live clock.
 
 use super::stage::PipelineStage;
-use crate::print::human_stream::emit;
-use crate::print::render_event::{Event, Outcome};
-use crate::print::style::Style;
+use print::human_stream::emit;
+use print::render_event::{Event, Outcome};
+use print::style::Style;
 use std::time::Instant;
 
 pub fn started(stage: PipelineStage) -> Instant {

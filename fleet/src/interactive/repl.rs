@@ -6,13 +6,13 @@ use super::commands::{execute_slash, CommandOutcome};
 use super::line_reader::{LineReader, ReadOutcome};
 use super::status_bar::render_status_bar;
 use super::theme::*;
-use crate::runtime::ConcurrencyCap;
+use runtime::ConcurrencyCap;
 use std::path::Path;
 
 pub(super) const DEFAULT_MODEL: &str = "sonnet";
 
 pub async fn run_loop(state_dir: &Path, cap: ConcurrencyCap) {
-    let color = crate::print::style::Style::detect().color;
+    let color = print::style::Style::detect().color;
     let lanes = cap.get();
     let mut model = std::env::var("FLEET_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.into());
     let mut auto_mode = true;

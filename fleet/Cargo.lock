@@ -484,6 +484,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
+name = "cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "clap_complete",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -944,21 +952,23 @@ dependencies = [
  "builder",
  "clap",
  "clap_complete",
+ "cli",
  "context",
  "control",
- "figment",
  "integrate",
  "knowledge",
- "libc",
  "notify",
  "planner",
+ "print",
  "rayon",
  "reedline",
  "review",
  "route",
+ "runtime",
  "scan",
  "serde",
  "serde_json",
+ "sow-memory",
  "store",
  "tempfile",
  "thiserror 1.0.69",
@@ -2193,40 +2203,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "probe-business"
+name = "print"
 version = "0.1.0"
 dependencies = [
  "serde",
- "thiserror 2.0.20",
- "tokio",
-]
-
-[[package]]
-name = "probe-learn"
-version = "0.1.0"
-dependencies = [
- "serde",
- "thiserror 2.0.20",
- "tokio",
-]
-
-[[package]]
-name = "probe-research"
-version = "0.1.0"
-dependencies = [
- "serde",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "probe-tech"
-version = "0.1.0"
-dependencies = [
- "serde",
- "thiserror 2.0.20",
- "tokio",
- "tree-sitter",
- "tree-sitter-rust",
+ "serde_json",
+ "verify",
 ]
 
 [[package]]
@@ -2268,15 +2250,6 @@ dependencies = [
  "rusty-fork",
  "tempfile",
  "unarray",
-]
-
-[[package]]
-name = "questions"
-version = "0.1.0"
-dependencies = [
- "serde",
- "thiserror 2.0.20",
- "unicode-segmentation",
 ]
 
 [[package]]
@@ -2566,6 +2539,17 @@ dependencies = [
  "serde",
  "serde_json",
  "types",
+]
+
+[[package]]
+name = "runtime"
+version = "0.1.0"
+dependencies = [
+ "figment",
+ "rayon",
+ "serde",
+ "thiserror 2.0.20",
+ "tokio",
 ]
 
 [[package]]
@@ -2919,6 +2903,16 @@ checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "sow-memory"
+version = "0.1.0"
+dependencies = [
+ "knowledge",
+ "scan",
+ "serde_json",
+ "thiserror 2.0.20",
 ]
 
 [[package]]

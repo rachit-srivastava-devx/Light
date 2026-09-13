@@ -2,7 +2,7 @@
 
 use super::help::print_help;
 use super::theme::*;
-use crate::runtime::ConcurrencyCap;
+use runtime::ConcurrencyCap;
 
 pub enum CommandOutcome {
     Continue,

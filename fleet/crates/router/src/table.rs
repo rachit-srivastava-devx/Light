@@ -1,13 +1,8 @@
 //! The committed candidate table. Re-homed from `fleet/keel/fleet/src/route.rs:15-52`.
 
-/// The tier a role maps to. `role_allows` (in `allow.rs`) is the only place tier <-> role is
-/// decided.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Tier {
-    Lead,
-    Worker,
-    Cheap,
-}
+#[path = "table_kinds.rs"]
+mod table_kinds;
+pub use table_kinds::{TaskClass, Tier};
 
 /// One entry in the committed, order-sensitive candidate table. Order changes are a policy
 /// change and require review (see `ORDER`'s doc comment for the D50 history this preserves).
@@ -74,24 +69,6 @@ pub const ORDER: &[CandidateSpec] = &[
     },
 ];
 
-/// Coarse task classification the safety-policy stage (stage 2) reasons over.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum TaskClass {
-    General,
-    Implementation,
-    HumanOnly,
-}
-
 #[cfg(test)]
-mod tests {
-    use super::ORDER;
-
-    #[test]
-    fn order_ids_are_pairwise_distinct() {
-        for (i, a) in ORDER.iter().enumerate() {
-            for b in &ORDER[i + 1..] {
-                assert_ne!(a.id, b.id, "duplicate candidate id {}", a.id);
-            }
-        }
-    }
-}
+#[path = "table_tests.rs"]
+mod tests;

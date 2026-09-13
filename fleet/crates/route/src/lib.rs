@@ -1,3 +1,5 @@
+//! STATUS: this crate's second `admit` pipeline is unwired scaffolding matching
+//! `docs/LLD/LLD.md` §8 — not dead code, no caller yet.
 mod explain;
 mod filter;
 mod policy;

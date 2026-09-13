@@ -1,3 +1,5 @@
+//! STATUS: `reconcile` + the 4 `EffectState` variants + `BrokerError::Conflict` are unwired,
+//! matching `docs/LLD/LLD.md` §13 — not dead code, no caller yet.
 //! Broker — the only parent-authorized path for external effects.
 pub mod authorize;
 pub mod effect;

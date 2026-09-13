@@ -3,12 +3,9 @@
 //! rules (BLUEPRINT §2). **Restate deferred** -- see `pipeline/graph.rs`'s doc comment.
 
 mod build_info;
-mod cli;
 mod dispatch;
 mod interactive;
 mod pipeline;
-mod print;
-mod runtime;
 
 use clap::{CommandFactory, FromArgMatches};
 use std::io::IsTerminal;

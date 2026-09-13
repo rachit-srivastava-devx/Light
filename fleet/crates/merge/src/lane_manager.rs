@@ -1,4 +1,5 @@
-use crate::merge::{merge_lane, MergeOutcome};
+use crate::merge::merge_lane;
+use crate::merge_outcome::MergeOutcome;
 use crate::worktree::{create as create_worktree, remove as remove_worktree, Worktree};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
