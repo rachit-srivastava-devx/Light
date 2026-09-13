@@ -66,7 +66,7 @@ pub fn sow(state_dir: &Path, args: SowArgs) -> Result<(), DispatchError> {
             human::refused(m);
         }
         Err(DispatchError::Refusal(format!(
-            "{} sow violation(s)",
+            "{} sow violation(s)\nsee fleet/docs/USING-FLEET.md#sow for a working template",
             messages.len()
         )))
     }

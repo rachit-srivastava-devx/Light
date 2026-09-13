@@ -45,6 +45,18 @@ pub struct SwarmArgs {
     /// to update that branch.
     #[arg(long)]
     pub merge: bool,
+    /// Chain `fleet run` (verify pipeline) against the same `--repo` and `--task` immediately
+    /// after the lane finishes `Done`. Off by default. A lane that ends `Refused` or
+    /// `EnvironmentFault` short-circuits: verify is NOT invoked and swarm's exit code is
+    /// preserved. When the lane finishes `Done`, the final exit code becomes the run pipeline's
+    /// outcome. Works with `--merge false`: verify grades the worktree, not the main branch.
+    #[arg(long)]
+    pub then_verify: bool,
+    /// `--agent` selects the CLI adapter -- one of `freelane` (default, keyless), `claude`
+    /// (drives `claude` CLI on PATH), or `codex` (drives `codex` CLI on PATH). Unknown values
+    /// refused at dispatch time as EnvironmentFault.
+    #[arg(long, default_value = "freelane")]
+    pub agent: String,
 }
 
 #[derive(Args, Debug)]

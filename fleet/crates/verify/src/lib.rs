@@ -21,6 +21,14 @@ pub use impl_::{
     ProbeTool, ProcessOutput, ProcessRunner, Report, Requirement, ToolProbe, Verdict, GATES,
 };
 
+// Parsers are `reviewed data` (per the fleet-verify doctrine), NOT a public API surface for
+// reuse. This type is re-exported (doc-hidden) SOLELY so integration tests under `tests/` can
+// pin the exact `DenominatorResult` each committed gate's parser produces from real gate-script
+// stdout; look the parser up via `GATES.iter().find(|g| g.id == …).parse_denominator` rather
+// than importing a parser fn directly.
+#[doc(hidden)]
+pub use impl_::DenominatorResult;
+
 pub fn verify(
     candidate: &ReviewedCandidate,
     runner: &dyn GateRunner,

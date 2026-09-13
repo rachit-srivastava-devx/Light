@@ -3,6 +3,10 @@
 //!
 //! **Module-level parallel execution**: Extended to support running multiple modules in parallel
 //! using worktrees, with each module merging to main when complete.
+//!
+//! Multi-repo (`--repo a --repo b ...`): `run` loops sequentially over the repos, delegating each
+//! to `run_pipeline_on` -- one task_id, N repos, one aggregated verdict. The final exit code is
+//! the worst of the set. Sequential is intentional (single-machine concurrency cap).
 
 use crate::cli::args_ops::RunArgs;
 use crate::dispatch::error::DispatchError;
@@ -11,7 +15,7 @@ use crate::pipeline::{maybe_flush, run_pipeline};
 use crate::print::json;
 use integrate::LaneManager;
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use types::{Module, TaskId};
 
 /// Every candidate confirmed installed, with an unmeasured-but-generous quota window and no
@@ -36,15 +40,28 @@ fn healthy_runtime() -> route::RuntimeState {
     }
 }
 
-pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
-    let task = TaskId::parse(args.task).map_err(|e| DispatchError::Refusal(e.to_string()))?;
-    let repo = PathBuf::from(&args.repo);
+/// Shared entrypoint for the verify pipeline. `run` is the CLI-invoked path (looping per
+/// `--repo`); `swarm_cmd`'s `--then-verify` reuses this same function so the two never drift
+/// (BLUEPRINT §5: one composition root per subcommand). String args match `swarm_cmd`'s call
+/// site; `json` mirrors `RunArgs::json`.
+pub(crate) fn run_pipeline_on(
+    state_dir: &Path,
+    repo: String,
+    task_id: String,
+    json: bool,
+) -> Result<(), DispatchError> {
+    let task = TaskId::parse(task_id).map_err(|e| DispatchError::Refusal(e.to_string()))?;
+    // Intake: refuse a `--repo` that isn't a git worktree up front, with an actionable
+    // message -- otherwise the failure surfaces deep in the verify stage on a per-gate `git`
+    // command, which is what happens today on `/Users/.../work/Frido` (a directory holding
+    // three sibling checkouts). Same helper `oracle`/`gate` already use.
+    let repo = super::verify_repo::ensure_repo(&repo)?;
     // The committed table with this repo's `.fleet/gates.toml` applied -- identical to
     // `verify::GATES` when the repo has no such file (see `gate_config`).
     let gates = super::gate_config::resolve(&repo)?;
     let outcome = run_pipeline(state_dir, &repo, task, &healthy_runtime(), &gates);
     maybe_flush(state_dir);
-    if args.json {
+    if json {
         json::print_pretty(&outcome);
     } else {
         crate::print::run_report::render(&outcome);
@@ -52,6 +69,48 @@ pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
     match outcome.result {
         Ok(()) => Ok(()),
         Err(e) => Err(DispatchError::Refusal(e.to_string())),
+    }
+}
+
+pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
+    // Preflight EVERY --repo first via the existing intake helper (typed refusal on
+    // nonexistent/unreadable paths). Refuse before running anything so a bad path in position 3
+    // doesn't leave repos 1-2 with completed receipts.
+    for r in &args.repos {
+        super::verify_repo::ensure_repo(r)?;
+    }
+    // Sequential loop -- single-machine concurrency cap governs per-repo work; per-PR-scope
+    // this stays serial. Same task_id across all repos so the ledger correlates the set.
+    let mut first_err: Option<DispatchError> = None;
+    let mut passed = 0usize;
+    let total = args.repos.len();
+    for repo in &args.repos {
+        match run_pipeline_on(state_dir, repo.clone(), args.task.clone(), args.json) {
+            Ok(()) => {
+                passed += 1;
+                if !args.json {
+                    eprintln!("PASS {repo}");
+                }
+            }
+            Err(e) => {
+                if !args.json {
+                    eprintln!("FAIL {repo}: {e}");
+                }
+                if first_err.is_none() {
+                    first_err = Some(e);
+                }
+            }
+        }
+    }
+    if !args.json && total > 1 {
+        let failed = total - passed;
+        eprintln!("rollup: {passed}/{total} passed, {failed} failed");
+    }
+    // Aggregated verdict: worst of the set. With one collected error, its exit code wins
+    // (Refusal here; `main` maps that via `DispatchError::exit_code`).
+    match first_err {
+        Some(e) => Err(e),
+        None => Ok(()),
     }
 }
 

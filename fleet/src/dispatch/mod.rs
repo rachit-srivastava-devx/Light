@@ -10,6 +10,7 @@ pub mod agents_cmd;
 pub mod capacity_probe_cmd;
 pub mod context_cmd;
 mod doctor_json;
+mod doctor_optional;
 pub mod error;
 mod error_exit;
 mod gate_config;

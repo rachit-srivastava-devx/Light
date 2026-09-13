@@ -3,6 +3,12 @@
 //! `Freelane` now shells out to the freelane.sh keyless lane restored into
 //! `crates/fleet-worker/src/freelane/` (see that module for the embed/materialize/invoke split
 //! this file only wires together); `Claude`/`Codex` invoke their CLI directly.
+//!
+//! Non-TTY invocation: `spawn::child_command::build` sets `stdin(Stdio::null())`, so the child
+//! sees no TTY. `claude`'s default REPL refuses under those conditions -- v2.1.268 exits 1 with
+//! empty stderr; `claude -p "<prompt>"` runs and prints the response. Verified 2026-09-11.
+//! `codex`'s non-interactive shape is `codex exec "<prompt>"`. `run_cli` therefore branches on
+//! adapter to pick the right non-REPL flag; Freelane never reaches `run_cli` (see `run` match).
 
 use builder::freelane;
 use builder::CliAdapter;
@@ -128,10 +134,18 @@ where
     };
     let mut cmd = Command::new(binary);
     // Claude CLI requires --print for non-interactive (batch) mode; without it, it tries
-    // to start an interactive session and fails when stdin is null.
+    // to start an interactive session and fails when stdin is null. `--print`/`--verbose`/
+    // `--output-format stream-json` also drive the live tool-call milestones and the
+    // restricted tool policy the interactive REPL depends on (see `agent_stream.rs`).
     if matches!(adapter, CliAdapter::Claude) {
         cmd.args(claude_stream_args());
         policy.configure_claude(&mut cmd);
+    }
+    // codex's non-interactive shape is `codex exec "<prompt>"` per the module doc above; a bare
+    // positional arg leaves it waiting on an interactive session it will never get (stdin is
+    // null here). Freelane never reaches this function (dispatched to `run_freelane` instead).
+    if matches!(adapter, CliAdapter::Codex) {
+        cmd.arg("exec");
     }
     cmd.arg(task);
     if let Some(m) = model {
