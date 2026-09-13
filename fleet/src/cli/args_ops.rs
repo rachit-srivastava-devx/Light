@@ -23,12 +23,17 @@ pub struct LifecycleArgs {
 
 #[derive(Args, Debug)]
 pub struct RunArgs {
-    #[arg(long)]
-    pub repo: String,
+    /// One or more repo paths. `--repo a` (single, back-compat) still works; `--repo a --repo b`
+    /// (repeat) and `--repo a b` (variadic per occurrence) both parse to a two-element `Vec`.
+    /// One task, N repos, aggregated verdict -- the Frido workspace's three sibling repos
+    /// (posx-frido-{store,backend,admin}) is the shape driving this.
+    #[arg(long = "repo", num_args = 1.., action = clap::ArgAction::Append, required = true)]
+    pub repos: Vec<String>,
     #[arg(long)]
     pub task: String,
     /// Emit the machine-readable `PipelineOutcome` JSON on stdout instead of the human
     /// structured summary on stderr. Byte-identical to the pre-existing always-JSON behaviour.
+    /// With N repos: N successive JSON objects (one per repo), in the given order.
     #[arg(long)]
     pub json: bool,
 }
