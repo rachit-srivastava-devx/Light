@@ -24,13 +24,10 @@ fn unit_tests_total_is_passed_plus_failed_not_passed_minus_failed() {
 #[test]
 fn unit_tests_parses_jest_summary_line() {
     let p = parser_for("unit tests");
-    // Jest's typical summary; `failed` and `skipped` counts may precede `passed`.
     let jest = "Test Suites: 1 passed, 1 total\nTests:       671 passed, 671 total\nSnapshots:   0 total\n";
     assert_eq!(p(jest, ""), DenominatorResult::Counted(671, 671));
-
     // Jest actually writes its summary to STDERR in normal runs -- proven against
     // posx-frido-backend `npm run --silent test:unit` (stdout empty, stderr carries the summary).
-    // Regression fixture for that: parser must read stderr as well as stdout.
     assert_eq!(p("", jest), DenominatorResult::Counted(671, 671));
 
     let with_failed = "Tests:       1 failed, 670 passed, 671 total\n";
@@ -44,11 +41,30 @@ fn unit_tests_parses_jest_summary_line() {
 fn unit_tests_parses_vitest_summary_line() {
     let p = parser_for("unit tests");
     let vitest = " Test Files  1 passed (1)\n      Tests  10 passed (10)\n";
-    // `Test Files 1 passed (1)` must NOT be picked up as the test count.
     assert_eq!(p(vitest, ""), DenominatorResult::Counted(10, 10));
 
     let vitest_mixed = " Test Files  2 failed | 5 passed (7)\n      Tests  3 failed | 10 passed (13)\n";
     assert_eq!(p(vitest_mixed, ""), DenominatorResult::Counted(10, 13));
+}
+
+#[test]
+fn corpus_collapses_seven_field_line_to_clean_over_total() {
+    let p = parser_for("corpus");
+    let line = "DENOMINATOR checked=100 total=100 excluded=0 caught=95 timeout_contention=0 \
+                timeout_confirmed=0 timeout_persistent=0";
+    assert_eq!(p(line, ""), DenominatorResult::Counted(5, 100));
+}
+
+#[test]
+fn corpus_honours_not_applicable_marker_on_foreign_repos() {
+    let p = parser_for("corpus");
+    // The whole corpus gate asserts fleet-own-source invariants; on a user
+    // repo the script prints this marker and exits 0. Parser must return
+    // NotApplicable so the gate reads as SKIP, not FAIL -- otherwise every
+    // `fleet run --repo <any user repo>` ends with a red gate that never
+    // had a chance to succeed.
+    let out = "corpus-gate: not-applicable -- target repo /some/user/repo is not a fleet checkout";
+    assert_eq!(p(out, ""), DenominatorResult::NotApplicable);
 }
 
 #[test]
