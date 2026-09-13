@@ -9,7 +9,7 @@ use crate::print::render_event::Event;
 use crate::print::style::Style;
 use builder::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
 use types::{Role, TaskId};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Duration;
 
 /// Env var name `fleet-worker::spawn::worker_state_dir::resolve` reads. Kept as a literal, not a
@@ -55,6 +55,10 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // already threaded through as `state_dir`, makes the worker's independent env read agree
     // with the CLI's resolution by construction instead of by coincidence.
     std::env::set_var(ENV_STATE_DIR, state_dir);
+    // Intake: refuse a `--repo` that isn't a git worktree up front, with an actionable
+    // message -- the lane's worktree/checkout/merge stages all assume it, and fail opaquely
+    // deep inside `builder` otherwise. Same helper `run`/`oracle`/`gate` already use.
+    let repo = super::verify_repo::ensure_repo(&args.repo)?;
     // Snapshot `repo`/`task` before `args` is partially moved into `SpawnRequest`: `--then-verify`
     // needs the same two strings after the lane joins to hand the verify pipeline the same
     // targets (never a mutated or re-parsed variant -- the "one command instead of two" promise
@@ -76,7 +80,7 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     let adapter = CliAdapter::from_agent_kind(&args.agent)
         .map_err(|e| DispatchError::EnvFault(format!("--agent {:?}: {e}", args.agent)))?;
     let request = SpawnRequest {
-        repo: PathBuf::from(&args.repo),
+        repo,
         role,
         task_id,
         adapter,
