@@ -55,17 +55,10 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // already threaded through as `state_dir`, makes the worker's independent env read agree
     // with the CLI's resolution by construction instead of by coincidence.
     std::env::set_var(ENV_STATE_DIR, state_dir);
-    // Intake: refuse a `--repo` that isn't a git worktree up front, with an actionable
-    // message -- the lane's worktree/checkout/merge stages all assume it, and fail opaquely
-    // deep inside `builder` otherwise. Same helper `run`/`oracle`/`gate` already use.
-    let repo = super::verify_repo::ensure_repo(&args.repo)?;
-    // Snapshot `repo`/`task` before `args` is partially moved into `SpawnRequest`: `--then-verify`
-    // needs the same two strings after the lane joins to hand the verify pipeline the same
-    // targets (never a mutated or re-parsed variant -- the "one command instead of two" promise
-    // relies on this being the byte-identical pair the dev passed).
-    let then_verify = args.then_verify;
-    let verify_repo = args.repo.clone();
-    let verify_task = args.task.clone();
+    // Cheap, offline validation first -- fail fast before ever touching the filesystem
+    // (`ensure_repo` below, which walks `--repo`) or the network. An invalid `--role`/`--agent`
+    // must refuse the same way regardless of whether `--repo` happens to exist (see the
+    // ordering-sensitive regression tests in swarm_cmd_tests.rs).
     let role = Role::parse(&args.role).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let task_id =
         TaskId::parse(args.task.clone()).map_err(|e| DispatchError::Refusal(e.to_string()))?;
@@ -80,6 +73,17 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // type system but were unreachable from CLI). `from_agent_kind` is the single parse point.
     let adapter = CliAdapter::from_agent_kind(&args.agent)
         .map_err(|e| DispatchError::EnvFault(format!("--agent {:?}: {e}", args.agent)))?;
+    // Intake: refuse a `--repo` that isn't a git worktree up front, with an actionable
+    // message -- the lane's worktree/checkout/merge stages all assume it, and fail opaquely
+    // deep inside `builder` otherwise. Same helper `run`/`oracle`/`gate` already use.
+    let repo = super::verify_repo::ensure_repo(&args.repo)?;
+    // Snapshot `repo`/`task` before `args` is partially moved into `SpawnRequest`: `--then-verify`
+    // needs the same two strings after the lane joins to hand the verify pipeline the same
+    // targets (never a mutated or re-parsed variant -- the "one command instead of two" promise
+    // relies on this being the byte-identical pair the dev passed).
+    let then_verify = args.then_verify;
+    let verify_repo = args.repo.clone();
+    let verify_task = args.task.clone();
     let request = SpawnRequest {
         repo,
         role,
