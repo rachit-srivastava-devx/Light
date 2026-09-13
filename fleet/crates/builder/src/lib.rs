@@ -2,6 +2,12 @@
 mod impl_;
 pub use impl_::*;
 
+/// Verbatim contents of `assets/claude-system-prompt.md` -- the tuned system prompt appended to
+/// every Fleet-driven Claude invocation via `claude --append-system-prompt`. Kept in this crate
+/// because it is bundled with the adapter shape, not a caller concern.
+pub const CLAUDE_SYSTEM_PROMPT: &str =
+    include_str!("../assets/claude-system-prompt.md");
+
 pub mod launch;
 pub mod lease;
 pub mod result;
