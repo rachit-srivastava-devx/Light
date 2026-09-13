@@ -341,7 +341,7 @@ EXIT:0
 | `fleet status [--json]` | prints `concurrency_cap`, not a task rollup | WORKS but semantically wrong — see §8 |
 | `fleet ledger [--verify]` | no `count`/`dump`/`append` subcommands | WORKS — see §9 |
 | `fleet oracle` (no flags) | | WORKS — was hanging per `archive/night-2026-09-08/DX-AUDIT.md`, fixed during this docs pass, see §6 |
-| `fleet adjudicate <ARTIFACT>` | positional, not `--artifact` | **NOT IMPLEMENTED** — always exit 3, "no adjudication-table fn exposed yet" |
+| `fleet adjudicate <ARTIFACT>` | positional, not `--artifact` | **FEATURE-GATED (`llm7`)** — dispatched via `dispatch/mod.rs` → `dispatch/adjudicate_cmd.rs`; without `--features llm7` fails with `NoJudgeConfigured` ("build with --features llm7"); with the feature on, invokes the real keyless `Llm7Judge` |
 | `fleet attest --artifact <ID>` | no `verify` subcommand | **NOT IMPLEMENTED** — always exit 3, "no builder-flow fn yet" |
 | `fleet pr --repo <P> --branch <B> --module-brief <T> --diff-summary <T>` | | **Correction, 2026-09-11: WORKS** — shells out to `gh pr create`; exits 3 if `gh` is missing or the repo has no remote (verified against a scratch repo: `gh pr create failed: no git remotes found`, branch left unmerged). The build reviewed for the original "NOT IMPLEMENTED" note actually had `fleet pr` wired to a raw `git merge` of the branch straight into the checked-out branch — bypassing PR review, not a stub — which is the defect that got fixed here. |
 
