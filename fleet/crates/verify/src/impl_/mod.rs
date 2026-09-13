@@ -11,6 +11,7 @@ mod requirement;
 mod spec;
 mod verdict;
 
+pub use denominator::DenominatorResult;
 pub use gates::{GateAssetError, GatesRoot};
 pub use orchestrate::{run_all, run_gate};
 pub use ports::{ProcessOutput, ProcessRunner, ToolProbe};
