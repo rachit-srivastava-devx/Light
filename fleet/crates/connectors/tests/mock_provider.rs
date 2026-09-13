@@ -1,4 +1,6 @@
-use connectors::{pull_once, ConnectorError, CredentialPort, NativeEvent, PollPage, ProviderClient, SecretRef};
+use connectors::{
+    pull_once, ConnectorError, CredentialPort, NativeEvent, PollPage, ProviderClient, SecretRef,
+};
 use serde_json::json;
 
 struct MockProviderClient {
@@ -16,7 +18,11 @@ impl ProviderClient for MockProviderClient {
                 ConnectorError::Provider(s) => ConnectorError::Provider(s.clone()),
             });
         }
-        Ok(PollPage { events: self.events.clone(), next_cursor: self.cursor.clone(), retry_after_seconds: None })
+        Ok(PollPage {
+            events: self.events.clone(),
+            next_cursor: self.cursor.clone(),
+            retry_after_seconds: None,
+        })
     }
 }
 
@@ -28,7 +34,13 @@ impl CredentialPort for MockCredentialPort {
 }
 
 fn event(src: &str, id: &str, actor: &str, payload: serde_json::Value) -> NativeEvent {
-    NativeEvent { source: src.into(), delivery_id: id.into(), object_version: "v1".into(), actor: actor.into(), payload }
+    NativeEvent {
+        source: src.into(),
+        delivery_id: id.into(),
+        object_version: "v1".into(),
+        actor: actor.into(),
+        payload,
+    }
 }
 
 #[test]
@@ -52,14 +64,23 @@ fn credential_never_appears_in_native_event() {
     let cred_port = MockCredentialPort;
     let _secret = cred_port.token("github").unwrap();
     let mut client = MockProviderClient {
-        events: vec![event("github", "d3", "user", json!({"action": "push", "repo": "myrepo"}))],
+        events: vec![event(
+            "github",
+            "d3",
+            "user",
+            json!({"action": "push", "repo": "myrepo"}),
+        )],
         cursor: None,
         fail_with: None,
     };
     let page = pull_once(&mut client, None).unwrap();
     assert_eq!(page.events.len(), 1);
     let json_str = serde_json::to_string(&page.events[0]).unwrap();
-    assert!(!json_str.contains("supersecret"), "Credential in event: {}", json_str);
+    assert!(
+        !json_str.contains("supersecret"),
+        "Credential in event: {}",
+        json_str
+    );
 }
 
 #[test]

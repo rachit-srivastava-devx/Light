@@ -10,6 +10,6 @@ pub mod types;
 
 pub use compile::compile;
 pub use types::{
-    CompileInput, ContextError, ContextManifest, Evidence, EvidenceRef,
-    RetrievalQuery, Retriever, Span, TokenCounter,
+    CompileInput, ContextError, ContextManifest, Evidence, EvidenceRef, RetrievalQuery, Retriever,
+    Span, TokenCounter,
 };

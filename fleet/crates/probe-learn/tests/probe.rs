@@ -6,7 +6,12 @@ struct FakeMemoryReader {
 
 impl MemoryReader for FakeMemoryReader {
     fn recall(&self, _q: &str, scope: &str, _limit: u32) -> Result<Vec<LessonHit>, ProbeError> {
-        Ok(self.lessons.iter().filter(|l| l.scope == scope).cloned().collect())
+        Ok(self
+            .lessons
+            .iter()
+            .filter(|l| l.scope == scope)
+            .cloned()
+            .collect())
     }
 }
 
@@ -26,7 +31,11 @@ fn ambiguity_request_retrieves_scoped_lessons() {
     let questions = probe(&input, &reader).unwrap();
     assert!(!questions.is_empty());
     let body = questions[0].text.to_lowercase();
-    assert!(body.contains("ownership"), "expected 'ownership' in '{}', but not found", body);
+    assert!(
+        body.contains("ownership"),
+        "expected 'ownership' in '{}', but not found",
+        body
+    );
 }
 
 #[test]
@@ -45,15 +54,20 @@ fn no_matching_lessons_returns_question() {
 fn returned_question_differs_by_scope() {
     let reader = FakeMemoryReader { lessons: vec![] };
 
-    let input_alpha = LearnInput { text: "T".into(), scope: "alpha".into() };
-    let input_beta = LearnInput { text: "T".into(), scope: "beta".into() };
+    let input_alpha = LearnInput {
+        text: "T".into(),
+        scope: "alpha".into(),
+    };
+    let input_beta = LearnInput {
+        text: "T".into(),
+        scope: "beta".into(),
+    };
 
     let q_alpha = probe(&input_alpha, &reader).unwrap();
     let q_beta = probe(&input_beta, &reader).unwrap();
 
     assert_ne!(
-        q_alpha[0].text,
-        q_beta[0].text,
+        q_alpha[0].text, q_beta[0].text,
         "Questions should differ by scope but got identical: '{}'",
         q_alpha[0].text
     );

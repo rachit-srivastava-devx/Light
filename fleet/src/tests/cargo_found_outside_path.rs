@@ -5,8 +5,8 @@
 //! Drives the real binary with a `PATH` that deliberately excludes the rustup directory.
 
 mod support;
-use support::cmd;
 use std::path::PathBuf;
+use support::cmd;
 
 /// The rustup install location this machine actually has, if any -- the test asserts the positive
 /// property only when there is something to find (rule: never fake the input to a check).
@@ -24,11 +24,24 @@ fn doctor_finds_cargo_in_the_rustup_location_when_path_does_not_have_it() {
         eprintln!("skipped: no rustup cargo on this machine to find");
         return;
     };
-    let out = cmd().env("PATH", "/usr/bin:/bin").arg("doctor").output().expect("binary runs");
+    let out = cmd()
+        .env("PATH", "/usr/bin:/bin")
+        .arg("doctor")
+        .output()
+        .expect("binary runs");
     let text = String::from_utf8_lossy(&out.stdout);
-    let line = text.lines().find(|l| l.starts_with("cargo:")).unwrap_or_default();
-    assert!(line.contains("found"), "cargo is installed but doctor said: {line:?}");
-    assert!(line.contains(&expected.display().to_string()), "must name where: {line:?}");
+    let line = text
+        .lines()
+        .find(|l| l.starts_with("cargo:"))
+        .unwrap_or_default();
+    assert!(
+        line.contains("found"),
+        "cargo is installed but doctor said: {line:?}"
+    );
+    assert!(
+        line.contains(&expected.display().to_string()),
+        "must name where: {line:?}"
+    );
 }
 
 #[test]
@@ -37,8 +50,11 @@ fn doctor_json_reports_the_same_resolution() {
         eprintln!("skipped: no rustup cargo on this machine to find");
         return;
     };
-    let out =
-        cmd().env("PATH", "/usr/bin:/bin").args(["doctor", "--json"]).output().expect("binary runs");
+    let out = cmd()
+        .env("PATH", "/usr/bin:/bin")
+        .args(["doctor", "--json"])
+        .output()
+        .expect("binary runs");
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).expect("valid json");
     assert_eq!(v["cargo"], true, "{v}");
     assert_eq!(v["cargo_path"], expected.display().to_string(), "{v}");
@@ -60,7 +76,16 @@ fn a_genuinely_missing_tool_names_every_directory_searched() {
         .output()
         .expect("binary runs");
     let err = String::from_utf8_lossy(&out.stderr);
-    assert!(err.contains("SKIP gate policy"), "expected a visible skip, got: {err}");
-    assert!(err.contains("no `conftest` in $PATH"), "must name the tool and $PATH: {err}");
-    assert!(err.contains(".cargo/bin"), "must name the fallback directories too: {err}");
+    assert!(
+        err.contains("SKIP gate policy"),
+        "expected a visible skip, got: {err}"
+    );
+    assert!(
+        err.contains("no `conftest` in $PATH"),
+        "must name the tool and $PATH: {err}"
+    );
+    assert!(
+        err.contains(".cargo/bin"),
+        "must name the fallback directories too: {err}"
+    );
 }

@@ -8,5 +8,8 @@ pub struct Violation {
 }
 
 pub(crate) fn v(path: impl Into<String>, message: impl Into<String>) -> Violation {
-    Violation { path: path.into(), message: message.into() }
+    Violation {
+        path: path.into(),
+        message: message.into(),
+    }
 }

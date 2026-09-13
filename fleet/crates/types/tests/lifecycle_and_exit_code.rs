@@ -9,8 +9,14 @@ fn allowed_next_is_total_and_matches_table() {
         LifecycleState::Building.allowed_next(),
         &[LifecycleState::Built, LifecycleState::Refused]
     );
-    assert_eq!(LifecycleState::Refused.allowed_next(), &[] as &[LifecycleState]);
-    assert_eq!(LifecycleState::Observed.allowed_next(), &[LifecycleState::Intake]);
+    assert_eq!(
+        LifecycleState::Refused.allowed_next(),
+        &[] as &[LifecycleState]
+    );
+    assert_eq!(
+        LifecycleState::Observed.allowed_next(),
+        &[LifecycleState::Intake]
+    );
 }
 
 #[test]

@@ -13,8 +13,8 @@
 
 use super::error::DispatchError;
 use super::gate_config_file as file;
-use verify::{GateCommand, GateSpec, ProbeTool};
 use std::path::Path;
+use verify::{GateCommand, GateSpec, ProbeTool};
 
 /// `GateSpec`'s `id`/`command`/`probe` are all `&'static` (the type is `Copy`, built as a `const`
 /// table), so a command read from a file has to outlive the process to go in one. The leak is
@@ -25,11 +25,20 @@ fn leak(text: &str) -> &'static str {
 }
 
 fn leak_argv(argv: &[String]) -> &'static [&'static str] {
-    Box::leak(argv.iter().map(|a| leak(a)).collect::<Vec<_>>().into_boxed_slice())
+    Box::leak(
+        argv.iter()
+            .map(|a| leak(a))
+            .collect::<Vec<_>>()
+            .into_boxed_slice(),
+    )
 }
 
 fn known_ids() -> String {
-    verify::GATES.iter().map(|g| format!("{:?}", g.id)).collect::<Vec<_>>().join(", ")
+    verify::GATES
+        .iter()
+        .map(|g| format!("{:?}", g.id))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn fault(reason: String) -> DispatchError {
@@ -47,7 +56,10 @@ pub fn resolve(repo: &Path) -> Result<Vec<GateSpec>, DispatchError> {
             return Err(fault(format!("gate {id:?} has an empty command")));
         }
         let Some(spec) = specs.iter_mut().find(|s| s.id == id) else {
-            return Err(fault(format!("gate {id:?} is not in the registry (known: {})", known_ids())));
+            return Err(fault(format!(
+                "gate {id:?} is not in the registry (known: {})",
+                known_ids()
+            )));
         };
         spec.command = GateCommand::OnPath(leak_argv(&over.command));
         if let Some(probe) = &over.probe {

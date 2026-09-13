@@ -20,7 +20,10 @@ mod tests {
 
     #[test]
     fn divides_available_by_budget() {
-        assert_eq!(ram_lanes_from_available(10 * PER_LANE_BUDGET_BYTES, PER_LANE_BUDGET_BYTES), 10);
+        assert_eq!(
+            ram_lanes_from_available(10 * PER_LANE_BUDGET_BYTES, PER_LANE_BUDGET_BYTES),
+            10
+        );
         assert_eq!(ram_lanes_from_available(0, PER_LANE_BUDGET_BYTES), 0);
     }
 

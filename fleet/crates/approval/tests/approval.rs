@@ -10,7 +10,10 @@ mod approval {
 
         impl MockStore {
             fn new() -> Self {
-                Self { grants: HashMap::new(), consumed: HashSet::new() }
+                Self {
+                    grants: HashMap::new(),
+                    consumed: HashSet::new(),
+                }
             }
         }
 
@@ -24,7 +27,10 @@ mod approval {
                 if self.consumed.contains(id) {
                     return Err(ApprovalError::Replay);
                 }
-                let grant = self.grants.get(id).cloned()
+                let grant = self
+                    .grants
+                    .get(id)
+                    .cloned()
                     .ok_or_else(|| ApprovalError::NotFound(id.to_string()))?;
                 self.consumed.insert(id.to_string());
                 Ok(grant)
@@ -47,7 +53,11 @@ mod approval {
         fn grant_consumed_on_approval() {
             let mut store = MockStore::new();
             let grant = approve(&mut store, make_req(1000), "operator".to_string(), 1).unwrap();
-            assert_eq!(store.grants.len(), 1, "store must contain exactly one record");
+            assert_eq!(
+                store.grants.len(),
+                1,
+                "store must contain exactly one record"
+            );
             let stored = &store.grants[&grant.approval_id];
             assert_eq!(stored.request.scope_hash, "deadbeef");
             assert_eq!(stored.actor, "operator");
@@ -61,7 +71,11 @@ mod approval {
             let first = store.consume(&id);
             assert!(first.is_ok(), "first consume must succeed");
             let second = store.consume(&id);
-            assert_eq!(second, Err(ApprovalError::Replay), "second consume must be Replay");
+            assert_eq!(
+                second,
+                Err(ApprovalError::Replay),
+                "second consume must be Replay"
+            );
         }
 
         #[test]
@@ -70,7 +84,10 @@ mod approval {
             // expires_at=5, now=10 → expired
             let result = approve(&mut store, make_req(5), "operator".to_string(), 10);
             assert_eq!(result, Err(ApprovalError::Expired));
-            assert!(store.grants.is_empty(), "no store write must occur on expiry");
+            assert!(
+                store.grants.is_empty(),
+                "no store write must occur on expiry"
+            );
         }
     }
 }

@@ -51,7 +51,10 @@ mod tests {
             vec!["fleet", "roles"],
             vec!["fleet", "__capacity_probe"],
         ] {
-            assert!(!cmd(&args).is_capacity_gated(), "{args:?} must not be gated");
+            assert!(
+                !cmd(&args).is_capacity_gated(),
+                "{args:?} must not be gated"
+            );
         }
     }
 

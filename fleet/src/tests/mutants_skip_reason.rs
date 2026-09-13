@@ -5,8 +5,8 @@
 //! comment for why a fake probe wouldn't prove this).
 
 mod support;
-use support::bounded::run_bounded;
 use std::time::Duration;
+use support::bounded::run_bounded;
 
 /// A machine that genuinely HAS `cargo-mutants` on `$PATH`, but with `FLEET_MUTANTS` unset: the
 /// skip must name the opt-in cause, not a generic "unavailable".

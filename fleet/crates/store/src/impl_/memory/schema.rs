@@ -7,9 +7,9 @@ use std::path::Path;
 
 use rusqlite::Connection;
 
+use super::super::io_fault::IoFault;
 use super::types::MemoryError;
 use super::MemoryStore;
-use super::super::io_fault::IoFault;
 
 impl MemoryStore {
     /// Open (creating if absent), ensure `memories`/`memories_fts`/the vector table exist, and
@@ -20,10 +20,16 @@ impl MemoryStore {
     /// as an unresolved gap -- injecting a default/discovered path would violate this crate's own
     /// "no ambient IO" rule, so `vec0_extension_path` is added here as a third, caller-supplied
     /// parameter instead.
-    pub fn open(path: &Path, vector_dimensions: u32, vec0_extension_path: &Path) -> Result<Self, MemoryError> {
+    pub fn open(
+        path: &Path,
+        vector_dimensions: u32,
+        vec0_extension_path: &Path,
+    ) -> Result<Self, MemoryError> {
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|source| IoFault::Open { path: path.to_path_buf(), source })?;
+            fs::create_dir_all(parent).map_err(|source| IoFault::Open {
+                path: path.to_path_buf(),
+                source,
+            })?;
         }
         let conn = Connection::open(path)?;
         conn.execute_batch("PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL;")?;
@@ -63,6 +69,10 @@ impl MemoryStore {
             &format!("CREATE VIRTUAL TABLE IF NOT EXISTS memory_vectors USING vec0(embedding float[{vector_dimensions}])"),
             [],
         )?;
-        Ok(Self { conn, vector_dimensions, db_path: path.to_path_buf() })
+        Ok(Self {
+            conn,
+            vector_dimensions,
+            db_path: path.to_path_buf(),
+        })
     }
 }

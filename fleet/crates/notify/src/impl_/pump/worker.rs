@@ -1,16 +1,16 @@
 //! `run_sink`: poll/filter/deliver/retry/persist, one cycle at a time, for one sink.
 
-use types::Receipt;
 use tokio::sync::watch;
 use tokio::time::sleep;
+use types::Receipt;
 
 use super::super::cursor::CursorStore;
 use super::super::event::StreamEvent;
 use super::super::log_source::{LogSource, LogSourceError};
 use super::super::sink::Sink;
 
-use super::worker_cycle::{cursor_err, deliver_with_retry, validate_order};
 use super::super::{PumpConfig, SinkStats};
+use super::worker_cycle::{cursor_err, deliver_with_retry, validate_order};
 
 /// # Panics
 /// Never. Every fallible path returns inside `SinkStats`'s bookkeeping or ends the loop on a

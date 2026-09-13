@@ -29,7 +29,11 @@ pub trait LexicalSearch {
 }
 /// The injected vector-search port.
 pub trait VectorSearch {
-    fn knn(&self, query_embedding: &Embedding, limit: usize) -> Result<Vec<VectorHit>, RetrieveError>;
+    fn knn(
+        &self,
+        query_embedding: &Embedding,
+        limit: usize,
+    ) -> Result<Vec<VectorHit>, RetrieveError>;
 }
 
 /// Either injected port failed.
@@ -66,12 +70,23 @@ pub fn retrieve(
         .into_iter()
         .filter_map(|(id, fused)| {
             let item = items.get(&id)?;
-            let relevance = Relevance::new(fused.clamp(0.0, 1.0)).unwrap_or(Relevance::new(1.0).unwrap());
-            Some(RetrievedItem { id, score: score(item, now, relevance, weights), relevance })
+            let relevance =
+                Relevance::new(fused.clamp(0.0, 1.0)).unwrap_or(Relevance::new(1.0).unwrap());
+            Some(RetrievedItem {
+                id,
+                score: score(item, now, relevance, weights),
+                relevance,
+            })
         })
         .collect();
 
-    ranked.sort_by(|a, b| b.score.get().partial_cmp(&a.score.get()).unwrap().then_with(|| a.id.cmp(&b.id)));
+    ranked.sort_by(|a, b| {
+        b.score
+            .get()
+            .partial_cmp(&a.score.get())
+            .unwrap()
+            .then_with(|| a.id.cmp(&b.id))
+    });
     ranked.truncate(limit);
     Ok(ranked)
 }

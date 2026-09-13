@@ -5,15 +5,24 @@ use route::{
 };
 
 fn open_policy() -> PolicySnapshot {
-    PolicySnapshot { max_cost_per_call: u64::MAX, allowed_providers: vec![] }
+    PolicySnapshot {
+        max_cost_per_call: u64::MAX,
+        allowed_providers: vec![],
+    }
 }
 
 fn big_budget() -> BudgetSnapshot {
-    BudgetSnapshot { limit: u64::MAX, spent: 0 }
+    BudgetSnapshot {
+        limit: u64::MAX,
+        spent: 0,
+    }
 }
 
 fn any_intent() -> IntentSpec {
-    IntentSpec { required_capabilities: vec![], task_class: "t".into() }
+    IntentSpec {
+        required_capabilities: vec![],
+        task_class: "t".into(),
+    }
 }
 
 /// Catches mutation: replace min_by_key(cost) with .first() in score_candidate.
@@ -36,8 +45,8 @@ fn score_picks_cheapest_not_first() {
         candidates: vec![expensive, cheap],
         digest: "d".into(),
     };
-    let result = admit(&any_intent(), &snapshot, &big_budget(), &open_policy())
-        .expect("should succeed");
+    let result =
+        admit(&any_intent(), &snapshot, &big_budget(), &open_policy()).expect("should succeed");
     assert_eq!(result.selected, CandidateId("c2-cheap".into()));
     assert_eq!(result.selected_cost, 100);
 }
@@ -52,9 +61,12 @@ fn conservative_baseline_used_not_zero() {
         historical_cost: None,
         provider: "p".into(),
     };
-    let snapshot = CatalogSnapshot { candidates: vec![c], digest: "d".into() };
-    let result = admit(&any_intent(), &snapshot, &big_budget(), &open_policy())
-        .expect("should succeed");
+    let snapshot = CatalogSnapshot {
+        candidates: vec![c],
+        digest: "d".into(),
+    };
+    let result =
+        admit(&any_intent(), &snapshot, &big_budget(), &open_policy()).expect("should succeed");
     assert_eq!(result.selected_cost, CONSERVATIVE_BASELINE);
     // Compile-time guard: baseline is non-zero so the mutation 0 is distinguishable.
     const _: () = assert!(CONSERVATIVE_BASELINE > 0);
@@ -69,7 +81,10 @@ fn policy_filter_rejects_disallowed_provider() {
         historical_cost: Some(10),
         provider: "blocked-provider".into(),
     };
-    let snapshot = CatalogSnapshot { candidates: vec![c], digest: "d".into() };
+    let snapshot = CatalogSnapshot {
+        candidates: vec![c],
+        digest: "d".into(),
+    };
     let policy = PolicySnapshot {
         max_cost_per_call: u64::MAX,
         allowed_providers: vec!["allowed-provider".into()],
@@ -90,8 +105,14 @@ fn budget_filter_rejects_over_budget() {
         historical_cost: Some(1000),
         provider: "p".into(),
     };
-    let snapshot = CatalogSnapshot { candidates: vec![c], digest: "d".into() };
-    let budget = BudgetSnapshot { limit: 500, spent: 0 };
+    let snapshot = CatalogSnapshot {
+        candidates: vec![c],
+        digest: "d".into(),
+    };
+    let budget = BudgetSnapshot {
+        limit: 500,
+        spent: 0,
+    };
     let err = admit(&any_intent(), &snapshot, &budget, &open_policy())
         .expect_err("over-budget candidate must be refused");
     let stages = err.stages();
@@ -109,10 +130,13 @@ fn reservation_matches_selected_and_is_future() {
         historical_cost: Some(42),
         provider: "p".into(),
     };
-    let snapshot = CatalogSnapshot { candidates: vec![c], digest: "d".into() };
+    let snapshot = CatalogSnapshot {
+        candidates: vec![c],
+        digest: "d".into(),
+    };
     let before = std::time::Instant::now();
-    let result = admit(&any_intent(), &snapshot, &big_budget(), &open_policy())
-        .expect("should succeed");
+    let result =
+        admit(&any_intent(), &snapshot, &big_budget(), &open_policy()).expect("should succeed");
     assert_eq!(result.reservation.candidate_id, result.selected);
     // reserved_until must be strictly after the call — catches + replaced with -.
     assert!(result.reservation.reserved_until > before);

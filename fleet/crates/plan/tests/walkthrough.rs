@@ -27,7 +27,11 @@ fn brief(node_id: &str, deps: &[&str], open_questions: &[&str]) -> Value {
 
 #[test]
 fn walkthrough_of_a_plan_with_n_modules_lists_them_in_work_order() {
-    let modules = vec![brief("mod-c", &["mod-b"], &[]), brief("mod-a", &[], &[]), brief("mod-b", &["mod-a"], &[])];
+    let modules = vec![
+        brief("mod-c", &["mod-b"], &[]),
+        brief("mod-a", &[], &[]),
+        brief("mod-b", &["mod-a"], &[]),
+    ];
     let w = build_walkthrough("demo plan", &modules).expect("valid plan");
 
     assert_eq!(w.what_will_be_built.len(), 3);
@@ -54,7 +58,10 @@ fn blank_module_brief_yields_invalid_module_brief_refusal_not_a_silent_narration
 
 #[test]
 fn cyclic_deps_are_refused_not_silently_ordered() {
-    let modules = vec![brief("mod-a", &["mod-b"], &[]), brief("mod-b", &["mod-a"], &[])];
+    let modules = vec![
+        brief("mod-a", &["mod-b"], &[]),
+        brief("mod-b", &["mod-a"], &[]),
+    ];
     let err = build_walkthrough("plan", &modules).unwrap_err();
     match err {
         WalkthroughError::CyclicDependency { cycle } => {

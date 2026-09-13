@@ -24,7 +24,10 @@ pub fn validate_module_brief(value: &Value) -> Vec<Violation> {
             if FORBIDDEN_MODULE_BRIEF_FIELDS.contains(&key.as_str()) {
                 out.push(v(key.as_str(), format!("\"{key}\" is gate-authored (Freeze-only) and must not appear on a ModuleBrief")));
             } else {
-                out.push(v(key.as_str(), format!("unexpected property \"{key}\" (additionalProperties: false)")));
+                out.push(v(
+                    key.as_str(),
+                    format!("unexpected property \"{key}\" (additionalProperties: false)"),
+                ));
             }
         }
     }
@@ -42,14 +45,20 @@ pub fn validate_module_brief(value: &Value) -> Vec<Violation> {
     }
     match b.get("purpose").and_then(Value::as_str) {
         Some(p) if !p.is_empty() && p.chars().count() <= 200 => {}
-        _ => out.push(v("purpose", "purpose must be a string of 1..200 characters")),
+        _ => out.push(v(
+            "purpose",
+            "purpose must be a string of 1..200 characters",
+        )),
     }
     if !is_non_empty_str(b.get("owner")) {
         out.push(v("owner", "owner must be a non-empty string"));
     }
     match b.get("owner_path").and_then(Value::as_str) {
         Some(p) if !p.trim().is_empty() && !p.contains("..") => {}
-        _ => out.push(v("owner_path", "owner_path must be a non-empty path containing no \"..\"")),
+        _ => out.push(v(
+            "owner_path",
+            "owner_path must be a non-empty path containing no \"..\"",
+        )),
     }
 
     check_module_brief_mid(b, node_id, &mut out);

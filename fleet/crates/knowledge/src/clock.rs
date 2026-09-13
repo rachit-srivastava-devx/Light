@@ -31,7 +31,9 @@ fn epoch_secs_to_ymd(mut days: u64) -> (u64, u64, u64) {
     let mut y = 1970u64;
     loop {
         let dy = if leap(y) { 366 } else { 365 };
-        if days < dy { break; }
+        if days < dy {
+            break;
+        }
         days -= dy;
         y += 1;
     }
@@ -42,7 +44,9 @@ fn epoch_secs_to_ymd(mut days: u64) -> (u64, u64, u64) {
     };
     let mut mo = 1u64;
     for dm in months {
-        if days < dm { break; }
+        if days < dm {
+            break;
+        }
         days -= dm;
         mo += 1;
     }
@@ -53,5 +57,7 @@ fn epoch_secs_to_ymd(mut days: u64) -> (u64, u64, u64) {
 pub struct FixedClock(pub String);
 
 impl Clock for FixedClock {
-    fn now_iso(&self) -> String { self.0.clone() }
+    fn now_iso(&self) -> String {
+        self.0.clone()
+    }
 }

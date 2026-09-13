@@ -1,7 +1,7 @@
 //! `OrbSink`'s lane-status projection, split out to keep `orb.rs` under the line cap.
 
-use types::Receipt;
 use serde_json::{json, Value};
+use types::Receipt;
 
 use super::super::sink::SinkError;
 
@@ -26,7 +26,10 @@ pub(super) fn project(receipt: &Receipt) -> Result<Value, SinkError> {
         .and_then(Value::as_str)
         .ok_or_else(|| permanent(receipt.seq, "lane_status body has no lane_id"))?;
     let role = body.get("role").and_then(Value::as_str).unwrap_or(lane_id);
-    let state = body.get("state").and_then(Value::as_str).unwrap_or("unknown");
+    let state = body
+        .get("state")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
     Ok(json!({
         "schema_version": "1.0",
         "lane_id": lane_id,

@@ -4,4 +4,4 @@ mod port;
 mod probe;
 
 pub use port::{LessonHit, MemoryReader, ProbeError};
-pub use probe::{LearnInput, Question, probe};
+pub use probe::{probe, LearnInput, Question};

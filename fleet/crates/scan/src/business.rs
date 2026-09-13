@@ -5,7 +5,14 @@ use crate::input::{ProbeKind, RequirementInput};
 use crate::probe::{GapSeverity, Probe, ProbeOutcome, Question};
 
 const METRIC_WORDS: &[&str] = &["metric", "kpi", "success", "measure", "target", "goal"];
-const AUDIENCE_WORDS: &[&str] = &["user", "customer", "team", "client", "audience", "stakeholder"];
+const AUDIENCE_WORDS: &[&str] = &[
+    "user",
+    "customer",
+    "team",
+    "client",
+    "audience",
+    "stakeholder",
+];
 
 /// Reads `RequirementInput.text` for missing business-outcome signal (no stated success metric,
 /// no stated audience). Pure heuristic text analysis -- no port, greenfield (§5/§7).

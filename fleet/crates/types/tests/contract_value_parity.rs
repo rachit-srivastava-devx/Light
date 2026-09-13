@@ -8,9 +8,9 @@
 #[allow(dead_code)]
 mod support;
 
-use types::ReceiptEvent;
 use serde_json::Value;
 use support::sample_attestation;
+use types::ReceiptEvent;
 
 const RECEIPT_SCHEMA: &str = include_str!("../contracts/receipt.v1.json");
 const ATTESTATION_SCHEMA: &str = include_str!("../contracts/attestation.v1.json");
@@ -27,7 +27,10 @@ fn attestation_predicate_type_value_matches_schema_const() {
         .as_str()
         .expect("serialized Attestation must have a string predicateType");
 
-    assert_eq!(actual, expected, "DeliveryAttestationV1 wire value has drifted from the schema");
+    assert_eq!(
+        actual, expected,
+        "DeliveryAttestationV1 wire value has drifted from the schema"
+    );
 }
 
 #[test]
@@ -54,6 +57,9 @@ fn every_receipt_event_variant_is_in_schema_enum() {
     for variant in variants {
         let value = serde_json::to_value(variant).unwrap();
         let value = value.as_str().unwrap();
-        assert!(allowed.contains(&value), "ReceiptEvent variant {value:?} missing from schema enum");
+        assert!(
+            allowed.contains(&value),
+            "ReceiptEvent variant {value:?} missing from schema enum"
+        );
     }
 }

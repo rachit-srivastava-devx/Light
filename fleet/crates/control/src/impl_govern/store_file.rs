@@ -34,10 +34,12 @@ impl FileMeterStore {
 
     fn publish(&self, lanes: &BTreeMap<String, LaneState>) -> Result<(), MeterIoError> {
         let tmp = self.path.with_extension("tmp");
-        let mut file = fs::File::create(&tmp).map_err(|e| MeterIoError(format!("create tmp: {e}")))?;
+        let mut file =
+            fs::File::create(&tmp).map_err(|e| MeterIoError(format!("create tmp: {e}")))?;
         file.write_all(encode_lanes(lanes).as_bytes())
             .map_err(|e| MeterIoError(format!("write tmp: {e}")))?;
-        file.sync_all().map_err(|e| MeterIoError(format!("sync tmp: {e}")))?;
+        file.sync_all()
+            .map_err(|e| MeterIoError(format!("sync tmp: {e}")))?;
         drop(file);
         fs::rename(&tmp, &self.path).map_err(|e| MeterIoError(format!("rename: {e}")))
     }

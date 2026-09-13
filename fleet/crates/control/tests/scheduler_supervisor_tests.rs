@@ -3,17 +3,36 @@ use control::supervisor::{commit_then_decide, validate_generation, SpawnDecision
 use control::{AuthorityStore, ControlError, Snapshot, TaskState};
 use std::sync::Mutex;
 
-struct NullStore { writes: Mutex<Vec<String>> }
-impl NullStore { fn new() -> Self { Self { writes: Mutex::new(vec![]) } } }
-impl AuthorityStore for NullStore {
-    fn write_receipt(&self, _: &str) -> Result<(), ControlError> { Ok(()) }
-    fn write_state(&self, id: &str) -> Result<(), ControlError> {
-        self.writes.lock().unwrap().push(id.to_string()); Ok(())
+struct NullStore {
+    writes: Mutex<Vec<String>>,
+}
+impl NullStore {
+    fn new() -> Self {
+        Self {
+            writes: Mutex::new(vec![]),
+        }
     }
-    fn has_event(&self, _: &str) -> bool { false }
+}
+impl AuthorityStore for NullStore {
+    fn write_receipt(&self, _: &str) -> Result<(), ControlError> {
+        Ok(())
+    }
+    fn write_state(&self, id: &str) -> Result<(), ControlError> {
+        self.writes.lock().unwrap().push(id.to_string());
+        Ok(())
+    }
+    fn has_event(&self, _: &str) -> bool {
+        false
+    }
 }
 
-fn ps(rev: u64) -> Snapshot { Snapshot { task_id: "t".into(), state: TaskState::Pending, revision: rev } }
+fn ps(rev: u64) -> Snapshot {
+    Snapshot {
+        task_id: "t".into(),
+        state: TaskState::Pending,
+        revision: rev,
+    }
+}
 
 #[test]
 fn heap_push_pop_order_by_score() {
@@ -49,19 +68,29 @@ fn heap_len_and_is_empty() {
 }
 
 #[test]
-fn cas_guard_matches_ok() { cas_guard(&ps(3), 3).unwrap(); }
-
-#[test]
-fn cas_guard_mismatch_errors() {
-    assert!(matches!(cas_guard(&ps(3), 5).unwrap_err(), ControlError::Store(_)));
+fn cas_guard_matches_ok() {
+    cas_guard(&ps(3), 3).unwrap();
 }
 
 #[test]
-fn validate_generation_match_ok() { validate_generation(4, 4).unwrap(); }
+fn cas_guard_mismatch_errors() {
+    assert!(matches!(
+        cas_guard(&ps(3), 5).unwrap_err(),
+        ControlError::Store(_)
+    ));
+}
+
+#[test]
+fn validate_generation_match_ok() {
+    validate_generation(4, 4).unwrap();
+}
 
 #[test]
 fn validate_generation_mismatch_errors() {
-    assert!(matches!(validate_generation(3, 4).unwrap_err(), ControlError::Store(_)));
+    assert!(matches!(
+        validate_generation(3, 4).unwrap_err(),
+        ControlError::Store(_)
+    ));
 }
 
 #[test]

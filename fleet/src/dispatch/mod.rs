@@ -1,44 +1,58 @@
 //! Top-level dispatch: match the parsed `Commands`, call the one `*_cmd` fn that owns it.
 
-mod adjudicate_cmd; mod adjudicate_cmd_error; mod adjudicate_render;
+mod adjudicate_cmd;
+mod adjudicate_cmd_error;
+mod adjudicate_render;
 pub mod agent_cmd;
-mod agent_cmd_error; pub(crate) mod agent_cmd_run;
+mod agent_cmd_error;
+pub(crate) mod agent_cmd_run;
 pub mod agents_cmd;
 pub mod capacity_probe_cmd;
 pub mod context_cmd;
 mod doctor_json;
-pub mod error; mod gate_config; mod gate_config_file;
+pub mod error;
 mod error_exit;
+mod gate_config;
+mod gate_config_file;
 pub mod ledger_cmd;
 pub mod lifecycle_cmd;
 pub(crate) mod memory;
 pub mod meter_cmd;
+mod mutants_probe;
 pub mod ops_cmd;
 mod ops_version; // `fleet version` + build identity, split out of `ops_cmd` for its 80-line gate
-mod pr_cmd; // `fleet pr`, split out of `ops_cmd` for its 80-line gate
 pub mod plan_cmd;
 pub mod planahead_cmd;
+mod pr_cmd; // `fleet pr`, split out of `ops_cmd` for its 80-line gate
 pub mod role_cmd;
 pub mod route_cmd;
 pub mod run_cmd;
 mod run_modules_cmd; // `fleet run-modules` arg parsing, split out of `mod.rs` for its 80-line gate
-mod mutants_probe; mod sow_probes; pub(crate) mod which_probe; pub(crate) mod tool_path;
+mod sow_probes;
 pub mod spawn_probe_cmd;
 pub mod swarm_cmd;
+pub(crate) mod tool_path;
 pub mod verify_cmd;
-mod verify_report; mod verify_repo;
 /// `pub(crate)`: `pipeline::verify_stage` reuses this module's real `WhichProbe`/`RealRunner`.
 pub(crate) mod verify_ports;
+mod verify_repo;
+mod verify_report;
 mod verify_runner_bounded;
 mod verify_runner_io;
-mod walk; mod walk_error;
+mod walk;
+mod walk_error;
+pub(crate) mod which_probe;
 pub mod worker_cmd;
 use crate::cli::Commands;
 use crate::runtime::ConcurrencyCap;
 use error::DispatchError;
 use std::path::Path;
 
-pub async fn run(command: Commands, state_dir: &Path, cap: ConcurrencyCap) -> Result<(), DispatchError> {
+pub async fn run(
+    command: Commands,
+    state_dir: &Path,
+    cap: ConcurrencyCap,
+) -> Result<(), DispatchError> {
     match command {
         Commands::Meter(a) => meter_cmd::meter(state_dir, a),
         Commands::Route(a) => route_cmd::route(a),
@@ -62,9 +76,16 @@ pub async fn run(command: Commands, state_dir: &Path, cap: ConcurrencyCap) -> Re
         Commands::Version(a) => ops_cmd::version(a.json),
         Commands::Completions { shell } => ops_cmd::completions(shell),
         Commands::RunModules(a) => {
-            run_cmd::run_modules(state_dir, Path::new(&a.repo), run_modules_cmd::parse_modules_from_args(&a)?).await
+            run_cmd::run_modules(
+                state_dir,
+                Path::new(&a.repo),
+                run_modules_cmd::parse_modules_from_args(&a)?,
+            )
+            .await
         }
-        Commands::PipelineProbe { task_id, repo } => run_cmd::pipeline_probe(state_dir, repo, task_id),
+        Commands::PipelineProbe { task_id, repo } => {
+            run_cmd::pipeline_probe(state_dir, repo, task_id)
+        }
         Commands::PlanAheadProbe(a) => planahead_cmd::probe(state_dir, a),
         Commands::Agent(a) => agent_cmd::agent(a).map_err(DispatchError::from),
         Commands::SpawnProbe(a) => spawn_probe_cmd::probe(a),

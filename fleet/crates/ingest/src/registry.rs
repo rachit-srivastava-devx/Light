@@ -1,5 +1,5 @@
-use unicode_normalization::UnicodeNormalization;
 use crate::types::{IngestError, SourceRegistration, MAX_SOURCE_LEN};
+use unicode_normalization::UnicodeNormalization;
 
 /// NFC-normalize, trim, cap length, then verify against the registered namespace.
 /// Returns the normalized form on success — this is what all downstream sees.

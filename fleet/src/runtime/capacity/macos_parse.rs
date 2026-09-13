@@ -31,20 +31,34 @@ pub fn parse_vm_stat_available(text: &str) -> Result<u64, ProbeError> {
 
 fn extract_page_size(text: &str) -> Result<u64, ProbeError> {
     let marker = "page size of";
-    let start = text.find(marker).ok_or_else(|| err("vm_stat", "page size", text))?;
-    let digits: String =
-        text[start + marker.len()..].chars().skip_while(|c| c.is_whitespace()).take_while(|c| c.is_ascii_digit()).collect();
-    digits.parse().map_err(|_| err("vm_stat", "page size", text))
+    let start = text
+        .find(marker)
+        .ok_or_else(|| err("vm_stat", "page size", text))?;
+    let digits: String = text[start + marker.len()..]
+        .chars()
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| c.is_ascii_digit())
+        .collect();
+    digits
+        .parse()
+        .map_err(|_| err("vm_stat", "page size", text))
 }
 
 fn extract_pages(text: &str, label: &'static str) -> Result<u64, ProbeError> {
-    let line = text.lines().find(|l| l.trim_start().starts_with(label)).ok_or_else(|| err("vm_stat", label, text))?;
+    let line = text
+        .lines()
+        .find(|l| l.trim_start().starts_with(label))
+        .ok_or_else(|| err("vm_stat", label, text))?;
     let digits: String = line.chars().filter(|c| c.is_ascii_digit()).collect();
     digits.parse().map_err(|_| err("vm_stat", label, text))
 }
 
 fn err(resource: &'static str, field: &'static str, raw: &str) -> ProbeError {
-    ProbeError::ParseFailed { resource, field, detail: format!("unexpected output: {raw:?}") }
+    ProbeError::ParseFailed {
+        resource,
+        field,
+        detail: format!("unexpected output: {raw:?}"),
+    }
 }
 
 #[cfg(test)]

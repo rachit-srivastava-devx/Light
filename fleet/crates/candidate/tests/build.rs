@@ -44,7 +44,10 @@ mod candidate {
             let lesson = build(e.clone(), "fix-digest".to_string()).unwrap();
             let mut store = InMemoryStore::new();
             assert!(store.insert(&lesson).is_ok());
-            assert!(matches!(store.insert(&lesson), Err(CandidateError::Conflict)));
+            assert!(matches!(
+                store.insert(&lesson),
+                Err(CandidateError::Conflict)
+            ));
         }
     }
 }

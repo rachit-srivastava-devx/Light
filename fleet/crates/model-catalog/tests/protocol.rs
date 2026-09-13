@@ -12,7 +12,9 @@ fn unknown_path_not_executed() {
     fs::write(&canary, script).unwrap();
     fs::set_permissions(&canary, fs::Permissions::from_mode(0o755)).unwrap();
 
-    let config = model_catalog::DiscoveryConfig { explicit_paths: vec![] };
+    let config = model_catalog::DiscoveryConfig {
+        explicit_paths: vec![],
+    };
     let candidates = model_catalog::discover(&config).unwrap();
     assert!(candidates.is_empty());
     assert!(
@@ -55,5 +57,8 @@ fn timeout_returns_unknown() {
 #[test]
 fn zero_trial_cannot_qualify() {
     let err = model_catalog::qualify(0, &[]).expect_err("should fail with zero trials");
-    assert!(matches!(err, model_catalog::CatalogError::InsufficientTrials { got: 0 }));
+    assert!(matches!(
+        err,
+        model_catalog::CatalogError::InsufficientTrials { got: 0 }
+    ));
 }

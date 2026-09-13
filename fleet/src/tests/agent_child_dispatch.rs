@@ -29,8 +29,15 @@ fn the_real_path_tests_do_not_run_under_the_fake_binary_seam() {
 fn agent_subcommand_is_recognized_by_the_real_binary() {
     let out = agent(&["freelane", "/tmp", "some task"]);
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(!stderr.contains("unrecognized subcommand"), "stderr: {stderr}");
-    assert_ne!(out.status.code(), Some(2), "must not fail as a clap usage error: {stderr}");
+    assert!(
+        !stderr.contains("unrecognized subcommand"),
+        "stderr: {stderr}"
+    );
+    assert_ne!(
+        out.status.code(),
+        Some(2),
+        "must not fail as a clap usage error: {stderr}"
+    );
 }
 
 /// `__spawn_probe` drives `builder::spawn`/`join`'s real parent path (real worktree, real
@@ -51,7 +58,11 @@ fn a_real_spawn_gets_a_real_fd3_receipt_back() {
         .arg(repo.path())
         .output()
         .expect("binary runs");
-    assert!(out.status.success(), "spawn probe failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "spawn probe failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let stdout = String::from_utf8_lossy(&out.stdout);
     assert!(
         stdout.contains("__spawn_probe: done") || stdout.contains("__spawn_probe: refused:"),

@@ -9,9 +9,15 @@ use super::*;
 #[test]
 fn one_gate_cannot_consume_the_whole_invocation_budget() {
     let total = Duration::from_secs(300);
-    assert!(per_gate_budget(total) < total, "a gate must not be able to spend the total");
+    assert!(
+        per_gate_budget(total) < total,
+        "a gate must not be able to spend the total"
+    );
     let left = total - per_gate_budget(total);
-    assert!(left >= Duration::from_secs(1), "starved gates need real time, got {left:?}");
+    assert!(
+        left >= Duration::from_secs(1),
+        "starved gates need real time, got {left:?}"
+    );
 }
 
 /// The short budgets the real-binary tests use must still yield a nonzero per-gate slice --

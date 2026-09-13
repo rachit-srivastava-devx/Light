@@ -26,7 +26,6 @@ pub fn read_with_fallback(
     if !path.exists() {
         return Ok((default_text.to_string(), ConfigSource::EmbeddedDefault));
     }
-    let text =
-        fs::read_to_string(&path).map_err(|_| ProvisionError::MissingFleetFile(name))?;
+    let text = fs::read_to_string(&path).map_err(|_| ProvisionError::MissingFleetFile(name))?;
     Ok((text, ConfigSource::Repo))
 }

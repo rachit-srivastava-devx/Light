@@ -6,12 +6,12 @@ pub use rusqlite::Connection;
 // Inlined from fleet-store (ledger module, Ledger, etc.)
 pub use impl_::{ledger, Ledger};
 
-pub(crate) mod schema;
-pub(crate) mod transaction;
 pub(crate) mod artifact;
 mod retention;
+pub(crate) mod schema;
 #[cfg(test)]
 mod tests;
+pub(crate) mod transaction;
 
 pub use artifact::publish_blob;
 pub use schema::{migrate, MigrationReport};

@@ -26,9 +26,15 @@ mod plan_review {
         }
 
         fn get_digest(evs: &[pr::ReviewEvent]) -> &pr::ReviewedPlanDigest {
-            evs.iter().find_map(|e| {
-                if let pr::ReviewEvent::Digest(d) = e { Some(d) } else { None }
-            }).unwrap()
+            evs.iter()
+                .find_map(|e| {
+                    if let pr::ReviewEvent::Digest(d) = e {
+                        Some(d)
+                    } else {
+                        None
+                    }
+                })
+                .unwrap()
         }
 
         #[test]
@@ -61,7 +67,10 @@ mod plan_review {
             let p = proposal("p", "w1");
             let v = verdict(pr::Decision::Reject, 1, 1);
             let evs = pr::emit_walkthrough(&p, "r1", &v);
-            assert!(matches!(evs[0], pr::ReviewEvent::Walkthrough(_)), "first event must be Walkthrough");
+            assert!(
+                matches!(evs[0], pr::ReviewEvent::Walkthrough(_)),
+                "first event must be Walkthrough"
+            );
             let d = get_digest(&evs);
             assert!(!d.approved, "Digest must not be approved on rejection");
         }

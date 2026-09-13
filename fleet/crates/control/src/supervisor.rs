@@ -17,7 +17,9 @@ pub fn commit_then_decide(
 ) -> Result<SpawnDecision, ControlError> {
     store.write_state(task_id)?;
     if should_spawn {
-        Ok(SpawnDecision::Launch { task_id: task_id.to_string() })
+        Ok(SpawnDecision::Launch {
+            task_id: task_id.to_string(),
+        })
     } else {
         Ok(SpawnDecision::Skip)
     }

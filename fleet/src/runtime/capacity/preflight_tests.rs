@@ -12,11 +12,21 @@ impl CapacityProbe for FakeProbe {
 }
 
 fn cfg() -> PreflightConfig {
-    PreflightConfig { review_cap: 3, load_factor: DEFAULT_LOAD_FACTOR, per_lane_budget_bytes: PER_LANE_BUDGET_BYTES, ram_lanes_ceiling: None }
+    PreflightConfig {
+        review_cap: 3,
+        load_factor: DEFAULT_LOAD_FACTOR,
+        per_lane_budget_bytes: PER_LANE_BUDGET_BYTES,
+        ram_lanes_ceiling: None,
+    }
 }
 
 fn healthy(cores: usize, available_bytes: u64, load: f64) -> Measurement {
-    Measurement { total_memory_bytes: available_bytes * 2, available_memory_bytes: available_bytes, load_avg_1m: load, logical_cores: cores }
+    Measurement {
+        total_memory_bytes: available_bytes * 2,
+        available_memory_bytes: available_bytes,
+        load_avg_1m: load,
+        logical_cores: cores,
+    }
 }
 
 #[test]
@@ -30,10 +40,22 @@ fn allows_a_healthy_machine_and_still_binds_on_review_cap() {
 fn refuses_on_insufficient_memory_with_measured_numbers_in_the_message() {
     let probe = FakeProbe(|| Ok(healthy(8, 500 * 1024 * 1024, 1.0)));
     let err = preflight(&probe, &cfg()).unwrap_err();
-    assert!(matches!(err, CapacityRefusal::InsufficientMemory { available_mb: 500, budget_mb: 2048 }));
+    assert!(matches!(
+        err,
+        CapacityRefusal::InsufficientMemory {
+            available_mb: 500,
+            budget_mb: 2048
+        }
+    ));
     let msg = err.to_string();
-    assert!(msg.contains("500"), "message should carry measured available MiB: {msg}");
-    assert!(msg.contains("2048"), "message should carry the budget MiB: {msg}");
+    assert!(
+        msg.contains("500"),
+        "message should carry measured available MiB: {msg}"
+    );
+    assert!(
+        msg.contains("2048"),
+        "message should carry the budget MiB: {msg}"
+    );
 }
 
 #[test]
@@ -42,16 +64,30 @@ fn refuses_on_overloaded_machine_with_measured_numbers_in_the_message() {
     let err = preflight(&probe, &cfg()).unwrap_err();
     assert!(matches!(err, CapacityRefusal::Overloaded { cores: 4, .. }));
     let msg = err.to_string();
-    assert!(msg.contains("20.00"), "message should carry the measured load: {msg}");
-    assert!(msg.contains('4'), "message should carry the core count: {msg}");
+    assert!(
+        msg.contains("20.00"),
+        "message should carry the measured load: {msg}"
+    );
+    assert!(
+        msg.contains('4'),
+        "message should carry the core count: {msg}"
+    );
 }
 
 #[test]
 fn refuses_when_the_probe_itself_cannot_measure() {
-    let probe = FakeProbe(|| Err(ProbeError::SourceUnavailable { resource: "vm_stat", detail: "not found".into() }));
+    let probe = FakeProbe(|| {
+        Err(ProbeError::SourceUnavailable {
+            resource: "vm_stat",
+            detail: "not found".into(),
+        })
+    });
     let err = preflight(&probe, &cfg()).unwrap_err();
     assert!(matches!(err, CapacityRefusal::ProbeFailed(_)));
-    assert!(err.to_string().contains("vm_stat"), "unknown capacity must say what failed: {err}");
+    assert!(
+        err.to_string().contains("vm_stat"),
+        "unknown capacity must say what failed: {err}"
+    );
 }
 
 #[test]

@@ -26,13 +26,21 @@ impl MemoryStore {
                 row.severity.as_str(),
             ],
         )?;
-        let rowid: i64 =
-            self.conn.query_row("SELECT rowid FROM memories WHERE id=?1", params![row.id], |r| r.get(0))?;
+        let rowid: i64 = self.conn.query_row(
+            "SELECT rowid FROM memories WHERE id=?1",
+            params![row.id],
+            |r| r.get(0),
+        )?;
         Ok(rowid as u64)
     }
 
     /// Store (or replace) one row's embedding plus the content-hash it was computed from.
-    pub fn set_embedding(&mut self, rowid: u64, vector: &[f32], content_hash: &str) -> Result<(), MemoryError> {
+    pub fn set_embedding(
+        &mut self,
+        rowid: u64,
+        vector: &[f32],
+        content_hash: &str,
+    ) -> Result<(), MemoryError> {
         if vector.len() as u32 != self.vector_dimensions {
             return Err(MemoryError::DimensionMismatch {
                 expected: self.vector_dimensions,
@@ -41,7 +49,10 @@ impl MemoryStore {
         }
         let bytes: Vec<u8> = vector.iter().flat_map(|v| v.to_le_bytes()).collect();
         let tx = self.conn.transaction()?;
-        tx.execute("DELETE FROM memory_vectors WHERE rowid=?1", params![rowid as i64])?;
+        tx.execute(
+            "DELETE FROM memory_vectors WHERE rowid=?1",
+            params![rowid as i64],
+        )?;
         tx.execute(
             "INSERT INTO memory_vectors(rowid, embedding) VALUES (?1, ?2)",
             params![rowid as i64, bytes],
@@ -57,8 +68,13 @@ impl MemoryStore {
 
     /// `(rowid, stored_content_hash)` for every row that has a stored embedding.
     pub fn embedding_hashes(&self) -> Result<Vec<(u64, String)>, MemoryError> {
-        let mut stmt = self.conn.prepare("SELECT memory_rowid, content_hash FROM memory_vector_meta")?;
-        let rows = stmt.query_map([], |r| Ok((r.get::<_, i64>(0)? as u64, r.get::<_, String>(1)?)))?;
-        rows.collect::<Result<Vec<_>, _>>().map_err(MemoryError::from)
+        let mut stmt = self
+            .conn
+            .prepare("SELECT memory_rowid, content_hash FROM memory_vector_meta")?;
+        let rows = stmt.query_map([], |r| {
+            Ok((r.get::<_, i64>(0)? as u64, r.get::<_, String>(1)?))
+        })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(MemoryError::from)
     }
 }

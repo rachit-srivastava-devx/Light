@@ -30,9 +30,21 @@ pub fn empty_runtime() -> RuntimeState {
 }
 
 pub fn assert_mutually_exclusive(decision: &Decision) {
-    assert_eq!(decision.refusal.is_some(), decision.selected_adapter.is_none());
-    assert_eq!(decision.refusal.is_some(), decision.requested_model.is_none());
-    assert_eq!(decision.refusal.is_some(), decision.resolved_model.is_none());
-    assert_eq!(decision.refusal.is_some(), decision.decided_at_stage.is_none());
+    assert_eq!(
+        decision.refusal.is_some(),
+        decision.selected_adapter.is_none()
+    );
+    assert_eq!(
+        decision.refusal.is_some(),
+        decision.requested_model.is_none()
+    );
+    assert_eq!(
+        decision.refusal.is_some(),
+        decision.resolved_model.is_none()
+    );
+    assert_eq!(
+        decision.refusal.is_some(),
+        decision.decided_at_stage.is_none()
+    );
     assert_eq!(decision.stages.len(), 6);
 }

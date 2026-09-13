@@ -7,12 +7,23 @@ use super::sow::StageViolation;
 use std::collections::BTreeMap;
 
 const DECISION_LEAK_WORDS: [&str; 9] = [
-    "tbd", "todo", "to be decided", "decide", "design choice", "either", "unknown", "figure out",
+    "tbd",
+    "todo",
+    "to be decided",
+    "decide",
+    "design choice",
+    "either",
+    "unknown",
+    "figure out",
     "determine",
 ];
 
 fn leaks_decision(row: &AtomicRow) -> bool {
-    let joined = format!("{} {} {} {}", row.description, row.inputs, row.outputs, row.acceptance).to_lowercase();
+    let joined = format!(
+        "{} {} {} {}",
+        row.description, row.inputs, row.outputs, row.acceptance
+    )
+    .to_lowercase();
     DECISION_LEAK_WORDS.iter().any(|w| joined.contains(w))
 }
 
@@ -30,21 +41,41 @@ pub fn validate_atomic_rows(rows: &[AtomicRow]) -> Vec<StageViolation> {
             continue;
         }
         seen.insert(row.id.as_str(), row.tier);
-        if row.description.is_empty() || row.inputs.is_empty() || row.outputs.is_empty() || row.acceptance.is_empty() {
-            out.push(StageViolation(format!("atomic row {} lacks an independent build contract", row.id)));
+        if row.description.is_empty()
+            || row.inputs.is_empty()
+            || row.outputs.is_empty()
+            || row.acceptance.is_empty()
+        {
+            out.push(StageViolation(format!(
+                "atomic row {} lacks an independent build contract",
+                row.id
+            )));
         }
         if row.design_decision != "none" && row.design_decision != "no" {
-            out.push(StageViolation(format!("atomic leaf {} still contains a design decision: {}", row.id, row.design_decision)));
+            out.push(StageViolation(format!(
+                "atomic leaf {} still contains a design decision: {}",
+                row.id, row.design_decision
+            )));
         } else if leaks_decision(row) {
-            out.push(StageViolation(format!("atomic leaf {} still contains a design decision", row.id)));
+            out.push(StageViolation(format!(
+                "atomic leaf {} still contains a design decision",
+                row.id
+            )));
         }
         let has_parents = !(row.parents.len() == 1 && row.parents[0] == "-");
         match row.tier {
             AtomicTier::Feature if has_parents => {
-                out.push(StageViolation(format!("feature {} must have parents=-", row.id)));
+                out.push(StageViolation(format!(
+                    "feature {} must have parents=-",
+                    row.id
+                )));
             }
             AtomicTier::Service | AtomicTier::Module if !has_parents => {
-                out.push(StageViolation(format!("{} {} must compose a lower tier", row.tier.name(), row.id)));
+                out.push(StageViolation(format!(
+                    "{} {} must compose a lower tier",
+                    row.tier.name(),
+                    row.id
+                )));
             }
             _ => {}
         }
@@ -55,7 +86,11 @@ pub fn validate_atomic_rows(rows: &[AtomicRow]) -> Vec<StageViolation> {
     out
 }
 
-fn check_parent_tiers(row: &AtomicRow, seen: &BTreeMap<&str, AtomicTier>, out: &mut Vec<StageViolation>) {
+fn check_parent_tiers(
+    row: &AtomicRow,
+    seen: &BTreeMap<&str, AtomicTier>,
+    out: &mut Vec<StageViolation>,
+) {
     let required = match row.tier {
         AtomicTier::Service => Some(AtomicTier::Feature),
         AtomicTier::Module => Some(AtomicTier::Service),
@@ -69,7 +104,10 @@ fn check_parent_tiers(row: &AtomicRow, seen: &BTreeMap<&str, AtomicTier>, out: &
         if seen.get(parent.as_str()) != Some(&required) {
             out.push(StageViolation(format!(
                 "{} {} must compose {} {}",
-                row.tier.name(), row.id, required.name(), parent
+                row.tier.name(),
+                row.id,
+                required.name(),
+                parent
             )));
         }
     }

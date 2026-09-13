@@ -33,7 +33,11 @@ pub enum AnyTask {
 
 macro_rules! any {
     ($variant:ident, $id:expr, $retry_depth:expr) => {
-        AnyTask::$variant(Task { id: $id, retry_depth: $retry_depth, _s: PhantomData })
+        AnyTask::$variant(Task {
+            id: $id,
+            retry_depth: $retry_depth,
+            _s: PhantomData,
+        })
     };
 }
 

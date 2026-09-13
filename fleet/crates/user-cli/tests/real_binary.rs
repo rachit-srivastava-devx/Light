@@ -6,7 +6,10 @@ fn fleet() -> Command {
 
 #[test]
 fn version_exits_zero() {
-    let out = fleet().arg("--version").output().expect("fleet binary runs");
+    let out = fleet()
+        .arg("--version")
+        .output()
+        .expect("fleet binary runs");
     assert!(
         out.status.success(),
         "fleet --version failed:\n{}",

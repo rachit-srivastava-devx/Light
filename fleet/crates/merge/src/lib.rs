@@ -29,7 +29,7 @@ mod worktree_guard;
 
 pub use cache::invalidate_build_cache;
 pub use error::{MergeRefusal, PrError, WorktreeError};
-pub use lane_manager::{Lane, LaneManager, LaneOutcome};
 pub use invariant::{check_files_changed, check_head_moved, check_stage_nonempty};
-pub use merge::{merge_lane, MergeOutcome, pr_emit};
+pub use lane_manager::{Lane, LaneManager, LaneOutcome};
+pub use merge::{merge_lane, pr_emit, MergeOutcome};
 pub use worktree::{create, remove, unique_name, Worktree};

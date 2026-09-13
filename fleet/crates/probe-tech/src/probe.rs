@@ -15,12 +15,20 @@ pub fn probe(
 ) -> Result<Vec<Question>, ProbeError> {
     let context = extract_code_context(&input.text);
     let question_text = generate_tech_question(&input.text, &context);
-    Ok(vec![Question { text: question_text }])
+    Ok(vec![Question {
+        text: question_text,
+    }])
 }
 
 fn extract_code_context(text: &str) -> String {
     let lang_terms = [
-        "function", "struct", "trait", "module", "type", "interface", "dependency",
+        "function",
+        "struct",
+        "trait",
+        "module",
+        "type",
+        "interface",
+        "dependency",
     ];
     let text_lower = text.to_lowercase();
     let found = lang_terms

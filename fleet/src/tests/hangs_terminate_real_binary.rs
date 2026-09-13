@@ -17,9 +17,16 @@ use std::time::{Duration, Instant};
 
 /// Run `bin() args...` with `stdin` closed, bounded to `budget` wall-clock time. `None` means the
 /// deadline was hit and the child was killed -- a regression back to a hang, not a pass.
-fn run_bounded(args: &[&str], envs: &[(&str, &str)], budget: Duration) -> Option<(i32, String, String)> {
+fn run_bounded(
+    args: &[&str],
+    envs: &[(&str, &str)],
+    budget: Duration,
+) -> Option<(i32, String, String)> {
     let mut c = cmd();
-    c.args(args).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
+    c.args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     for (k, v) in envs {
         c.env(k, v);
     }
@@ -56,24 +63,41 @@ fn fleet_run_terminates_with_a_real_exit_code_instead_of_hanging() {
 
     let result = run_bounded(
         &["run", "--repo", &repo_arg, "--task", "add a test"],
-        &[("FLEET_STATE_DIR", &state_env), ("FLEET_VERIFY_BUDGET_SECS", "2")],
+        &[
+            ("FLEET_STATE_DIR", &state_env),
+            ("FLEET_VERIFY_BUDGET_SECS", "2"),
+        ],
         Duration::from_secs(25),
     );
     let (code, out, err) = result.expect("fleet run must terminate, not hang, within 25s");
-    assert_ne!(code, 0, "an empty scratch repo cannot pass real verify gates: stdout={out} stderr={err}");
-    assert!(err.contains("stage"), "expected stage progress on stderr, got: {err}");
+    assert_ne!(
+        code, 0,
+        "an empty scratch repo cannot pass real verify gates: stdout={out} stderr={err}"
+    );
+    assert!(
+        err.contains("stage"),
+        "expected stage progress on stderr, got: {err}"
+    );
 }
 
 #[test]
 fn fleet_oracle_with_no_args_terminates_with_guidance_and_nonzero_exit() {
-    let result = run_bounded(&["oracle"], &[("FLEET_VERIFY_BUDGET_SECS", "2")], Duration::from_secs(20));
+    let result = run_bounded(
+        &["oracle"],
+        &[("FLEET_VERIFY_BUDGET_SECS", "2")],
+        Duration::from_secs(20),
+    );
     let (code, _out, err) = result.expect("fleet oracle must terminate, not hang, within 20s");
     assert_ne!(code, 0, "stderr: {err}");
 }
 
 #[test]
 fn fleet_gate_with_no_args_terminates_with_guidance_and_nonzero_exit() {
-    let result = run_bounded(&["gate"], &[("FLEET_VERIFY_BUDGET_SECS", "2")], Duration::from_secs(20));
+    let result = run_bounded(
+        &["gate"],
+        &[("FLEET_VERIFY_BUDGET_SECS", "2")],
+        Duration::from_secs(20),
+    );
     let (code, _out, err) = result.expect("fleet gate must terminate, not hang, within 20s");
     assert_ne!(code, 0, "stderr: {err}");
 }

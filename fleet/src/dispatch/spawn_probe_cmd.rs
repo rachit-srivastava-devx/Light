@@ -5,10 +5,10 @@
 
 use crate::cli::args_agent::SpawnProbeArgs;
 use crate::dispatch::error::DispatchError;
-use types::{Role, TaskId};
 use builder::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
 use std::path::PathBuf;
 use std::time::Duration;
+use types::{Role, TaskId};
 
 pub fn probe(args: SpawnProbeArgs) -> Result<(), DispatchError> {
     let request = SpawnRequest {

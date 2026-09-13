@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::{CapabilityReport, CapabilityState, Candidate};
+use crate::{Candidate, CapabilityReport, CapabilityState};
 
 fn unknown_report(candidate: &Candidate, reason: &str) -> CapabilityReport {
     let mut caps = HashMap::new();
     caps.insert(
         "probe_result".into(),
-        CapabilityState::Unknown { reason: reason.into() },
+        CapabilityState::Unknown {
+            reason: reason.into(),
+        },
     );
     CapabilityReport {
         candidate: candidate.clone(),

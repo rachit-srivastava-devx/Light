@@ -1,6 +1,9 @@
-use plan::{submission_eligible, validate_review_contract, verdict_decision, RoleContract, VerdictDecision, VerdictName, VerdictRefusal};
-use types::{LifecycleState, TaskId};
+use plan::{
+    submission_eligible, validate_review_contract, verdict_decision, RoleContract, VerdictDecision,
+    VerdictName, VerdictRefusal,
+};
 use std::collections::BTreeSet;
+use types::{LifecycleState, TaskId};
 
 fn set(items: &[&str]) -> BTreeSet<String> {
     items.iter().map(|s| s.to_string()).collect()
@@ -24,9 +27,25 @@ fn full_submit_to_accept_happy_path() {
 
     let worker_id = TaskId::parse("worker-1").unwrap();
     let reviewer_id = TaskId::parse("reviewer-1").unwrap();
-    assert!(submission_eligible(&worker_id, &reviewer_id, LifecycleState::Verifying, LifecycleState::Intake, 0, 3).is_ok());
+    assert!(submission_eligible(
+        &worker_id,
+        &reviewer_id,
+        LifecycleState::Verifying,
+        LifecycleState::Intake,
+        0,
+        3
+    )
+    .is_ok());
 
-    let decision = verdict_decision("looks good", LifecycleState::Verified, VerdictName::Accept, 0, 3, "plan").unwrap();
+    let decision = verdict_decision(
+        "looks good",
+        LifecycleState::Verified,
+        VerdictName::Accept,
+        0,
+        3,
+        "plan",
+    )
+    .unwrap();
     assert_eq!(decision, VerdictDecision::Accept);
 }
 
@@ -34,33 +53,84 @@ fn full_submit_to_accept_happy_path() {
 fn submission_eligible_boundary_at_exact_limit() {
     let worker_id = TaskId::parse("w").unwrap();
     let reviewer_id = TaskId::parse("r").unwrap();
-    let refused = submission_eligible(&worker_id, &reviewer_id, LifecycleState::Verifying, LifecycleState::Intake, 3, 3);
+    let refused = submission_eligible(
+        &worker_id,
+        &reviewer_id,
+        LifecycleState::Verifying,
+        LifecycleState::Intake,
+        3,
+        3,
+    );
     assert!(refused.is_err());
-    let ok = submission_eligible(&worker_id, &reviewer_id, LifecycleState::Verifying, LifecycleState::Intake, 2, 3);
+    let ok = submission_eligible(
+        &worker_id,
+        &reviewer_id,
+        LifecycleState::Verifying,
+        LifecycleState::Intake,
+        2,
+        3,
+    );
     assert!(ok.is_ok());
 }
 
 #[test]
 fn submission_eligible_rejects_self_review() {
     let id = TaskId::parse("same").unwrap();
-    let r = submission_eligible(&id, &id, LifecycleState::Verifying, LifecycleState::Intake, 0, 3);
+    let r = submission_eligible(
+        &id,
+        &id,
+        LifecycleState::Verifying,
+        LifecycleState::Intake,
+        0,
+        3,
+    );
     assert!(r.is_err());
 }
 
 #[test]
 fn verdict_decision_revise_past_limit_escalates_not_revises() {
-    let d = verdict_decision("r", LifecycleState::Verified, VerdictName::Revise, 3, 3, "plan").unwrap();
-    assert_eq!(d, VerdictDecision::Escalate { attempts: 3, limit: 3 });
+    let d = verdict_decision(
+        "r",
+        LifecycleState::Verified,
+        VerdictName::Revise,
+        3,
+        3,
+        "plan",
+    )
+    .unwrap();
+    assert_eq!(
+        d,
+        VerdictDecision::Escalate {
+            attempts: 3,
+            limit: 3
+        }
+    );
 }
 
 #[test]
 fn verdict_decision_reason_missing_wins_over_every_other_check() {
-    let err = verdict_decision("", LifecycleState::Intake, VerdictName::Accept, 99, 1, "nonsense").unwrap_err();
+    let err = verdict_decision(
+        "",
+        LifecycleState::Intake,
+        VerdictName::Accept,
+        99,
+        1,
+        "nonsense",
+    )
+    .unwrap_err();
     assert_eq!(err, VerdictRefusal::ReasonMissing);
 }
 
 #[test]
 fn verdict_decision_reenter_state_must_be_plan() {
-    let err = verdict_decision("r", LifecycleState::Verified, VerdictName::Revise, 0, 3, "somewhere-else").unwrap_err();
+    let err = verdict_decision(
+        "r",
+        LifecycleState::Verified,
+        VerdictName::Revise,
+        0,
+        3,
+        "somewhere-else",
+    )
+    .unwrap_err();
     assert!(matches!(err, VerdictRefusal::ReenterStateUnsupported(_)));
 }

@@ -1,8 +1,8 @@
 use crate::merge::{merge_lane, MergeOutcome};
 use crate::worktree::{create as create_worktree, remove as remove_worktree, Worktree};
-use types::{Blueprint, Module};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use types::{Blueprint, Module};
 
 /// A lane represents one module's execution context with its own worktree and branch.
 #[derive(Clone, Debug)]
@@ -40,7 +40,7 @@ pub struct LaneManager {
 
 impl LaneManager {
     /// Create a new lane manager.
-    /// 
+    ///
     /// # Arguments
     /// * `repo` - Path to the git repository
     /// * `state_dir` - Path to the state directory for tracking execution
@@ -79,7 +79,12 @@ impl LaneManager {
     }
 
     /// Update a lane with its blueprint.
-    pub fn with_blueprint(&mut self, lanes: &mut HashMap<String, Lane>, module_id: &str, blueprint: Blueprint) {
+    pub fn with_blueprint(
+        &mut self,
+        lanes: &mut HashMap<String, Lane>,
+        module_id: &str,
+        blueprint: Blueprint,
+    ) {
         if let Some(lane) = lanes.get_mut(module_id) {
             lane.blueprint = Some(blueprint);
         }
@@ -227,11 +232,7 @@ mod tests {
 
     #[test]
     fn test_lane_manager_creation() {
-        let manager = LaneManager::new(
-            PathBuf::from("/tmp/repo"),
-            PathBuf::from("/tmp/state"),
-            4,
-        );
+        let manager = LaneManager::new(PathBuf::from("/tmp/repo"), PathBuf::from("/tmp/state"), 4);
 
         assert_eq!(manager.repo().to_string_lossy(), "/tmp/repo");
         assert_eq!(manager.state_dir().to_string_lossy(), "/tmp/state");

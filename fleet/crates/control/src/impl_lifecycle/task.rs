@@ -44,6 +44,10 @@ impl<S: State> Task<S> {
             to: std::any::type_name::<N>(),
             evidence,
         })?;
-        Ok(Task { id: self.id, retry_depth: self.retry_depth, _s: PhantomData })
+        Ok(Task {
+            id: self.id,
+            retry_depth: self.retry_depth,
+            _s: PhantomData,
+        })
     }
 }

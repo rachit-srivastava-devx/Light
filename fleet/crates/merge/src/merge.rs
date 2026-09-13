@@ -38,8 +38,8 @@ pub fn merge_lane(
     if !add.status.success() {
         return Err(MergeRefusal::StageFailed(worktree_dir.to_path_buf()));
     }
-    let staged_out = run_git(worktree_dir, &["diff", "--cached", "--name-only"])
-        .map_err(MergeRefusal::Spawn)?;
+    let staged_out =
+        run_git(worktree_dir, &["diff", "--cached", "--name-only"]).map_err(MergeRefusal::Spawn)?;
     let staged_files = count_lines(&staged_out.stdout);
     check_stage_nonempty(staged_files, branch)?;
 
@@ -50,17 +50,28 @@ pub fn merge_lane(
     )
     .map_err(MergeRefusal::Spawn)?;
     if !commit.status.success() {
-        return Err(MergeRefusal::CommitFailed { branch: branch.to_string() });
+        return Err(MergeRefusal::CommitFailed {
+            branch: branch.to_string(),
+        });
     }
 
     let before = rev_parse_head(repo)?;
     let merge = run_git(
         repo,
-        &["-c", "core.hooksPath=/dev/null", "merge", "--no-edit", "-q", branch],
+        &[
+            "-c",
+            "core.hooksPath=/dev/null",
+            "merge",
+            "--no-edit",
+            "-q",
+            branch,
+        ],
     )
     .map_err(MergeRefusal::Spawn)?;
     if !merge.status.success() {
-        return Err(MergeRefusal::Conflict { branch: branch.to_string() });
+        return Err(MergeRefusal::Conflict {
+            branch: branch.to_string(),
+        });
     }
     let after = rev_parse_head(repo)?;
     check_head_moved(&before, &after, branch)?;
@@ -70,7 +81,13 @@ pub fn merge_lane(
     let changed_files = count_lines(&diff_out.stdout);
     check_files_changed(changed_files, branch)?;
 
-    Ok(MergeOutcome { branch: branch.to_string(), staged_files, changed_files, before, after })
+    Ok(MergeOutcome {
+        branch: branch.to_string(),
+        staged_files,
+        changed_files,
+        before,
+        after,
+    })
 }
 
 /// Create a GitHub pull request from branch work using `gh pr create`.
@@ -83,7 +100,12 @@ pub fn pr_emit(
     diff_summary: &str,
 ) -> Result<PrOutcome, PrError> {
     // Check that gh CLI is available
-    if !Command::new("gh").arg("--version").output().map(|o| o.status.success()).unwrap_or(false) {
+    if !Command::new("gh")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+    {
         return Err(PrError::GhCliNotFound);
     }
 
@@ -97,7 +119,7 @@ pub fn pr_emit(
     // Parse module_brief JSON to extract module_id and description if possible
     // For now, use branch as module_id placeholder
     let title = format!("Module: {} - Changes from lane", branch);
-    
+
     let body = format!(
         "## Module Brief\n{}\n\n## Diff Summary\n{}",
         module_brief, diff_summary
@@ -149,7 +171,11 @@ mod tests {
     #[test]
     fn test_pr_emit_github_cli_check() {
         // This test just verifies gh CLI availability
-        let available = Command::new("gh").arg("--version").output().map(|o| o.status.success()).unwrap_or(false);
+        let available = Command::new("gh")
+            .arg("--version")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
         println!("gh CLI available: {}", available);
     }
 }

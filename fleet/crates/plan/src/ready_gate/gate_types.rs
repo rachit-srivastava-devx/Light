@@ -4,8 +4,19 @@ use serde_json::Value;
 
 /// The 14 check ids, byte-identical to and in the same order as `lld_ready.rs:24-39`.
 pub const GATE_CHECK_IDS: [&str; 14] = [
-    "C1-OPEN", "C2-OWNER", "C3-ACC-PARSE", "C3-ACC-GROUND", "C3-ACC-NONTAUT", "R17-DERIV",
-    "R19-ABSOLUTE", "R21-ALTS", "R21-FAIL", "C12-STORE", "C12-DEPS", "REG-VERDICT", "IFACE",
+    "C1-OPEN",
+    "C2-OWNER",
+    "C3-ACC-PARSE",
+    "C3-ACC-GROUND",
+    "C3-ACC-NONTAUT",
+    "R17-DERIV",
+    "R19-ABSOLUTE",
+    "R21-ALTS",
+    "R21-FAIL",
+    "C12-STORE",
+    "C12-DEPS",
+    "REG-VERDICT",
+    "IFACE",
     "SHAPE",
 ];
 

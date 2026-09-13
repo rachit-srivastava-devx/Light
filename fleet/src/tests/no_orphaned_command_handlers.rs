@@ -19,7 +19,12 @@ use support::m4::{command_module_names, read_or_fail_loudly};
 fn every_cmd_module_is_called_from_the_dispatch_match() {
     let mod_rs = read_or_fail_loudly("dispatch/mod.rs");
     let modules = command_module_names(&mod_rs);
-    let dead: Vec<&String> =
-        modules.iter().filter(|m| !mod_rs.contains(&format!("{m}::"))).collect();
-    assert!(dead.is_empty(), "dead command module(s), never called from dispatch::run: {dead:?}");
+    let dead: Vec<&String> = modules
+        .iter()
+        .filter(|m| !mod_rs.contains(&format!("{m}::")))
+        .collect();
+    assert!(
+        dead.is_empty(),
+        "dead command module(s), never called from dispatch::run: {dead:?}"
+    );
 }

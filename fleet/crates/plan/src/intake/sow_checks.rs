@@ -46,5 +46,7 @@ pub(crate) fn has_measurable_threshold(text: &str) -> bool {
         return true;
     }
     let b = lc.as_bytes();
-    b.iter().enumerate().any(|(i, &c)| c == b'%' && i > 0 && b[i - 1].is_ascii_digit())
+    b.iter()
+        .enumerate()
+        .any(|(i, &c)| c == b'%' && i > 0 && b[i - 1].is_ascii_digit())
 }

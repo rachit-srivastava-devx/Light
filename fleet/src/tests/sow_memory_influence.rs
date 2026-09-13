@@ -22,7 +22,10 @@ fn run(state_dir: &std::path::Path) -> (bool, String) {
         .args(["sow", "--text", VALID, "--intent-hash", "abc123"])
         .output()
         .expect("binary runs");
-    (out.status.success(), String::from_utf8_lossy(&out.stderr).to_string())
+    (
+        out.status.success(),
+        String::from_utf8_lossy(&out.stderr).to_string(),
+    )
 }
 
 #[test]
@@ -37,7 +40,10 @@ fn a_second_identical_sow_recalls_the_first_runs_memory() {
     );
 
     let (ok2, second) = run(state_dir.path());
-    assert!(!ok2, "second run: same SOW must be refused as prior decision\n{second}");
+    assert!(
+        !ok2,
+        "second run: same SOW must be refused as prior decision\n{second}"
+    );
     assert!(
         second.contains("This looks like a prior decision"),
         "second run over the SAME state dir and SAME text must recall the memory the first \
@@ -45,5 +51,8 @@ fn a_second_identical_sow_recalls_the_first_runs_memory() {
          \nfirst:\n{first}\nsecond:\n{second}"
     );
 
-    assert_ne!(first, second, "second run must differ from first BECAUSE of memory recall");
+    assert_ne!(
+        first, second,
+        "second run must differ from first BECAUSE of memory recall"
+    );
 }

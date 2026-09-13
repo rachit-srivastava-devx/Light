@@ -31,7 +31,9 @@ pub enum ApplyError {
 
     /// The resolved, canonicalised target (or a symlinked ancestor of it) falls outside the
     /// worktree -- covers both `..` disguised via a symlink and a pre-existing symlinked target.
-    #[error("freelane apply: fence #{index} target {path:?} resolves outside the worktree -- refusing")]
+    #[error(
+        "freelane apply: fence #{index} target {path:?} resolves outside the worktree -- refusing"
+    )]
     EscapesWorktree { index: usize, path: String },
 
     /// The worktree root itself could not be canonicalised -- should not happen for a real lane,

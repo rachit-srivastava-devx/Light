@@ -30,12 +30,19 @@ fn is_executable(path: &Path) -> bool {
 /// `None` means it is genuinely not installed anywhere fleet knows to look.
 pub fn find(name: &str) -> Option<PathBuf> {
     let out = Command::new("which").arg(name).output();
-    let on_path = out.ok().filter(|o| o.status.success()).map(|o| o.stdout).unwrap_or_default();
+    let on_path = out
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| o.stdout)
+        .unwrap_or_default();
     let on_path = String::from_utf8_lossy(&on_path).trim().to_string();
     if !on_path.is_empty() {
         return Some(PathBuf::from(on_path));
     }
-    fallback_dirs().into_iter().map(|d| d.join(name)).find(|p| is_executable(p))
+    fallback_dirs()
+        .into_iter()
+        .map(|d| d.join(name))
+        .find(|p| is_executable(p))
 }
 
 pub fn found(name: &str) -> bool {
@@ -56,7 +63,9 @@ pub fn resolve_bin(bin: &str) -> String {
     if bin.contains(std::path::MAIN_SEPARATOR) {
         return bin.to_string();
     }
-    find(bin).map(|p| p.display().to_string()).unwrap_or_else(|| bin.to_string())
+    find(bin)
+        .map(|p| p.display().to_string())
+        .unwrap_or_else(|| bin.to_string())
 }
 
 #[cfg(test)]
@@ -67,7 +76,10 @@ mod tests {
     fn searched_names_path_and_the_rustup_locations() {
         let text = searched();
         assert!(text.starts_with("$PATH"), "got {text}");
-        assert!(text.contains(".cargo/bin") || std::env::var_os("HOME").is_none(), "got {text}");
+        assert!(
+            text.contains(".cargo/bin") || std::env::var_os("HOME").is_none(),
+            "got {text}"
+        );
     }
 
     /// A resolved `GateCommand::Script` path must never be rewritten by the bare-name lookup.

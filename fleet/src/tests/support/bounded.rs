@@ -9,9 +9,16 @@ use std::time::{Duration, Instant};
 
 /// Run `bin() args...` with `stdin` closed, bounded to `budget` wall-clock time. `None` means the
 /// deadline was hit and the child was killed -- a regression back to a hang, not a pass.
-pub fn run_bounded(args: &[&str], envs: &[(&str, &str)], budget: Duration) -> Option<(i32, String, String)> {
+pub fn run_bounded(
+    args: &[&str],
+    envs: &[(&str, &str)],
+    budget: Duration,
+) -> Option<(i32, String, String)> {
     let mut c = cmd();
-    c.args(args).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
+    c.args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     for (k, v) in envs {
         c.env(k, v);
     }

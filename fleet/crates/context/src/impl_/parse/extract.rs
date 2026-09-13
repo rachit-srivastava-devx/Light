@@ -3,8 +3,8 @@
 
 use super::super::error::ContextError;
 use super::super::parse::extract_call::call;
-use super::super::parse::extract_macro_call::macro_body_call;
 use super::super::parse::extract_definition::definition;
+use super::super::parse::extract_macro_call::macro_body_call;
 use super::super::types::Language;
 use tree_sitter::Node;
 
@@ -47,10 +47,16 @@ pub fn collect_nodes(
     // children pairwise for `<name> <nested "(...)"  token_tree>` (see `macro_body_call`'s doc).
     if language == Language::Rust && node.kind() == "token_tree" {
         if let Some(caller) = next {
-            let children: Vec<Node> = (0..node.named_child_count()).filter_map(|i| node.named_child(i)).collect();
+            let children: Vec<Node> = (0..node.named_child_count())
+                .filter_map(|i| node.named_child(i))
+                .collect();
             for pair in children.windows(2) {
                 if let Some((callee_name, arity)) = macro_body_call(pair[0], pair[1], source) {
-                    calls.push(RawCall { caller, callee_name, arity });
+                    calls.push(RawCall {
+                        caller,
+                        callee_name,
+                        arity,
+                    });
                 }
             }
         }

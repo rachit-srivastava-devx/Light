@@ -4,16 +4,16 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::time::SystemTime;
 
-use types::{Blake3Hash, ExitCode, PrevHash, Receipt, ReceiptEvent, SchemaV1};
 use serde_json::Value;
+use types::{Blake3Hash, ExitCode, PrevHash, Receipt, ReceiptEvent, SchemaV1};
 
+use super::super::io_fault::IoFault;
+use super::super::lock::FileLock;
 use super::canon::canonical_bytes;
 use super::clock::now_rfc3339;
 use super::tail::read_tail;
 use super::types::LedgerError;
 use super::Ledger;
-use super::super::io_fault::IoFault;
-use super::super::lock::FileLock;
 
 impl Ledger {
     /// Append one receipt. O(1) amortised in chain length: reads only the current on-disk tip
@@ -40,7 +40,15 @@ impl Ledger {
         };
         let ts_wall = now_rfc3339(SystemTime::now());
         let canonical = canonical_bytes(
-            &SchemaV1, seq, &prev_hash, &ts_wall, &event, &actor, &resolved_model, &exit_code, &body,
+            &SchemaV1,
+            seq,
+            &prev_hash,
+            &ts_wall,
+            &event,
+            &actor,
+            &resolved_model,
+            &exit_code,
+            &body,
         );
         let mut hash_input = prev_hash.as_str().as_bytes().to_vec();
         hash_input.extend_from_slice(&canonical);
@@ -59,19 +67,31 @@ impl Ledger {
             exit_code,
             body,
         };
-        let line = serde_json::to_string(&receipt)
-            .map_err(|e| LedgerError::MalformedRow { seq, reason: e.to_string() })?;
+        let line = serde_json::to_string(&receipt).map_err(|e| LedgerError::MalformedRow {
+            seq,
+            reason: e.to_string(),
+        })?;
         let mut file = OpenOptions::new()
             .create(true)
             .append(true)
             .open(&self.paths.chain)
-            .map_err(|source| IoFault::Open { path: self.paths.chain.clone(), source })?;
+            .map_err(|source| IoFault::Open {
+                path: self.paths.chain.clone(),
+                source,
+            })?;
         file.write_all(line.as_bytes())
-            .map_err(|source| IoFault::Write { path: self.paths.chain.clone(), source })?;
-        file.write_all(b"\n")
-            .map_err(|source| IoFault::Write { path: self.paths.chain.clone(), source })?;
-        file.sync_data()
-            .map_err(|source| IoFault::Write { path: self.paths.chain.clone(), source })?;
+            .map_err(|source| IoFault::Write {
+                path: self.paths.chain.clone(),
+                source,
+            })?;
+        file.write_all(b"\n").map_err(|source| IoFault::Write {
+            path: self.paths.chain.clone(),
+            source,
+        })?;
+        file.sync_data().map_err(|source| IoFault::Write {
+            path: self.paths.chain.clone(),
+            source,
+        })?;
         Ok(receipt)
     }
 }

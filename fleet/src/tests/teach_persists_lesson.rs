@@ -23,20 +23,32 @@ fn a_failed_run_writes_a_lesson_that_outlives_the_process() {
         .arg(repo.path())
         .output()
         .expect("binary runs");
-    assert!(!output.status.success(), "a non-worktree --repo must make Merge fail");
+    assert!(
+        !output.status.success(),
+        "a non-worktree --repo must make Merge fail"
+    );
     let stdout = String::from_utf8_lossy(&output.stdout);
     // `final_stage` names where the run ACTUALLY ended -- here, the stage that failed. This
     // previously asserted `"Teach"`, pinning a defect: `graph.rs` overwrote `final_stage` with
     // Teach on every path, so `fleet run` told users to investigate a stage that never failed.
     // Teach still runs (that is what the lesson assertion below proves); it is just not the
     // answer to "where did this run stop".
-    assert!(stdout.contains("\"final_stage\": \"Merge\""), "must report the failing stage: {stdout}");
+    assert!(
+        stdout.contains("\"final_stage\": \"Merge\""),
+        "must report the failing stage: {stdout}"
+    );
 
     // The child process above has already exited by the time `.output()` returns -- this is a
     // separate read, off disk, of a file no longer-running process could still be holding open.
     let lesson_path = state_dir.path().join("memory").join("sow.json");
     let persisted = fs::read_to_string(&lesson_path)
         .unwrap_or_else(|e| panic!("lesson must survive the process at {lesson_path:?}: {e}"));
-    assert!(persisted.contains("merge"), "lesson must name the failing stage: {persisted}");
-    assert!(persisted.contains("mitigation="), "lesson must carry a mitigation field: {persisted}");
+    assert!(
+        persisted.contains("merge"),
+        "lesson must name the failing stage: {persisted}"
+    );
+    assert!(
+        persisted.contains("mitigation="),
+        "lesson must carry a mitigation field: {persisted}"
+    );
 }

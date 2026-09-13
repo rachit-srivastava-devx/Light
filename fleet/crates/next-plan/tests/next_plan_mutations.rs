@@ -1,17 +1,30 @@
-use next_plan::{propose_next, MemQueue, NextError, NextInput, NextPlanSignal, NextQueue, PlanDraft};
+use next_plan::{
+    propose_next, MemQueue, NextError, NextInput, NextPlanSignal, NextQueue, PlanDraft,
+};
 
 fn inp(digest: &str, write: &[&str], meas: &[&str], mods: &[&str]) -> NextInput {
     NextInput {
         current_plan_digest: digest.into(),
         current_write_set: write.iter().map(|s| s.to_string()).collect(),
         current_measure_set: meas.iter().map(|s| s.to_string()).collect(),
-        candidate: PlanDraft { modules: mods.iter().map(|s| s.to_string()).collect(), digest: "x".into() },
+        candidate: PlanDraft {
+            modules: mods.iter().map(|s| s.to_string()).collect(),
+            digest: "x".into(),
+        },
         queue_capacity: 4,
     }
 }
 
 fn sig(parent: &str) -> NextPlanSignal {
-    NextPlanSignal { parent_digest: parent.into(), candidate: PlanDraft { modules: vec![], digest: parent.into() }, write_set: vec![], measure_set: vec![] }
+    NextPlanSignal {
+        parent_digest: parent.into(),
+        candidate: PlanDraft {
+            modules: vec![],
+            digest: parent.into(),
+        },
+        write_set: vec![],
+        measure_set: vec![],
+    }
 }
 #[test]
 fn propose_overlap_write_set_returns_err() {

@@ -17,7 +17,9 @@ fn stubs_still_wired_through_not_yet_implemented_keep_their_label() {
     let mod_rs = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/dispatch/mod.rs"))
         .expect("dispatch/mod.rs readable");
     let arm_start = mod_rs.find("other @ (").expect("a not-yet-implemented arm");
-    let arm_end = mod_rs[arm_start..].find("=> Err(ops_cmd::not_yet_implemented").expect("arm's own arrow");
+    let arm_end = mod_rs[arm_start..]
+        .find("=> Err(ops_cmd::not_yet_implemented")
+        .expect("arm's own arrow");
     let arm = &mod_rs[arm_start..arm_start + arm_end];
     let stub_names: Vec<String> = arm
         .split("Commands::")
@@ -25,12 +27,20 @@ fn stubs_still_wired_through_not_yet_implemented_keep_their_label() {
         .filter_map(|s| s.split(|c: char| !c.is_alphanumeric()).next())
         .map(kebab)
         .collect();
-    assert!(!stub_names.is_empty(), "found no stub command names in dispatch/mod.rs -- measuring nothing");
+    assert!(
+        !stub_names.is_empty(),
+        "found no stub command names in dispatch/mod.rs -- measuring nothing"
+    );
 
     let out = cmd().arg("--help").output().expect("binary runs");
     let stdout = String::from_utf8_lossy(&out.stdout);
     let mut unlabeled = Vec::new();
-    for line in stdout.split("Commands:\n").nth(1).expect("a Commands: section").lines() {
+    for line in stdout
+        .split("Commands:\n")
+        .nth(1)
+        .expect("a Commands: section")
+        .lines()
+    {
         let trimmed = line.trim();
         if trimmed.is_empty() || !line.starts_with("  ") {
             break;
@@ -42,12 +52,21 @@ fn stubs_still_wired_through_not_yet_implemented_keep_their_label() {
             unlabeled.push(name);
         }
     }
-    assert!(unlabeled.is_empty(), "still-a-stub command(s) missing their NOT IMPLEMENTED label: {unlabeled:?}");
+    assert!(
+        unlabeled.is_empty(),
+        "still-a-stub command(s) missing their NOT IMPLEMENTED label: {unlabeled:?}"
+    );
 
     // The specific case the brief named: `adjudicate` must have left the stub set above AND
     // its label must have actually changed to match (not just been deleted).
-    let adjudicate_desc = stdout.lines().find(|l| l.trim_start().starts_with("adjudicate ")).unwrap_or("");
-    assert!(!stub_names.contains(&"adjudicate".to_string()), "adjudicate is still in the stub arm");
+    let adjudicate_desc = stdout
+        .lines()
+        .find(|l| l.trim_start().starts_with("adjudicate "))
+        .unwrap_or("");
+    assert!(
+        !stub_names.contains(&"adjudicate".to_string()),
+        "adjudicate is still in the stub arm"
+    );
     assert!(
         !adjudicate_desc.contains("NOT IMPLEMENTED"),
         "adjudicate --help still carries a stale NOT IMPLEMENTED label: {adjudicate_desc:?}"

@@ -29,7 +29,10 @@ fn check_grant_target_ref_mismatch_refused() {
         expires_at: 9_999_999_999,
     };
     let req = make_req(g, 1, 1);
-    assert!(matches!(cas::check_grant(&req), Err(IntegrateError::Grant { .. })));
+    assert!(matches!(
+        cas::check_grant(&req),
+        Err(IntegrateError::Grant { .. })
+    ));
 }
 
 #[test]
@@ -40,19 +43,28 @@ fn check_grant_digest_mismatch_refused() {
         expires_at: 9_999_999_999,
     };
     let req = make_req(g, 1, 1);
-    assert!(matches!(cas::check_grant(&req), Err(IntegrateError::Grant { .. })));
+    assert!(matches!(
+        cas::check_grant(&req),
+        Err(IntegrateError::Grant { .. })
+    ));
 }
 
 #[test]
 fn check_grant_zero_checked_refuses() {
     let req = make_req(valid_grant(), 0, 1);
-    assert!(matches!(cas::check_grant(&req), Err(IntegrateError::Grant { .. })));
+    assert!(matches!(
+        cas::check_grant(&req),
+        Err(IntegrateError::Grant { .. })
+    ));
 }
 
 #[test]
 fn check_grant_partial_checked_refuses() {
     let req = make_req(valid_grant(), 1, 2);
-    assert!(matches!(cas::check_grant(&req), Err(IntegrateError::Grant { .. })));
+    assert!(matches!(
+        cas::check_grant(&req),
+        Err(IntegrateError::Grant { .. })
+    ));
 }
 
 #[test]

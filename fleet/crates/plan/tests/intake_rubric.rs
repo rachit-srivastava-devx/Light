@@ -1,11 +1,27 @@
-use plan::{derive_questions, intake_gate, open_questions, GateDecision, QuestionId, StageReadiness, Trigger};
+use plan::{
+    derive_questions, intake_gate, open_questions, GateDecision, QuestionId, StageReadiness,
+    Trigger,
+};
 use std::collections::BTreeSet;
 
 #[test]
 fn question_id_parse_matches_all_15_and_only_15() {
     let ids = [
-        "scope", "success", "cli_flag", "schema_migration", "ui_view", "api_endpoint", "deletion",
-        "scale", "tenancy", "precision", "auth", "ownership", "failure", "unhappy", "rename_refactor",
+        "scope",
+        "success",
+        "cli_flag",
+        "schema_migration",
+        "ui_view",
+        "api_endpoint",
+        "deletion",
+        "scale",
+        "tenancy",
+        "precision",
+        "auth",
+        "ownership",
+        "failure",
+        "unhappy",
+        "rename_refactor",
     ];
     for id in ids {
         let q = QuestionId::parse(id).unwrap();
@@ -45,30 +61,55 @@ fn open_questions_excludes_answered_ids() {
     answered.insert(QuestionId::Success);
     let open = open_questions(&qs, &answered);
     assert_eq!(open.len(), qs.len() - 2);
-    assert!(open.iter().all(|q| q.id != QuestionId::Scope && q.id != QuestionId::Success));
+    assert!(open
+        .iter()
+        .all(|q| q.id != QuestionId::Scope && q.id != QuestionId::Success));
 }
 
 #[test]
 fn intake_gate_priority_order_matches_bash() {
-    let stages = StageReadiness { sow: false, atomic: false, challenges: false, clarifications: false };
+    let stages = StageReadiness {
+        sow: false,
+        atomic: false,
+        challenges: false,
+        clarifications: false,
+    };
     let d = intake_gate(3, stages, 5);
     assert_eq!(d, GateDecision::BlockedByRubric);
 }
 
 #[test]
 fn intake_gate_reports_ready() {
-    let stages = StageReadiness { sow: true, atomic: true, challenges: true, clarifications: true };
+    let stages = StageReadiness {
+        sow: true,
+        atomic: true,
+        challenges: true,
+        clarifications: true,
+    };
     assert_eq!(intake_gate(0, stages, 0), GateDecision::Ready);
 }
 
 #[test]
 fn intake_gate_blocked_by_stages_when_rubric_clear() {
-    let stages = StageReadiness { sow: true, atomic: false, challenges: true, clarifications: true };
+    let stages = StageReadiness {
+        sow: true,
+        atomic: false,
+        challenges: true,
+        clarifications: true,
+    };
     assert_eq!(intake_gate(0, stages, 2), GateDecision::BlockedByStages);
 }
 
 #[test]
 fn intake_gate_blocked_by_open_clarifications_last() {
-    let stages = StageReadiness { sow: true, atomic: true, challenges: true, clarifications: true };
-    assert_eq!(intake_gate(0, stages, 7), GateDecision::BlockedByOpenClarifications { count: 7 });
+    let stages = StageReadiness {
+        sow: true,
+        atomic: true,
+        challenges: true,
+        clarifications: true,
+    };
+    assert_eq!(
+        intake_gate(0, stages, 7),
+        GateDecision::BlockedByOpenClarifications { count: 7 }
+    );
 }

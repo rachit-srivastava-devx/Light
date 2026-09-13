@@ -23,11 +23,15 @@ pub fn report(review_cap: usize, ram_lanes_ceiling: Option<usize>) -> Result<(),
 
 fn print_measurement(m: &Measurement, budget_bytes: u64, load_factor: f64) {
     human::line("total_memory_mb", m.total_memory_bytes / (1024 * 1024));
-    human::line("available_memory_mb", m.available_memory_bytes / (1024 * 1024));
+    human::line(
+        "available_memory_mb",
+        m.available_memory_bytes / (1024 * 1024),
+    );
     human::line("load_avg_1m", m.load_avg_1m);
     human::line("logical_cores", m.logical_cores);
     human::line("per_lane_budget_mb", budget_bytes / (1024 * 1024));
     human::line("load_factor_threshold", load_factor);
-    let derived = crate::runtime::capacity::ram_lanes_from_available(m.available_memory_bytes, budget_bytes);
+    let derived =
+        crate::runtime::capacity::ram_lanes_from_available(m.available_memory_bytes, budget_bytes);
     human::line("derived_ram_lanes", derived);
 }

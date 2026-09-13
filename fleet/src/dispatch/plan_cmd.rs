@@ -12,10 +12,13 @@ use crate::dispatch::error::DispatchError;
 use crate::dispatch::memory::{record_accepted_sow, RealMemory};
 use crate::dispatch::sow_probes::{SequentialRunner, StubCodebase, StubResearch};
 use crate::print::human;
-use scan::{assess, Assessment, BusinessProbe, MemoryProbe, ProbeSet, RequirementInput, ResearchProbe, TechnicalProbe};
-use types::{Blueprint, Module, TaskId};
+use scan::{
+    assess, Assessment, BusinessProbe, MemoryProbe, ProbeSet, RequirementInput, ResearchProbe,
+    TechnicalProbe,
+};
 use std::collections::HashMap;
 use std::path::Path;
+use types::{Blueprint, Module, TaskId};
 
 pub fn sow(state_dir: &Path, args: SowArgs) -> Result<(), DispatchError> {
     let mut messages: Vec<String> = planner::validate_sow_text(&args.text, &args.intent_hash)
@@ -26,14 +29,24 @@ pub fn sow(state_dir: &Path, args: SowArgs) -> Result<(), DispatchError> {
     let (codebase, memory, research) = (StubCodebase, RealMemory::new(state_dir), StubResearch);
     let probes = ProbeSet {
         business: &BusinessProbe,
-        technical: &TechnicalProbe { codebase: &codebase },
+        technical: &TechnicalProbe {
+            codebase: &codebase,
+        },
         memory: &MemoryProbe { memory: &memory },
-        research: &ResearchProbe { research: &research },
+        research: &ResearchProbe {
+            research: &research,
+        },
     };
-    let input = RequirementInput { text: args.text.clone(), task_id: None };
+    let input = RequirementInput {
+        text: args.text.clone(),
+        task_id: None,
+    };
     if let Assessment::Open(open) = assess(&input, &probes, &SequentialRunner).result {
         for q in open.into_vec() {
-            messages.push(format!("ambiguity ({:?}): {} -- {}", q.probe, q.text, q.why));
+            messages.push(format!(
+                "ambiguity ({:?}): {} -- {}",
+                q.probe, q.text, q.why
+            ));
         }
     }
 
@@ -52,7 +65,10 @@ pub fn sow(state_dir: &Path, args: SowArgs) -> Result<(), DispatchError> {
         for m in &messages {
             human::refused(m);
         }
-        Err(DispatchError::Refusal(format!("{} sow violation(s)", messages.len())))
+        Err(DispatchError::Refusal(format!(
+            "{} sow violation(s)",
+            messages.len()
+        )))
     }
 }
 
@@ -63,29 +79,40 @@ pub fn sow_modules(
     modules: &[Module],
 ) -> Result<HashMap<String, Module>, DispatchError> {
     let mut result = HashMap::new();
-    
+
     // Track states for dependency checking
     let mut state_map: HashMap<String, String> = HashMap::new();
 
     for module in modules {
-        let mut messages: Vec<String> = planner::validate_sow_text(&module.sow_text, &format!("hash-{}", module.id))
-            .into_iter()
-            .map(|v| v.0)
-            .collect();
+        let mut messages: Vec<String> =
+            planner::validate_sow_text(&module.sow_text, &format!("hash-{}", module.id))
+                .into_iter()
+                .map(|v| v.0)
+                .collect();
 
         let (codebase, memory, research) = (StubCodebase, RealMemory::new(state_dir), StubResearch);
         let probes = ProbeSet {
             business: &BusinessProbe,
-            technical: &TechnicalProbe { codebase: &codebase },
+            technical: &TechnicalProbe {
+                codebase: &codebase,
+            },
             memory: &MemoryProbe { memory: &memory },
-            research: &ResearchProbe { research: &research },
+            research: &ResearchProbe {
+                research: &research,
+            },
         };
         let task_id = TaskId::parse(&module.id)
             .map_err(|_| DispatchError::Refusal(format!("module {} has invalid id", module.id)))?;
-        let input = RequirementInput { text: module.sow_text.clone(), task_id: Some(task_id) };
+        let input = RequirementInput {
+            text: module.sow_text.clone(),
+            task_id: Some(task_id),
+        };
         if let Assessment::Open(open) = assess(&input, &probes, &SequentialRunner).result {
             for q in open.into_vec() {
-                messages.push(format!("ambiguity ({:?}): {} -- {}", q.probe, q.text, q.why));
+                messages.push(format!(
+                    "ambiguity ({:?}): {} -- {}",
+                    q.probe, q.text, q.why
+                ));
             }
         }
 
@@ -97,15 +124,25 @@ pub fn sow_modules(
                 human::refused(format!("module {}: {}", module.id, m));
             }
             state_map.insert(module.id.clone(), "failed".to_string());
-            return Err(DispatchError::Refusal(format!("module {} has {} sow violation(s)", module.id, messages.len())));
+            return Err(DispatchError::Refusal(format!(
+                "module {} has {} sow violation(s)",
+                module.id,
+                messages.len()
+            )));
         }
     }
 
     // Rebuild modules with successful state
     for module in modules {
-        if state_map.get(&module.id).map(|s| s == "sowed").unwrap_or(false) {
+        if state_map
+            .get(&module.id)
+            .map(|s| s == "sowed")
+            .unwrap_or(false)
+        {
             let mut updated = module.clone();
-            updated.state = types::ModuleState::Sowed { sow_id: format!("sow-{}", module.id) };
+            updated.state = types::ModuleState::Sowed {
+                sow_id: format!("sow-{}", module.id),
+            };
             result.insert(module.id.clone(), updated);
         }
     }
@@ -129,7 +166,7 @@ pub fn plan_modules(
 ) -> Result<HashMap<String, Blueprint>, DispatchError> {
     // TODO: Implement actual parallel planning with L8 engineer role
     let mut blueprints = HashMap::new();
-    
+
     for module in _modules {
         // For now, create a stub blueprint
         let blueprint = Blueprint {
@@ -139,6 +176,6 @@ pub fn plan_modules(
         };
         blueprints.insert(module.id.clone(), blueprint);
     }
-    
+
     Ok(blueprints)
 }

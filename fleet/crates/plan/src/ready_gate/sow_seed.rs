@@ -14,15 +14,24 @@ pub(crate) fn check_sow_seed(value: Option<&Value>, out: &mut Vec<Violation>) {
     };
     for key in s.keys() {
         if !ALLOWED_SOW_SEED_FIELDS.contains(&key.as_str()) {
-            out.push(v(format!("sow_seed.{key}"), format!("unexpected property \"{key}\" (additionalProperties: false)")));
+            out.push(v(
+                format!("sow_seed.{key}"),
+                format!("unexpected property \"{key}\" (additionalProperties: false)"),
+            ));
         }
     }
     if !is_non_empty_str(s.get("restatement")) {
-        out.push(v("sow_seed.restatement", "restatement must be a non-empty string"));
+        out.push(v(
+            "sow_seed.restatement",
+            "restatement must be a non-empty string",
+        ));
     }
     check_accepts_when(s.get("blind_suite_seed"), "sow_seed.blind_suite_seed", out);
     if !is_non_empty_str(s.get("blast_radius")) {
-        out.push(v("sow_seed.blast_radius", "blast_radius must be a non-empty string"));
+        out.push(v(
+            "sow_seed.blast_radius",
+            "blast_radius must be a non-empty string",
+        ));
     }
     if !is_non_empty_str(s.get("owner")) {
         out.push(v("sow_seed.owner", "owner must be a non-empty string"));

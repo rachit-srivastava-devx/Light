@@ -24,7 +24,11 @@ impl VectorIndex for NoVectorIndex {
         Ok(())
     }
 
-    fn nearest(&self, _query_vector: &[f32], _k: u32) -> Result<Vec<(SymbolId, f32)>, ContextError> {
+    fn nearest(
+        &self,
+        _query_vector: &[f32],
+        _k: u32,
+    ) -> Result<Vec<(SymbolId, f32)>, ContextError> {
         Ok(Vec::new())
     }
 }

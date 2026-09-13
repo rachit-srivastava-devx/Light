@@ -46,7 +46,10 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 
 pub(crate) fn hash_canonical_string(canonical: &str) -> String {
-    format!("sha256:{}", hex_encode(&Sha256::digest(canonical.as_bytes())))
+    format!(
+        "sha256:{}",
+        hex_encode(&Sha256::digest(canonical.as_bytes()))
+    )
 }
 
 /// `"sha256:" + hex(sha256(canonical_json(value)))`.

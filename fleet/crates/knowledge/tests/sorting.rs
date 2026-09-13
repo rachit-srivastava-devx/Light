@@ -1,8 +1,12 @@
-use knowledge::{sources, Clock, InMemoryStore, KnowledgeItem, Kind, KnowledgeStore, Scope, SystemClock};
+use knowledge::{
+    sources, Clock, InMemoryStore, Kind, KnowledgeItem, KnowledgeStore, Scope, SystemClock,
+};
 
 struct FixedClock(String);
 impl Clock for FixedClock {
-    fn now_iso(&self) -> String { self.0.clone() }
+    fn now_iso(&self) -> String {
+        self.0.clone()
+    }
 }
 
 fn item(id: &str, scope: &str, evidence_count: u32) -> KnowledgeItem {
@@ -43,8 +47,12 @@ fn zero_items_returns_empty_not_panic() {
 fn query_param_filters_results() {
     let store = InMemoryStore::new();
     store.put_candidate(item("rust-basics", "lang", 1)).unwrap();
-    store.put_candidate(item("python-intro", "lang", 1)).unwrap();
-    store.put_candidate(item("rust-advanced", "lang", 2)).unwrap();
+    store
+        .put_candidate(item("python-intro", "lang", 1))
+        .unwrap();
+    store
+        .put_candidate(item("rust-advanced", "lang", 2))
+        .unwrap();
     let manifest = sources(&store, "rust", &Scope::new("lang"), 10, &SystemClock).unwrap();
     assert_eq!(manifest.items.len(), 2);
     assert!(manifest.items.iter().all(|i| i.id.contains("rust")));

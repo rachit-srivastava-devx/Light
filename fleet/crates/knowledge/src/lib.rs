@@ -10,7 +10,7 @@ pub mod promote;
 
 pub use clock::{Clock, SystemClock};
 pub use filter::sources;
-pub use item::{KnowledgeItem, Kind, Scope, SourceManifest};
+pub use item::{Kind, KnowledgeItem, Scope, SourceManifest};
 pub use port::InMemoryStore;
 
 use thiserror::Error;

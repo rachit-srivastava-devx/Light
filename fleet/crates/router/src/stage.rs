@@ -20,8 +20,14 @@ pub(crate) fn stage(number: usize, name: &'static str, candidates: &[CandidateSp
 
 /// Stage 1: filter `ORDER` to the candidates `role`'s tier allows. `role = None` yields empty.
 pub(crate) fn filter_role(role: Option<Role>) -> Vec<CandidateSpec> {
-    role.map(|role| ORDER.iter().copied().filter(|c| role_allows(role, *c)).collect())
-        .unwrap_or_default()
+    role.map(|role| {
+        ORDER
+            .iter()
+            .copied()
+            .filter(|c| role_allows(role, *c))
+            .collect()
+    })
+    .unwrap_or_default()
 }
 
 /// Stage 1's refusal, if `candidates` came back empty.
@@ -54,16 +60,28 @@ pub(crate) fn refusal_capability(candidates: &[CandidateSpec]) -> Option<Refusal
 pub(crate) fn filter_quota(candidates: &mut Vec<CandidateSpec>, runtime: &RuntimeState) {
     candidates.retain(|c| {
         !runtime.cooldown.contains(c.adapter)
-            && runtime.remaining.get(c.adapter).copied().flatten().is_some_and(|r| r >= runtime.required_tokens)
+            && runtime
+                .remaining
+                .get(c.adapter)
+                .copied()
+                .flatten()
+                .is_some_and(|r| r >= runtime.required_tokens)
     });
 }
 
 /// Stage 4's refusal, if `candidates` came back empty.
-pub(crate) fn refusal_quota(candidates: &[CandidateSpec], runtime: &RuntimeState) -> Option<Refusal> {
+pub(crate) fn refusal_quota(
+    candidates: &[CandidateSpec],
+    runtime: &RuntimeState,
+) -> Option<Refusal> {
     candidates.is_empty().then(|| Refusal {
         stage: 4,
         stage_name: "availability/quota",
-        reason: "all eligible lanes are cooling down or lack a sufficient known quota window".into(),
-        fix: format!("wait for cooldown/reset or configure a measured window of at least {} tokens", runtime.required_tokens),
+        reason: "all eligible lanes are cooling down or lack a sufficient known quota window"
+            .into(),
+        fix: format!(
+            "wait for cooldown/reset or configure a measured window of at least {} tokens",
+            runtime.required_tokens
+        ),
     })
 }

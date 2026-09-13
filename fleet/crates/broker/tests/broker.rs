@@ -22,13 +22,19 @@ impl Provider for Mock {
     fn dispatch(&self, e: &ExternalEffect) -> Result<ProviderAck, BrokerError> {
         self.calls.set(self.calls.get() + 1);
         if self.ok {
-            Ok(ProviderAck { key: e.idempotency_key.clone(), provider_ref: "scripted".into() })
+            Ok(ProviderAck {
+                key: e.idempotency_key.clone(),
+                provider_ref: "scripted".into(),
+            })
         } else {
             Err(BrokerError::Provider("scripted failure".into()))
         }
     }
     fn readback(&self, k: &str) -> Result<Readback, BrokerError> {
-        Ok(Readback { key: k.into(), state: EffectState::Acked })
+        Ok(Readback {
+            key: k.into(),
+            state: EffectState::Acked,
+        })
     }
 }
 
@@ -55,7 +61,10 @@ mod tests {
 
     #[test]
     fn approval_consumption_produces_effect() {
-        let p = Mock { ok: true, calls: Cell::new(0) };
+        let p = Mock {
+            ok: true,
+            calls: Cell::new(0),
+        };
         let mut s = Mem(HashMap::new());
         let r = execute(&p, &mut s, base_effect()).unwrap();
         assert_eq!(r.state, EffectState::Acked);
@@ -65,13 +74,20 @@ mod tests {
 
     #[test]
     fn provider_ack_advances_receipt() {
-        let p = Mock { ok: true, calls: Cell::new(0) };
+        let p = Mock {
+            ok: true,
+            calls: Cell::new(0),
+        };
         let mut s = Mem(HashMap::new());
         let e = base_effect();
         execute(&p, &mut s, e.clone()).unwrap();
         let r = execute(&p, &mut s, e).unwrap();
         assert_eq!(r.state, EffectState::Acked);
-        assert_eq!(p.calls.get(), 1, "provider called more than once for same key");
+        assert_eq!(
+            p.calls.get(),
+            1,
+            "provider called more than once for same key"
+        );
     }
 
     #[test]
@@ -88,6 +104,9 @@ mod tests {
         let mut s = Mem(HashMap::new());
         let mut e = base_effect();
         e.grant.consumed = false;
-        assert!(matches!(execute(&Never, &mut s, e), Err(BrokerError::Grant(_))));
+        assert!(matches!(
+            execute(&Never, &mut s, e),
+            Err(BrokerError::Grant(_))
+        ));
     }
 }

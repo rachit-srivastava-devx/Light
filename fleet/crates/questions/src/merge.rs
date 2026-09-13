@@ -28,7 +28,10 @@ pub fn merge(candidates: Vec<Question>, max: NonZeroU8) -> Result<QuestionSet, M
 
     valid.truncate(max.get() as usize);
 
-    Ok(QuestionSet { revision: 1, items: valid })
+    Ok(QuestionSet {
+        revision: 1,
+        items: valid,
+    })
 }
 
 pub fn merge_probes(

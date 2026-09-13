@@ -62,8 +62,10 @@ mod tests {
     fn partial_checked_is_coverage_error() {
         let mut s = OfflineScore {
             candidate_id: "c".into(),
-            baseline_pass: 2, variant_pass: 1,
-            checked: 3, total: 5,
+            baseline_pass: 2,
+            variant_pass: 1,
+            checked: 3,
+            total: 5,
             recommendation: Recommendation::Reject,
         };
         assert!(apply_quality_criteria(&mut s).is_err());

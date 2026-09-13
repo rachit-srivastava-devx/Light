@@ -3,7 +3,9 @@
 //! subprocess) -- that hash is a parameter here (`intent_hash`), computed by the caller. The
 //! `source_intent_hash` gate itself lives in `sow_intent.rs`.
 
-use super::sow_checks::{contains_any_ci, has_line_prefix_ci, has_measurable_threshold, section_body};
+use super::sow_checks::{
+    contains_any_ci, has_line_prefix_ci, has_measurable_threshold, section_body,
+};
 use super::sow_intent::intent_hash_violation;
 
 /// One SOW/atomic/challenge/clarification structural defect: a human-readable reason, matching
@@ -45,16 +47,27 @@ pub fn validate_sow_text(sow_text: &str, intent_hash: &str) -> Vec<StageViolatio
         out.push(StageViolation("SOW needs a non-empty request: line".into()));
     }
     if !has_measurable_threshold(sow_text) {
-        out.push(StageViolation("SOW needs a measurable acceptance threshold".into()));
+        out.push(StageViolation(
+            "SOW needs a measurable acceptance threshold".into(),
+        ));
     }
     if !contains_any_ci(sow_text, &["not", "out of scope", "excluded", "forbidden"]) {
         out.push(StageViolation("SOW needs explicit non-goals".into()));
     }
     if contains_any_ci(
         sow_text,
-        &["tbd", "todo", "[fill", "placeholder", "to be decided", "lorem ipsum"],
+        &[
+            "tbd",
+            "todo",
+            "[fill",
+            "placeholder",
+            "to be decided",
+            "lorem ipsum",
+        ],
     ) {
-        out.push(StageViolation("SOW contains an unresolved placeholder".into()));
+        out.push(StageViolation(
+            "SOW contains an unresolved placeholder".into(),
+        ));
     }
     out
 }

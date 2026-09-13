@@ -26,7 +26,11 @@ pub struct RouteDecision {
 #[derive(Debug, thiserror::Error)]
 pub enum RouteRefusal {
     #[error("no candidates after {stage}: {reason}")]
-    NoCandidates { stage: String, reason: String, candidates_in: usize },
+    NoCandidates {
+        stage: String,
+        reason: String,
+        candidates_in: usize,
+    },
     #[error("empty catalog")]
     EmptyCatalog,
 }
@@ -34,7 +38,11 @@ pub enum RouteRefusal {
 impl RouteRefusal {
     pub fn stages(&self) -> Vec<StageEvidence> {
         match self {
-            RouteRefusal::NoCandidates { stage, candidates_in, .. } => {
+            RouteRefusal::NoCandidates {
+                stage,
+                candidates_in,
+                ..
+            } => {
                 vec![StageEvidence {
                     stage: stage.clone(),
                     candidates_in: *candidates_in,

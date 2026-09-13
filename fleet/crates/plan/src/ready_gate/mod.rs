@@ -29,7 +29,9 @@ mod violation;
 pub use canonical::{canonical_json, content_hash, NumericLeafError};
 pub use gate_checks_table::CHECKS;
 pub use gate_eval::{check_and_evaluate, depth_evidence, evaluate, evaluate_with, EntryOutcome};
-pub use gate_types::{Check, DepthScore, GateReason, GateRefs, Outcome, Verdict, GATE_CHECK_IDS, STAMPED_BY};
+pub use gate_types::{
+    Check, DepthScore, GateReason, GateRefs, Outcome, Verdict, GATE_CHECK_IDS, STAMPED_BY,
+};
 pub use lld_v1::validate_lld_v1;
 pub use module_brief::validate_module_brief;
 pub use violation::Violation;

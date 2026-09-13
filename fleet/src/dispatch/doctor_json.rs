@@ -20,7 +20,10 @@ pub struct DoctorReport {
 pub fn probe(tool: &str) -> (bool, String) {
     match super::tool_path::find(tool) {
         Some(p) => (true, p.display().to_string()),
-        None => (false, format!("missing (searched {})", super::tool_path::searched())),
+        None => (
+            false,
+            format!("missing (searched {})", super::tool_path::searched()),
+        ),
     }
 }
 
@@ -31,5 +34,12 @@ pub fn build(cargo: bool, cargo_path: String, git: bool, git_path: String) -> Do
         Err(refusal) => format!("refuse: {refusal}"),
     };
     let build = crate::build_info::IDENTITY;
-    DoctorReport { cargo, cargo_path, git, git_path, capacity_decision, build }
+    DoctorReport {
+        cargo,
+        cargo_path,
+        git,
+        git_path,
+        capacity_decision,
+        build,
+    }
 }

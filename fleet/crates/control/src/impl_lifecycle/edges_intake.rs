@@ -10,7 +10,11 @@ use std::marker::PhantomData;
 
 impl Task<Intake> {
     pub fn new(id: TaskId) -> Self {
-        Self { id, retry_depth: 0, _s: PhantomData }
+        Self {
+            id,
+            retry_depth: 0,
+            _s: PhantomData,
+        }
     }
 
     pub fn specify(

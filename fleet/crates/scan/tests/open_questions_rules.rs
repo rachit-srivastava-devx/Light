@@ -16,13 +16,19 @@ fn jaccard_similarity_is_symmetric_and_bounded() {
 
 #[test]
 fn open_questions_rejects_empty() {
-    assert_eq!(scan::OpenQuestions::new(vec![]), Err(OpenQuestionsError::Empty));
+    assert_eq!(
+        scan::OpenQuestions::new(vec![]),
+        Err(OpenQuestionsError::Empty)
+    );
 }
 
 #[test]
 fn open_questions_rejects_more_than_four() {
     let items = vec![q("a", "w", GapSeverity::Low, ProbeKind::Business); 5];
-    assert_eq!(scan::OpenQuestions::new(items), Err(OpenQuestionsError::TooMany(5)));
+    assert_eq!(
+        scan::OpenQuestions::new(items),
+        Err(OpenQuestionsError::TooMany(5))
+    );
 }
 
 #[test]

@@ -32,26 +32,23 @@ fn gate_result(id: &str, exit_code: i32, stdout_digest: &str) -> CanonicalGateRe
 //   compute_digest → "xyzzy" → "xyzzy"
 #[test]
 fn evidence_digest_is_pinned_for_known_gate_result() {
-    let ev = assemble_gate_evidence(
-        &candidate(),
-        vec![gate_result("g1", 0, "abc")],
-        vec![],
-    );
+    let ev = assemble_gate_evidence(&candidate(), vec![gate_result("g1", 0, "abc")], vec![]);
     assert_eq!(ev.evidence_digest, "sha256:c693a99547a742d9");
 }
 
 // Ensures findings change the digest (compute_digest covers both results + findings paths).
 #[test]
 fn finding_changes_evidence_digest() {
-    let without = assemble_gate_evidence(
-        &candidate(),
-        vec![gate_result("g1", 0, "abc")],
-        vec![],
-    );
+    let without = assemble_gate_evidence(&candidate(), vec![gate_result("g1", 0, "abc")], vec![]);
     let with_finding = assemble_gate_evidence(
         &candidate(),
         vec![gate_result("g1", 0, "abc")],
-        vec![SecretFinding { rule_id: "AWS_KEY".into(), severity: "critical".into(), file: "src/lib.rs".into(), redacted: true }],
+        vec![SecretFinding {
+            rule_id: "AWS_KEY".into(),
+            severity: "critical".into(),
+            file: "src/lib.rs".into(),
+            redacted: true,
+        }],
     );
     assert_ne!(without.evidence_digest, with_finding.evidence_digest);
 }

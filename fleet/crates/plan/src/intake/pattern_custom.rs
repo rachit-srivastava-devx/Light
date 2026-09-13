@@ -5,7 +5,9 @@ use super::pattern::{word_runs, Matcher};
 
 pub(crate) fn leftmost(text: &str, m: &Matcher) -> Option<(usize, usize)> {
     match m {
-        Matcher::Word(w) => word_runs(text).into_iter().find(|&(s, e)| &text[s..e] == *w),
+        Matcher::Word(w) => word_runs(text)
+            .into_iter()
+            .find(|&(s, e)| &text[s..e] == *w),
         Matcher::WordOptS(stem) => word_runs(text).into_iter().find(|&(s, e)| {
             let run = &text[s..e];
             run == *stem || run == format!("{stem}s")

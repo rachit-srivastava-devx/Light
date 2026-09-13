@@ -1,10 +1,10 @@
 //! Serde round-trip against `attestation.v1.json`'s shape (BLUEPRINT.md §9).
 
+use serde_json::json;
 use types::{
     Attestation, AttestationBuilder, AttestationDigest, AttestationElements, AttestationSubject,
     BareBlake3Digest, DeliveryAttestationV1, DeliveryPredicate, DeliveryTier, InTotoStatementV1,
 };
-use serde_json::json;
 
 fn sample_attestation() -> Attestation {
     Attestation {
@@ -18,7 +18,9 @@ fn sample_attestation() -> Attestation {
         }],
         predicate: DeliveryPredicate {
             tier: DeliveryTier::TStd,
-            builder: AttestationBuilder { id: "fleet-worker".to_string() },
+            builder: AttestationBuilder {
+                id: "fleet-worker".to_string(),
+            },
             elements: AttestationElements {
                 oracle_independence: Some(json!({"checked": true})),
                 ..Default::default()
@@ -54,4 +56,3 @@ fn wrong_predicate_type_fails_to_deserialize() {
     );
     assert!(serde_json::from_str::<Attestation>(&bad).is_err());
 }
-

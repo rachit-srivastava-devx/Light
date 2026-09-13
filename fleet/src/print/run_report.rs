@@ -10,7 +10,11 @@ use crate::pipeline::stage::PipelineStage;
 /// How many stages the pipeline attempted to reach `final_stage`, inclusive. Derived from the
 /// canonical `PipelineStage::ALL` order so adding a stage cannot leave this count stale.
 fn stages_attempted(final_stage: PipelineStage) -> usize {
-    PipelineStage::ALL.iter().position(|s| *s == final_stage).map(|i| i + 1).unwrap_or(1)
+    PipelineStage::ALL
+        .iter()
+        .position(|s| *s == final_stage)
+        .map(|i| i + 1)
+        .unwrap_or(1)
 }
 
 pub fn render(outcome: &PipelineOutcome) {
@@ -20,7 +24,12 @@ pub fn render(outcome: &PipelineOutcome) {
         None
     } else {
         let stage = outcome.final_stage.name();
-        let err = outcome.result.as_ref().err().map(|e| e.to_string()).unwrap_or_default();
+        let err = outcome
+            .result
+            .as_ref()
+            .err()
+            .map(|e| e.to_string())
+            .unwrap_or_default();
         Some(format!("investigate stage `{stage}`: {err}"))
     };
     // Real stage counts, not `1`: the pipeline reached `final_stage`, so every stage up to and

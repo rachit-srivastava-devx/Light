@@ -15,7 +15,11 @@ pub fn ready(version: &GraphVersion, accepted: &[String]) -> Result<ReadySet, Da
         .nodes
         .iter()
         .filter(|n| !accepted_set.contains(n.id.as_str()))
-        .filter(|n| n.depends_on.iter().all(|dep| accepted_set.contains(dep.as_str())))
+        .filter(|n| {
+            n.depends_on
+                .iter()
+                .all(|dep| accepted_set.contains(dep.as_str()))
+        })
         .map(|n| n.id.as_str())
         .collect();
     // stable lexicographic tie-break (apply_tie_break)

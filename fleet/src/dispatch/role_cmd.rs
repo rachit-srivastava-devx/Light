@@ -16,13 +16,20 @@ pub fn roles(json: bool) -> Result<(), DispatchError> {
     if json {
         let report: Vec<RoleReport> = Role::ALL
             .iter()
-            .map(|r| RoleReport { name: r.name(), bandwidth: r.bandwidth(), owned_gate: r.owned_gate() })
+            .map(|r| RoleReport {
+                name: r.name(),
+                bandwidth: r.bandwidth(),
+                owned_gate: r.owned_gate(),
+            })
             .collect();
         crate::print::json::print_pretty(&report);
         return Ok(());
     }
     for role in Role::ALL {
-        human::line(role.name(), format!("bandwidth={} gate={}", role.bandwidth(), role.owned_gate()));
+        human::line(
+            role.name(),
+            format!("bandwidth={} gate={}", role.bandwidth(), role.owned_gate()),
+        );
     }
     Ok(())
 }
@@ -43,7 +50,10 @@ pub fn role_check(args: RoleCheckArgs) -> Result<(), DispatchError> {
     };
     route::evaluate_role_check(&check).map_err(|e| DispatchError::RoleCheck(e.reason()))?;
     if args.json {
-        crate::print::json::print_pretty(&RoleCheckReport { role: args.role, passed: true });
+        crate::print::json::print_pretty(&RoleCheckReport {
+            role: args.role,
+            passed: true,
+        });
     } else {
         human::ok("role check passed");
     }

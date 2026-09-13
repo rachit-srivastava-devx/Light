@@ -46,7 +46,10 @@ impl Sink for OrbSink {
         if status.is_success() {
             Ok(())
         } else if status.is_client_error() {
-            Err(permanent(event.seq(), format!("orb rejected with {status}")))
+            Err(permanent(
+                event.seq(),
+                format!("orb rejected with {status}"),
+            ))
         } else {
             Err(SinkError::Transient {
                 sink: "orb",

@@ -23,18 +23,30 @@ pub fn validate(version: &GraphVersion) -> Result<(), DagError> {
         }
     }
     // Kahn's algorithm: indegree = number of declared dependencies per node
-    let mut indegree: HashMap<&str, usize> =
-        version.nodes.iter().map(|n| (n.id.as_str(), n.depends_on.len())).collect();
+    let mut indegree: HashMap<&str, usize> = version
+        .nodes
+        .iter()
+        .map(|n| (n.id.as_str(), n.depends_on.len()))
+        .collect();
     // successors: who depends on this node (edges: dep -> dependent)
-    let mut successors: HashMap<&str, Vec<&str>> =
-        version.nodes.iter().map(|n| (n.id.as_str(), Vec::new())).collect();
+    let mut successors: HashMap<&str, Vec<&str>> = version
+        .nodes
+        .iter()
+        .map(|n| (n.id.as_str(), Vec::new()))
+        .collect();
     for n in &version.nodes {
         for dep in &n.depends_on {
-            successors.entry(dep.as_str()).or_default().push(n.id.as_str());
+            successors
+                .entry(dep.as_str())
+                .or_default()
+                .push(n.id.as_str());
         }
     }
-    let mut queue: VecDeque<&str> =
-        indegree.iter().filter(|(_, &v)| v == 0).map(|(&k, _)| k).collect();
+    let mut queue: VecDeque<&str> = indegree
+        .iter()
+        .filter(|(_, &v)| v == 0)
+        .map(|(&k, _)| k)
+        .collect();
     let mut processed = 0usize;
     while let Some(id) = queue.pop_front() {
         processed += 1;

@@ -36,17 +36,31 @@ fn attestation_matches_attestation_v1_schema() {
 
     let digest_schema = &schema["properties"]["subject"]["items"]["properties"]["digest"];
     let digest_instance = &subject_instance["digest"];
-    assert_object_matches_schema(digest_schema, digest_instance, "Attestation.subject[0].digest");
+    assert_object_matches_schema(
+        digest_schema,
+        digest_instance,
+        "Attestation.subject[0].digest",
+    );
 
     let predicate_schema = &schema["properties"]["predicate"];
     let predicate_instance = &instance["predicate"];
-    assert_object_matches_schema(predicate_schema, predicate_instance, "Attestation.predicate");
+    assert_object_matches_schema(
+        predicate_schema,
+        predicate_instance,
+        "Attestation.predicate",
+    );
 }
 
 #[test]
 fn schema_files_are_present_and_non_trivial() {
     // include_str! already fails the build if the file is missing; this asserts it isn't
     // an empty stub either, since a build error and a silently-empty fixture fail differently.
-    assert!(RECEIPT_SCHEMA.len() > 100, "receipt.v1.json looks truncated");
-    assert!(ATTESTATION_SCHEMA.len() > 100, "attestation.v1.json looks truncated");
+    assert!(
+        RECEIPT_SCHEMA.len() > 100,
+        "receipt.v1.json looks truncated"
+    );
+    assert!(
+        ATTESTATION_SCHEMA.len() > 100,
+        "attestation.v1.json looks truncated"
+    );
 }

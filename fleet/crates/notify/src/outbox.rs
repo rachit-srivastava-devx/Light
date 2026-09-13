@@ -15,7 +15,9 @@ pub trait OutboxStore {
     fn insert(&mut self, record: OutboxRecord) -> Result<(), NotifyError>;
     fn contains_key(&self, key: &str) -> bool;
     fn len(&self) -> usize;
-    fn is_empty(&self) -> bool { self.len() == 0 }
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 /// Atomically enqueue a notification (durable intent before any transport send).

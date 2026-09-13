@@ -53,13 +53,17 @@ pub(crate) fn check_r17_deriv(b: &Value, _refs: &GateRefs) -> bool {
     }
     guarantees.iter().all(|g| {
         let derivation = g.get("derivation");
-        match derivation.and_then(|d| d.get("kind")).and_then(Value::as_str) {
+        match derivation
+            .and_then(|d| d.get("kind"))
+            .and_then(Value::as_str)
+        {
             Some("number") => {
                 let calc = as_str(derivation.and_then(|d| d.get("calc"))).unwrap_or("");
                 number_calc_ok(calc)
             }
             _ => {
-                let enforced_by = as_str(derivation.and_then(|d| d.get("enforced_by"))).unwrap_or("");
+                let enforced_by =
+                    as_str(derivation.and_then(|d| d.get("enforced_by"))).unwrap_or("");
                 structural_enforced_by_ok(enforced_by)
             }
         }

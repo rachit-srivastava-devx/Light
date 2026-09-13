@@ -5,8 +5,8 @@
 //! failing report still exited 0 -- the defect this file exists to not regress.
 
 use super::verify_ports::{resolve_gates_root, RealRunner};
-use super::which_probe::WhichProbe;
 use super::verify_repo::ensure_repo;
+use super::which_probe::WhichProbe;
 use crate::cli::args_ctx::{GateArgs, OracleArgs};
 use crate::dispatch::error::DispatchError;
 use crate::print::verify_report::render as print_report;

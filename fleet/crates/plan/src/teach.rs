@@ -25,10 +25,23 @@ impl LessonSource {
 /// The one thing that happened and is now being turned into a lesson.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TaughtOutcome {
-    Rejected { reviewer_role: String, reason: String },
-    Escalated { task: TaskId, attempts: u32, limit: u32 },
-    GateRefused { check_id: &'static str, detail: String },
-    MutationSurvived { mutant: String, killed_by: Option<String> },
+    Rejected {
+        reviewer_role: String,
+        reason: String,
+    },
+    Escalated {
+        task: TaskId,
+        attempts: u32,
+        limit: u32,
+    },
+    GateRefused {
+        check_id: &'static str,
+        detail: String,
+    },
+    MutationSurvived {
+        mutant: String,
+        killed_by: Option<String>,
+    },
 }
 
 /// The `challenges.tsv` row shape (`id\tsource\taffected_leaf\trisk\ttrigger\tmitigation`,
@@ -43,14 +56,29 @@ pub struct Lesson {
 }
 
 /// Turns one settled outcome into a `Lesson` ready for the caller to append.
-pub fn derive_lesson(outcome: &TaughtOutcome, source: LessonSource, affected_leaf: NodeId, role: Role) -> Lesson {
+pub fn derive_lesson(
+    outcome: &TaughtOutcome,
+    source: LessonSource,
+    affected_leaf: NodeId,
+    role: Role,
+) -> Lesson {
     let (risk, trigger, mitigation) = match outcome {
-        TaughtOutcome::Rejected { reviewer_role, reason } => (
-            format!("a {} role's submission was rejected by {reviewer_role}", role.name()),
+        TaughtOutcome::Rejected {
+            reviewer_role,
+            reason,
+        } => (
+            format!(
+                "a {} role's submission was rejected by {reviewer_role}",
+                role.name()
+            ),
             format!("reviewer rejected with: {reason}"),
             "address the reviewer's stated reason before resubmitting".to_string(),
         ),
-        TaughtOutcome::Escalated { task, attempts, limit } => (
+        TaughtOutcome::Escalated {
+            task,
+            attempts,
+            limit,
+        } => (
             format!("task {} exhausted its review retry budget", task.as_str()),
             format!("attempt {attempts} reached the {limit}-attempt ceiling"),
             "escalate to a higher-authority reviewer instead of retrying".to_string(),
@@ -69,5 +97,11 @@ pub fn derive_lesson(outcome: &TaughtOutcome, source: LessonSource, affected_lea
             },
         ),
     };
-    Lesson { source, affected_leaf, risk, trigger, mitigation }
+    Lesson {
+        source,
+        affected_leaf,
+        risk,
+        trigger,
+        mitigation,
+    }
 }

@@ -11,7 +11,10 @@ fn no_color_env_forces_plain_regardless_of_flag() {
     std::env::set_var("NO_COLOR", "1");
     let style = Style::detect();
     std::env::remove_var("NO_COLOR");
-    assert!(!style.color, "NO_COLOR=1 must force plain output even if stderr were a TTY");
+    assert!(
+        !style.color,
+        "NO_COLOR=1 must force plain output even if stderr were a TTY"
+    );
 }
 
 #[test]
@@ -27,5 +30,8 @@ fn plain_style_paint_emits_no_ansi_bytes() {
     let style = Style::new(false);
     let painted = style.paint(super::RED, "boom");
     assert_eq!(painted, "boom");
-    assert!(!painted.contains('\x1b'), "plain Style must never emit an ESC byte: {painted:?}");
+    assert!(
+        !painted.contains('\x1b'),
+        "plain Style must never emit an ESC byte: {painted:?}"
+    );
 }

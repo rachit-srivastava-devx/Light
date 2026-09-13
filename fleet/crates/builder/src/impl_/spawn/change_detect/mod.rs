@@ -30,8 +30,14 @@ use std::path::Path;
 /// outcome becomes `EnvironmentFault` instead -- that is a fault in the check, not a claim
 /// about what the worker did. Every other outcome (already `Refused`/`EnvironmentFault`) passes
 /// through untouched.
-pub fn enforce_change_honesty(outcome: LaneOutcome, worktree: &Path, base_commit: &str) -> LaneOutcome {
-    let LaneOutcome::Done { body, .. } = &outcome else { return outcome };
+pub fn enforce_change_honesty(
+    outcome: LaneOutcome,
+    worktree: &Path,
+    base_commit: &str,
+) -> LaneOutcome {
+    let LaneOutcome::Done { body, .. } = &outcome else {
+        return outcome;
+    };
     match lane_changed(worktree, base_commit) {
         Ok(true) => outcome,
         Ok(false) => LaneOutcome::Refused {
@@ -41,6 +47,8 @@ pub fn enforce_change_honesty(outcome: LaneOutcome, worktree: &Path, base_commit
                  worker response: {body}"
             ),
         },
-        Err(err) => LaneOutcome::EnvironmentFault { detail: err.to_string() },
+        Err(err) => LaneOutcome::EnvironmentFault {
+            detail: err.to_string(),
+        },
     }
 }

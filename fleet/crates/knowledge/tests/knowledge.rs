@@ -1,4 +1,6 @@
-use knowledge::{sources, InMemoryStore, KnowledgeError, KnowledgeItem, Kind, KnowledgeStore, Scope, SystemClock};
+use knowledge::{
+    sources, InMemoryStore, Kind, KnowledgeError, KnowledgeItem, KnowledgeStore, Scope, SystemClock,
+};
 
 fn make_item(
     id: &str,

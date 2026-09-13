@@ -43,7 +43,11 @@ pub fn to_event(
     request_id: String,
     actor: String,
 ) -> Result<CliEvent, CliError> {
-    Ok(CliEvent { request_id, actor, command })
+    Ok(CliEvent {
+        request_id,
+        actor,
+        command,
+    })
 }
 
 #[cfg(test)]

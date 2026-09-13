@@ -1,5 +1,5 @@
-use crate::types::{ReadyInput, ReadyVerdict, Status, Violation};
 use crate::receipt::validate_denominator;
+use crate::types::{ReadyInput, ReadyVerdict, Status, Violation};
 
 /// Evaluate all fixed predicates. Returns ZeroCoverage when checked==0 or total==0.
 /// Pure, deterministic, no IO, no panic.
@@ -36,6 +36,15 @@ pub fn evaluate(input: &ReadyInput) -> ReadyVerdict {
     if !input.resources_available {
         violations.push(Violation::ResourcesUnavailable);
     }
-    let status = if violations.is_empty() { Status::Ready } else { Status::NotReady };
-    ReadyVerdict { status, violations, checked: input.checked, total: input.total }
+    let status = if violations.is_empty() {
+        Status::Ready
+    } else {
+        Status::NotReady
+    };
+    ReadyVerdict {
+        status,
+        violations,
+        checked: input.checked,
+        total: input.total,
+    }
 }

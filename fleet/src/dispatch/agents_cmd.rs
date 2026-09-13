@@ -20,7 +20,10 @@ struct AgentsReport<'a> {
 pub fn agents(args: AgentsArgs) -> Result<(), DispatchError> {
     let provision = resolve_hermetic_provision(Path::new(&args.repo), &args.agent_id)?;
     if args.json {
-        let report = AgentsReport { skills: &provision.skill_ids, system_prompt: &provision.system_prompt };
+        let report = AgentsReport {
+            skills: &provision.skill_ids,
+            system_prompt: &provision.system_prompt,
+        };
         crate::print::json::print_pretty(&report);
     } else {
         human::line("skills", format!("{:?}", provision.skill_ids));

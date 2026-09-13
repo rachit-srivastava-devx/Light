@@ -4,8 +4,8 @@
 use crate::cli::args_core::RouteArgs;
 use crate::dispatch::error::DispatchError;
 use crate::print::human;
-use types::Role;
 use std::collections::{BTreeMap, BTreeSet};
+use types::Role;
 
 fn default_runtime() -> route::RuntimeState {
     route::RuntimeState {
@@ -24,14 +24,22 @@ struct RouteReport {
 
 pub fn route(args: RouteArgs) -> Result<(), DispatchError> {
     let json = args.json;
-    let role = args.role.as_deref().map(Role::parse).transpose().ok().flatten();
+    let role = args
+        .role
+        .as_deref()
+        .map(Role::parse)
+        .transpose()
+        .ok()
+        .flatten();
     let runtime = default_runtime();
     let decision = route::decide(role, route::TaskClass::General, None, &runtime);
     match decision.refusal {
         None => {
             let adapter = format!("{:?}", decision.selected_adapter);
             if json {
-                crate::print::json::print_pretty(&RouteReport { selected_adapter: adapter });
+                crate::print::json::print_pretty(&RouteReport {
+                    selected_adapter: adapter,
+                });
             } else {
                 human::ok(format!("selected {adapter}"));
             }

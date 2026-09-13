@@ -56,7 +56,11 @@ pub fn load() -> Result<Config, ConfigError> {
         }
     };
 
-    Ok(Config { state_dir, ram_lanes: raw.ram_lanes, review_cap: raw.review_cap })
+    Ok(Config {
+        state_dir,
+        ram_lanes: raw.ram_lanes,
+        review_cap: raw.review_cap,
+    })
 }
 
 #[cfg(test)]

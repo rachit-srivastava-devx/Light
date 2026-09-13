@@ -14,8 +14,8 @@ use super::event::PipelineError;
 use super::stage::PipelineStage;
 use crate::dispatch::memory::record_sow_refusal;
 use planner::{derive_lesson, Lesson, LessonSource, TaughtOutcome};
-use types::{NodeId, Role};
 use std::path::Path;
+use types::{NodeId, Role};
 
 fn lesson_text(lesson: &Lesson) -> String {
     format!(
@@ -28,9 +28,17 @@ fn lesson_text(lesson: &Lesson) -> String {
     )
 }
 
-pub fn teach(state_dir: &Path, node: NodeId, role: Role, failure: Option<(PipelineStage, &PipelineError)>) {
+pub fn teach(
+    state_dir: &Path,
+    node: NodeId,
+    role: Role,
+    failure: Option<(PipelineStage, &PipelineError)>,
+) {
     let Some((stage, err)) = failure else { return };
-    let outcome = TaughtOutcome::GateRefused { check_id: stage.name(), detail: err.to_string() };
+    let outcome = TaughtOutcome::GateRefused {
+        check_id: stage.name(),
+        detail: err.to_string(),
+    };
     let source = LessonSource::ThreadLessons("fleet-cli-pipeline".to_string());
     let lesson = derive_lesson(&outcome, source, node, role);
     // A lesson that fails to persist must not be swallowed silently either -- but `Teach` has no

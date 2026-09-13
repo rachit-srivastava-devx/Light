@@ -18,7 +18,11 @@ pub struct RoleContract {
 pub enum ReviewContractViolation {
     /// `review.sh:50-52` -- the worker's declared `reviewer` field names a different role.
     #[error("role {worker_role:?} must be reviewed by {expected:?}, not {reviewer_role:?}")]
-    WrongAuthority { worker_role: String, expected: String, reviewer_role: String },
+    WrongAuthority {
+        worker_role: String,
+        expected: String,
+        reviewer_role: String,
+    },
     /// `review.sh:53`.
     #[error("role {0:?} cannot produce work_output")]
     RoleCannotProduce(String),
@@ -41,10 +45,14 @@ pub fn validate_review_contract(
         });
     }
     if !worker.may_produce.contains("work_output") {
-        return Err(ReviewContractViolation::RoleCannotProduce(worker_role.to_string()));
+        return Err(ReviewContractViolation::RoleCannotProduce(
+            worker_role.to_string(),
+        ));
     }
     if !reviewer.must_consume.contains("work_output") || !reviewer.cycle_states.contains("review") {
-        return Err(ReviewContractViolation::ReviewerCycleMissing(reviewer_role.to_string()));
+        return Err(ReviewContractViolation::ReviewerCycleMissing(
+            reviewer_role.to_string(),
+        ));
     }
     Ok(())
 }

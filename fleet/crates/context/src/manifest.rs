@@ -5,8 +5,15 @@ fn simple_digest(mandatory: &[Span], evidence: &[EvidenceRef]) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     let mut h = DefaultHasher::new();
-    for s in mandatory { s.source_digest.hash(&mut h); s.start.hash(&mut h); s.end.hash(&mut h); }
-    for e in evidence { e.source_digest.hash(&mut h); e.tokens.hash(&mut h); }
+    for s in mandatory {
+        s.source_digest.hash(&mut h);
+        s.start.hash(&mut h);
+        s.end.hash(&mut h);
+    }
+    for e in evidence {
+        e.source_digest.hash(&mut h);
+        e.tokens.hash(&mut h);
+    }
     format!("{:016x}", h.finish())
 }
 

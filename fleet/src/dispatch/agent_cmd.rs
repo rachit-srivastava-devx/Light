@@ -27,8 +27,12 @@ pub fn agent(args: AgentArgs) -> Result<(), AgentCmdError> {
 
     let outcome = agent_cmd_run::run(adapter, &args.worktree, &args.task, args.model.as_deref());
     match outcome {
-        AgentOutcome::Done { body, resolved_model } => {
-            fd3::send_done(body, resolved_model.as_deref(), None)?;
+        AgentOutcome::Done {
+            body,
+            resolved_model,
+            tokens,
+        } => {
+            fd3::send_done(body, resolved_model.as_deref(), tokens)?;
             Ok(())
         }
         AgentOutcome::Refused(reason) => {

@@ -22,7 +22,11 @@ pub fn render(verdict: &Verdict, json: bool) {
     }
     let style = Style::detect();
     match verdict {
-        Verdict::Decided { label, confidence_pct, because } => {
+        Verdict::Decided {
+            label,
+            confidence_pct,
+            because,
+        } => {
             let next = format!("verdict is `{label}` ({confidence_pct}% confidence)");
             println!("{} {next}", style.paint(style::BOLD, "next:"));
             human::ok(format!("{label} -- {because}"));
@@ -38,14 +42,21 @@ pub fn render(verdict: &Verdict, json: bool) {
 
 fn to_report(verdict: &Verdict) -> AdjudicateReport {
     match verdict {
-        Verdict::Decided { label, confidence_pct, because } => AdjudicateReport {
+        Verdict::Decided {
+            label,
+            confidence_pct,
+            because,
+        } => AdjudicateReport {
             label: Some(label.clone()),
             confidence_pct: Some(*confidence_pct),
             because: Some(because.clone()),
             abstained: false,
         },
-        Verdict::Abstain { why } => {
-            AdjudicateReport { label: None, confidence_pct: None, because: Some(why.clone()), abstained: true }
-        }
+        Verdict::Abstain { why } => AdjudicateReport {
+            label: None,
+            confidence_pct: None,
+            because: Some(why.clone()),
+            abstained: true,
+        },
     }
 }

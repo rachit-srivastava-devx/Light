@@ -19,7 +19,11 @@ pub enum TickOutcome {
     /// `decision` is boxed -- `Decision` carries a `Vec<Stage>` audit trail (large and rarely
     /// needed by every call site) while every other variant is a few bytes, and clippy's
     /// `large_enum_variant` flags the size gap otherwise.
-    Advanced { unit: UnitId, decision: Box<Decision>, reservation: Reservation },
+    Advanced {
+        unit: UnitId,
+        decision: Box<Decision>,
+        reservation: Reservation,
+    },
     /// `next_provider` refused: every capable adapter is either cooling down or below the
     /// required quota right now. Not a busy-loop signal -- sleep until `until`, then retry.
     Paused { until: SystemTime },

@@ -32,7 +32,9 @@ pub struct ReadyHeap {
 
 impl ReadyHeap {
     pub fn new() -> Self {
-        Self { inner: BinaryHeap::new() }
+        Self {
+            inner: BinaryHeap::new(),
+        }
     }
 
     pub fn push(&mut self, task_id: String, score: u64) {

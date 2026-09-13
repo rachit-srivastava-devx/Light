@@ -2,10 +2,10 @@
 
 use std::fs;
 
-use super::types::LedgerError;
-use super::Ledger;
 use super::super::io_fault::IoFault;
 use super::super::retention::{PruneReport, RetentionPolicy, UsageReport};
+use super::types::LedgerError;
+use super::Ledger;
 
 impl Ledger {
     /// Report the current on-disk size of the ledger chain file. `row_count` is the number
@@ -16,12 +16,18 @@ impl Ledger {
         let rows = self.rows(true)?;
         let byte_size = if self.paths.chain.exists() {
             fs::metadata(&self.paths.chain)
-                .map_err(|source| IoFault::Read { path: self.paths.chain.clone(), source })?
+                .map_err(|source| IoFault::Read {
+                    path: self.paths.chain.clone(),
+                    source,
+                })?
                 .len()
         } else {
             0
         };
-        Ok(UsageReport { row_count: rows.len() as u64, byte_size })
+        Ok(UsageReport {
+            row_count: rows.len() as u64,
+            byte_size,
+        })
     }
 
     /// Always refused: the ledger is append-only and hash-chained. Deleting any row would break

@@ -1,7 +1,7 @@
 //! HEAD/digest gate — validates exact integrated tree before approval.
-use std::{fs, path::Path};
-use crate::{GateRunner, PostError, PostRequest, PostVerdict, Status};
 use crate::receipt::write_verdict;
+use crate::{GateRunner, PostError, PostRequest, PostVerdict, Status};
+use std::{fs, path::Path};
 
 /// Read the current HEAD commit SHA from `.git/HEAD` in `repo`.
 /// Follows symbolic refs (`ref: refs/heads/<branch>`).
@@ -27,10 +27,7 @@ fn read_head(repo: &Path) -> Result<String, PostError> {
 /// - actual HEAD must equal `req.expected_head` → `Stale`
 ///
 /// Gate failures produce a `Failed` verdict with a receipt written to disk.
-pub fn verify_after_merge(
-    r: &impl GateRunner,
-    req: PostRequest,
-) -> Result<PostVerdict, PostError> {
+pub fn verify_after_merge(r: &impl GateRunner, req: PostRequest) -> Result<PostVerdict, PostError> {
     if req.required_gates.is_empty() {
         return Err(PostError::ZeroCoverage);
     }
@@ -52,10 +49,7 @@ pub fn verify_after_merge(
         head: actual_head,
         checked,
         total,
-        evidence_digest: format!(
-            "{}:{}/{}",
-            req.acceptance_digest, checked, total
-        ),
+        evidence_digest: format!("{}:{}/{}", req.acceptance_digest, checked, total),
     };
     let store = req.repo.join(".fleet").join("post-receipts");
     write_verdict(&verdict, &store)?;

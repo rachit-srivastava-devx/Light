@@ -42,7 +42,10 @@ pub enum ModuleState {
     /// Module is ready for parallel execution
     Ready,
     /// Module is currently executing
-    Executing { branch: String, worktree_path: String },
+    Executing {
+        branch: String,
+        worktree_path: String,
+    },
     /// Module has executed successfully
     Executed { commit_count: usize },
     /// Module has been merged to main
@@ -71,7 +74,11 @@ pub struct ModuleGraph {
 
 impl Module {
     /// Create a new module with pending state
-    pub fn new(id: impl Into<String>, name: impl Into<String>, sow_text: impl Into<String>) -> Self {
+    pub fn new(
+        id: impl Into<String>,
+        name: impl Into<String>,
+        sow_text: impl Into<String>,
+    ) -> Self {
         Self {
             id: id.into(),
             name: name.into(),
@@ -96,9 +103,12 @@ impl Module {
 
     /// Check if this module is ready for execution (all dependencies are Executed or Merged)
     pub fn can_be_executed(&self, state_map: &HashMap<String, ModuleState>) -> bool {
-        self.depends_on
-            .iter()
-            .all(|dep_id| matches!(state_map.get(dep_id), Some(ModuleState::Executed { .. } | ModuleState::Merged { .. })))
+        self.depends_on.iter().all(|dep_id| {
+            matches!(
+                state_map.get(dep_id),
+                Some(ModuleState::Executed { .. } | ModuleState::Merged { .. })
+            )
+        })
     }
 }
 
@@ -138,7 +148,11 @@ impl ModuleGraph {
 
     /// Get all modules that are ready to be SOWed (all dependencies satisfied)
     pub fn ready_for_sow(&self) -> Vec<&Module> {
-        let state_map: HashMap<_, _> = self.modules.iter().map(|(k, v)| (k.clone(), v.state.clone())).collect();
+        let state_map: HashMap<_, _> = self
+            .modules
+            .iter()
+            .map(|(k, v)| (k.clone(), v.state.clone()))
+            .collect();
         self.modules
             .values()
             .filter(|m| m.state == ModuleState::Pending && m.can_be_sowed(&state_map))
@@ -147,7 +161,11 @@ impl ModuleGraph {
 
     /// Get all modules that are ready for execution
     pub fn ready_for_execution(&self) -> Vec<&Module> {
-        let state_map: HashMap<_, _> = self.modules.iter().map(|(k, v)| (k.clone(), v.state.clone())).collect();
+        let state_map: HashMap<_, _> = self
+            .modules
+            .iter()
+            .map(|(k, v)| (k.clone(), v.state.clone()))
+            .collect();
         self.modules
             .values()
             .filter(|m| m.state == ModuleState::Ready && m.can_be_executed(&state_map))
@@ -172,9 +190,10 @@ impl ModuleGraph {
         // Add directed edges: dependency → dependent (dep must precede module).
         for module in self.modules.values() {
             for dep in &module.depends_on {
-                if let (Some(&dep_idx), Some(&mod_idx)) =
-                    (id_to_idx.get(dep.as_str()), id_to_idx.get(module.id.as_str()))
-                {
+                if let (Some(&dep_idx), Some(&mod_idx)) = (
+                    id_to_idx.get(dep.as_str()),
+                    id_to_idx.get(module.id.as_str()),
+                ) {
                     graph.add_edge(dep_idx, mod_idx, ());
                 }
             }
@@ -292,7 +311,10 @@ mod tests {
         graph.add_module(Module::new("A", "A", "SOW A").with_dependencies(vec![]));
         graph.add_module(Module::new("B", "B", "SOW B").with_dependencies(vec!["A".to_string()]));
         graph.add_module(Module::new("C", "C", "SOW C").with_dependencies(vec!["A".to_string()]));
-        graph.add_module(Module::new("D", "D", "SOW D").with_dependencies(vec!["B".to_string(), "C".to_string()]));
+        graph.add_module(
+            Module::new("D", "D", "SOW D")
+                .with_dependencies(vec!["B".to_string(), "C".to_string()]),
+        );
 
         let batches = graph.batches().unwrap();
         // Batch 0: A (no deps)

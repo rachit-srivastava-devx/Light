@@ -13,9 +13,18 @@ fn bare_digest_rejects_prefixed_or_uppercase_hash() {
 
 #[test]
 fn tier_wire_names_match_schema() {
-    assert_eq!(serde_json::to_string(&DeliveryTier::TMin).unwrap(), "\"T-min\"");
-    assert_eq!(serde_json::to_string(&DeliveryTier::TStd).unwrap(), "\"T-std\"");
-    assert_eq!(serde_json::to_string(&DeliveryTier::TMax).unwrap(), "\"T-max\"");
+    assert_eq!(
+        serde_json::to_string(&DeliveryTier::TMin).unwrap(),
+        "\"T-min\""
+    );
+    assert_eq!(
+        serde_json::to_string(&DeliveryTier::TStd).unwrap(),
+        "\"T-std\""
+    );
+    assert_eq!(
+        serde_json::to_string(&DeliveryTier::TMax).unwrap(),
+        "\"T-max\""
+    );
 }
 
 #[test]

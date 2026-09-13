@@ -22,7 +22,9 @@ pub(crate) fn decode_lanes(text: &str) -> Result<BTreeMap<String, LaneState>, Me
     let mut lines = text.lines();
     let header = lines.next().unwrap_or_default();
     if !header.is_empty() && header != HEADER {
-        return Err(MeterIoError(format!("unsupported meter state header {header:?}")));
+        return Err(MeterIoError(format!(
+            "unsupported meter state header {header:?}"
+        )));
     }
     let mut lanes = BTreeMap::new();
     for line in lines {

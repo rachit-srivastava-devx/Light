@@ -1,4 +1,4 @@
-use integrate::{Grant, MergeRequest, RealGit, integrate};
+use integrate::{integrate, Grant, MergeRequest, RealGit};
 use std::path::Path;
 
 fn git_in(dir: &Path, args: &[&str]) {
@@ -43,13 +43,20 @@ fn after_sha_matches_actual_head_post_merge() {
         expected_head: before.clone(),
         lane_head: "lane".into(),
         candidate_digest: "d3".into(),
-        grant: Grant { target_ref: "lane".into(), candidate_digest: "d3".into(), expires_at: 9_999_999_999 },
+        grant: Grant {
+            target_ref: "lane".into(),
+            candidate_digest: "d3".into(),
+            expires_at: 9_999_999_999,
+        },
         checked: 1,
         total: 1,
     };
     let r = integrate(&RealGit, req).expect("clean merge must succeed");
     let actual_head = head_of(p);
-    assert_eq!(r.after, actual_head, "after must equal the real post-merge HEAD SHA");
+    assert_eq!(
+        r.after, actual_head,
+        "after must equal the real post-merge HEAD SHA"
+    );
     assert_ne!(r.after, before, "after must differ from pre-merge HEAD");
     assert_ne!(r.after, "", "after must not be empty");
     assert_ne!(r.after, "xyzzy", "after must be a real SHA");

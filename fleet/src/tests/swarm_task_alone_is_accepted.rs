@@ -22,9 +22,19 @@ fn task_alone_is_never_rejected_as_an_empty_prompt() {
     support::scratch_repo(dir.path());
     let repo = dir.path().to_string_lossy().into_owned();
 
-    let out = swarm(&["--repo", &repo, "--task", "hello world task", "--role", "builder"]);
+    let out = swarm(&[
+        "--repo",
+        &repo,
+        "--task",
+        "hello world task",
+        "--role",
+        "builder",
+    ]);
     let err = String::from_utf8_lossy(&out.stderr);
-    assert!(!err.contains("task is empty"), "cross-wire regression: --task alone got: {err}");
+    assert!(
+        !err.contains("task is empty"),
+        "cross-wire regression: --task alone got: {err}"
+    );
 }
 
 // `types::ExitCode::Invariant` -- the code `SpawnError::EmptyTask` maps to (the fallback
@@ -46,13 +56,34 @@ fn task_alone_reaches_the_same_downstream_step_as_task_plus_prompt() {
     support::scratch_repo(dir.path());
     let repo = dir.path().to_string_lossy().into_owned();
 
-    let alone = swarm(&["--repo", &repo, "--task", "hello world task", "--role", "builder"]);
-    let with_prompt =
-        swarm(&["--repo", &repo, "--task", "hello world task", "--role", "builder", "--prompt", "hello world task"]);
+    let alone = swarm(&[
+        "--repo",
+        &repo,
+        "--task",
+        "hello world task",
+        "--role",
+        "builder",
+    ]);
+    let with_prompt = swarm(&[
+        "--repo",
+        &repo,
+        "--task",
+        "hello world task",
+        "--role",
+        "builder",
+        "--prompt",
+        "hello world task",
+    ]);
 
-    for (label, out) in [("--task alone", &alone), ("--task + --prompt", &with_prompt)] {
+    for (label, out) in [
+        ("--task alone", &alone),
+        ("--task + --prompt", &with_prompt),
+    ] {
         let err = String::from_utf8_lossy(&out.stderr);
-        assert!(!err.contains("task is empty"), "{label}: rejected as empty task: {err}");
+        assert!(
+            !err.contains("task is empty"),
+            "{label}: rejected as empty task: {err}"
+        );
         assert_ne!(
             out.status.code(),
             Some(INVARIANT),

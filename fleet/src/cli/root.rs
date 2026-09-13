@@ -44,11 +44,16 @@ pub enum Commands {
     Contract(ContractArgs),
     Gate(GateArgs),
     Freeze(FreezeArgs),
-    Console { #[arg(long)] task: Option<String> },
+    Console {
+        #[arg(long)]
+        task: Option<String>,
+    },
     Graph(GraphArgs),
     Impact(ImpactArgs),
     Mcp(McpArgs),
-    Completions { shell: Shell },
+    Completions {
+        shell: Shell,
+    },
     Doctor(JsonOnly),
     Version(JsonOnly),
     /// Run multiple modules in parallel using worktrees.

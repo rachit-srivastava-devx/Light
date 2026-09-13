@@ -4,4 +4,4 @@ mod port;
 mod probe;
 
 pub use port::{BusinessReader, ProbeError};
-pub use probe::{BusinessInput, Question, probe};
+pub use probe::{probe, BusinessInput, Question};

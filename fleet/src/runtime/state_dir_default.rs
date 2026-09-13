@@ -19,7 +19,10 @@ pub fn default_state_dir() -> Result<PathBuf, ConfigError> {
         }
     }
     let home = std::env::var("HOME").map_err(|_| ConfigError::HomeUnset)?;
-    Ok(PathBuf::from(home).join(".local").join("state").join("fleet"))
+    Ok(PathBuf::from(home)
+        .join(".local")
+        .join("state")
+        .join("fleet"))
 }
 
 /// One-shot notice (this runs once per process -- `load` calls it at most once, and `main` calls
@@ -31,7 +34,9 @@ pub fn warn_if_cwd_state_orphaned(new_default: &std::path::Path) {
     if !cwd_state.is_dir() {
         return;
     }
-    let Ok(cwd) = std::env::current_dir() else { return };
+    let Ok(cwd) = std::env::current_dir() else {
+        return;
+    };
     let old = cwd.join(cwd_state);
     eprintln!(
         "fleet: found existing state at {} but the default state dir is now {} \
@@ -51,8 +56,14 @@ mod tests {
         let dir = default_state_dir();
         // `$HOME`/`$XDG_STATE_HOME` are environment-dependent in CI; only assert the shape.
         if let Ok(dir) = dir {
-            assert!(dir.is_absolute(), "default state dir must be absolute: {dir:?}");
-            assert!(dir.ends_with("fleet"), "default state dir must end in fleet/: {dir:?}");
+            assert!(
+                dir.is_absolute(),
+                "default state dir must be absolute: {dir:?}"
+            );
+            assert!(
+                dir.ends_with("fleet"),
+                "default state dir must end in fleet/: {dir:?}"
+            );
         }
     }
 }

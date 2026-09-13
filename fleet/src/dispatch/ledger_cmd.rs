@@ -4,9 +4,9 @@ use crate::cli::args_ops::{LedgerArgs, RollbackArgs};
 use crate::dispatch::error::DispatchError;
 use crate::print::human;
 use integrate::Worktree;
+use std::path::{Path, PathBuf};
 use store::ledger::LedgerPaths;
 use store::Ledger;
-use std::path::{Path, PathBuf};
 
 #[derive(serde::Serialize)]
 struct LedgerReport {
@@ -22,17 +22,29 @@ pub fn ledger(state_dir: &Path, args: LedgerArgs) -> Result<(), DispatchError> {
     };
     let ledger = Ledger::open(paths);
     if args.verify {
-        let chain = ledger.verify().map_err(|e| DispatchError::Refusal(e.to_string()))?;
+        let chain = ledger
+            .verify()
+            .map_err(|e| DispatchError::Refusal(e.to_string()))?;
         if args.json {
-            let report = LedgerReport { checked: Some(chain.checked), total: Some(chain.total), rows: None };
+            let report = LedgerReport {
+                checked: Some(chain.checked),
+                total: Some(chain.total),
+                rows: None,
+            };
             crate::print::json::print_pretty(&report);
         } else {
             human::line("verified", format!("{}/{}", chain.checked, chain.total));
         }
     } else {
-        let rows = ledger.rows(true).map_err(|e| DispatchError::Refusal(e.to_string()))?;
+        let rows = ledger
+            .rows(true)
+            .map_err(|e| DispatchError::Refusal(e.to_string()))?;
         if args.json {
-            let report = LedgerReport { checked: None, total: None, rows: Some(rows.len()) };
+            let report = LedgerReport {
+                checked: None,
+                total: None,
+                rows: Some(rows.len()),
+            };
             crate::print::json::print_pretty(&report);
         } else {
             human::line("rows", rows.len());

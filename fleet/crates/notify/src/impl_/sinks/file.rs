@@ -42,7 +42,10 @@ impl FileSink {
 }
 
 fn transient(reason: String) -> SinkError {
-    SinkError::Transient { sink: "file", reason }
+    SinkError::Transient {
+        sink: "file",
+        reason,
+    }
 }
 
 impl Sink for FileSink {

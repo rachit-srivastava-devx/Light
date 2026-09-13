@@ -17,7 +17,10 @@ pub(super) fn cursor_err(err: CursorError) -> LogSourceError {
 
 /// Every returned `seq` must be strictly greater than the previous one seen (starting at
 /// `after`), matching `LogSource::poll_since`'s documented contract.
-pub(super) fn validate_order(receipts: &[Receipt], after: Option<u64>) -> Result<(), LogSourceError> {
+pub(super) fn validate_order(
+    receipts: &[Receipt],
+    after: Option<u64>,
+) -> Result<(), LogSourceError> {
     let mut prev = after;
     for receipt in receipts {
         if let Some(bound) = prev {
@@ -48,7 +51,8 @@ pub(super) async fn deliver_with_retry(
     // Build a duration iterator: yields the sleep to take before each retry.
     // `with_max_times(n)` makes it yield at most n durations, so the iterator
     // exhausts after max_retries sleeps — matching the old `attempt >= max_retries` guard.
-    let mut backoff = config.retry_backoff
+    let mut backoff = config
+        .retry_backoff
         .clone()
         .with_max_times(config.max_retries as usize)
         .build();
@@ -56,7 +60,9 @@ pub(super) async fn deliver_with_retry(
     loop {
         match sink.deliver(event) {
             Ok(()) => return stats.record_delivered(event.seq()),
-            Err(SinkError::Permanent { .. }) => return stats.record_permanently_skipped(event.seq()),
+            Err(SinkError::Permanent { .. }) => {
+                return stats.record_permanently_skipped(event.seq())
+            }
             Err(SinkError::Transient { .. }) => match backoff.next() {
                 None => return stats.record_permanently_skipped(event.seq()),
                 Some(dur) => {

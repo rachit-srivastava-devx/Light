@@ -1,7 +1,7 @@
 use crate::budget::pack;
 use crate::manifest::assemble_manifest;
 use crate::types::{
-    CompileInput, ContextError, ContextManifest, Retriever, RetrievalQuery, TokenCounter,
+    CompileInput, ContextError, ContextManifest, RetrievalQuery, Retriever, TokenCounter,
 };
 
 /// Compile a bounded, digest-bound context manifest from inputs and ports.
@@ -31,8 +31,13 @@ pub fn compile(
         budget: input.budget,
     };
     let candidates = r.retrieve(&q)?;
-    let (evidence, omitted) =
-        pack(&input.mandatory, &candidates, input.budget, input.reserve, counter)?;
+    let (evidence, omitted) = pack(
+        &input.mandatory,
+        &candidates,
+        input.budget,
+        input.reserve,
+        counter,
+    )?;
     let manifest = assemble_manifest(input.mandatory.clone(), evidence, omitted);
     if manifest.total == 0 {
         return Err(ContextError::ZeroCoverage);

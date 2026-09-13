@@ -25,11 +25,21 @@ fn flee_state_dir_env_var_overrides_the_default_and_state_lands_there() {
         .arg(repo.path())
         .output()
         .expect("binary runs");
-    assert!(out.status.success(), "probe failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "probe failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     let log_in_override = explicit_state.path().join(format!("{task_id}.steps.json"));
-    assert!(log_in_override.exists(), "explicit FLEET_STATE_DIR must be honored: {log_in_override:?}");
+    assert!(
+        log_in_override.exists(),
+        "explicit FLEET_STATE_DIR must be honored: {log_in_override:?}"
+    );
 
     let default_dir = fake_home.path().join(".local").join("state").join("fleet");
-    assert!(!Path::new(&default_dir).exists(), "override must win; default dir must stay untouched");
+    assert!(
+        !Path::new(&default_dir).exists(),
+        "override must win; default dir must stay untouched"
+    );
 }

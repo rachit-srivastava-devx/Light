@@ -14,7 +14,9 @@ use super::clock::now;
 use super::embed::{embed_text, stable_id};
 use super::ports::InMemoryPorts;
 use super::store::{MemoryStoreError, SowMemoryStore};
-use knowledge::{write, DedupThreshold, Importance, MemoryKind, NewMemory, RetrieveError, WriteDecision};
+use knowledge::{
+    write, DedupThreshold, Importance, MemoryKind, NewMemory, RetrieveError, WriteDecision,
+};
 use std::path::Path;
 
 #[derive(Debug, thiserror::Error)]
@@ -53,7 +55,12 @@ fn record(state_dir: &Path, text: &str) -> Result<(), SowMemoryError> {
     };
     match decision {
         WriteDecision::Insert(item) => items.push(item),
-        WriteDecision::Merge { into, observed_importance, observation_count, .. } => {
+        WriteDecision::Merge {
+            into,
+            observed_importance,
+            observation_count,
+            ..
+        } => {
             if let Some(existing) = items.iter_mut().find(|it| it.id == into) {
                 let merged = existing.importance.get().max(observed_importance.get());
                 existing.importance = Importance::new(merged).unwrap_or(existing.importance);

@@ -13,10 +13,7 @@ pub trait GitPort {
 /// Production implementation that shells out to the host `git` binary.
 pub struct RealGit;
 
-fn git_cmd(
-    repo: &Path,
-    args: &[&str],
-) -> Result<std::process::Output, IntegrateError> {
+fn git_cmd(repo: &Path, args: &[&str]) -> Result<std::process::Output, IntegrateError> {
     Command::new("git")
         .args(args)
         .current_dir(repo)
@@ -31,7 +28,9 @@ fn git_cmd(
 fn rev_parse_head(repo: &Path) -> Result<String, IntegrateError> {
     let out = git_cmd(repo, &["rev-parse", "HEAD"])?;
     if !out.status.success() {
-        return Err(IntegrateError::Git { msg: "rev-parse HEAD failed".into() });
+        return Err(IntegrateError::Git {
+            msg: "rev-parse HEAD failed".into(),
+        });
     }
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
 }
@@ -49,7 +48,9 @@ impl GitPort for RealGit {
             if stderr.contains("unknown option") || stderr.contains("usage:") {
                 return Ok(()); // old git: let merge() handle conflict detection
             }
-            return Err(IntegrateError::Conflict { branch: req.lane_head.clone() });
+            return Err(IntegrateError::Conflict {
+                branch: req.lane_head.clone(),
+            });
         }
         Ok(())
     }
@@ -57,11 +58,20 @@ impl GitPort for RealGit {
     fn merge(&self, req: &MergeRequest) -> Result<String, IntegrateError> {
         let out = git_cmd(
             &req.repo,
-            &["-c", "core.hooksPath=/dev/null", "merge", "--no-ff", "-q", &req.lane_head],
+            &[
+                "-c",
+                "core.hooksPath=/dev/null",
+                "merge",
+                "--no-ff",
+                "-q",
+                &req.lane_head,
+            ],
         )?;
         if !out.status.success() {
             let _ = git_cmd(&req.repo, &["merge", "--abort"]);
-            return Err(IntegrateError::Conflict { branch: req.lane_head.clone() });
+            return Err(IntegrateError::Conflict {
+                branch: req.lane_head.clone(),
+            });
         }
         rev_parse_head(&req.repo)
     }

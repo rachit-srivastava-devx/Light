@@ -2,8 +2,8 @@
 //! (which gained a `NotFound` variant) under the file's line budget; each variant is one of
 //! `merge-lane.sh`'s already-shipped refusals.
 
-use types::ExitCode;
 use std::path::PathBuf;
+use types::ExitCode;
 
 #[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum MergeRefusal {

@@ -7,11 +7,23 @@ use std::path::PathBuf;
 #[derive(Debug, thiserror::Error)]
 pub enum IoFault {
     #[error("could not open {path}: {source}")]
-    Open { path: PathBuf, source: std::io::Error },
+    Open {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[error("could not acquire exclusive lock on {path}: {source}")]
-    Lock { path: PathBuf, source: std::io::Error },
+    Lock {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[error("could not read {path}: {source}")]
-    Read { path: PathBuf, source: std::io::Error },
+    Read {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[error("could not write {path}: {source}")]
-    Write { path: PathBuf, source: std::io::Error },
+    Write {
+        path: PathBuf,
+        source: std::io::Error,
+    },
 }

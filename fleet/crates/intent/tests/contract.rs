@@ -11,16 +11,25 @@ fn proposal(kind: &str, goal: &str) -> ModelProposal {
 }
 
 fn input() -> IntentInput {
-    IntentInput { request: "implement OAuth2 login".into(), context: String::new() }
+    IntentInput {
+        request: "implement OAuth2 login".into(),
+        context: String::new(),
+    }
 }
 
 fn policy() -> PolicySnapshot {
-    PolicySnapshot { allowed_effects: vec![] }
+    PolicySnapshot {
+        allowed_effects: vec![],
+    }
 }
 
 #[test]
 fn unknown_kind_refuses() {
-    let result = validate(proposal("unknown-workflow", "do something"), &input(), &policy());
+    let result = validate(
+        proposal("unknown-workflow", "do something"),
+        &input(),
+        &policy(),
+    );
     assert!(matches!(result, Err(IntentError::UnknownKind(_))));
 }
 
@@ -40,7 +49,11 @@ fn empty_goal_refuses() {
 
 #[test]
 fn valid_proposal_produces_intent_spec() {
-    let result = validate(proposal("feature", "implement OAuth2 login"), &input(), &policy());
+    let result = validate(
+        proposal("feature", "implement OAuth2 login"),
+        &input(),
+        &policy(),
+    );
     assert!(result.is_ok(), "expected Ok, got {:?}", result);
     let spec = result.unwrap();
     assert!(!spec.kind.is_empty());

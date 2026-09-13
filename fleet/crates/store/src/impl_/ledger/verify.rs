@@ -19,7 +19,10 @@ impl Ledger {
         }
         verify_rows(&rows)?;
         let total = rows.len() as u64;
-        Ok(VerifiedChain { checked: total, total })
+        Ok(VerifiedChain {
+            checked: total,
+            total,
+        })
     }
 }
 

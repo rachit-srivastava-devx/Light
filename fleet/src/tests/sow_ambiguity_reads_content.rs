@@ -23,7 +23,10 @@ fn run(text: &str) -> String {
         .args(["sow", "--text", text, "--intent-hash", "x"])
         .output()
         .expect("binary runs");
-    assert!(!out.status.success(), "a bare --text with no SOW sections should still be refused");
+    assert!(
+        !out.status.success(),
+        "a bare --text with no SOW sections should still be refused"
+    );
     String::from_utf8_lossy(&out.stderr).to_string()
 }
 
@@ -36,7 +39,10 @@ fn detailed_spec_produces_strictly_fewer_ambiguity_findings_than_vague_prompt() 
     let vague_out = run(VAGUE);
     let detailed_out = run(DETAILED);
 
-    assert_ne!(vague_out, detailed_out, "vague and detailed sow output must not be identical");
+    assert_ne!(
+        vague_out, detailed_out,
+        "vague and detailed sow output must not be identical"
+    );
 
     let vague_n = ambiguity_lines(&vague_out);
     let detailed_n = ambiguity_lines(&detailed_out);
@@ -50,11 +56,17 @@ fn detailed_spec_produces_strictly_fewer_ambiguity_findings_than_vague_prompt() 
 #[test]
 fn vague_prompt_flags_missing_audience() {
     let out = run(VAGUE);
-    assert!(out.contains("Who is this requirement for?"), "vague output: {out}");
+    assert!(
+        out.contains("Who is this requirement for?"),
+        "vague output: {out}"
+    );
 }
 
 #[test]
 fn detailed_spec_does_not_flag_missing_audience() {
     let out = run(DETAILED);
-    assert!(!out.contains("Who is this requirement for?"), "detailed output: {out}");
+    assert!(
+        !out.contains("Who is this requirement for?"),
+        "detailed output: {out}"
+    );
 }

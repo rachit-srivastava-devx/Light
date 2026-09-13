@@ -17,6 +17,8 @@ pub enum LoopError {
     Settle(#[from] SettleError),
     #[error("router selected an adapter name fleet-types rejected: {0}")]
     BadAdapter(#[from] EmptyIdentifier),
-    #[error("complete_unit called for {0:?} but tick's last Advanced outcome named a different unit")]
+    #[error(
+        "complete_unit called for {0:?} but tick's last Advanced outcome named a different unit"
+    )]
     UnitMismatch(String),
 }

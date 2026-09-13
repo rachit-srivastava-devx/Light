@@ -30,7 +30,11 @@ impl From<FreelaneAssetError> for FreelaneRunError {
 /// baked into the binary at compile time is materialized fresh, so this works regardless of the
 /// caller's cwd. Then runs `<script> [--model M] <task>` with `cwd = worktree`, matching keel's
 /// `Command::new(&script).arg(task).current_dir(repo)` plus freelane.sh's own `--model` flag.
-pub fn run(worktree: &Path, task: &str, model: Option<&str>) -> Result<FreelaneOutput, FreelaneRunError> {
+pub fn run(
+    worktree: &Path,
+    task: &str,
+    model: Option<&str>,
+) -> Result<FreelaneOutput, FreelaneRunError> {
     let root = match std::env::var_os("FLEET_FREELANE_ROOT") {
         Some(path) => FreelaneRoot::from_override(path)?,
         None => FreelaneRoot::materialize()?,
@@ -58,7 +62,11 @@ pub fn run(worktree: &Path, task: &str, model: Option<&str>) -> Result<FreelaneO
                 log
             }))
         }
-        None => return Err(FreelaneRunError("freelane: worker terminated without an exit code".into())),
+        None => {
+            return Err(FreelaneRunError(
+                "freelane: worker terminated without an exit code".into(),
+            ))
+        }
     }
     let response = String::from_utf8(output.stdout)
         .map_err(|_| FreelaneRunError("freelane: response was not UTF-8".into()))?;

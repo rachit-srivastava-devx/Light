@@ -38,23 +38,33 @@ impl CursorStore for FileCursorStore {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
             Err(source) => return Err(fault(sink_id, &path, "read", &source)),
         };
-        text.trim().parse::<u64>().map(Some).map_err(|e| CursorError {
-            sink_id,
-            reason: format!("cursor file {} is corrupt: {e}", path.display()),
-        })
+        text.trim()
+            .parse::<u64>()
+            .map(Some)
+            .map_err(|e| CursorError {
+                sink_id,
+                reason: format!("cursor file {} is corrupt: {e}", path.display()),
+            })
     }
 
     fn save(&self, sink_id: &'static str, seq: u64) -> Result<(), CursorError> {
         fs::create_dir_all(&self.dir)
             .map_err(|source| fault(sink_id, &self.dir, "create directory", &source))?;
         let n = TMP_COUNTER.fetch_add(1, Ordering::Relaxed);
-        let tmp = self.dir.join(format!("{sink_id}.cursor.tmp-{}-{n}", std::process::id()));
-        fs::write(&tmp, seq.to_string()).map_err(|source| fault(sink_id, &tmp, "write", &source))?;
+        let tmp = self
+            .dir
+            .join(format!("{sink_id}.cursor.tmp-{}-{n}", std::process::id()));
+        fs::write(&tmp, seq.to_string())
+            .map_err(|source| fault(sink_id, &tmp, "write", &source))?;
         let dest = self.cursor_path(sink_id);
-        fs::rename(&tmp, &dest).map_err(|source| fault(sink_id, &dest, "rename into place", &source))
+        fs::rename(&tmp, &dest)
+            .map_err(|source| fault(sink_id, &dest, "rename into place", &source))
     }
 }
 
 fn fault(sink_id: &'static str, path: &Path, action: &str, source: &std::io::Error) -> CursorError {
-    CursorError { sink_id, reason: format!("could not {action} {}: {source}", path.display()) }
+    CursorError {
+        sink_id,
+        reason: format!("could not {action} {}: {source}", path.display()),
+    }
 }

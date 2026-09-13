@@ -2,15 +2,24 @@ use crate::Effect;
 
 // Keyword table: (kind, keywords-that-imply-it) in conservatism order.
 const KIND_KEYWORDS: &[(&str, &[&str])] = &[
-    ("answer",           &["what is", "how does", "explain", "describe"]),
-    ("review-only",      &["review", "audit", "check only"]),
-    ("small-change",     &["fix", "bug", "patch", "typo", "small"]),
-    ("investigate",      &["investigate", "diagnose", "trace"]),
-    ("research-design",  &["research", "explore", "design proposal"]),
-    ("refactor",         &["refactor", "reorganize", "restructure"]),
-    ("feature",          &["new feature", "implement feature", "add feature"]),
-    ("incident",         &["incident", "outage", "emergency", "rollback"]),
-    ("multi-repo-change",&["cross-repo", "multi-repo", "monorepo-wide"]),
+    ("answer", &["what is", "how does", "explain", "describe"]),
+    ("review-only", &["review", "audit", "check only"]),
+    ("small-change", &["fix", "bug", "patch", "typo", "small"]),
+    ("investigate", &["investigate", "diagnose", "trace"]),
+    (
+        "research-design",
+        &["research", "explore", "design proposal"],
+    ),
+    ("refactor", &["refactor", "reorganize", "restructure"]),
+    (
+        "feature",
+        &["new feature", "implement feature", "add feature"],
+    ),
+    ("incident", &["incident", "outage", "emergency", "rollback"]),
+    (
+        "multi-repo-change",
+        &["cross-repo", "multi-repo", "monorepo-wide"],
+    ),
 ];
 
 /// Deterministic kind classification based on request text only.
@@ -34,6 +43,9 @@ mod tests {
     }
     #[test]
     fn unknown_text_defaults_to_investigate() {
-        assert_eq!(independent_kind("do something unspecified", &[]), "investigate");
+        assert_eq!(
+            independent_kind("do something unspecified", &[]),
+            "investigate"
+        );
     }
 }

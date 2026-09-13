@@ -1,8 +1,8 @@
 //! `Receipt` edge cases split from `receipt_roundtrip.rs` to keep test files within the crate's
 //! 80-line-per-file rule (BLUEPRINT.md §9).
 
-use types::{Blake3Hash, ExitCode, PrevHash, Receipt, ReceiptEvent, SchemaV1};
 use serde_json::json;
+use types::{Blake3Hash, ExitCode, PrevHash, Receipt, ReceiptEvent, SchemaV1};
 
 fn sample_receipt() -> Receipt {
     Receipt {

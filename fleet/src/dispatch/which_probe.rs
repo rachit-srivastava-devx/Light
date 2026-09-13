@@ -14,7 +14,9 @@ impl ToolProbe for WhichProbe {
     /// it was, instead of collapsing both into one misleading "unavailable".
     fn available(&self, tool: ProbeTool) -> bool {
         match tool {
-            ProbeTool::CargoMutants => matches!(mutants_probe::probe(), mutants_probe::Availability::Yes),
+            ProbeTool::CargoMutants => {
+                matches!(mutants_probe::probe(), mutants_probe::Availability::Yes)
+            }
             other => on_path(name_on_path(other)),
         }
     }
@@ -25,7 +27,11 @@ impl ToolProbe for WhichProbe {
     fn unavailable_reason(&self, tool: ProbeTool) -> String {
         match tool {
             ProbeTool::CargoMutants => mutants_probe::reason(mutants_probe::probe()),
-            other => format!("not found: no `{}` in {}", name_on_path(other), tool_path::searched()),
+            other => format!(
+                "not found: no `{}` in {}",
+                name_on_path(other),
+                tool_path::searched()
+            ),
         }
     }
 }

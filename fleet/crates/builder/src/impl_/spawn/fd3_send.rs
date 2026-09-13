@@ -28,7 +28,11 @@ pub fn child_channel_open() -> bool {
     rc == 0
 }
 
-pub fn send_done(body: Value, resolved_model: Option<&str>, tokens: Option<u64>) -> Result<(), std::io::Error> {
+pub fn send_done(
+    body: Value,
+    resolved_model: Option<&str>,
+    tokens: Option<u64>,
+) -> Result<(), std::io::Error> {
     let mut packet = json!({"schema_version": "1.0", "kind": "done", "body": body});
     if let Some(m) = resolved_model {
         packet["resolved_model"] = json!(m);

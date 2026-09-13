@@ -1,5 +1,5 @@
-use std::num::NonZeroU8;
 use questions::{merge_probes, Question};
+use std::num::NonZeroU8;
 
 fn q(text: &str, why: &str, severity: u8) -> Question {
     Question {
@@ -12,10 +12,19 @@ fn q(text: &str, why: &str, severity: u8) -> Question {
 #[test]
 fn output_capped_at_three() {
     let inputs = vec![
-        vec![q("biz q1", "probe_business", 10), q("biz q2", "probe_business", 8)],
+        vec![
+            q("biz q1", "probe_business", 10),
+            q("biz q2", "probe_business", 8),
+        ],
         vec![q("tech q1", "probe_tech", 9), q("tech q2", "probe_tech", 7)],
-        vec![q("learn q1", "probe_learn", 6), q("learn q2", "probe_learn", 5)],
-        vec![q("research q1", "probe_research", 4), q("research q2", "probe_research", 3)],
+        vec![
+            q("learn q1", "probe_learn", 6),
+            q("learn q2", "probe_learn", 5),
+        ],
+        vec![
+            q("research q1", "probe_research", 4),
+            q("research q2", "probe_research", 3),
+        ],
     ];
     let result = merge_probes(inputs, NonZeroU8::new(3).unwrap()).unwrap();
     assert_eq!(result.items.len(), 3);
@@ -78,9 +87,7 @@ fn question_with_empty_text_is_filtered() {
 #[test]
 fn max_cap_one_is_valid() {
     // Kills: `replace > with <` — if < were used, max=1 would be rejected (1 < 3)
-    let inputs = vec![
-        vec![q("q1", "why1", 9), q("q2", "why2", 8)],
-    ];
+    let inputs = vec![vec![q("q1", "why1", 9), q("q2", "why2", 8)]];
     let result = merge_probes(inputs, NonZeroU8::new(1).unwrap()).unwrap();
     assert_eq!(result.items.len(), 1);
 }
@@ -90,5 +97,8 @@ fn max_cap_four_is_rejected() {
     use questions::merge_probes;
     let inputs: Vec<Vec<questions::Question>> = vec![];
     let result = merge_probes(inputs, NonZeroU8::new(4).unwrap());
-    assert!(result.is_err(), "cap=4 must be rejected; only 1..=3 are valid");
+    assert!(
+        result.is_err(),
+        "cap=4 must be rejected; only 1..=3 are valid"
+    );
 }

@@ -20,8 +20,16 @@ use support::cmd;
 /// a non-empty stage every time, regardless of what is staged in the checkout running this test.
 fn scratch_repo_with_staged_file(dir: &Path) {
     let run = |args: &[&str]| {
-        let out = Command::new("git").current_dir(dir).args(args).output().expect("git runs");
-        assert!(out.status.success(), "git {args:?} failed: {}", String::from_utf8_lossy(&out.stderr));
+        let out = Command::new("git")
+            .current_dir(dir)
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(
+            out.status.success(),
+            "git {args:?} failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
     };
     run(&["init", "-q"]);
     run(&["config", "user.email", "test@example.com"]);
@@ -47,17 +55,33 @@ fn a_second_process_against_the_same_state_dir_replays_instead_of_rerunning() {
     let task_id = "resume-demo-task";
 
     let first = run_probe(dir.path(), repo.path(), task_id);
-    assert!(first.status.success(), "first run: {}", String::from_utf8_lossy(&first.stderr));
+    assert!(
+        first.status.success(),
+        "first run: {}",
+        String::from_utf8_lossy(&first.stderr)
+    );
 
     let log_path = dir.path().join(format!("{task_id}.steps.json"));
     let after_first = fs::read_to_string(&log_path).expect("step log written by first process");
-    for stage in ["Event", "Classify", "Scan", "Plan", "Dispatch", "Verify", "Merge", "Teach"] {
-        assert!(after_first.contains(stage), "stage {stage} missing from step log: {after_first}");
+    for stage in [
+        "Event", "Classify", "Scan", "Plan", "Dispatch", "Verify", "Merge", "Teach",
+    ] {
+        assert!(
+            after_first.contains(stage),
+            "stage {stage} missing from step log: {after_first}"
+        );
     }
 
     // A brand new process, standing in for the post-crash restart, sees the same completed log.
     let second = run_probe(dir.path(), repo.path(), task_id);
-    assert!(second.status.success(), "second run: {}", String::from_utf8_lossy(&second.stderr));
+    assert!(
+        second.status.success(),
+        "second run: {}",
+        String::from_utf8_lossy(&second.stderr)
+    );
     let after_second = fs::read_to_string(&log_path).expect("step log still present");
-    assert_eq!(after_first, after_second, "replay must not mutate the completed step log");
+    assert_eq!(
+        after_first, after_second,
+        "replay must not mutate the completed step log"
+    );
 }

@@ -17,7 +17,10 @@ pub enum AdjudicateCmdError {
     NoJudgeConfigured,
     /// The artifact path could not be read.
     #[error("could not read artifact {path:?}: {source}")]
-    ArtifactUnreadable { path: String, source: std::io::Error },
+    ArtifactUnreadable {
+        path: String,
+        source: std::io::Error,
+    },
     /// The judge core itself refused/faulted (`review::judge`'s own typed errors).
     #[error(transparent)]
     Judge(#[from] JudgeError),

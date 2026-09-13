@@ -1,15 +1,15 @@
 //! `dag` — versioned workflow DAG: cycle detection, ready ordering, CAS port.
 //! Blueprint: docs/blueprints-next/dag/BLUEPRINT.md
 
-pub mod types;
 mod graph;
-mod ready;
 pub mod port;
+mod ready;
+pub mod types;
 
-pub use types::{DagError, GraphVersion, Node, ReadySet, SkipPlanningSignal, WorkflowRecipe};
 pub use graph::validate;
-pub use ready::ready;
 pub use port::{MemoryVersionStore, VersionStore};
+pub use ready::ready;
+pub use types::{DagError, GraphVersion, Node, ReadySet, SkipPlanningSignal, WorkflowRecipe};
 
 #[cfg(test)]
 mod tests {
@@ -17,11 +17,19 @@ mod tests {
     use types::Node;
 
     fn mk_node(id: &str, deps: &[&str]) -> Node {
-        Node { id: id.into(), depends_on: deps.iter().map(|s| s.to_string()).collect(),
-            read_set: vec![], write_set: vec![] }
+        Node {
+            id: id.into(),
+            depends_on: deps.iter().map(|s| s.to_string()).collect(),
+            read_set: vec![],
+            write_set: vec![],
+        }
     }
     fn mk_gv(revision: u64, nodes: Vec<Node>) -> GraphVersion {
-        GraphVersion { id: "g".into(), revision, nodes }
+        GraphVersion {
+            id: "g".into(),
+            revision,
+            nodes,
+        }
     }
 
     #[test]

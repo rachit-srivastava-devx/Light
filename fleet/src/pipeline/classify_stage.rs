@@ -11,7 +11,14 @@ use route::{Decision, TaskClass};
 /// concrete code change is `Implementation`; an empty/vague task falls back to `General`.
 fn task_class(task_text: &str) -> TaskClass {
     let lower = task_text.to_lowercase();
-    let human_only = ["contract", "migration", "money", "payment", "credential", "secret"];
+    let human_only = [
+        "contract",
+        "migration",
+        "money",
+        "payment",
+        "credential",
+        "secret",
+    ];
     if human_only.iter().any(|k| lower.contains(k)) {
         TaskClass::HumanOnly
     } else if lower.trim().is_empty() {

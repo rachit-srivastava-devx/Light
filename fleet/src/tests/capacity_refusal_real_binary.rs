@@ -28,7 +28,10 @@ fn an_unmeetable_lane_budget_refuses_with_the_measured_numbers() {
     let out = run(&[("FLEET_LANE_BUDGET_MB", "99999999")], &["oracle"]);
     let err = String::from_utf8_lossy(&out.stderr);
     assert_eq!(out.status.code(), Some(REFUSAL), "stderr: {err}");
-    assert!(err.contains("available memory"), "no measured memory in: {err}");
+    assert!(
+        err.contains("available memory"),
+        "no measured memory in: {err}"
+    );
     assert!(err.contains("99999999"), "no threshold in: {err}");
 }
 
@@ -47,7 +50,11 @@ fn an_impossible_load_factor_refuses_naming_load_cores_and_threshold() {
 fn a_refusal_short_circuits_before_any_work_is_done() {
     let out = run(&[("FLEET_LANE_BUDGET_MB", "99999999")], &["oracle"]);
     assert_eq!(out.status.code(), Some(REFUSAL));
-    assert!(out.stdout.is_empty(), "work ran despite refusal: {:?}", String::from_utf8_lossy(&out.stdout));
+    assert!(
+        out.stdout.is_empty(),
+        "work ran despite refusal: {:?}",
+        String::from_utf8_lossy(&out.stdout)
+    );
 }
 
 /// With no overrides this machine must be allowed -- otherwise the gate is unconditional, which
@@ -71,10 +78,16 @@ fn status_reports_the_same_cap_the_probe_measured() {
     let probe_out = String::from_utf8_lossy(&probe.stdout);
     let measured = probe_out
         .lines()
-        .find_map(|l| l.strip_prefix("decision: allow (concurrency_cap=")?.strip_suffix(')'))
+        .find_map(|l| {
+            l.strip_prefix("decision: allow (concurrency_cap=")?
+                .strip_suffix(')')
+        })
         .expect("probe reports an allow decision with a cap")
         .to_string();
     let status = run(&hi, &["status", "--json"]);
     let shown = String::from_utf8_lossy(&status.stdout);
-    assert!(shown.contains(&measured), "status cap disagrees with measured {measured}: {shown}");
+    assert!(
+        shown.contains(&measured),
+        "status cap disagrees with measured {measured}: {shown}"
+    );
 }

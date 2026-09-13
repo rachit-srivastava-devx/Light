@@ -23,7 +23,14 @@ pub enum ScorecardOutcome {
 
 impl Scorecard {
     pub(crate) fn empty(agent_id: &str) -> Self {
-        Self { agent_id: agent_id.to_string(), credited: 0, faulted: 0, unknown: 0, checked: 0, total: 0 }
+        Self {
+            agent_id: agent_id.to_string(),
+            credited: 0,
+            faulted: 0,
+            unknown: 0,
+            checked: 0,
+            total: 0,
+        }
     }
 
     /// `checked == credited + faulted` and `total == checked + unknown` -- a corrupt scorecard

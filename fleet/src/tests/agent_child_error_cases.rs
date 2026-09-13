@@ -4,8 +4,8 @@
 
 mod support;
 
-use support::agent;
 use std::fs;
+use support::agent;
 
 #[test]
 fn unknown_adapter_kind_is_a_typed_refusal() {
@@ -51,14 +51,20 @@ fn the_four_error_cases_exit_with_four_distinct_codes() {
     let _ = fs::remove_dir_all(&missing);
     let codes: Vec<Option<i32>> = vec![
         agent(&["not-a-real-adapter", "/tmp", "task"]).status.code(),
-        agent(&["freelane", missing.to_str().unwrap(), "task"]).status.code(),
+        agent(&["freelane", missing.to_str().unwrap(), "task"])
+            .status
+            .code(),
         agent(&["freelane", "/tmp", ""]).status.code(),
         agent(&["freelane", "/tmp", "some task"]).status.code(), // fd 3 not open
     ];
     let mut unique = codes.clone();
     unique.sort();
     unique.dedup();
-    assert_eq!(unique.len(), 4, "expected 4 distinct exit codes, got {codes:?}");
+    assert_eq!(
+        unique.len(),
+        4,
+        "expected 4 distinct exit codes, got {codes:?}"
+    );
     for code in &codes {
         assert_ne!(*code, Some(0));
         assert_ne!(*code, Some(2), "must never be clap's own usage-error code");

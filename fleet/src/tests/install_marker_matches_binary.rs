@@ -15,7 +15,10 @@ fn marker_from_install_sh(script: &str) -> String {
         .lines()
         .find(|l| l.contains("&& return 1") && l.contains("grep -q"))
         .expect("install.sh must still identify its own binary by an output marker");
-    let after = line.split("grep -q").nth(1).expect("grep -q takes a pattern");
+    let after = line
+        .split("grep -q")
+        .nth(1)
+        .expect("grep -q takes a pattern");
     let quoted = after.trim().trim_start_matches('\'');
     let pattern = quoted.split('\'').next().expect("pattern is single-quoted");
     pattern.trim_start_matches('^').to_string()
@@ -26,7 +29,10 @@ fn the_installers_identity_marker_appears_in_the_real_binary_output() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../install.sh");
     let script = std::fs::read_to_string(root).expect("install.sh must exist next to the crate");
     let marker = marker_from_install_sh(&script);
-    assert!(!marker.is_empty(), "extracted an empty marker from install.sh");
+    assert!(
+        !marker.is_empty(),
+        "extracted an empty marker from install.sh"
+    );
 
     // The real product binary, not a fake: this is the exact program `install.sh` interrogates.
     let out = Command::new(env!("CARGO_BIN_EXE_fleet"))

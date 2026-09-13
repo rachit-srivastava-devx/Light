@@ -13,7 +13,10 @@ mod tests {
     fn sig(d: &str) -> NextPlanSignal {
         NextPlanSignal {
             parent_digest: d.into(),
-            candidate: PlanDraft { modules: vec![], digest: d.into() },
+            candidate: PlanDraft {
+                modules: vec![],
+                digest: d.into(),
+            },
             write_set: vec![],
             measure_set: vec![],
         }

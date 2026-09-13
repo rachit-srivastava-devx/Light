@@ -2,7 +2,9 @@
 //! this list, or to `Teach` from any stage on failure -- enforced by an exhaustive match with no
 //! wildcard arm (BLUEPRINT §4).
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Ord, PartialOrd, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Hash, Ord, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
 pub enum PipelineStage {
     Event,
     Classify,
@@ -44,8 +46,9 @@ impl PipelineStage {
     /// `TaughtOutcome::GateRefused`'s `check_id` so a real failure names the stage that produced
     /// it instead of a constant.
     pub fn name(self) -> &'static str {
-        const NAMES: [&str; 8] =
-            ["event", "classify", "scan", "plan", "dispatch", "verify", "merge", "teach"];
+        const NAMES: [&str; 8] = [
+            "event", "classify", "scan", "plan", "dispatch", "verify", "merge", "teach",
+        ];
         NAMES[self as usize]
     }
 

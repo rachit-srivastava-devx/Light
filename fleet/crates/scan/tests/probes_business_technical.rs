@@ -31,7 +31,9 @@ impl CodebasePort for MockCodebase {
 #[test]
 fn technical_probe_flags_existing_symbol() {
     let codebase = MockCodebase(true);
-    let probe = TechnicalProbe { codebase: &codebase };
+    let probe = TechnicalProbe {
+        codebase: &codebase,
+    };
     let out = probe.probe(&input("add a new FooBar_Handler"));
     match out {
         ProbeOutcome::Questions(qs) => assert_eq!(qs.len(), 1),
@@ -50,7 +52,12 @@ impl CodebasePort for FaultingCodebase {
 #[test]
 fn technical_probe_reports_fault() {
     let codebase = FaultingCodebase;
-    let probe = TechnicalProbe { codebase: &codebase };
+    let probe = TechnicalProbe {
+        codebase: &codebase,
+    };
     let out = probe.probe(&input("add a new FooBar_Handler"));
-    assert!(matches!(out, ProbeOutcome::Fault(EnvFault::CredentialMissing(_))));
+    assert!(matches!(
+        out,
+        ProbeOutcome::Fault(EnvFault::CredentialMissing(_))
+    ));
 }

@@ -22,7 +22,9 @@ impl CodebasePort for StubCodebase {
 pub struct StubResearch;
 impl ResearchPort for StubResearch {
     fn search(&self, _query: &str) -> Result<Vec<String>, EnvFault> {
-        Err(EnvFault::CredentialMissing("research backend not wired into `sow` yet".into()))
+        Err(EnvFault::CredentialMissing(
+            "research backend not wired into `sow` yet".into(),
+        ))
     }
 }
 

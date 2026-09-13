@@ -2,19 +2,19 @@
 //!
 //! Entry point: [`normalize`]. Dedup: [`SeenIds`].
 
-pub mod types;
 pub mod dedup;
+pub mod types;
 
-mod registry;
-mod redact;
-mod injection;
 mod attachment;
+mod injection;
+mod redact;
+mod registry;
 
-pub use types::*;
 pub use dedup::{InboxDecision, SeenIds};
+pub use types::*;
 
-use std::io::{self, Write};
 use serde_json::Value;
+use std::io::{self, Write};
 
 struct ByteCounter(usize);
 impl Write for ByteCounter {
@@ -25,12 +25,13 @@ impl Write for ByteCounter {
         }
         Ok(buf.len())
     }
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
 }
 
 fn check_size(payload: &Value) -> Result<(), IngestError> {
-    serde_json::to_writer(ByteCounter(0), payload)
-        .map_err(|_| IngestError::OversizedPayload)
+    serde_json::to_writer(ByteCounter(0), payload).map_err(|_| IngestError::OversizedPayload)
 }
 
 fn compute_digest(payload: &Value) -> String {
@@ -50,16 +51,25 @@ fn compute_digest(payload: &Value) -> String {
 /// 4. `redact_secrets` — scrub keys/tokens/passwords; track what was removed
 /// 5. `validate_attachments` — count, URI len, size, uniqueness
 /// 6. `compute_digest` — BLAKE3 over the scrubbed payload
-pub fn normalize(input: IncomingEvent, reg: &SourceRegistration) -> Result<NormalizedEvent, IngestError> {
-    let source    = registry::check_source(&input.source, reg)?;
+pub fn normalize(
+    input: IncomingEvent,
+    reg: &SourceRegistration,
+) -> Result<NormalizedEvent, IngestError> {
+    let source = registry::check_source(&input.source, reg)?;
     check_size(&input.payload)?;
-    let taint     = injection::check_injection(&input.payload);  // scan raw, before redaction
+    let taint = injection::check_injection(&input.payload); // scan raw, before redaction
     let (payload, mut receipt) = redact::redact_secrets(input.payload)?;
     attachment::validate_attachments(&input.attachments)?;
-    let digest    = compute_digest(&payload);
-    let event_id  = format!("{source}-{}", input.delivery_id);
+    let digest = compute_digest(&payload);
+    let event_id = format!("{source}-{}", input.delivery_id);
     receipt.event_id = event_id.clone();
-    Ok(NormalizedEvent { event_id, source, payload, payload_digest: digest,
-                         attachments: input.attachments, redaction_receipt: receipt,
-                         injection_taint: taint })
+    Ok(NormalizedEvent {
+        event_id,
+        source,
+        payload,
+        payload_digest: digest,
+        attachments: input.attachments,
+        redaction_receipt: receipt,
+        injection_taint: taint,
+    })
 }

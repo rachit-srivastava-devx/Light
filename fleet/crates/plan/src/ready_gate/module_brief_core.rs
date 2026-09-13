@@ -33,22 +33,34 @@ pub(crate) fn valid_node_id(s: &str) -> bool {
         return false;
     }
     let head_ok = b[0].is_ascii_lowercase() || b[0].is_ascii_digit();
-    head_ok && b[1..].iter().all(|&c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
+    head_ok
+        && b[1..]
+            .iter()
+            .all(|&c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
 }
 
 /// `^fz-[0-9a-f]{16}$`.
 pub(crate) fn valid_freeze_id(s: &str) -> bool {
-    s.len() == 19 && s.starts_with("fz-") && s[3..].bytes().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
+    s.len() == 19
+        && s.starts_with("fz-")
+        && s[3..]
+            .bytes()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
 }
 
 /// `^sha256:[0-9a-f]{64}$`.
 pub(crate) fn valid_content_hash(s: &str) -> bool {
-    s.len() == 71 && s.starts_with("sha256:") && s[7..].bytes().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
+    s.len() == 71
+        && s.starts_with("sha256:")
+        && s[7..]
+            .bytes()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
 }
 
 pub(crate) fn number_calc_ok(calc: &str) -> bool {
     let has_digit = calc.bytes().any(|b| b.is_ascii_digit());
-    let has_operator = calc.contains(['+', '-', '*', '/', '\u{f7}', '\u{d7}', '=', '\u{2248}', '%']);
+    let has_operator =
+        calc.contains(['+', '-', '*', '/', '\u{f7}', '\u{d7}', '=', '\u{2248}', '%']);
     !calc.trim().is_empty() && has_digit && has_operator
 }
 

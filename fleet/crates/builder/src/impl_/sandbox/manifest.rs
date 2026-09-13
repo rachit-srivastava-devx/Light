@@ -55,7 +55,10 @@ pub fn manifest_for_lease(expression: &str) -> Result<serde_json::Value, Provisi
             ("ledger_read", "fleet".to_string()),
         ]
         .into_iter()
-        .map(|(name, scope)| ManifestTool { name: name.to_string(), scope })
+        .map(|(name, scope)| ManifestTool {
+            name: name.to_string(),
+            scope,
+        })
         .collect(),
     };
     serde_json::to_value(manifest).map_err(|_| ProvisionError::MissingFleetFile("manifest"))

@@ -17,9 +17,7 @@ fn fleet() -> Command {
 /// This is the branch that guards REPL activation -- the binary must exit cleanly, not block.
 #[test]
 fn no_args_non_terminal_prints_help_and_exits() {
-    let out = fleet()
-        .output()
-        .expect("fleet binary must run");
+    let out = fleet().output().expect("fleet binary must run");
     // The binary exits 0 (Ok exit code from the Ok(()) branch in main.rs).
     assert_eq!(
         out.status.code(),
@@ -29,7 +27,8 @@ fn no_args_non_terminal_prints_help_and_exits() {
     );
     let stdout = String::from_utf8_lossy(&out.stdout);
     assert!(
-        stdout.contains("fleet") && (stdout.contains("Usage") || stdout.contains("usage") || stdout.contains("--help")),
+        stdout.contains("fleet")
+            && (stdout.contains("Usage") || stdout.contains("usage") || stdout.contains("--help")),
         "expected help output, got:\n{stdout}"
     );
 }

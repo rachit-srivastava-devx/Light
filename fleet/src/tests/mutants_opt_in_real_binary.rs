@@ -5,8 +5,8 @@
 //! fake probe -- a fake would prove the trait, not the wiring a real machine actually exercises.
 
 mod support;
-use support::bounded::run_bounded;
 use std::time::Duration;
+use support::bounded::run_bounded;
 
 /// Without the opt-in env var, `cargo-mutants` being on the test machine's `$PATH` must NOT be
 /// enough to run it -- the gate must skip, and that skip must print (never a silent pass).
@@ -23,7 +23,10 @@ fn mutants_gate_skips_visibly_without_the_opt_in_env_var() {
         Duration::from_secs(10),
     );
     let (code, out, err) = result.expect("an opt-out skip must terminate fast, not hang");
-    assert_eq!(code, 0, "an advisory skip must not fail the run: stdout={out} stderr={err}");
+    assert_eq!(
+        code, 0,
+        "an advisory skip must not fail the run: stdout={out} stderr={err}"
+    );
     assert!(
         err.contains("SKIP") && err.contains("mutants"),
         "opt-in skip must be VISIBLE (D27), got stdout={out} stderr={err}"
@@ -43,7 +46,8 @@ fn mutants_gate_actually_runs_when_opted_in() {
         &[("FLEET_MUTANTS", "1"), ("FLEET_VERIFY_BUDGET_SECS", "2")],
         Duration::from_secs(15),
     );
-    let (_code, out, err) = result.expect("an opted-in mutants run must still terminate within budget");
+    let (_code, out, err) =
+        result.expect("an opted-in mutants run must still terminate within budget");
     assert!(
         !out.contains("SKIP") && !err.contains("SKIP"),
         "FLEET_MUTANTS=1 must make the gate attempt to run, not skip: stdout={out} stderr={err}"

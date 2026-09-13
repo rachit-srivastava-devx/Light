@@ -12,7 +12,10 @@ fn every_top_level_subcommand_has_a_non_empty_description() {
     let out = cmd().arg("--help").output().expect("binary runs");
     assert!(out.status.success());
     let stdout = String::from_utf8_lossy(&out.stdout);
-    let commands_block = stdout.split("Commands:\n").nth(1).expect("a Commands: section");
+    let commands_block = stdout
+        .split("Commands:\n")
+        .nth(1)
+        .expect("a Commands: section");
 
     let mut missing = Vec::new();
     for line in commands_block.lines() {
@@ -27,5 +30,8 @@ fn every_top_level_subcommand_has_a_non_empty_description() {
             missing.push(name.to_string());
         }
     }
-    assert!(missing.is_empty(), "subcommand(s) with an empty --help description: {missing:?}");
+    assert!(
+        missing.is_empty(),
+        "subcommand(s) with an empty --help description: {missing:?}"
+    );
 }

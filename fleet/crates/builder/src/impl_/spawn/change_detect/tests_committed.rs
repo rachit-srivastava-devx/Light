@@ -1,9 +1,9 @@
 //! The committed-work + moved-`HEAD` cases -- split out of `tests.rs` to keep that file under
 //! the line budget.
 
+use super::super::super::outcome::LaneOutcome;
 use super::enforce_change_honesty;
 use super::tests::{git, init_repo_with_commit};
-use super::super::super::outcome::LaneOutcome;
 use serde_json::json;
 use std::process::Command;
 
@@ -17,10 +17,25 @@ fn a_committed_change_is_still_reported_as_done() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "worker change"]);
     // The mirror-image: without the fix, `git status --porcelain` alone is 0 lines here.
-    let status = Command::new("git").arg("-C").arg(dir.path()).args(["status", "--porcelain"]).output().unwrap();
-    assert!(status.stdout.is_empty(), "sanity: a committed change leaves git status clean");
-    let outcome = LaneOutcome::Done { resolved_model: None, tokens: None, body: json!({}) };
-    assert!(matches!(enforce_change_honesty(outcome, dir.path(), &base), LaneOutcome::Done { .. }));
+    let status = Command::new("git")
+        .arg("-C")
+        .arg(dir.path())
+        .args(["status", "--porcelain"])
+        .output()
+        .unwrap();
+    assert!(
+        status.stdout.is_empty(),
+        "sanity: a committed change leaves git status clean"
+    );
+    let outcome = LaneOutcome::Done {
+        resolved_model: None,
+        tokens: None,
+        body: json!({}),
+    };
+    assert!(matches!(
+        enforce_change_honesty(outcome, dir.path(), &base),
+        LaneOutcome::Done { .. }
+    ));
 }
 
 /// A worker that commits, then resets back onto `base_commit` (amend/reset landing back on the
@@ -34,7 +49,11 @@ fn committing_then_resetting_back_to_base_is_still_refused() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "temp"]);
     git(dir.path(), &["reset", "--hard", &base]);
-    let outcome = LaneOutcome::Done { resolved_model: None, tokens: None, body: json!({}) };
+    let outcome = LaneOutcome::Done {
+        resolved_model: None,
+        tokens: None,
+        body: json!({}),
+    };
     let out = enforce_change_honesty(outcome, dir.path(), &base);
     assert!(matches!(out, LaneOutcome::Refused { .. }), "{out:?}");
 }
@@ -49,9 +68,21 @@ fn a_committed_change_on_a_detached_head_is_still_reported_as_done() {
     std::fs::write(dir.path().join("f.txt"), "worker wrote this").unwrap();
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "worker change"]);
-    let head = Command::new("git").arg("-C").arg(dir.path()).args(["rev-parse", "HEAD"]).output().unwrap();
+    let head = Command::new("git")
+        .arg("-C")
+        .arg(dir.path())
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .unwrap();
     let head = String::from_utf8_lossy(&head.stdout).trim().to_string();
     git(dir.path(), &["checkout", "-q", "--detach", &head]);
-    let outcome = LaneOutcome::Done { resolved_model: None, tokens: None, body: json!({}) };
-    assert!(matches!(enforce_change_honesty(outcome, dir.path(), &base), LaneOutcome::Done { .. }));
+    let outcome = LaneOutcome::Done {
+        resolved_model: None,
+        tokens: None,
+        body: json!({}),
+    };
+    assert!(matches!(
+        enforce_change_honesty(outcome, dir.path(), &base),
+        LaneOutcome::Done { .. }
+    ));
 }

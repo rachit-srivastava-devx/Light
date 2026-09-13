@@ -19,7 +19,10 @@ pub fn validate(input: &ReviewInput, v: &ReviewVerdict) -> Result<(), ReviewErro
 }
 
 /// Validate a plan proposal and check independence before dispatching to the reviewer.
-pub fn validate_plan_proposal(proposal: &PlanProposal, reviewer_id: &str) -> Result<(), ReviewError> {
+pub fn validate_plan_proposal(
+    proposal: &PlanProposal,
+    reviewer_id: &str,
+) -> Result<(), ReviewError> {
     if proposal.plan_digest.is_empty() {
         return Err(ReviewError::InvalidInput("empty plan_digest".into()));
     }

@@ -91,7 +91,8 @@ mod tests {
     fn notice_different_path_returns_mismatch_hint() {
         let current = Path::new("/new/fleet");
         let path_fleet = Path::new("/old/fleet");
-        let msg = notice(current, Some(path_fleet), false).expect("should return Some when paths differ");
+        let msg =
+            notice(current, Some(path_fleet), false).expect("should return Some when paths differ");
         assert!(msg.contains("/old/fleet"), "got: {msg}");
         assert!(msg.contains("/new/fleet"), "got: {msg}");
         assert!(msg.contains("install.sh"), "got: {msg}");

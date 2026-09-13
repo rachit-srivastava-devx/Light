@@ -1,8 +1,7 @@
 //! Kills Decision-is-never-read mutations: emit_walkthrough must derive
 //! `approved` from Decision::Accept, not from a caller-supplied literal.
 use plan_review::{
-    Decision, PlanProposal, ReviewVerdict, ReviewEvent, ReviewedPlanDigest,
-    emit_walkthrough,
+    emit_walkthrough, Decision, PlanProposal, ReviewEvent, ReviewVerdict, ReviewedPlanDigest,
 };
 
 fn proposal(plan_digest: &str) -> PlanProposal {
@@ -25,9 +24,15 @@ fn verdict(decision: Decision) -> ReviewVerdict {
 }
 
 fn get_digest(evs: &[ReviewEvent]) -> &ReviewedPlanDigest {
-    evs.iter().find_map(|e| {
-        if let ReviewEvent::Digest(d) = e { Some(d) } else { None }
-    }).unwrap()
+    evs.iter()
+        .find_map(|e| {
+            if let ReviewEvent::Digest(d) = e {
+                Some(d)
+            } else {
+                None
+            }
+        })
+        .unwrap()
 }
 
 // Kills: emit_walkthrough body → approved = true (constant)

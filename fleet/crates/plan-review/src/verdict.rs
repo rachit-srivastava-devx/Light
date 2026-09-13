@@ -1,7 +1,7 @@
 use crate::contract::validate_plan_proposal;
 use crate::types::{
-    Decision, PlanProposal, PlanReviewer, PlanWalkthrough, ReviewError,
-    ReviewEvent, ReviewInput, ReviewedPlanDigest, ReviewVerdict,
+    Decision, PlanProposal, PlanReviewer, PlanWalkthrough, ReviewError, ReviewEvent, ReviewInput,
+    ReviewVerdict, ReviewedPlanDigest,
 };
 
 /// Dispatch to the injected reviewer model and return an event sequence.
@@ -42,7 +42,10 @@ pub fn emit_walkthrough(
         checked: verdict.checked,
         total: verdict.total,
     };
-    vec![ReviewEvent::Walkthrough(walkthrough), ReviewEvent::Digest(digest)]
+    vec![
+        ReviewEvent::Walkthrough(walkthrough),
+        ReviewEvent::Digest(digest),
+    ]
 }
 
 /// Canonical output digest from the verdict.

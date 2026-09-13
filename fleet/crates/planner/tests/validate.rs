@@ -53,8 +53,8 @@ fn task_digest_empty_is_rejected() {
 
 #[test]
 fn all_digests_present_passes() {
-    let report = validate_draft(&valid_input(), &one_module_draft())
-        .expect("valid input must pass");
+    let report =
+        validate_draft(&valid_input(), &one_module_draft()).expect("valid input must pass");
     assert_eq!(report.checked, report.total);
     assert!(report.total > 0);
 }

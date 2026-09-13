@@ -31,5 +31,6 @@ pub fn embed_text(text: &str) -> Embedding {
 /// A stable id for a piece of text -- same text always maps to the same id, so a repeated
 /// observation of the same requirement text is recognised as the same memory row's candidate.
 pub fn stable_id(text: &str) -> MemoryId {
-    MemoryId::parse(format!("sow-{:016x}", fnv1a(text.as_bytes()))).expect("hex string is non-empty")
+    MemoryId::parse(format!("sow-{:016x}", fnv1a(text.as_bytes())))
+        .expect("hex string is non-empty")
 }

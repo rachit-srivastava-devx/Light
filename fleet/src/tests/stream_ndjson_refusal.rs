@@ -13,8 +13,16 @@ fn a_failing_stage_leaves_a_refusal_row_in_the_stream() {
     // Committed, nothing staged: `check_stage_nonempty` refuses `Merge`.
     scratch_repo(repo.path());
 
-    let out = pipeline_probe(state_dir.path(), repo.path(), "refusal-task", Some(stream_dir.path()));
-    assert!(!out.status.success(), "probe should fail when the stage is empty");
+    let out = pipeline_probe(
+        state_dir.path(),
+        repo.path(),
+        "refusal-task",
+        Some(stream_dir.path()),
+    );
+    assert!(
+        !out.status.success(),
+        "probe should fail when the stage is empty"
+    );
 
     let events_path = stream_dir.path().join("events.ndjson");
     let rows: Vec<serde_json::Value> = fs::read_to_string(&events_path)
@@ -23,6 +31,9 @@ fn a_failing_stage_leaves_a_refusal_row_in_the_stream() {
         .map(|l| serde_json::from_str(l).unwrap())
         .collect();
 
-    let refusal = rows.iter().find(|r| r["event"] == "refusal").expect("a refusal row must exist");
+    let refusal = rows
+        .iter()
+        .find(|r| r["event"] == "refusal")
+        .expect("a refusal row must exist");
     assert_eq!(refusal["body"]["stage"], "merge");
 }

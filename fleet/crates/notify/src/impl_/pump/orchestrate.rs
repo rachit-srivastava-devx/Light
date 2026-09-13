@@ -23,14 +23,23 @@ pub async fn pump(
         let cursors = Arc::clone(&cursors);
         let mut shutdown = shutdown.clone();
         tasks.push(tokio::spawn(async move {
-            run_sink(source.as_ref(), cursors.as_ref(), sink.as_mut(), &config, &mut shutdown).await
+            run_sink(
+                source.as_ref(),
+                cursors.as_ref(),
+                sink.as_mut(),
+                &config,
+                &mut shutdown,
+            )
+            .await
         }));
     }
     let mut results = Vec::with_capacity(tasks.len());
     for task in tasks {
         results.push(match task.await {
             Ok(result) => result,
-            Err(_) => Err(LogSourceError::Unavailable("sink worker task panicked".into())),
+            Err(_) => Err(LogSourceError::Unavailable(
+                "sink worker task panicked".into(),
+            )),
         });
     }
     results

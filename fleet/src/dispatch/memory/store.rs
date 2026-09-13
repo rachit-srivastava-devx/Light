@@ -17,7 +17,9 @@ pub struct SowMemoryStore {
 
 impl SowMemoryStore {
     pub fn new(state_dir: &Path) -> Self {
-        Self { path: state_dir.join("memory").join("sow.json") }
+        Self {
+            path: state_dir.join("memory").join("sow.json"),
+        }
     }
 
     pub fn load(&self) -> Result<Vec<MemoryItem>, MemoryStoreError> {
@@ -25,7 +27,10 @@ impl SowMemoryStore {
             Ok(text) => serde_json::from_str(&text)
                 .map_err(|e| MemoryStoreError(format!("decode {}: {e}", self.path.display()))),
             Err(e) if e.kind() == ErrorKind::NotFound => Ok(Vec::new()),
-            Err(e) => Err(MemoryStoreError(format!("read {}: {e}", self.path.display()))),
+            Err(e) => Err(MemoryStoreError(format!(
+                "read {}: {e}",
+                self.path.display()
+            ))),
         }
     }
 
@@ -35,6 +40,7 @@ impl SowMemoryStore {
         }
         let text = serde_json::to_string_pretty(items)
             .map_err(|e| MemoryStoreError(format!("encode: {e}")))?;
-        fs::write(&self.path, text).map_err(|e| MemoryStoreError(format!("write {}: {e}", self.path.display())))
+        fs::write(&self.path, text)
+            .map_err(|e| MemoryStoreError(format!("write {}: {e}", self.path.display())))
     }
 }

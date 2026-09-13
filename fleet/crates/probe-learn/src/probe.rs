@@ -17,9 +17,13 @@ pub struct Question {
 ///
 /// Always returns `Ok(vec![..])` with one element — never an empty vec.
 pub fn probe(input: &LearnInput, reader: &dyn MemoryReader) -> Result<Vec<Question>, ProbeError> {
-    let hits = reader.recall(&input.text, &input.scope, 10).unwrap_or_default();
+    let hits = reader
+        .recall(&input.text, &input.scope, 10)
+        .unwrap_or_default();
     let question_text = format_learning_prompt(&input.text, &input.scope, &hits);
-    Ok(vec![Question { text: question_text }])
+    Ok(vec![Question {
+        text: question_text,
+    }])
 }
 
 fn format_learning_prompt(text: &str, scope: &str, hits: &[LessonHit]) -> String {

@@ -20,15 +20,33 @@ fn stale_cwd_state_prints_the_relocation_notice_exactly_once() {
         .env("HOME", fake_home.path())
         .env_remove("FLEET_STATE_DIR")
         .env_remove("XDG_STATE_HOME")
-        .args(["__pipeline_probe", "--task-id", "state-dir-notice-task", "--repo"])
+        .args([
+            "__pipeline_probe",
+            "--task-id",
+            "state-dir-notice-task",
+            "--repo",
+        ])
         .arg(repo.path())
         .output()
         .expect("binary runs");
-    assert!(out.status.success(), "probe failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "probe failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     let stderr = String::from_utf8_lossy(&out.stderr);
     let occurrences = stderr.matches("found existing state at").count();
-    assert_eq!(occurrences, 1, "notice must print exactly once, got {occurrences} in: {stderr}");
-    assert!(stderr.contains(".fleet-state"), "notice must name the old CWD-relative path: {stderr}");
-    assert!(stderr.contains("fleet"), "notice must name the new default path: {stderr}");
+    assert_eq!(
+        occurrences, 1,
+        "notice must print exactly once, got {occurrences} in: {stderr}"
+    );
+    assert!(
+        stderr.contains(".fleet-state"),
+        "notice must name the old CWD-relative path: {stderr}"
+    );
+    assert!(
+        stderr.contains("fleet"),
+        "notice must name the new default path: {stderr}"
+    );
 }

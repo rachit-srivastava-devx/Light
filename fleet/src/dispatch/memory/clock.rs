@@ -6,6 +6,9 @@ use knowledge::Timestamp;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn now() -> Timestamp {
-    let secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
     Timestamp::from_unix_secs(secs)
 }

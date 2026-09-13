@@ -12,7 +12,9 @@ pub struct InMemoryStore {
 
 impl InMemoryStore {
     pub fn new() -> Self {
-        Self { items: Mutex::new(HashMap::new()) }
+        Self {
+            items: Mutex::new(HashMap::new()),
+        }
     }
 }
 

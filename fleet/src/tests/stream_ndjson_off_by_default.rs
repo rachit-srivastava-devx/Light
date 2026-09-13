@@ -15,7 +15,14 @@ fn unset_stream_dir_writes_nothing_to_the_stream_path() {
     let events_path = would_be_stream_dir.path().join("events.ndjson");
 
     let out = pipeline_probe(state_dir.path(), repo.path(), "no-stream-task", None);
-    assert!(out.status.success(), "probe failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "probe failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
-    assert!(!events_path.exists(), "no NDJSON file must appear when FLEET_STREAM_DIR is unset");
+    assert!(
+        !events_path.exists(),
+        "no NDJSON file must appear when FLEET_STREAM_DIR is unset"
+    );
 }

@@ -39,18 +39,24 @@ pub struct StepLog {
 
 impl StepLog {
     pub fn open(state_dir: &Path, task_id: &str) -> Self {
-        Self { path: state_dir.join(format!("{task_id}.steps.json")) }
+        Self {
+            path: state_dir.join(format!("{task_id}.steps.json")),
+        }
     }
 
     /// Open a step log for a specific module within a task.
     #[allow(dead_code)]
     pub fn open_module(state_dir: &Path, task_id: &str, module_id: &str) -> Self {
-        Self { path: state_dir.join(format!("{task_id}.{module_id}.steps.json")) }
+        Self {
+            path: state_dir.join(format!("{task_id}.{module_id}.steps.json")),
+        }
     }
 
     #[allow(dead_code)]
     fn load(&self) -> BTreeSet<PipelineStage> {
-        let Ok(text) = fs::read_to_string(&self.path) else { return BTreeSet::new() };
+        let Ok(text) = fs::read_to_string(&self.path) else {
+            return BTreeSet::new();
+        };
         serde_json::from_str(&text).unwrap_or_default()
     }
 
@@ -71,18 +77,22 @@ impl StepLog {
     /// Check if a module stage is done (for parallel module execution).
     #[allow(dead_code)]
     pub fn is_module_done(&self, module_id: &str, stage: PipelineStage) -> bool {
-        let module_log = Self::open_module(self.path.parent().unwrap(), 
-            self.path.file_stem().unwrap().to_string_lossy().as_ref(), 
-            module_id);
+        let module_log = Self::open_module(
+            self.path.parent().unwrap(),
+            self.path.file_stem().unwrap().to_string_lossy().as_ref(),
+            module_id,
+        );
         module_log.is_done(stage)
     }
 
     /// Mark a module stage as done (for parallel module execution).
     #[allow(dead_code)]
     pub fn mark_module_done(&self, module_id: &str, stage: PipelineStage) -> std::io::Result<()> {
-        let module_log = Self::open_module(self.path.parent().unwrap(), 
-            self.path.file_stem().unwrap().to_string_lossy().as_ref(), 
-            module_id);
+        let module_log = Self::open_module(
+            self.path.parent().unwrap(),
+            self.path.file_stem().unwrap().to_string_lossy().as_ref(),
+            module_id,
+        );
         module_log.mark_done(stage)
     }
 }
@@ -108,19 +118,21 @@ mod tests {
     fn module_step_log_isolated_per_module() {
         let dir = tempfile::tempdir().unwrap();
         let log = StepLog::open(dir.path(), "task-1");
-        
+
         // Mark module-a as done
-        log.mark_module_done("module-a", PipelineStage::Plan).unwrap();
-        
+        log.mark_module_done("module-a", PipelineStage::Plan)
+            .unwrap();
+
         // Module-a should be done
         assert!(log.is_module_done("module-a", PipelineStage::Plan));
-        
+
         // Module-b should not be done yet
         assert!(!log.is_module_done("module-b", PipelineStage::Plan));
-        
+
         // Mark module-b as done
-        log.mark_module_done("module-b", PipelineStage::Plan).unwrap();
-        
+        log.mark_module_done("module-b", PipelineStage::Plan)
+            .unwrap();
+
         // Both should be done
         assert!(log.is_module_done("module-a", PipelineStage::Plan));
         assert!(log.is_module_done("module-b", PipelineStage::Plan));

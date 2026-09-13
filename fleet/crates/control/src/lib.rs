@@ -45,7 +45,10 @@ pub struct Transition {
 #[derive(Debug, thiserror::Error)]
 pub enum ControlError {
     #[error("state mismatch: snapshot={snapshot:?} event={event:?}")]
-    StateMismatch { snapshot: TaskState, event: TaskState },
+    StateMismatch {
+        snapshot: TaskState,
+        event: TaskState,
+    },
     #[error("illegal transition: {from:?} → {to:?}")]
     IllegalTransition { from: TaskState, to: TaskState },
     #[error("store error: {0}")]

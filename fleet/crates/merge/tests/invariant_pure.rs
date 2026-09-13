@@ -38,11 +38,21 @@ fn exit_code_mapping_matches_merge_lane_sh() {
     let variants = vec![
         MergeRefusal::NoWorktree(std::path::PathBuf::from("/tmp/x")),
         MergeRefusal::StageFailed(std::path::PathBuf::from("/tmp/x")),
-        MergeRefusal::EmptyStage { branch: branch.clone() },
-        MergeRefusal::CommitFailed { branch: branch.clone() },
-        MergeRefusal::Conflict { branch: branch.clone() },
-        MergeRefusal::HeadUnmoved { branch: branch.clone() },
-        MergeRefusal::NoFilesChanged { branch: branch.clone() },
+        MergeRefusal::EmptyStage {
+            branch: branch.clone(),
+        },
+        MergeRefusal::CommitFailed {
+            branch: branch.clone(),
+        },
+        MergeRefusal::Conflict {
+            branch: branch.clone(),
+        },
+        MergeRefusal::HeadUnmoved {
+            branch: branch.clone(),
+        },
+        MergeRefusal::NoFilesChanged {
+            branch: branch.clone(),
+        },
         MergeRefusal::Spawn("boom".to_string()),
     ];
     for v in variants {

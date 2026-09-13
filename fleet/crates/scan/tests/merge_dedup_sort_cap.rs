@@ -12,7 +12,12 @@ fn merge_drops_empty_why() {
 
     let candidates = vec![
         q("dropped", "   ", GapSeverity::High, ProbeKind::Business),
-        q("kept", "has a reason", GapSeverity::Low, ProbeKind::Technical),
+        q(
+            "kept",
+            "has a reason",
+            GapSeverity::Low,
+            ProbeKind::Technical,
+        ),
     ];
     match merge_questions(candidates) {
         Assessment::Open(open) => assert_eq!(open.as_slice().len(), 1),
@@ -23,9 +28,24 @@ fn merge_drops_empty_why() {
 #[test]
 fn merge_dedups_above_jaccard_point_six() {
     let candidates = vec![
-        q("what is the target audience", "why1", GapSeverity::Low, ProbeKind::Research),
-        q("what is the target audience segment", "why2", GapSeverity::High, ProbeKind::Business),
-        q("completely different unrelated topic here", "why3", GapSeverity::Medium, ProbeKind::Memory),
+        q(
+            "what is the target audience",
+            "why1",
+            GapSeverity::Low,
+            ProbeKind::Research,
+        ),
+        q(
+            "what is the target audience segment",
+            "why2",
+            GapSeverity::High,
+            ProbeKind::Business,
+        ),
+        q(
+            "completely different unrelated topic here",
+            "why3",
+            GapSeverity::Medium,
+            ProbeKind::Memory,
+        ),
     ];
     match merge_questions(candidates) {
         Assessment::Open(open) => {
@@ -42,7 +62,12 @@ fn merge_dedups_above_jaccard_point_six() {
 fn merge_sorts_by_descending_gap_severity() {
     let candidates = vec![
         q("low one", "w", GapSeverity::Low, ProbeKind::Business),
-        q("blocking one", "w", GapSeverity::Blocking, ProbeKind::Research),
+        q(
+            "blocking one",
+            "w",
+            GapSeverity::Blocking,
+            ProbeKind::Research,
+        ),
         q("medium one", "w", GapSeverity::Medium, ProbeKind::Memory),
         q("high one", "w", GapSeverity::High, ProbeKind::Technical),
     ];
@@ -51,7 +76,12 @@ fn merge_sorts_by_descending_gap_severity() {
             let gaps: Vec<GapSeverity> = open.as_slice().iter().map(|q| q.gap).collect();
             assert_eq!(
                 gaps,
-                vec![GapSeverity::Blocking, GapSeverity::High, GapSeverity::Medium, GapSeverity::Low]
+                vec![
+                    GapSeverity::Blocking,
+                    GapSeverity::High,
+                    GapSeverity::Medium,
+                    GapSeverity::Low
+                ]
             );
         }
         Assessment::Clear => panic!("expected survivors"),

@@ -10,8 +10,16 @@ use std::time::{Duration, Instant};
 
 pub use crate::dispatch::walk_error::WalkError;
 
-const SKIP_DIRS: &[&str] =
-    &["target", ".git", ".worktrees", "node_modules", ".venv", "__pycache__", "dist", "build"];
+const SKIP_DIRS: &[&str] = &[
+    "target",
+    ".git",
+    ".worktrees",
+    "node_modules",
+    ".venv",
+    "__pycache__",
+    "dist",
+    "build",
+];
 const MAX_FILES: usize = 50_000;
 const MAX_BYTES: u64 = 500_000_000;
 const DEADLINE: Duration = Duration::from_secs(60);
@@ -27,7 +35,9 @@ struct Budget {
 /// below, `gate`/`oracle` via `verify_cmd.rs`) so "refuse an unusable target" is one rule, not
 /// one per caller.
 pub fn ensure_repo_readable(repo: &Path) -> Result<(), WalkError> {
-    std::fs::read_dir(repo).map(|_| ()).map_err(|e| WalkError::RepoUnreadable(repo.to_path_buf(), e.to_string()))
+    std::fs::read_dir(repo)
+        .map(|_| ())
+        .map_err(|e| WalkError::RepoUnreadable(repo.to_path_buf(), e.to_string()))
 }
 
 /// Walks `repo` for `fleet-context`-parseable source files, skipping `SKIP_DIRS` and refusing
@@ -38,13 +48,23 @@ pub fn read_source_files_bounded(repo: &Path) -> Result<Vec<SourceFile>, WalkErr
     // -- only the root the caller explicitly named must be a hard error.
     ensure_repo_readable(repo)?;
     let mut out = Vec::new();
-    let mut budget = Budget { started: Instant::now(), bytes: 0 };
+    let mut budget = Budget {
+        started: Instant::now(),
+        bytes: 0,
+    };
     collect(repo, repo, &mut out, &mut budget)?;
     Ok(out)
 }
 
-fn collect(root: &Path, dir: &Path, out: &mut Vec<SourceFile>, budget: &mut Budget) -> Result<(), WalkError> {
-    let Ok(entries) = std::fs::read_dir(dir) else { return Ok(()) };
+fn collect(
+    root: &Path,
+    dir: &Path,
+    out: &mut Vec<SourceFile>,
+    budget: &mut Budget,
+) -> Result<(), WalkError> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Ok(());
+    };
     for entry in entries.flatten() {
         if budget.started.elapsed() > DEADLINE {
             return Err(WalkError::DeadlineExceeded(DEADLINE, dir.to_path_buf()));
@@ -64,8 +84,16 @@ fn collect(root: &Path, dir: &Path, out: &mut Vec<SourceFile>, budget: &mut Budg
                 if budget.bytes > MAX_BYTES {
                     return Err(WalkError::TooManyBytes(MAX_BYTES, path));
                 }
-                let rel = path.strip_prefix(root).unwrap_or(&path).to_string_lossy().replace('\\', "/");
-                out.push(SourceFile { path: rel, language, source });
+                let rel = path
+                    .strip_prefix(root)
+                    .unwrap_or(&path)
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                out.push(SourceFile {
+                    path: rel,
+                    language,
+                    source,
+                });
             }
         }
     }

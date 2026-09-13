@@ -67,7 +67,10 @@ fn atomic_row_accepts_valid_chain() {
 
 #[test]
 fn atomic_rejects_duplicate_id() {
-    let rows = vec![atomic_row("f1", AtomicTier::Feature, &["-"]), atomic_row("f1", AtomicTier::Feature, &["-"])];
+    let rows = vec![
+        atomic_row("f1", AtomicTier::Feature, &["-"]),
+        atomic_row("f1", AtomicTier::Feature, &["-"]),
+    ];
     let v = validate_atomic_rows(&rows);
     assert!(v.iter().any(|e| e.0.contains("duplicate atomic id")));
 }

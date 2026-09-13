@@ -12,7 +12,10 @@ pub struct EventLog(Arc<Mutex<Vec<String>>>);
 
 impl EventLog {
     pub fn push(&self, event: impl Into<String>) {
-        self.0.lock().unwrap_or_else(|p| p.into_inner()).push(event.into());
+        self.0
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .push(event.into());
     }
 
     pub fn snapshot(&self) -> Vec<String> {
@@ -44,7 +47,10 @@ pub fn gated_build_fn(
         log.push(format!("build_start:{unit}"));
         if unit == gated_unit {
             let _ = started_tx.send(());
-            let _ = release_rx.lock().unwrap_or_else(|p| p.into_inner()).recv_timeout(Duration::from_secs(10));
+            let _ = release_rx
+                .lock()
+                .unwrap_or_else(|p| p.into_inner())
+                .recv_timeout(Duration::from_secs(10));
         }
         log.push(format!("build_end:{unit}"));
         Ok(())

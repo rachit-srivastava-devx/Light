@@ -34,9 +34,15 @@ fn validate_module_brief_accepts_a_minimal_well_formed_brief() {
 #[test]
 fn validate_module_brief_rejects_an_extra_top_level_field() {
     let mut brief = minimal_brief();
-    brief.as_object_mut().unwrap().insert("depth_evidence".to_string(), json!({"score": {}}));
+    brief
+        .as_object_mut()
+        .unwrap()
+        .insert("depth_evidence".to_string(), json!({"score": {}}));
     let violations = validate_module_brief(&brief);
-    assert!(violations.iter().any(|v| v.path == "depth_evidence"), "{violations:?}");
+    assert!(
+        violations.iter().any(|v| v.path == "depth_evidence"),
+        "{violations:?}"
+    );
 }
 
 #[test]
@@ -59,5 +65,7 @@ fn content_hash_matches_the_expected_pattern() {
     let hash = content_hash(&json!({"a": "1"})).unwrap();
     assert!(hash.starts_with("sha256:"));
     assert_eq!(hash.len(), "sha256:".len() + 64);
-    assert!(hash["sha256:".len()..].bytes().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
+    assert!(hash["sha256:".len()..]
+        .bytes()
+        .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
 }

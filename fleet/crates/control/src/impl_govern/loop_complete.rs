@@ -14,7 +14,12 @@ impl<'a> AutonomousRun<'a> {
     /// The settle-then-persist order matters: if `progress.save` fails, a retried `tick` sees the
     /// unit still pending and the caller must settle again on its next attempt -- progress is
     /// never marked done ahead of the budget actually being reconciled.
-    pub fn complete_unit(&self, unit: &UnitId, reservation: Reservation, actual: Tokens) -> Result<(), LoopError> {
+    pub fn complete_unit(
+        &self,
+        unit: &UnitId,
+        reservation: Reservation,
+        actual: Tokens,
+    ) -> Result<(), LoopError> {
         let mut progress = self.progress.load(&self.plan.id)?.unwrap_or_default();
         let expected = self.plan.units.get(progress.completed.len());
         if expected != Some(unit) {

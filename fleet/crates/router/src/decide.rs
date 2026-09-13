@@ -3,10 +3,13 @@
 //! `ORDER`. "First empty wins": `first_empty.get_or_insert(..)` never overwrites an earlier
 //! stage's refusal with a later one.
 
-use crate::stage::{filter_capability, filter_quota, filter_role, refusal_capability, refusal_quota, refusal_role, stage};
+use crate::pick::{pick, refusal_pick};
+use crate::stage::{
+    filter_capability, filter_quota, filter_role, refusal_capability, refusal_quota, refusal_role,
+    stage,
+};
 use crate::table::TaskClass;
 use crate::types::{Decision, Refusal, RuntimeState};
-use crate::pick::{pick, refusal_pick};
 use crate::verify_gate::{filter_verifier, refusal_verifier, safety_refusal};
 use types::Role;
 
@@ -30,7 +33,12 @@ pub fn decide(
 
     if let Some((reason, fix)) = safety_refusal(role, class) {
         candidates.clear();
-        first_empty.get_or_insert(Refusal { stage: 2, stage_name: "safety policy", reason: reason.into(), fix: fix.into() });
+        first_empty.get_or_insert(Refusal {
+            stage: 2,
+            stage_name: "safety policy",
+            reason: reason.into(),
+            fix: fix.into(),
+        });
     }
     stages.push(stage(2, "safety policy", &candidates));
 
@@ -56,7 +64,11 @@ pub fn decide(
     if let Some(r) = refusal_pick(selected) {
         first_empty.get_or_insert(r);
     }
-    stages.push(stage(6, "deterministic pick", &selected.into_iter().collect::<Vec<_>>()));
+    stages.push(stage(
+        6,
+        "deterministic pick",
+        &selected.into_iter().collect::<Vec<_>>(),
+    ));
 
     Decision {
         role: role.map(Role::name).unwrap_or("invalid"),

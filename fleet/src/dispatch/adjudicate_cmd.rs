@@ -32,8 +32,11 @@ fn select_model() -> Result<Box<dyn JudgeModel>, AdjudicateCmdError> {
 }
 
 pub fn adjudicate(artifact: String, json: bool) -> Result<(), DispatchError> {
-    let text = fs::read_to_string(&artifact)
-        .map_err(|source| AdjudicateCmdError::ArtifactUnreadable { path: artifact.clone(), source })?;
+    let text =
+        fs::read_to_string(&artifact).map_err(|source| AdjudicateCmdError::ArtifactUnreadable {
+            path: artifact.clone(),
+            source,
+        })?;
     // `dispatch::run` is always called from inside `main`'s multi-thread tokio runtime
     // (`tokio_rt.block_on(...)`, see `main.rs`); `Llm7Judge` owns a `reqwest::blocking::Client`,
     // which builds its own internal runtime and panics if that runtime is built OR dropped from
@@ -49,8 +52,18 @@ pub fn adjudicate(artifact: String, json: bool) -> Result<(), DispatchError> {
 
 /// Drives `judge` over an injected model and renders the result -- the seam tests use with a
 /// fake `JudgeModel` (see `adjudicate_cmd_tests.rs`).
-fn run_with_model(text: &str, json: bool, model: &dyn JudgeModel) -> Result<(), AdjudicateCmdError> {
-    let verdict = judge(&criteria(), &Candidate { input: text.to_string() }, model)?;
+fn run_with_model(
+    text: &str,
+    json: bool,
+    model: &dyn JudgeModel,
+) -> Result<(), AdjudicateCmdError> {
+    let verdict = judge(
+        &criteria(),
+        &Candidate {
+            input: text.to_string(),
+        },
+        model,
+    )?;
     render(&verdict, json);
     match verdict {
         Verdict::Decided { .. } => Ok(()),

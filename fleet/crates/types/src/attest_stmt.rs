@@ -24,7 +24,9 @@ impl<'de> Deserialize<'de> for InTotoStatementV1 {
         if value == "https://in-toto.io/Statement/v1" {
             Ok(InTotoStatementV1)
         } else {
-            Err(serde::de::Error::custom(format!("unexpected _type {value:?}")))
+            Err(serde::de::Error::custom(format!(
+                "unexpected _type {value:?}"
+            )))
         }
     }
 }
@@ -45,7 +47,9 @@ impl<'de> Deserialize<'de> for DeliveryAttestationV1 {
         if value == "https://fleet.local/DeliveryAttestation/v1" {
             Ok(DeliveryAttestationV1)
         } else {
-            Err(serde::de::Error::custom(format!("unexpected predicateType {value:?}")))
+            Err(serde::de::Error::custom(format!(
+                "unexpected predicateType {value:?}"
+            )))
         }
     }
 }

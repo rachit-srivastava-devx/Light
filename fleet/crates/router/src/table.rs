@@ -37,11 +37,41 @@ pub struct CandidateSpec {
 /// fallback, preferred only when every authenticated CLI is unavailable or out of quota, never
 /// over them.
 pub const ORDER: &[CandidateSpec] = &[
-    CandidateSpec { id: "codex",    adapter: "codex",    requested: "codex-worker",    resolved: "codex",  tier: Tier::Worker },
-    CandidateSpec { id: "sonnet",   adapter: "claude",   requested: "claude-sonnet",   resolved: "sonnet", tier: Tier::Worker },
-    CandidateSpec { id: "opus",     adapter: "claude",   requested: "opus",            resolved: "opus",   tier: Tier::Lead },
-    CandidateSpec { id: "haiku",    adapter: "claude",   requested: "haiku",           resolved: "haiku",  tier: Tier::Cheap },
-    CandidateSpec { id: "freelane", adapter: "freelane", requested: "codestral-latest", resolved: "codestral-latest", tier: Tier::Worker },
+    CandidateSpec {
+        id: "codex",
+        adapter: "codex",
+        requested: "codex-worker",
+        resolved: "codex",
+        tier: Tier::Worker,
+    },
+    CandidateSpec {
+        id: "sonnet",
+        adapter: "claude",
+        requested: "claude-sonnet",
+        resolved: "sonnet",
+        tier: Tier::Worker,
+    },
+    CandidateSpec {
+        id: "opus",
+        adapter: "claude",
+        requested: "opus",
+        resolved: "opus",
+        tier: Tier::Lead,
+    },
+    CandidateSpec {
+        id: "haiku",
+        adapter: "claude",
+        requested: "haiku",
+        resolved: "haiku",
+        tier: Tier::Cheap,
+    },
+    CandidateSpec {
+        id: "freelane",
+        adapter: "freelane",
+        requested: "codestral-latest",
+        resolved: "codestral-latest",
+        tier: Tier::Worker,
+    },
 ];
 
 /// Coarse task classification the safety-policy stage (stage 2) reasons over.

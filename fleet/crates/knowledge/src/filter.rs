@@ -29,5 +29,9 @@ pub fn sources(
         .filter(|i| !check_expiry(i, clock))
         .collect();
     let n = fresh.len() as u32;
-    Ok(SourceManifest { checked: n, total: n, items: fresh })
+    Ok(SourceManifest {
+        checked: n,
+        total: n,
+        items: fresh,
+    })
 }

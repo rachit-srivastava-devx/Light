@@ -23,7 +23,11 @@ fn head_of(dir: &Path) -> String {
 }
 
 fn grant(target_ref: &str, digest: &str) -> Grant {
-    Grant { target_ref: target_ref.into(), candidate_digest: digest.into(), expires_at: 9_999_999_999 }
+    Grant {
+        target_ref: target_ref.into(),
+        candidate_digest: digest.into(),
+        expires_at: 9_999_999_999,
+    }
 }
 
 #[test]

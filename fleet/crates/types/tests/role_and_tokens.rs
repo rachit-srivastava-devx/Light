@@ -16,11 +16,20 @@ fn role_parse_matches_all_five_and_only_five() {
 #[test]
 fn checked_add_overflows_instead_of_wrapping() {
     assert_eq!(Tokens::ZERO.checked_add(Tokens::ZERO), Ok(Tokens::ZERO));
-    assert_eq!(Tokens::new(u64::MAX).checked_add(Tokens::new(1)), Err(TokensOverflow));
+    assert_eq!(
+        Tokens::new(u64::MAX).checked_add(Tokens::new(1)),
+        Err(TokensOverflow)
+    );
 }
 
 #[test]
 fn checked_sub_underflows_instead_of_wrapping() {
-    assert_eq!(Tokens::ZERO.checked_sub(Tokens::new(1)), Err(TokensOverflow));
-    assert_eq!(Tokens::new(5).checked_sub(Tokens::new(2)), Ok(Tokens::new(3)));
+    assert_eq!(
+        Tokens::ZERO.checked_sub(Tokens::new(1)),
+        Err(TokensOverflow)
+    );
+    assert_eq!(
+        Tokens::new(5).checked_sub(Tokens::new(2)),
+        Ok(Tokens::new(3))
+    );
 }

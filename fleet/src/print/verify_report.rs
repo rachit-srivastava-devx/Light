@@ -14,8 +14,14 @@ use verify::{GateResult, Report, Verdict};
 fn denominator(v: &Verdict) -> (Option<u64>, Option<u64>) {
     match v {
         Verdict::Pass(d) => (Some(d.numerator()), Some(d.total())),
-        Verdict::Fail { denominator: Some(d), .. } => (Some(d.numerator()), Some(d.total())),
-        Verdict::Fail { denominator: None, .. } | Verdict::Skip { .. } => (None, None),
+        Verdict::Fail {
+            denominator: Some(d),
+            ..
+        } => (Some(d.numerator()), Some(d.total())),
+        Verdict::Fail {
+            denominator: None, ..
+        }
+        | Verdict::Skip { .. } => (None, None),
     }
 }
 
@@ -30,7 +36,13 @@ pub(crate) fn line_for(r: &GateResult) -> Event {
         Verdict::Fail { reason, .. } => (Outcome::Fail, Some(format!("{reason:?}"))),
         Verdict::Skip { reason, .. } => (Outcome::Skip, Some(reason.clone())),
     };
-    Event::GateVerdict { id: r.id.to_string(), outcome, checked, total, detail }
+    Event::GateVerdict {
+        id: r.id.to_string(),
+        outcome,
+        checked,
+        total,
+        detail,
+    }
 }
 
 /// Sum every gate's published `(checked, total)` into one aggregate -- NOT the same quantity as
@@ -43,7 +55,10 @@ fn aggregate_checks(report: &Report) -> Checks {
         checked_sum += checked.unwrap_or(0);
         total_sum += total.unwrap_or(0);
     }
-    Checks::Performed { checked: checked_sum, total: total_sum }
+    Checks::Performed {
+        checked: checked_sum,
+        total: total_sum,
+    }
 }
 
 /// Lead with the actionable thing: the first failing gate's id, so the reader's next command is

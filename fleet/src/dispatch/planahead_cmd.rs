@@ -30,6 +30,9 @@ pub fn probe(state_dir: &Path, args: PlanAheadProbeArgs) -> Result<(), DispatchE
         ))
     });
     result.map_err(DispatchError::PlanAhead)?;
-    human::line("planahead", format!("{} unit(s) planned+built", args.units.len()));
+    human::line(
+        "planahead",
+        format!("{} unit(s) planned+built", args.units.len()),
+    );
     Ok(())
 }

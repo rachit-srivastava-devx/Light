@@ -26,17 +26,34 @@ fn missing_home_is_a_typed_error_not_a_panic() {
         .env_remove("HOME")
         .env_remove("FLEET_STATE_DIR")
         .env_remove("XDG_STATE_HOME")
-        .args(["__pipeline_probe", "--task-id", "state-dir-home-unset-task", "--repo"])
+        .args([
+            "__pipeline_probe",
+            "--task-id",
+            "state-dir-home-unset-task",
+            "--repo",
+        ])
         .arg(repo.path())
         .output()
         .expect("binary runs");
 
-    assert!(!out.status.success(), "must refuse, not silently pick a fallback dir");
+    assert!(
+        !out.status.success(),
+        "must refuse, not silently pick a fallback dir"
+    );
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(stderr.contains("HOME is not set"), "expected the typed HOME-unset message, got: {stderr}");
-    assert!(!stderr.contains("panicked at"), "must be a typed error, not a panic: {stderr}");
+    assert!(
+        stderr.contains("HOME is not set"),
+        "expected the typed HOME-unset message, got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("panicked at"),
+        "must be a typed error, not a panic: {stderr}"
+    );
 
     // No `.fleet-state` (or any other new path) must appear in the repo despite the failure.
     let after = git_status_porcelain(repo.path());
-    assert_eq!(before, after, "repo's git status must be unchanged even on refusal");
+    assert_eq!(
+        before, after,
+        "repo's git status must be unchanged even on refusal"
+    );
 }

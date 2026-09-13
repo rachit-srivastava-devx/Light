@@ -6,21 +6,36 @@ use offline::{
 struct PassingRunner;
 impl TrialRunner for PassingRunner {
     fn run(&self, task: &HeldOutTask, v: Variant) -> Result<Outcome, OfflineError> {
-        Ok(Outcome { task_id: task.id.clone(), variant: v, passed: true })
+        Ok(Outcome {
+            task_id: task.id.clone(),
+            variant: v,
+            passed: true,
+        })
     }
 }
 
 struct FailingRunner;
 impl TrialRunner for FailingRunner {
-    fn run(&self, _: &HeldOutTask, _: Variant) -> Result<Outcome, OfflineError> { Err(OfflineError::Unavailable("boom".into())) }
+    fn run(&self, _: &HeldOutTask, _: Variant) -> Result<Outcome, OfflineError> {
+        Err(OfflineError::Unavailable("boom".into()))
+    }
 }
 
 fn task(id: &str) -> HeldOutTask {
-    HeldOutTask { id: id.into(), input: "x".into(), input_digest: format!("d-{}", id) }
+    HeldOutTask {
+        id: id.into(),
+        input: "x".into(),
+        input_digest: format!("d-{}", id),
+    }
 }
 
 fn req(ts: Vec<HeldOutTask>, min: u64) -> EvaluationRequest {
-    EvaluationRequest { candidate_id: "c".into(), tasks: ts, min_pairs: min, seed: 0 }
+    EvaluationRequest {
+        candidate_id: "c".into(),
+        tasks: ts,
+        min_pairs: min,
+        seed: 0,
+    }
 }
 #[test]
 fn exact_pass_counts_both_arms() {
@@ -38,7 +53,10 @@ fn zero_min_pairs_refused() {
 #[test]
 fn insufficient_pairs_exact_counts() {
     let r = evaluate(&PassingRunner, req(vec![task("a")], 5));
-    assert!(matches!(r, Err(OfflineError::InsufficientPairs { need: 5, got: 1 })));
+    assert!(matches!(
+        r,
+        Err(OfflineError::InsufficientPairs { need: 5, got: 1 })
+    ));
 }
 #[test]
 fn runner_error_propagates_unavailable() {
@@ -48,10 +66,21 @@ fn runner_error_propagates_unavailable() {
 #[test]
 fn pair_mismatch_same_id_different_digest_refused() {
     let tasks = vec![
-        HeldOutTask { id: "same".into(), input: "x".into(), input_digest: "d1".into() },
-        HeldOutTask { id: "same".into(), input: "y".into(), input_digest: "d2".into() },
+        HeldOutTask {
+            id: "same".into(),
+            input: "x".into(),
+            input_digest: "d1".into(),
+        },
+        HeldOutTask {
+            id: "same".into(),
+            input: "y".into(),
+            input_digest: "d2".into(),
+        },
     ];
-    assert!(matches!(evaluate(&PassingRunner, req(tasks, 1)), Err(OfflineError::PairMismatch)));
+    assert!(matches!(
+        evaluate(&PassingRunner, req(tasks, 1)),
+        Err(OfflineError::PairMismatch)
+    ));
 }
 #[test]
 fn emit_validated_lesson_promote_returns_some() {

@@ -11,16 +11,18 @@ fn make_node(id: &str, deps: &[&str]) -> Node {
 
 /// Build a DAG that contains a cycle (chain + back-edge from first to last).
 fn make_cycle_dag(n: usize, seed: usize) -> GraphVersion {
-    let mut nodes: Vec<Node> = (0..n)
-        .map(|i| make_node(&format!("n{i}"), &[]))
-        .collect();
+    let mut nodes: Vec<Node> = (0..n).map(|i| make_node(&format!("n{i}"), &[])).collect();
     // Chain edges: n[i] depends on n[i-1]
     for (i, node) in nodes.iter_mut().enumerate().skip(1) {
         node.depends_on.push(format!("n{}", i - 1));
     }
     // Back-edge: n0 depends on n[n-1], creating a cycle
     nodes[0].depends_on.push(format!("n{}", n - 1));
-    GraphVersion { id: format!("cyc{n}_{seed}"), revision: (seed as u64) + 1, nodes }
+    GraphVersion {
+        id: format!("cyc{n}_{seed}"),
+        revision: (seed as u64) + 1,
+        nodes,
+    }
 }
 
 #[test]

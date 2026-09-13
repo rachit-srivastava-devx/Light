@@ -14,10 +14,7 @@ pub use result::Observation;
 ///
 /// Returns `Err(BuilderError::ScopeViolation)` when `changed` is empty
 /// (no-op stub) or any changed path falls outside `write_scope`.
-pub fn validate_observation(
-    o: &Observation,
-    lease: &Lease,
-) -> Result<(), BuilderError> {
+pub fn validate_observation(o: &Observation, lease: &Lease) -> Result<(), BuilderError> {
     lease::validate_observation(o, lease)
 }
 

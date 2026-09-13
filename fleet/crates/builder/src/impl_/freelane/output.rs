@@ -25,7 +25,11 @@ pub struct FreelaneOutput {
 /// `model` field.
 pub(super) fn parse_resolved_model(log: &str) -> Option<String> {
     log.lines().find_map(|line| {
-        let value = line.trim().strip_prefix("[resolved_model=")?.split_once(" requested=")?.0;
+        let value = line
+            .trim()
+            .strip_prefix("[resolved_model=")?
+            .split_once(" requested=")?
+            .0;
         (!value.is_empty() && value != "UNRESOLVED").then(|| value.to_string())
     })
 }
@@ -50,9 +54,13 @@ mod tests {
 
     #[test]
     fn resolved_model_reads_back_reported_model_not_requested() {
-        let log = "[resolved_model=served-model requested=requested-model lane=1/1 tried=x:answered]";
+        let log =
+            "[resolved_model=served-model requested=requested-model lane=1/1 tried=x:answered]";
         assert_eq!(parse_resolved_model(log).as_deref(), Some("served-model"));
-        assert_eq!(parse_resolved_model("[resolved_model=UNRESOLVED requested=r]"), None);
+        assert_eq!(
+            parse_resolved_model("[resolved_model=UNRESOLVED requested=r]"),
+            None
+        );
         assert_eq!(parse_resolved_model("no trailer here"), None);
     }
 

@@ -7,12 +7,20 @@ use scan::{assess, merge_questions, Assessment, GapSeverity, ProbeKind, ProbeOut
 
 #[test]
 fn all_four_clear_yields_clear() {
-    let empty = |kind| FixedProbe { kind, outcome: ProbeOutcome::Questions(vec![]) };
+    let empty = |kind| FixedProbe {
+        kind,
+        outcome: ProbeOutcome::Questions(vec![]),
+    };
     let business = empty(ProbeKind::Business);
     let technical = empty(ProbeKind::Technical);
     let memory = empty(ProbeKind::Memory);
     let research = empty(ProbeKind::Research);
-    let probes = ProbeSet { business: &business, technical: &technical, memory: &memory, research: &research };
+    let probes = ProbeSet {
+        business: &business,
+        technical: &technical,
+        memory: &memory,
+        research: &research,
+    };
     let report = assess(&input("requirement"), &probes, &SequentialRunner);
 
     assert_eq!(report.result, Assessment::Clear);
@@ -25,14 +33,25 @@ fn assess_never_returns_more_than_four_questions_end_to_end() {
     let make = |kind: ProbeKind, offset: usize| FixedProbe {
         kind,
         outcome: ProbeOutcome::Questions(
-            words[offset..offset + 2].iter().map(|w| qw(w, GapSeverity::Medium, kind)).collect(),
+            words[offset..offset + 2]
+                .iter()
+                .map(|w| qw(w, GapSeverity::Medium, kind))
+                .collect(),
         ),
     };
     let business = make(ProbeKind::Business, 0);
     let technical = make(ProbeKind::Technical, 2);
     let memory = make(ProbeKind::Memory, 4);
-    let research = FixedProbe { kind: ProbeKind::Research, outcome: ProbeOutcome::Questions(vec![]) };
-    let probes = ProbeSet { business: &business, technical: &technical, memory: &memory, research: &research };
+    let research = FixedProbe {
+        kind: ProbeKind::Research,
+        outcome: ProbeOutcome::Questions(vec![]),
+    };
+    let probes = ProbeSet {
+        business: &business,
+        technical: &technical,
+        memory: &memory,
+        research: &research,
+    };
     let report = assess(&input("requirement"), &probes, &SequentialRunner);
 
     match report.result {

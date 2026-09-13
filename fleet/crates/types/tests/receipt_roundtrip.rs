@@ -1,7 +1,7 @@
 //! Serde round-trip against `receipt.v1.json`'s shape (BLUEPRINT.md §9).
 
-use types::{Blake3Hash, ExitCode, PrevHash, Receipt, ReceiptEvent, SchemaV1};
 use serde_json::json;
+use types::{Blake3Hash, ExitCode, PrevHash, Receipt, ReceiptEvent, SchemaV1};
 
 pub fn sample_receipt() -> Receipt {
     Receipt {

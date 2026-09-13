@@ -45,8 +45,14 @@ pub enum AdmitError {
     WindowUnknown(String),
     #[error("lane {0:?} usage is unmeasured (unknown_observed)")]
     UsedUnknown(String),
-    #[error("lane {lane:?} would exceed its window: requested {requested:?} > remaining {remaining:?}")]
-    InsufficientBudget { lane: String, requested: Tokens, remaining: Tokens },
+    #[error(
+        "lane {lane:?} would exceed its window: requested {requested:?} > remaining {remaining:?}"
+    )]
+    InsufficientBudget {
+        lane: String,
+        requested: Tokens,
+        remaining: Tokens,
+    },
     #[error("token arithmetic overflowed while reserving")]
     Overflow(#[from] TokensOverflow),
     #[error("meter store IO failed: {0}")]

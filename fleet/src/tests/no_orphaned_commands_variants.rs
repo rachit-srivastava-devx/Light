@@ -13,5 +13,8 @@ fn every_commands_variant_is_named_somewhere_in_the_dispatch_match() {
         .into_iter()
         .filter(|v| !mentions_variant(&mod_rs, v))
         .collect();
-    assert!(orphaned.is_empty(), "Commands variant(s) with no dispatch arm at all: {orphaned:?}");
+    assert!(
+        orphaned.is_empty(),
+        "Commands variant(s) with no dispatch arm at all: {orphaned:?}"
+    );
 }

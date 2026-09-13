@@ -1,12 +1,12 @@
 //! Shared helper + fixtures for `../schema_parity.rs`. Not a test target itself: cargo only
 //! auto-discovers files directly under `tests/`, not this subdirectory, so `#[path]` pulls it in.
 
+use serde_json::{json, Value};
 use types::{
     Attestation, AttestationBuilder, AttestationDigest, AttestationElements, AttestationSubject,
-    BareBlake3Digest, Blake3Hash, DeliveryAttestationV1, DeliveryPredicate, DeliveryTier,
-    ExitCode, InTotoStatementV1, PrevHash, Receipt, ReceiptEvent, SchemaV1,
+    BareBlake3Digest, Blake3Hash, DeliveryAttestationV1, DeliveryPredicate, DeliveryTier, ExitCode,
+    InTotoStatementV1, PrevHash, Receipt, ReceiptEvent, SchemaV1,
 };
-use serde_json::{json, Value};
 
 /// Every `required` field name in `schema` must be a key of `instance`. If `schema` declares
 /// `"additionalProperties": false`, every key of `instance` must also be a declared property.
@@ -69,7 +69,9 @@ pub fn sample_attestation() -> Attestation {
         }],
         predicate: DeliveryPredicate {
             tier: DeliveryTier::TStd,
-            builder: AttestationBuilder { id: "fleet-worker".to_string() },
+            builder: AttestationBuilder {
+                id: "fleet-worker".to_string(),
+            },
             elements: AttestationElements {
                 oracle_independence: Some(json!({"checked": true})),
                 ..Default::default()

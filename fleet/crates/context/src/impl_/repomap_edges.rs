@@ -36,7 +36,10 @@ mod tests {
         let mut by_key: BTreeMap<(String, u64), Vec<SymbolId>> = BTreeMap::new();
         by_key.insert(
             ("f".to_string(), 0),
-            vec![SymbolId::derive("a.rs", "f", 0), SymbolId::derive("b.rs", "f", 0)],
+            vec![
+                SymbolId::derive("a.rs", "f", 0),
+                SymbolId::derive("b.rs", "f", 0),
+            ],
         );
         assert_eq!(resolve_callee(&by_key, "f", 0), None);
     }

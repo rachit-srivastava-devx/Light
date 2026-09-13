@@ -3,8 +3,8 @@
 use crate::cli::args_core::RunModulesArgs;
 use crate::dispatch::error::DispatchError;
 use crate::dispatch::run_cmd;
-use types::Module;
 use std::path::Path;
+use types::Module;
 
 /// Parse modules from CLI args. Neither `--modules` nor `--modules-file` has a parser wired up
 /// yet, so this refuses rather than silently running the rest of `run-modules` against zero
@@ -20,7 +20,9 @@ pub fn parse_modules_from_args(args: &RunModulesArgs) -> Result<Vec<Module>, Dis
             "run-modules: --modules parsing is not implemented yet".to_string(),
         ));
     }
-    Err(DispatchError::Refusal("run-modules: no modules given (pass --modules or --modules-file)".to_string()))
+    Err(DispatchError::Refusal(
+        "run-modules: no modules given (pass --modules or --modules-file)".to_string(),
+    ))
 }
 
 /// Entry point for running multiple modules in parallel.

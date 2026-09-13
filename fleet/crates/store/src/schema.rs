@@ -1,5 +1,5 @@
-use rusqlite::Connection;
 use crate::StoreError;
+use rusqlite::Connection;
 
 pub struct MigrationReport {
     pub checked: u32,
@@ -56,11 +56,9 @@ pub fn migrate(conn: &Connection) -> Result<MigrationReport, StoreError> {
     for (i, sql) in MIGRATIONS.iter().enumerate() {
         let id = i as i64 + 1;
         let applied: i64 = conn
-            .query_row(
-                "SELECT COUNT(*) FROM _migrations WHERE id=?1",
-                [id],
-                |r| r.get(0),
-            )
+            .query_row("SELECT COUNT(*) FROM _migrations WHERE id=?1", [id], |r| {
+                r.get(0)
+            })
             .map_err(|e| StoreError::Migration(e.to_string()))?;
         if applied == 0 {
             conn.execute_batch(sql)

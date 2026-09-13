@@ -1,6 +1,7 @@
 use plan::review::VerdictName;
 use plan::{
-    build_pr_walkthrough, AcceptanceResult, AttestationSummary, DiffSummary, FileChange, PrWalkthroughError,
+    build_pr_walkthrough, AcceptanceResult, AttestationSummary, DiffSummary, FileChange,
+    PrWalkthroughError,
 };
 use serde_json::{json, Value};
 
@@ -20,23 +21,46 @@ fn brief() -> Value {
 fn diff() -> DiffSummary {
     DiffSummary {
         files: vec![
-            FileChange { path: "src/small.rs".into(), lines_added: 2, lines_removed: 0 },
-            FileChange { path: "src/big.rs".into(), lines_added: 40, lines_removed: 10 },
+            FileChange {
+                path: "src/small.rs".into(),
+                lines_added: 2,
+                lines_removed: 0,
+            },
+            FileChange {
+                path: "src/big.rs".into(),
+                lines_added: 40,
+                lines_removed: 10,
+            },
         ],
     }
 }
 
 fn passing_acceptance() -> Vec<AcceptanceResult> {
-    vec![AcceptanceResult { check_name: "check_1".into(), oracle_kind: "test".into(), passed: true, detail: "ok".into() }]
+    vec![AcceptanceResult {
+        check_name: "check_1".into(),
+        oracle_kind: "test".into(),
+        passed: true,
+        detail: "ok".into(),
+    }]
 }
 
 fn attestation(verdict: VerdictName) -> AttestationSummary {
-    AttestationSummary { builder: "worker-1".into(), verdict, notes: "n".into() }
+    AttestationSummary {
+        builder: "worker-1".into(),
+        verdict,
+        notes: "n".into(),
+    }
 }
 
 #[test]
 fn pr_walkthrough_names_the_largest_diff_as_riskiest_when_all_checks_pass() {
-    let w = build_pr_walkthrough(&brief(), &diff(), &passing_acceptance(), &attestation(VerdictName::Accept)).unwrap();
+    let w = build_pr_walkthrough(
+        &brief(),
+        &diff(),
+        &passing_acceptance(),
+        &attestation(VerdictName::Accept),
+    )
+    .unwrap();
     assert!(w.riskiest_part.contains("src/big.rs"));
     assert_eq!(w.verified.len(), 1);
     assert!(w.not_verified.is_empty());
@@ -47,13 +71,20 @@ fn pr_walkthrough_names_the_largest_diff_as_riskiest_when_all_checks_pass() {
 #[test]
 fn empty_diff_is_a_typed_refusal_not_an_empty_success() {
     let empty = DiffSummary { files: vec![] };
-    let err = build_pr_walkthrough(&brief(), &empty, &passing_acceptance(), &attestation(VerdictName::Accept)).unwrap_err();
+    let err = build_pr_walkthrough(
+        &brief(),
+        &empty,
+        &passing_acceptance(),
+        &attestation(VerdictName::Accept),
+    )
+    .unwrap_err();
     assert_eq!(err, PrWalkthroughError::EmptyDiff);
 }
 
 #[test]
 fn zero_acceptance_results_is_a_typed_refusal() {
-    let err = build_pr_walkthrough(&brief(), &diff(), &[], &attestation(VerdictName::Accept)).unwrap_err();
+    let err = build_pr_walkthrough(&brief(), &diff(), &[], &attestation(VerdictName::Accept))
+        .unwrap_err();
     assert_eq!(err, PrWalkthroughError::NoAcceptanceResults);
 }
 
@@ -61,6 +92,12 @@ fn zero_acceptance_results_is_a_typed_refusal() {
 fn invalid_module_brief_is_a_typed_refusal() {
     let mut bad = brief();
     bad["purpose"] = json!("");
-    let err = build_pr_walkthrough(&bad, &diff(), &passing_acceptance(), &attestation(VerdictName::Accept)).unwrap_err();
+    let err = build_pr_walkthrough(
+        &bad,
+        &diff(),
+        &passing_acceptance(),
+        &attestation(VerdictName::Accept),
+    )
+    .unwrap_err();
     matches!(err, PrWalkthroughError::InvalidModuleBrief { .. });
 }

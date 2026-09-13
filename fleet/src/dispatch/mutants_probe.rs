@@ -43,7 +43,13 @@ mod tests {
 
     #[test]
     fn reason_names_the_real_cause_for_each_availability() {
-        assert_eq!(reason(Availability::NotOptedIn), "skipped: set FLEET_MUTANTS=1 to run it");
-        assert_eq!(reason(Availability::NotOnPath), "skipped: cargo-mutants not found on PATH");
+        assert_eq!(
+            reason(Availability::NotOptedIn),
+            "skipped: set FLEET_MUTANTS=1 to run it"
+        );
+        assert_eq!(
+            reason(Availability::NotOnPath),
+            "skipped: cargo-mutants not found on PATH"
+        );
     }
 }

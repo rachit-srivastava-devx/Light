@@ -36,7 +36,15 @@ impl Report {
     pub fn env_faults(&self) -> usize {
         self.results
             .iter()
-            .filter(|r| matches!(r.verdict, Verdict::Skip { was_required: true, .. }))
+            .filter(|r| {
+                matches!(
+                    r.verdict,
+                    Verdict::Skip {
+                        was_required: true,
+                        ..
+                    }
+                )
+            })
             .count()
     }
 

@@ -14,9 +14,16 @@ pub struct Measurement {
 #[derive(Debug, thiserror::Error)]
 pub enum ProbeError {
     #[error("could not read {resource}: {detail}")]
-    SourceUnavailable { resource: &'static str, detail: String },
+    SourceUnavailable {
+        resource: &'static str,
+        detail: String,
+    },
     #[error("could not parse {field} from {resource}: {detail}")]
-    ParseFailed { resource: &'static str, field: &'static str, detail: String },
+    ParseFailed {
+        resource: &'static str,
+        field: &'static str,
+        detail: String,
+    },
     /// Only constructed on platforms other than macOS/Linux -- `dead_code` on the two platforms
     /// this repo actually builds for is expected, not a bug.
     #[allow(dead_code)]

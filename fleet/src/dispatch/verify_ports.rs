@@ -4,9 +4,9 @@
 //! bounded-execution logic (S1 hang fix) lives in `verify_runner_bounded.rs` for the same reason.
 
 use super::verify_runner_bounded::run_bounded;
-use verify::{GateAssetError, GatesRoot, ProcessOutput, ProcessRunner};
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
+use verify::{GateAssetError, GatesRoot, ProcessOutput, ProcessRunner};
 
 /// Where `GateCommand::Script` gates resolve their scripts from. `$FLEET_GATES_ROOT`, if set,
 /// overrides the embedded copies with real files on disk (fleet-verify's own injected-port style,

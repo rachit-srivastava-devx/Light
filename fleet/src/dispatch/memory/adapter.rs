@@ -18,23 +18,44 @@ pub struct RealMemory {
 
 impl RealMemory {
     pub fn new(state_dir: &Path) -> Self {
-        Self { state_dir: state_dir.to_path_buf() }
+        Self {
+            state_dir: state_dir.to_path_buf(),
+        }
     }
 }
 
 impl MemoryPort for RealMemory {
     fn recall_similar(&self, query: &str, limit: usize) -> Result<Vec<MemoryHit>, EnvFault> {
         let store = SowMemoryStore::new(&self.state_dir);
-        let items = store.load().map_err(|e| EnvFault::Internal(e.to_string()))?;
+        let items = store
+            .load()
+            .map_err(|e| EnvFault::Internal(e.to_string()))?;
         if items.is_empty() {
             return Ok(Vec::new());
         }
-        let map: BTreeMap<MemoryId, MemoryItem> = items.iter().cloned().map(|it| (it.id.clone(), it)).collect();
+        let map: BTreeMap<MemoryId, MemoryItem> = items
+            .iter()
+            .cloned()
+            .map(|it| (it.id.clone(), it))
+            .collect();
         let query_embedding = embed_text(query);
         let ports = InMemoryPorts { items: &items };
-        let weights = ScoreWeights { alpha: 0.0, beta: 0.0, gamma: 1.0 };
-        let ranked = knowledge::retrieve(query, &query_embedding, &map, now(), limit, weights, &ports, &ports)
-            .map_err(|RetrieveError(e)| EnvFault::Internal(e))?;
+        let weights = ScoreWeights {
+            alpha: 0.0,
+            beta: 0.0,
+            gamma: 1.0,
+        };
+        let ranked = knowledge::retrieve(
+            query,
+            &query_embedding,
+            &map,
+            now(),
+            limit,
+            weights,
+            &ports,
+            &ports,
+        )
+        .map_err(|RetrieveError(e)| EnvFault::Internal(e))?;
         // `retrieve`'s RRF-fused `relevance` decides ranking/selection; the score reported
         // outward is the item's raw cosine similarity (a real magnitude `fleet-scan`'s 0.75
         // threshold can compare against -- an RRF rank score never approaches that range).
@@ -43,7 +64,10 @@ impl MemoryPort for RealMemory {
             .filter_map(|r| {
                 let item = map.get(&r.id)?;
                 let cosine = item.embedding.cosine(&query_embedding).ok()?;
-                Some(MemoryHit { text: item.text.clone(), score: cosine.get().max(0.0) as f32 })
+                Some(MemoryHit {
+                    text: item.text.clone(),
+                    score: cosine.get().max(0.0) as f32,
+                })
             })
             .collect())
     }

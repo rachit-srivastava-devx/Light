@@ -1,9 +1,13 @@
-//! Raw-mode line reader supporting cursor editing, history, and Shift+Tab.
+//! Reedline-backed input with Fleet-specific mode and clear keybindings.
 
-use super::keys::{read_key, Key};
-use super::raw_terminal::RawModeGuard;
-use super::theme::*;
+use super::input_prompt::InputPrompt;
+use reedline::{
+    default_emacs_keybindings, Emacs, KeyCode, KeyModifiers, Reedline, ReedlineEvent, Signal,
+};
 use std::io::{self, Write};
+
+const TOGGLE_MODE: &str = "fleet:toggle-mode";
+const CLEAR_SCREEN: &str = "fleet:clear-screen";
 
 pub enum ReadOutcome {
     Submit(String),
@@ -12,53 +16,39 @@ pub enum ReadOutcome {
     Exit,
 }
 
-pub fn read_input(prompt: &str, color: bool, history: &[String]) -> ReadOutcome {
-    let _guard = match RawModeGuard::enter() {
-        Ok(g) => g,
-        Err(_) => return fallback_read(),
-    };
-    let mut buf = String::new();
-    let mut cursor = 0usize;
-    let mut hist_idx = history.len();
-
-    loop {
-        render_line(prompt, &buf, cursor, color);
-        match read_key().unwrap_or(Key::CtrlC) {
-            Key::Char(c) => { buf.insert(cursor, c); cursor += 1; }
-            Key::Backspace if cursor > 0 => { cursor -= 1; buf.remove(cursor); }
-            Key::Left if cursor > 0 => cursor -= 1,
-            Key::Right if cursor < buf.len() => cursor += 1,
-            Key::Home => cursor = 0,
-            Key::End => cursor = buf.len(),
-            Key::ShiftTab => return ReadOutcome::ToggleMode,
-            Key::CtrlC | Key::CtrlD => { println!(); return ReadOutcome::Exit; }
-            Key::CtrlL => return ReadOutcome::Clear,
-            Key::Up if hist_idx > 0 => {
-                hist_idx -= 1;
-                buf = history[hist_idx].clone();
-                cursor = buf.len();
-            }
-            Key::Down => {
-                if hist_idx + 1 < history.len() {
-                    hist_idx += 1;
-                    buf = history[hist_idx].clone();
-                } else {
-                    hist_idx = history.len();
-                    buf.clear();
-                }
-                cursor = buf.len();
-            }
-            Key::Enter => { println!(); return ReadOutcome::Submit(buf); }
-            _ => {}
-        }
-    }
+pub struct LineReader {
+    editor: Reedline,
 }
 
-fn render_line(prompt: &str, buf: &str, cursor: usize, color: bool) {
-    let p = paint(color, BOLD, prompt);
-    let before = &buf[..cursor];
-    print!("\r\x1b[K{p}{buf}\r\x1b[K{p}{before}");
-    let _ = io::stdout().flush();
+impl LineReader {
+    pub fn new() -> Self {
+        let mut keys = default_emacs_keybindings();
+        keys.add_binding(
+            KeyModifiers::SHIFT,
+            KeyCode::BackTab,
+            ReedlineEvent::ExecuteHostCommand(TOGGLE_MODE.into()),
+        );
+        keys.add_binding(
+            KeyModifiers::CONTROL,
+            KeyCode::Char('l'),
+            ReedlineEvent::ExecuteHostCommand(CLEAR_SCREEN.into()),
+        );
+        Self {
+            editor: Reedline::create().with_edit_mode(Box::new(Emacs::new(keys))),
+        }
+    }
+
+    pub fn read_input(&mut self, prompt: &str, color: bool) -> ReadOutcome {
+        let prompt = InputPrompt::new(prompt, color);
+        match self.editor.read_line(&prompt) {
+            Ok(Signal::Success(line)) => ReadOutcome::Submit(line),
+            Ok(Signal::HostCommand(command)) if command == TOGGLE_MODE => ReadOutcome::ToggleMode,
+            Ok(Signal::HostCommand(command)) if command == CLEAR_SCREEN => ReadOutcome::Clear,
+            Ok(Signal::CtrlC | Signal::CtrlD) => ReadOutcome::Exit,
+            Ok(_) => ReadOutcome::Exit,
+            Err(_) => fallback_read(),
+        }
+    }
 }
 
 fn fallback_read() -> ReadOutcome {

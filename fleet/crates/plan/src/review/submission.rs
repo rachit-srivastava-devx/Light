@@ -33,10 +33,17 @@ pub fn submission_eligible(
         return Err(SubmissionRefusal::SelfReview);
     }
     if !matches!(worker_state, LifecycleState::Verifying) {
-        return Err(SubmissionRefusal::OutputNotReady { state: worker_state });
+        return Err(SubmissionRefusal::OutputNotReady {
+            state: worker_state,
+        });
     }
-    if !matches!(reviewer_state, LifecycleState::Intake | LifecycleState::Briefed) {
-        return Err(SubmissionRefusal::ReviewerNotReady { state: reviewer_state });
+    if !matches!(
+        reviewer_state,
+        LifecycleState::Intake | LifecycleState::Briefed
+    ) {
+        return Err(SubmissionRefusal::ReviewerNotReady {
+            state: reviewer_state,
+        });
     }
     if attempts >= limit {
         return Err(SubmissionRefusal::Exhausted { attempts, limit });

@@ -1,4 +1,4 @@
-use dag::{validate, ready, GraphVersion, Node};
+use dag::{ready, validate, GraphVersion, Node};
 
 fn node(id: &str, deps: &[&str]) -> Node {
     Node {
@@ -10,7 +10,11 @@ fn node(id: &str, deps: &[&str]) -> Node {
 }
 
 fn ver(nodes: Vec<Node>) -> GraphVersion {
-    GraphVersion { id: "test".to_string(), revision: 1, nodes }
+    GraphVersion {
+        id: "test".to_string(),
+        revision: 1,
+        nodes,
+    }
 }
 
 #[test]

@@ -7,22 +7,26 @@ use crate::cli::args_ops::LifecycleArgs;
 use crate::dispatch::error::DispatchError;
 use crate::print::human;
 use control::{advance_any, resume, ReceiptLedger, TaskId, TransitionReceipt};
-use types::GateRefusal;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use types::GateRefusal;
 
 struct FileReceiptLedger(PathBuf);
 
 impl ReceiptLedger for FileReceiptLedger {
     fn append(&self, receipt: TransitionReceipt) -> Result<(), GateRefusal> {
-        let line = format!("{} {} -> {} : {}\n", receipt.task_id, receipt.from, receipt.to, receipt.evidence);
+        let line = format!(
+            "{} {} -> {} : {}\n",
+            receipt.task_id, receipt.from, receipt.to, receipt.evidence
+        );
         let mut file = OpenOptions::new()
             .create(true)
             .append(true)
             .open(&self.0)
             .map_err(|e| GateRefusal::new("RECEIPT_IO", e.to_string()))?;
-        file.write_all(line.as_bytes()).map_err(|e| GateRefusal::new("RECEIPT_IO", e.to_string()))
+        file.write_all(line.as_bytes())
+            .map_err(|e| GateRefusal::new("RECEIPT_IO", e.to_string()))
     }
 }
 

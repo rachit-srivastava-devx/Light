@@ -12,7 +12,10 @@ impl TaskId {
     pub fn new(value: impl Into<String>) -> Result<Self, GateRefusal> {
         let value = value.into();
         if value.trim().is_empty() {
-            return Err(GateRefusal::new("EMPTY_TASK_ID", "a task id must not be empty"));
+            return Err(GateRefusal::new(
+                "EMPTY_TASK_ID",
+                "a task id must not be empty",
+            ));
         }
         Ok(Self(value))
     }

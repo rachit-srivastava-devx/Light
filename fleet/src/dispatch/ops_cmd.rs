@@ -24,7 +24,9 @@ struct StatusReport {
 /// 3 while the measured preflight cap was 2. Reporting an unmeasured number next to a measured
 /// gate is how a check becomes cosmetic; the cap is passed in now, never re-derived.
 pub fn status(json: bool, cap: ConcurrencyCap) -> Result<(), DispatchError> {
-    let report = StatusReport { concurrency_cap: cap.get() };
+    let report = StatusReport {
+        concurrency_cap: cap.get(),
+    };
     if json {
         crate::print::json::print_pretty(&report);
     } else {
@@ -43,8 +45,22 @@ pub fn doctor(json: bool) -> Result<(), DispatchError> {
         return Ok(());
     }
     let id = crate::build_info::IDENTITY;
-    human::line("cargo", if cargo { format!("found ({cargo_where})") } else { cargo_where });
-    human::line("git", if git { format!("found ({git_where})") } else { git_where });
+    human::line(
+        "cargo",
+        if cargo {
+            format!("found ({cargo_where})")
+        } else {
+            cargo_where
+        },
+    );
+    human::line(
+        "git",
+        if git {
+            format!("found ({git_where})")
+        } else {
+            git_where
+        },
+    );
     human::line("commit_sha", id.commit_sha);
     human::line("tree_state", id.tree_state);
     human::line("build_time", id.build_time);

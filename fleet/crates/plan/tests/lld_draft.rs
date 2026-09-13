@@ -2,7 +2,13 @@ use plan::{assemble_acceptance_checks_draft, assemble_blueprint_doc, assemble_su
 
 #[test]
 fn assemble_blueprint_doc_has_five_sections() {
-    let doc = assemble_blueprint_doc("SOW BODY\n", "atomic\trows\n", "chal\trows\n", "biz\trows\n", "tech\trows\n");
+    let doc = assemble_blueprint_doc(
+        "SOW BODY\n",
+        "atomic\trows\n",
+        "chal\trows\n",
+        "biz\trows\n",
+        "tech\trows\n",
+    );
     assert!(doc.starts_with("# fleet build blueprint\n"));
     for heading in [
         "## Statement of Work",

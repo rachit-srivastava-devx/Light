@@ -16,16 +16,31 @@ async fn planning_of_next_unit_starts_before_current_units_build_completes() {
     let build = gated_build_fn(log.clone(), "a", started_tx, release_rx);
 
     let units = vec!["a".to_string(), "b".to_string()];
-    let handle = tokio::spawn(run_plan_ahead(units, dir.path().to_path_buf(), "run-a", 1, plan_fn(log.clone()), build));
-    started_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("build(a) must start");
-    assert!(wait_until(|| log.contains("plan:b")).await, "plan(b) never ran while build(a) was in flight");
+    let handle = tokio::spawn(run_plan_ahead(
+        units,
+        dir.path().to_path_buf(),
+        "run-a",
+        1,
+        plan_fn(log.clone()),
+        build,
+    ));
+    started_rx
+        .recv_timeout(std::time::Duration::from_secs(5))
+        .expect("build(a) must start");
+    assert!(
+        wait_until(|| log.contains("plan:b")).await,
+        "plan(b) never ran while build(a) was in flight"
+    );
     release_tx.send(()).unwrap();
     handle.await.unwrap().unwrap();
 
     let events = log.snapshot();
     let plan_b = events.iter().position(|e| e == "plan:b").unwrap();
     let build_end_a = events.iter().position(|e| e == "build_end:a").unwrap();
-    assert!(plan_b < build_end_a, "plan(b) must be observed before build(a) finishes: {events:?}");
+    assert!(
+        plan_b < build_end_a,
+        "plan(b) must be observed before build(a) finishes: {events:?}"
+    );
 }
 
 /// (b): the queue is bounded -- with capacity 1 and a stalled builder, the 4th unit's *enqueue*
@@ -38,11 +53,29 @@ async fn planning_blocks_on_a_full_queue_when_the_builder_lags() {
     let (release_tx, release_rx) = std::sync::mpsc::channel();
     let build = gated_build_fn(log.clone(), "a", started_tx, release_rx);
 
-    let units = vec!["a", "b", "c", "d"].into_iter().map(String::from).collect();
-    let handle = tokio::spawn(run_plan_ahead(units, dir.path().to_path_buf(), "run-b", 1, plan_fn(log.clone()), build));
-    started_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("build(a) must start");
-    assert!(wait_until(|| log.contains("plan:c")).await, "plan(c) should still happen (in flight + 1 buffered)");
-    assert!(!wait_until(|| log.contains("plan:d")).await, "plan(d) ran despite a full, stalled build queue");
+    let units = vec!["a", "b", "c", "d"]
+        .into_iter()
+        .map(String::from)
+        .collect();
+    let handle = tokio::spawn(run_plan_ahead(
+        units,
+        dir.path().to_path_buf(),
+        "run-b",
+        1,
+        plan_fn(log.clone()),
+        build,
+    ));
+    started_rx
+        .recv_timeout(std::time::Duration::from_secs(5))
+        .expect("build(a) must start");
+    assert!(
+        wait_until(|| log.contains("plan:c")).await,
+        "plan(c) should still happen (in flight + 1 buffered)"
+    );
+    assert!(
+        !wait_until(|| log.contains("plan:d")).await,
+        "plan(d) ran despite a full, stalled build queue"
+    );
 
     release_tx.send(()).unwrap();
     handle.await.unwrap().unwrap();

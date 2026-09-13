@@ -7,7 +7,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 pub fn scorecard_path(state_dir: &Path, agent_id: &str) -> PathBuf {
-    state_dir.join("scorecards").join(format!("{agent_id}.json"))
+    state_dir
+        .join("scorecards")
+        .join(format!("{agent_id}.json"))
 }
 
 /// Record one attributable outcome for an agent, serialised by an exclusive file lock across

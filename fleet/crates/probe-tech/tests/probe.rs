@@ -34,7 +34,13 @@ fn question_references_language_construct() {
     let questions = probe(&input, &FakeReader).unwrap();
     let body = questions[0].text.to_lowercase();
     let terms = [
-        "function", "struct", "trait", "module", "dependency", "interface", "type",
+        "function",
+        "struct",
+        "trait",
+        "module",
+        "dependency",
+        "interface",
+        "type",
     ];
     assert!(
         terms.iter().any(|t| body.contains(t)),

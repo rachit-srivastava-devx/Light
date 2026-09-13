@@ -1,6 +1,6 @@
 /// Integration tests that exercise real behaviour not covered by unit tests.
 /// These live here (outside src/) so the 80-line src/ constraint does not apply.
-use store::{Event, SqlStore, Store, StoreError, migrate};
+use store::{migrate, Event, SqlStore, Store, StoreError};
 
 fn mem_store() -> SqlStore {
     // store::Connection is rusqlite::Connection re-exported; open_in_memory is
@@ -16,7 +16,13 @@ fn mem_store() -> SqlStore {
 fn append_event_revision_increments() {
     let mut s = mem_store();
     let c = s
-        .append_event(0, Event { id: "e1".to_string(), payload: b"x".to_vec() })
+        .append_event(
+            0,
+            Event {
+                id: "e1".to_string(),
+                payload: b"x".to_vec(),
+            },
+        )
         .unwrap();
     assert_eq!(c.revision, 1, "first event must receive revision 1");
 }
@@ -26,10 +32,23 @@ fn append_event_revision_increments() {
 #[test]
 fn duplicate_event_is_rejected() {
     let mut s = mem_store();
-    s.append_event(0, Event { id: "ev".to_string(), payload: b"a".to_vec() }).unwrap();
+    s.append_event(
+        0,
+        Event {
+            id: "ev".to_string(),
+            payload: b"a".to_vec(),
+        },
+    )
+    .unwrap();
     // Same id, next expected revision (1) — must fail with DuplicateEvent.
     let err = s
-        .append_event(1, Event { id: "ev".to_string(), payload: b"b".to_vec() })
+        .append_event(
+            1,
+            Event {
+                id: "ev".to_string(),
+                payload: b"b".to_vec(),
+            },
+        )
         .unwrap_err();
     assert!(
         matches!(err, StoreError::DuplicateEvent { .. }),

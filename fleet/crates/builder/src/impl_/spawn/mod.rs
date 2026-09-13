@@ -14,8 +14,8 @@ mod util;
 mod worker_state_dir;
 
 use super::request::{LaneHandle, SpawnError, SpawnRequest};
-use types::LaneId;
 use prepare::prepare;
+use types::LaneId;
 use util::{which_on_path, CHILD_EXE_OVERRIDE};
 
 pub use join_impl::join;
@@ -30,8 +30,12 @@ pub fn spawn(request: SpawnRequest) -> Result<LaneHandle, SpawnError> {
             return Err(SpawnError::CliNotOnPath(request.adapter, binary));
         }
     }
-    let prepare::Prepared { worktree, base_commit, sandbox_root, hermetic } =
-        prepare(&request.repo, request.role.name())?;
+    let prepare::Prepared {
+        worktree,
+        base_commit,
+        sandbox_root,
+        hermetic,
+    } = prepare(&request.repo, request.role.name())?;
     let lane_id = LaneId::parse(worktree.name.clone())
         .map_err(|e| SpawnError::ProcessSpawnFailed(e.to_string()))?;
 

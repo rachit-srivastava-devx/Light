@@ -6,7 +6,7 @@ pub const MAX_ATTACHMENTS_PER_EVENT: usize = 100;
 pub const MAX_ATTACHMENT_URI_LEN: usize = 4096;
 pub const MAX_ATTACHMENT_BYTES: u64 = 16 * 1024 * 1024;
 pub const MAX_JSON_DEPTH: usize = 32;
-pub const MAX_JSON_LEAVES: usize = 10_000;  // reachable within MAX_PAYLOAD_BYTES; 100k is not
+pub const MAX_JSON_LEAVES: usize = 10_000; // reachable within MAX_PAYLOAD_BYTES; 100k is not
 pub const MAX_SEEN_IDS: usize = 1_000_000;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -18,7 +18,12 @@ pub struct AttachmentRef {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum RedactedCategory { ApiKey, BearerToken, PrivateKey, GenericSecret }
+pub enum RedactedCategory {
+    ApiKey,
+    BearerToken,
+    PrivateKey,
+    GenericSecret,
+}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct RedactionReceipt {

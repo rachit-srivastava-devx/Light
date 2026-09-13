@@ -24,8 +24,17 @@ impl RunRecords {
         }
     }
 
-    pub fn stage(&mut self, stage: PipelineStage, outcome: &'static str, elapsed: Option<Duration>) {
-        self.stages.push(StageRecord { stage, outcome, elapsed_ms: elapsed.map(|d| d.as_millis()) });
+    pub fn stage(
+        &mut self,
+        stage: PipelineStage,
+        outcome: &'static str,
+        elapsed: Option<Duration>,
+    ) {
+        self.stages.push(StageRecord {
+            stage,
+            outcome,
+            elapsed_ms: elapsed.map(|d| d.as_millis()),
+        });
     }
 
     /// `refusal` is derived here, from the one `Result` that owns the truth, so the JSON's

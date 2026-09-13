@@ -6,7 +6,10 @@ pub fn apply_scope_filter(findings: Vec<Finding>, scope: &[String]) -> Vec<Findi
     if scope.is_empty() {
         return findings;
     }
-    findings.into_iter().filter(|f| scope.contains(&f.path)).collect()
+    findings
+        .into_iter()
+        .filter(|f| scope.contains(&f.path))
+        .collect()
 }
 
 /// Invoke the `semgrep` binary and parse its JSON output into findings.
@@ -39,14 +42,27 @@ pub fn parse_semgrep_findings(raw: &serde_json::Value) -> Result<Vec<Finding>, R
     let mut out = Vec::new();
     for item in results {
         let severity = item
-            .get("extra").and_then(|e| e.get("severity"))
-            .and_then(|s| s.as_str()).unwrap_or("INFO").to_string();
+            .get("extra")
+            .and_then(|e| e.get("severity"))
+            .and_then(|s| s.as_str())
+            .unwrap_or("INFO")
+            .to_string();
         let path = item
-            .get("path").and_then(|p| p.as_str()).unwrap_or("").to_string();
+            .get("path")
+            .and_then(|p| p.as_str())
+            .unwrap_or("")
+            .to_string();
         let rationale = item
-            .get("extra").and_then(|e| e.get("message"))
-            .and_then(|m| m.as_str()).unwrap_or("").to_string();
-        out.push(Finding { severity, path, rationale });
+            .get("extra")
+            .and_then(|e| e.get("message"))
+            .and_then(|m| m.as_str())
+            .unwrap_or("")
+            .to_string();
+        out.push(Finding {
+            severity,
+            path,
+            rationale,
+        });
     }
     Ok(out)
 }
@@ -58,10 +74,20 @@ pub fn parse_ruff_findings(raw: &serde_json::Value) -> Result<Vec<Finding>, Revi
     let mut out = Vec::new();
     for item in results {
         let path = item
-            .get("filename").and_then(|p| p.as_str()).unwrap_or("").to_string();
+            .get("filename")
+            .and_then(|p| p.as_str())
+            .unwrap_or("")
+            .to_string();
         let rationale = item
-            .get("message").and_then(|m| m.as_str()).unwrap_or("").to_string();
-        out.push(Finding { severity: "WARNING".to_string(), path, rationale });
+            .get("message")
+            .and_then(|m| m.as_str())
+            .unwrap_or("")
+            .to_string();
+        out.push(Finding {
+            severity: "WARNING".to_string(),
+            path,
+            rationale,
+        });
     }
     Ok(out)
 }

@@ -1,4 +1,3 @@
-
 mod errors;
 mod judge;
 mod model;

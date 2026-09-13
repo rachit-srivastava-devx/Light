@@ -38,19 +38,40 @@ fn fmt_elapsed(d: Duration) -> String {
 pub fn render(event: &Event, style: &Style) -> String {
     match event {
         Event::StageStarted { stage } => {
-            format!("{} stage {}", style.paint(style::CYAN, "\u{25b6}"), style.paint(style::BOLD, stage))
+            format!(
+                "{} stage {}",
+                style.paint(style::CYAN, "\u{25b6}"),
+                style.paint(style::BOLD, stage)
+            )
         }
-        Event::StageFinished { stage, outcome, elapsed } => {
+        Event::StageFinished {
+            stage,
+            outcome,
+            elapsed,
+        } => {
             let badge = style.paint(badge_code(*outcome), label(*outcome));
-            format!("  {badge} stage {} ({})", style.paint(style::BOLD, stage), fmt_elapsed(*elapsed))
+            format!(
+                "  {badge} stage {} ({})",
+                style.paint(style::BOLD, stage),
+                fmt_elapsed(*elapsed)
+            )
         }
-        Event::GateVerdict { id, outcome, checked, total, detail } => {
+        Event::GateVerdict {
+            id,
+            outcome,
+            checked,
+            total,
+            detail,
+        } => {
             let badge = style.paint(badge_code(*outcome), label(*outcome));
             let counts = match (checked, total) {
                 (Some(c), Some(t)) => format!(" {c}/{t}"),
                 _ => String::new(),
             };
-            let detail = detail.as_deref().map(|d| format!(" -- {d}")).unwrap_or_default();
+            let detail = detail
+                .as_deref()
+                .map(|d| format!(" -- {d}"))
+                .unwrap_or_default();
             format!("    {badge} gate {id}{counts}{detail}")
         }
         Event::Worker { lane, text } => {

@@ -2,9 +2,9 @@
 //! a human running it by hand (exactly how the owner found this bug) gets a clear diagnostic
 //! instead of a panic or a silent success.
 
-use types::ExitCode;
 use builder::UnknownAgentKind;
 use std::path::PathBuf;
+use types::ExitCode;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AgentCmdError {

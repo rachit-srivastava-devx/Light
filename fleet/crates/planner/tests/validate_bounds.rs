@@ -16,8 +16,18 @@ fn cycle_in_modules_is_rejected() {
     let draft = PlanDraft {
         version: 1,
         modules: vec![
-            ModuleDraft { id: "a".into(), dependencies: vec!["b".into()], write_set: vec![], acceptance_refs: vec![] },
-            ModuleDraft { id: "b".into(), dependencies: vec!["a".into()], write_set: vec![], acceptance_refs: vec![] },
+            ModuleDraft {
+                id: "a".into(),
+                dependencies: vec!["b".into()],
+                write_set: vec![],
+                acceptance_refs: vec![],
+            },
+            ModuleDraft {
+                id: "b".into(),
+                dependencies: vec!["a".into()],
+                write_set: vec![],
+                acceptance_refs: vec![],
+            },
         ],
         explanation: "cycle".into(),
     };
@@ -30,13 +40,31 @@ fn cycle_in_modules_is_rejected() {
 
 #[test]
 fn draft_exceeds_max_modules_is_rejected() {
-    let input = PlanInput { max_modules: 2, ..valid_input() };
+    let input = PlanInput {
+        max_modules: 2,
+        ..valid_input()
+    };
     let draft = PlanDraft {
         version: 1,
         modules: vec![
-            ModuleDraft { id: "a".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![] },
-            ModuleDraft { id: "b".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![] },
-            ModuleDraft { id: "c".into(), dependencies: vec![], write_set: vec![], acceptance_refs: vec![] },
+            ModuleDraft {
+                id: "a".into(),
+                dependencies: vec![],
+                write_set: vec![],
+                acceptance_refs: vec![],
+            },
+            ModuleDraft {
+                id: "b".into(),
+                dependencies: vec![],
+                write_set: vec![],
+                acceptance_refs: vec![],
+            },
+            ModuleDraft {
+                id: "c".into(),
+                dependencies: vec![],
+                write_set: vec![],
+                acceptance_refs: vec![],
+            },
         ],
         explanation: "too many".into(),
     };

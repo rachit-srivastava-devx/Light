@@ -23,7 +23,10 @@ pub(crate) fn as_array(v: Option<&Value>) -> &[Value] {
 }
 
 pub(crate) fn as_str_array(v: Option<&Value>) -> Vec<&str> {
-    as_array(v).iter().filter_map(|item| item.as_str()).collect()
+    as_array(v)
+        .iter()
+        .filter_map(|item| item.as_str())
+        .collect()
 }
 
 fn is_word_char(c: char) -> bool {

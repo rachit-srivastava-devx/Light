@@ -14,7 +14,10 @@ use std::collections::BTreeSet;
 /// `module_briefs` is the plan's module briefs (LLD leaves) in any order; this crate has already
 /// validated each one's shape via `validate_module_brief`, re-run here so a walkthrough can never
 /// narrate a brief this crate would otherwise reject.
-pub fn build_walkthrough(title: &str, module_briefs: &[Value]) -> Result<Walkthrough, WalkthroughError> {
+pub fn build_walkthrough(
+    title: &str,
+    module_briefs: &[Value],
+) -> Result<Walkthrough, WalkthroughError> {
     if module_briefs.is_empty() {
         return Err(WalkthroughError::EmptyPlan);
     }
@@ -26,7 +29,8 @@ pub fn build_walkthrough(title: &str, module_briefs: &[Value]) -> Result<Walkthr
         if !violations.is_empty() {
             return Err(WalkthroughError::InvalidModuleBrief { index, violations });
         }
-        let summary = extract_module_summary(brief).ok_or(WalkthroughError::IncompleteModuleBrief { index })?;
+        let summary = extract_module_summary(brief)
+            .ok_or(WalkthroughError::IncompleteModuleBrief { index })?;
         if !seen.insert(summary.node_id.clone()) {
             return Err(WalkthroughError::DuplicateNodeId(summary.node_id));
         }
@@ -35,14 +39,22 @@ pub fn build_walkthrough(title: &str, module_briefs: &[Value]) -> Result<Walkthr
 
     let what_will_be_built: Vec<BuildItem> = summaries
         .iter()
-        .map(|m| BuildItem { node_id: m.node_id.clone(), purpose: m.purpose.clone() })
+        .map(|m| BuildItem {
+            node_id: m.node_id.clone(),
+            purpose: m.purpose.clone(),
+        })
         .collect();
 
-    let steps = compute_work_order(&summaries).map_err(|cycle| WalkthroughError::CyclicDependency { cycle })?;
+    let steps = compute_work_order(&summaries)
+        .map_err(|cycle| WalkthroughError::CyclicDependency { cycle })?;
     let work_order = steps
         .into_iter()
         .enumerate()
-        .map(|(i, s)| WorkOrderItem { position: i as u32 + 1, node_id: s.node_id, because: s.because })
+        .map(|(i, s)| WorkOrderItem {
+            position: i as u32 + 1,
+            node_id: s.node_id,
+            because: s.because,
+        })
         .collect();
 
     let fallback = what_will_be_built.first().map(|b| b.node_id.as_str());

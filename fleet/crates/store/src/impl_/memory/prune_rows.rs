@@ -8,22 +8,30 @@ use super::MemoryStore;
 
 impl MemoryStore {
     pub(super) fn old_memory_ids(&self, cutoff_epoch: u64) -> Result<Vec<String>, MemoryError> {
-        let mut stmt =
-            self.conn.prepare("SELECT id FROM memories WHERE strftime('%s', updated_at) <= ?1")?;
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id FROM memories WHERE strftime('%s', updated_at) <= ?1")?;
         let rows = stmt.query_map(params![cutoff_epoch as i64], |r| r.get::<_, String>(0))?;
-        rows.collect::<Result<Vec<_>, _>>().map_err(MemoryError::from)
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(MemoryError::from)
     }
 
     pub(super) fn oldest_memory_id(&self) -> Result<Option<String>, MemoryError> {
         let mut preferred = self
             .conn
-            .query_row("SELECT id FROM memories ORDER BY updated_at, rowid LIMIT 1", [], |r| r.get(0))
+            .query_row(
+                "SELECT id FROM memories ORDER BY updated_at, rowid LIMIT 1",
+                [],
+                |r| r.get(0),
+            )
             .optional()
             .map_err(MemoryError::from)?;
         if preferred.is_none() {
             preferred = self
                 .conn
-                .query_row("SELECT id FROM memories ORDER BY rowid LIMIT 1", [], |r| r.get(0))
+                .query_row("SELECT id FROM memories ORDER BY rowid LIMIT 1", [], |r| {
+                    r.get(0)
+                })
                 .optional()
                 .map_err(MemoryError::from)?;
         }

@@ -35,7 +35,8 @@ impl MemoryStore {
                 relevance: row.get(5)?,
             })
         })?;
-        rows.collect::<Result<Vec<_>, _>>().map_err(MemoryError::from)
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(MemoryError::from)
     }
 
     /// Raw vector k-NN, unranked against anything but distance.
@@ -52,14 +53,20 @@ impl MemoryStore {
              WHERE v.embedding MATCH ?1 AND k = ?2 ORDER BY v.distance",
         )?;
         let rows = stmt.query_map(params![bytes, limit], |row| {
-            Ok(VectorHit { id: row.get(0)?, distance: row.get(1)? })
+            Ok(VectorHit {
+                id: row.get(0)?,
+                distance: row.get(1)?,
+            })
         })?;
-        rows.collect::<Result<Vec<_>, _>>().map_err(MemoryError::from)
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(MemoryError::from)
     }
 
     /// Row count.
     pub fn count(&self) -> Result<u64, MemoryError> {
-        let n: i64 = self.conn.query_row("SELECT count(*) FROM memories", [], |r| r.get(0))?;
+        let n: i64 = self
+            .conn
+            .query_row("SELECT count(*) FROM memories", [], |r| r.get(0))?;
         Ok(n as u64)
     }
 }

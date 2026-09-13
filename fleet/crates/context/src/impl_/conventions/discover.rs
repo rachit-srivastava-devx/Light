@@ -2,10 +2,10 @@
 //! down to `work_dir`, nearest-wins by construction (each level's precedence is its depth), then
 //! adds the non-layered templates/`CONTRIBUTING.md` via `discover_templates`.
 
+use super::super::error::ContextError;
 use super::fs_port::ConventionFs;
 use super::templates::discover_templates;
 use super::types::{ConventionDoc, ConventionSet, DocKind};
-use super::super::error::ContextError;
 use std::path::{Path, PathBuf};
 
 pub fn discover_conventions(
@@ -29,12 +29,32 @@ pub fn discover_conventions(
         if let Some(component) = component {
             current.push(component);
         }
-        push_layer_doc(fs, &current, repo_root, DocKind::AgentsMd, "AGENTS.md", rank as u32, &mut docs);
-        push_layer_doc(fs, &current, repo_root, DocKind::ClaudeMd, "CLAUDE.md", rank as u32, &mut docs);
+        push_layer_doc(
+            fs,
+            &current,
+            repo_root,
+            DocKind::AgentsMd,
+            "AGENTS.md",
+            rank as u32,
+            &mut docs,
+        );
+        push_layer_doc(
+            fs,
+            &current,
+            repo_root,
+            DocKind::ClaudeMd,
+            "CLAUDE.md",
+            rank as u32,
+            &mut docs,
+        );
     }
 
     docs.extend(discover_templates(fs, repo_root));
-    docs.sort_by(|a, b| b.precedence.cmp(&a.precedence).then_with(|| a.path.cmp(&b.path)));
+    docs.sort_by(|a, b| {
+        b.precedence
+            .cmp(&a.precedence)
+            .then_with(|| a.path.cmp(&b.path))
+    });
     Ok(ConventionSet { docs })
 }
 

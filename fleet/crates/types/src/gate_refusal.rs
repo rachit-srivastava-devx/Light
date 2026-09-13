@@ -13,7 +13,10 @@ pub struct GateRefusal {
 
 impl GateRefusal {
     pub fn new(code: &'static str, message: impl Into<String>) -> Self {
-        Self { code, message: message.into() }
+        Self {
+            code,
+            message: message.into(),
+        }
     }
 
     pub fn code(&self) -> &'static str {

@@ -1,6 +1,6 @@
 //! Tests for validate contract checks.
 //! Kills: skipping reviewer_id check, skipping digest comparison, returning Ok on empty checked.
-use plan_review::{Decision, ReviewError, ReviewInput, ReviewVerdict, validate};
+use plan_review::{validate, Decision, ReviewError, ReviewInput, ReviewVerdict};
 
 fn input() -> ReviewInput {
     ReviewInput {
@@ -59,7 +59,10 @@ fn valid_proposal_with_matching_digest_passes() {
 fn finding_with_empty_severity_is_rejected() {
     let mut v = verdict(Decision::Accept, "p1", 1);
     v.output_digest = String::new();
-    assert!(matches!(validate(&input(), &v), Err(ReviewError::DigestMismatch)));
+    assert!(matches!(
+        validate(&input(), &v),
+        Err(ReviewError::DigestMismatch)
+    ));
 }
 
 // Kills: skipping empty plan_digest on input (invalid input must be caught)

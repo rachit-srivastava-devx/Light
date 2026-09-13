@@ -8,11 +8,17 @@ pub trait CoverageProvider: Send + Sync {
     fn coverage_percent(&self, tree_digest: &str) -> Result<u64, VerifyError>;
 }
 
-pub struct FakeGateRunner { exit_code: i32 }
+pub struct FakeGateRunner {
+    exit_code: i32,
+}
 
 impl FakeGateRunner {
-    pub fn passing() -> Self { Self { exit_code: 0 } }
-    pub fn failing() -> Self { Self { exit_code: 1 } }
+    pub fn passing() -> Self {
+        Self { exit_code: 0 }
+    }
+    pub fn failing() -> Self {
+        Self { exit_code: 1 }
+    }
 }
 
 impl GateRunner for FakeGateRunner {
@@ -25,17 +31,26 @@ impl GateRunner for FakeGateRunner {
             stderr_digest: "sha256:ddeeff".into(),
             input_digest: "sha256:112233".into(),
             passed,
-            failure_message: if passed { None } else {
-                Some(format!("gate '{}' failed (exit {})", gate.id, self.exit_code))
+            failure_message: if passed {
+                None
+            } else {
+                Some(format!(
+                    "gate '{}' failed (exit {})",
+                    gate.id, self.exit_code
+                ))
             },
         })
     }
 }
 
-pub struct FakeCoverageProvider { percent: u64 }
+pub struct FakeCoverageProvider {
+    percent: u64,
+}
 
 impl FakeCoverageProvider {
-    pub fn with(percent: u64) -> Self { Self { percent } }
+    pub fn with(percent: u64) -> Self {
+        Self { percent }
+    }
 }
 
 impl CoverageProvider for FakeCoverageProvider {
@@ -49,7 +64,9 @@ pub fn run_all_gates(
     tree_digest: &str,
     runner: &dyn GateRunner,
 ) -> Result<Vec<GateResult>, VerifyError> {
-    if gates.is_empty() { return Err(VerifyError::NoGates); }
+    if gates.is_empty() {
+        return Err(VerifyError::NoGates);
+    }
     gates.iter().map(|g| runner.run(g, tree_digest)).collect()
 }
 
@@ -60,7 +77,9 @@ pub fn evaluate_coverage(
 ) -> Result<GateResult, VerifyError> {
     let percent = provider.coverage_percent(tree_digest)?;
     let passed = percent >= floor;
-    let failure_message = if passed { None } else {
+    let failure_message = if passed {
+        None
+    } else {
         Some(format!("coverage {}% is below floor {}%", percent, floor))
     };
     Ok(GateResult {

@@ -47,13 +47,20 @@ pub fn create(repo: &Path, name: &str) -> Result<Worktree, WorktreeError> {
     }
     if !succeeded {
         let stderr = String::from_utf8_lossy(&last_stderr).into_owned();
-        return Err(WorktreeError::CreateFailed { attempts: 8, stderr });
+        return Err(WorktreeError::CreateFailed {
+            attempts: 8,
+            stderr,
+        });
     }
     let path = repo.join(&rel);
     if !path.is_dir() {
         return Err(WorktreeError::MissingAfterCreate { path });
     }
-    Ok(Worktree { path, branch, name: name.to_string() })
+    Ok(Worktree {
+        path,
+        branch,
+        name: name.to_string(),
+    })
 }
 
 /// `git worktree remove --force .worktrees/<name>`, fs fallback + best-effort branch delete. A
@@ -61,17 +68,24 @@ pub fn create(repo: &Path, name: &str) -> Result<Worktree, WorktreeError> {
 /// refusal, because the fs fallback below is a RECURSIVE DELETE (see `worktree_guard`).
 pub fn remove(repo: &Path, worktree: &Worktree) -> Result<(), WorktreeError> {
     if !worktree.path.exists() {
-        return Err(WorktreeError::NotFound { path: worktree.path.clone() });
+        return Err(WorktreeError::NotFound {
+            path: worktree.path.clone(),
+        });
     }
     let owned = crate::worktree_guard::ensure_owned_worktree(repo, &worktree.path)?;
     let rel = format!(".worktrees/{}", worktree.name);
     let output =
         run_git(repo, &["worktree", "remove", "--force", &rel]).map_err(WorktreeError::Spawn)?;
     if !output.status.success() && worktree.path.exists() {
-        let fail = |e: std::io::Error| WorktreeError::RemoveFailed { path: owned.clone(), source_msg: e.to_string() };
+        let fail = |e: std::io::Error| WorktreeError::RemoveFailed {
+            path: owned.clone(),
+            source_msg: e.to_string(),
+        };
         std::fs::remove_dir_all(&owned).map_err(fail)?;
         if worktree.path.exists() {
-            return Err(WorktreeError::RemoveLeaked { path: worktree.path.clone() });
+            return Err(WorktreeError::RemoveLeaked {
+                path: worktree.path.clone(),
+            });
         }
     }
     run_git_quiet(repo, &["branch", "-D", &worktree.branch]);

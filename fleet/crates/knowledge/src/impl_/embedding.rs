@@ -39,11 +39,29 @@ impl Embedding {
     /// rather than dividing by zero into `NaN` (not typed as an error in BLUEPRINT.md §3).
     pub fn cosine(&self, other: &Embedding) -> Result<CosineSimilarity, DimensionMismatch> {
         if self.0.len() != other.0.len() {
-            return Err(DimensionMismatch { a: self.0.len(), b: other.0.len() });
+            return Err(DimensionMismatch {
+                a: self.0.len(),
+                b: other.0.len(),
+            });
         }
-        let dot: f64 = self.0.iter().zip(&other.0).map(|(a, b)| *a as f64 * *b as f64).sum();
-        let norm_a: f64 = self.0.iter().map(|v| (*v as f64).powi(2)).sum::<f64>().sqrt();
-        let norm_b: f64 = other.0.iter().map(|v| (*v as f64).powi(2)).sum::<f64>().sqrt();
+        let dot: f64 = self
+            .0
+            .iter()
+            .zip(&other.0)
+            .map(|(a, b)| *a as f64 * *b as f64)
+            .sum();
+        let norm_a: f64 = self
+            .0
+            .iter()
+            .map(|v| (*v as f64).powi(2))
+            .sum::<f64>()
+            .sqrt();
+        let norm_b: f64 = other
+            .0
+            .iter()
+            .map(|v| (*v as f64).powi(2))
+            .sum::<f64>()
+            .sqrt();
         if norm_a == 0.0 || norm_b == 0.0 {
             return Ok(CosineSimilarity(0.0));
         }

@@ -1,21 +1,32 @@
+use crate::types::{
+    AttachmentRef, IngestError, MAX_ATTACHMENTS_PER_EVENT, MAX_ATTACHMENT_BYTES,
+    MAX_ATTACHMENT_URI_LEN,
+};
 use std::collections::HashSet;
-use crate::types::{AttachmentRef, IngestError, MAX_ATTACHMENTS_PER_EVENT, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_URI_LEN};
 
 pub fn validate_attachments(refs: &[AttachmentRef]) -> Result<(), IngestError> {
     check_count(refs)?;
     check_no_duplicate_uris(refs)?;
-    for r in refs { check_one(r)?; }
+    for r in refs {
+        check_one(r)?;
+    }
     Ok(())
 }
 
 fn check_count(refs: &[AttachmentRef]) -> Result<(), IngestError> {
-    if refs.len() > MAX_ATTACHMENTS_PER_EVENT { Err(IngestError::TooManyAttachments) } else { Ok(()) }
+    if refs.len() > MAX_ATTACHMENTS_PER_EVENT {
+        Err(IngestError::TooManyAttachments)
+    } else {
+        Ok(())
+    }
 }
 
 fn check_no_duplicate_uris(refs: &[AttachmentRef]) -> Result<(), IngestError> {
     let mut seen: HashSet<&str> = HashSet::new();
     for r in refs {
-        if !seen.insert(r.uri.as_str()) { return Err(IngestError::DuplicateAttachmentUri); }
+        if !seen.insert(r.uri.as_str()) {
+            return Err(IngestError::DuplicateAttachmentUri);
+        }
     }
     Ok(())
 }

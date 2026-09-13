@@ -47,15 +47,31 @@ fn default_state_dir_never_lands_in_the_repo_and_is_the_per_user_default() {
     let before = git_status_porcelain(repo.path());
 
     let out = run_probe(repo.path(), fake_home.path(), task_id);
-    assert!(out.status.success(), "probe failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "probe failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     // The defect: an untracked `.fleet-state/` (or any other new path) appearing in the repo.
     let after = git_status_porcelain(repo.path());
-    assert_eq!(before, after, "repo's git status must be unchanged by the run");
-    assert!(!repo.path().join(".fleet-state").exists(), "must not create .fleet-state in the repo");
+    assert_eq!(
+        before, after,
+        "repo's git status must be unchanged by the run"
+    );
+    assert!(
+        !repo.path().join(".fleet-state").exists(),
+        "must not create .fleet-state in the repo"
+    );
 
     // The fix: state actually lands under the per-user default, `$HOME/.local/state/fleet`.
     let expected_dir = fake_home.path().join(".local").join("state").join("fleet");
     let log_path = expected_dir.join(format!("{task_id}.steps.json"));
-    assert!(log_path.exists(), "expected step log at {log_path:?}, dir contents: {:?}", fs::read_dir(&expected_dir).ok().map(|d| d.filter_map(|e| e.ok().map(|e| e.file_name())).collect::<Vec<_>>()));
+    assert!(
+        log_path.exists(),
+        "expected step log at {log_path:?}, dir contents: {:?}",
+        fs::read_dir(&expected_dir).ok().map(|d| d
+            .filter_map(|e| e.ok().map(|e| e.file_name()))
+            .collect::<Vec<_>>())
+    );
 }

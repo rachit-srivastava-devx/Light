@@ -63,7 +63,10 @@ fn remove_reports_leak_when_directory_survives_forced_remove() {
     // `RemoveLeaked` stays reachable for the stranger case: `remove_dir_all` returns Ok yet the
     // directory is still on disk. Either is a correct refusal; a silent Ok never was.
     assert!(
-        matches!(err, WorktreeError::RemoveFailed { .. } | WorktreeError::RemoveLeaked { .. }),
+        matches!(
+            err,
+            WorktreeError::RemoveFailed { .. } | WorktreeError::RemoveLeaked { .. }
+        ),
         "unremovable directory must be reported, got {err:?}"
     );
     let mut perms = std::fs::metadata(&wt.path).unwrap().permissions();

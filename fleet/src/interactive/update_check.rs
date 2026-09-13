@@ -1,20 +1,19 @@
-//! Async check for newer commits on the git remote, shown once at REPL startup.
+//! Conservative remote provenance probe at REPL startup.
 //!
 //! Uses the repo path embedded at BUILD TIME (not CWD) so the check works for the installed
 //! binary even when the shell's cwd is unrelated to this repo. Returns None silently on any
 //! failure — network issues, missing git, moved repo — rather than printing an error or blocking.
 
-use super::theme::*;
-
 /// Remote SHA prefix length to compare; matches the 12-char short sha in build_info.
 const SHA_LEN: usize = 12;
 
-/// Check if the git remote has commits the running binary wasn't built from.
+/// Check remote provenance without making an unsupported update claim.
 ///
 /// Runs `git ls-remote origin` from the embedded repo path, with a 2-second wall-clock
-/// timeout. Returns `Some(notice)` when the remote is ahead; `None` when up-to-date, or on any
-/// error/timeout (all silent — update check must never break the REPL startup).
+/// timeout. `ls-remote` has no ancestry information, so this probe never claims an update exists;
+/// it returns `None` on every outcome until an ancestry-aware implementation replaces it.
 pub async fn check(color: bool) -> Option<String> {
+    let _ = color;
     let local_sha = crate::build_info::IDENTITY.commit_sha;
     if local_sha == "unknown" {
         return None; // built outside a checkout; nothing meaningful to compare
@@ -24,29 +23,16 @@ pub async fn check(color: bool) -> Option<String> {
     if !std::path::Path::new(repo).join(".git").exists() {
         return None;
     }
-    let result = tokio::time::timeout(
-        std::time::Duration::from_secs(2),
-        run_ls_remote(repo),
-    )
-    .await
-    .ok()??;
+    let result = tokio::time::timeout(std::time::Duration::from_secs(2), run_ls_remote(repo))
+        .await
+        .ok()??;
 
-    // `ls-remote origin` lists ALL remote refs. If the local SHA prefix matches any ref,
-    // this binary is on a published commit — no update needed. Comparing against only
-    // `origin HEAD` (the default branch) fires falsely when working on a feature branch
-    // that is ahead of main: different SHA ≠ outdated.
-    if sha_in_remote(local_sha, &result) {
-        return None;
-    }
-    // {:?} quotes and escapes the path, handling spaces in directory names.
-    // FLEET_DIR is the fleet package dir (where install.sh lives), not the git root.
-    let cmd = format!("cd {:?} && cargo build --release && ./install.sh", env!("FLEET_DIR"));
-    Some(format!(
-        "  {} {} Run {}",
-        paint(color, AMBER, "↑"),
-        paint(color, AMBER, "This build's commit is not on origin."),
-        paint(color, BOLD, &cmd),
-    ))
+    // `ls-remote` cannot establish that an unpublished local commit is outdated: it could
+    // simply be the build the developer just installed. Never present that as an update.
+    // A real remote-ahead check needs a fetched, ancestry-aware comparison, which this
+    // non-blocking startup probe deliberately does not perform yet.
+    let _published = sha_in_remote(local_sha, &result);
+    None
 }
 
 /// True if `local_sha` (12-char prefix) matches the 12-char prefix of any SHA in `ls-remote` output.
@@ -90,12 +76,15 @@ mod tests {
             "2441646abaed1234567890ab\trefs/heads/main\n",
             "2441646abaed1234567890ab\tHEAD\n",
         );
-        assert!(sha_in_remote("175fb18284d0", output), "dev sha must be found via refs/heads/dev");
+        assert!(
+            sha_in_remote("175fb18284d0", output),
+            "dev sha must be found via refs/heads/dev"
+        );
     }
 
     #[test]
-    fn sha_in_remote_returns_false_when_commit_not_on_remote() {
-        // Commit exists only locally (not pushed, or remote has moved on).
+    fn sha_in_remote_returns_false_when_commit_is_unpublished() {
+        // An unpublished local commit is not evidence that a newer binary exists.
         let output = concat!(
             "2441646abaed1234567890ab\trefs/heads/main\n",
             "2441646abaed1234567890ab\tHEAD\n",

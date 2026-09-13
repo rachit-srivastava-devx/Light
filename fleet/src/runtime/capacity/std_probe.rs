@@ -9,7 +9,9 @@ pub struct StdCapacityProbe;
 
 impl CapacityProbe for StdCapacityProbe {
     fn measure(&self) -> Result<Measurement, ProbeError> {
-        let cores = std::thread::available_parallelism().map(NonZeroUsize::get).unwrap_or(1);
+        let cores = std::thread::available_parallelism()
+            .map(NonZeroUsize::get)
+            .unwrap_or(1);
         measure_for_platform(cores)
     }
 }
@@ -35,7 +37,9 @@ mod tests {
 
     #[test]
     fn real_probe_measures_something_plausible_on_this_machine() {
-        let m = StdCapacityProbe.measure().expect("probe works on macOS/Linux dev & CI machines");
+        let m = StdCapacityProbe
+            .measure()
+            .expect("probe works on macOS/Linux dev & CI machines");
         assert!(m.logical_cores >= 1);
         assert!(m.total_memory_bytes > 0);
         assert!(m.available_memory_bytes <= m.total_memory_bytes);

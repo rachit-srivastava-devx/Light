@@ -2,10 +2,10 @@
 //! rows (`intake.sh:111-123`), each paired with its trigger `Matcher`s.
 
 use super::pattern::Matcher;
+use super::pattern::Matcher::CliFlag as MatchCliFlag;
 use super::pattern::Matcher::{CleanUp, Literal, Stem, Word, WordOptS};
 use super::question_id::QuestionId;
 use super::question_id::QuestionId::*;
-use super::pattern::Matcher::CliFlag as MatchCliFlag;
 
 pub(crate) struct Derived {
     pub id: QuestionId,
@@ -15,8 +15,16 @@ pub(crate) struct Derived {
 }
 
 pub(crate) const CORE: [(QuestionId, &str, &str); 2] = [
-    (Scope, "scope boundary", "What is explicitly in scope, and what boundary must not be crossed?"),
-    (Success, "success criteria", "What observable result proves this is done, including the acceptance threshold?"),
+    (
+        Scope,
+        "scope boundary",
+        "What is explicitly in scope, and what boundary must not be crossed?",
+    ),
+    (
+        Success,
+        "success criteria",
+        "What observable result proves this is done, including the acceptance threshold?",
+    ),
 ];
 
 pub(crate) static DERIVED: &[Derived] = &[

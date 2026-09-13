@@ -18,9 +18,14 @@ impl FileLock {
             .read(true)
             .write(true)
             .open(path)
-            .map_err(|source| IoFault::Open { path: path.to_path_buf(), source })?;
-        file.lock_exclusive()
-            .map_err(|source| IoFault::Lock { path: path.to_path_buf(), source })?;
+            .map_err(|source| IoFault::Open {
+                path: path.to_path_buf(),
+                source,
+            })?;
+        file.lock_exclusive().map_err(|source| IoFault::Lock {
+            path: path.to_path_buf(),
+            source,
+        })?;
         Ok(Self(file))
     }
 }

@@ -6,7 +6,9 @@
 /// Derives `Serialize`/`Deserialize` beyond BLUEPRINT.md §3's literal snippet: `MemoryItem`
 /// (§3.C) derives them too and embeds a `MemoryId`, so this is required for that struct to
 /// compile — a minimal, necessary deviation (see the crate's return notes).
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
 pub struct MemoryId(String);
 
 /// A `MemoryId` was constructed from an empty or all-whitespace string.

@@ -13,13 +13,20 @@ pub struct Question {
 }
 
 const DOMAIN_TERMS: &[&str] = &[
-    "stakeholder", "requirement", "constraint", "scope", "budget",
+    "stakeholder",
+    "requirement",
+    "constraint",
+    "scope",
+    "budget",
 ];
 
 /// Probe `input` using `reader` for additional context and return exactly one question.
 ///
 /// Always returns `Ok(vec![..])` with one element — never an empty vec.
-pub fn probe(input: &BusinessInput, reader: &dyn BusinessReader) -> Result<Vec<Question>, ProbeError> {
+pub fn probe(
+    input: &BusinessInput,
+    reader: &dyn BusinessReader,
+) -> Result<Vec<Question>, ProbeError> {
     let context = reader.recall(&input.text).unwrap_or_default();
     let q = build_question(&input.text, &context);
     Ok(vec![Question { text: q }])

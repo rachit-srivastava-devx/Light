@@ -33,7 +33,10 @@ pub fn probe(input: &ResearchInput, port: &dyn ResearchPort) -> Result<ProbeResu
     match port.search(&query, input.deadline_ms) {
         Ok(sources) => {
             let text = question_from_sources(&sources, &input.unknown);
-            Ok(ProbeResult { questions: vec![Question { text }], sources })
+            Ok(ProbeResult {
+                questions: vec![Question { text }],
+                sources,
+            })
         }
         Err(ResearchError::Timeout) => Ok(ProbeResult {
             questions: fallback_question(&input.unknown),

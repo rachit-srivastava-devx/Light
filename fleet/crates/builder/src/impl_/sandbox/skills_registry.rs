@@ -25,10 +25,7 @@ struct RegistryFile {
 
 /// Resolve every `skill_id` an agent declares against `.fleet/skills.toml`'s committed set,
 /// returning the resolved ids plus, for the first unresolved skill found, the failure detail.
-pub fn resolve_skills(
-    repo: &Path,
-    agent: &AgentFacts,
-) -> Result<BTreeSet<String>, ProvisionError> {
+pub fn resolve_skills(repo: &Path, agent: &AgentFacts) -> Result<BTreeSet<String>, ProvisionError> {
     let (text, _source) = read_with_fallback(repo, "skills.toml", SKILLS_TOML)?;
     let parsed: RegistryFile =
         toml::from_str(&text).map_err(|_| ProvisionError::MissingFleetFile("skills.toml"))?;

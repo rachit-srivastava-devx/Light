@@ -6,13 +6,27 @@ struct MockStore {
     consumed: HashSet<String>,
 }
 impl MockStore {
-    fn new() -> Self { Self { grants: HashMap::new(), consumed: HashSet::new() } }
+    fn new() -> Self {
+        Self {
+            grants: HashMap::new(),
+            consumed: HashSet::new(),
+        }
+    }
 }
 impl ApprovalStore for MockStore {
-    fn put(&mut self, g: &ApprovalGrant) -> Result<(), ApprovalError> { self.grants.insert(g.approval_id.clone(), g.clone()); Ok(()) }
+    fn put(&mut self, g: &ApprovalGrant) -> Result<(), ApprovalError> {
+        self.grants.insert(g.approval_id.clone(), g.clone());
+        Ok(())
+    }
     fn consume(&mut self, id: &str) -> Result<ApprovalGrant, ApprovalError> {
-        if self.consumed.contains(id) { return Err(ApprovalError::Replay); }
-        let g = self.grants.get(id).cloned().ok_or_else(|| ApprovalError::NotFound(id.to_string()))?;
+        if self.consumed.contains(id) {
+            return Err(ApprovalError::Replay);
+        }
+        let g = self
+            .grants
+            .get(id)
+            .cloned()
+            .ok_or_else(|| ApprovalError::NotFound(id.to_string()))?;
         self.consumed.insert(id.to_string());
         Ok(g)
     }
@@ -35,7 +49,8 @@ fn approval_id_exact_format() {
     let grant = approve(&mut store, make_req(1000), "op".into(), 5).unwrap();
     assert_eq!(grant.approval_id, "grant-task-1-5");
 }
-#[test] fn issued_at_exact_value() {
+#[test]
+fn issued_at_exact_value() {
     let mut store = MockStore::new();
     let grant = approve(&mut store, make_req(1000), "op".into(), 42).unwrap();
     assert_eq!(grant.issued_at, 42);

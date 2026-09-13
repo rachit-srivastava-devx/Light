@@ -41,7 +41,12 @@ pub fn assess(
     probes: &ProbeSet<'_>,
     runner: &dyn ConcurrentRunner,
 ) -> AssessmentReport {
-    let probe_refs: [&dyn Probe; 4] = [probes.business, probes.technical, probes.memory, probes.research];
+    let probe_refs: [&dyn Probe; 4] = [
+        probes.business,
+        probes.technical,
+        probes.memory,
+        probes.research,
+    ];
     let jobs = probe_refs.map(|p| {
         let job: crate::ports::ProbeJob<'_> = Box::new(move || p.probe(input));
         job
@@ -57,5 +62,8 @@ pub fn assess(
             ProbeRun::Panicked(msg) => faults.push((kind, EnvFault::Internal(msg))),
         }
     }
-    AssessmentReport { result: merge_questions(candidates), faults }
+    AssessmentReport {
+        result: merge_questions(candidates),
+        faults,
+    }
 }

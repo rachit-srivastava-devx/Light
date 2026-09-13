@@ -39,7 +39,10 @@ fn decided_verdict_json_output_is_pretty_json() {
 
 #[test]
 fn abstain_verdict_is_an_error_not_a_pass() {
-    let raw = RawVerdict { abstain_why: Some("not enough context".into()), ..Default::default() };
+    let raw = RawVerdict {
+        abstain_why: Some("not enough context".into()),
+        ..Default::default()
+    };
     let model = FakeModel(Ok(raw));
     let err = run_with_model("some artifact text", false, &model).unwrap_err();
     assert!(matches!(err, AdjudicateCmdError::Abstained(_)), "{err:?}");

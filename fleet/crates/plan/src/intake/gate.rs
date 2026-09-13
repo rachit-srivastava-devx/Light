@@ -41,7 +41,9 @@ pub fn intake_gate(
         return GateDecision::BlockedByStages;
     }
     if open_blocking_clarifications != 0 {
-        return GateDecision::BlockedByOpenClarifications { count: open_blocking_clarifications };
+        return GateDecision::BlockedByOpenClarifications {
+            count: open_blocking_clarifications,
+        };
     }
     GateDecision::Ready
 }

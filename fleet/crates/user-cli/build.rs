@@ -10,5 +10,8 @@ fn main() {
         .and_then(|p| p.parent()) // {profile}/
         .expect("unexpected OUT_DIR structure");
     let fleet_bin = profile_dir.join("fleet");
-    println!("cargo:rustc-env=CARGO_BIN_EXE_fleet={}", fleet_bin.display());
+    println!(
+        "cargo:rustc-env=CARGO_BIN_EXE_fleet={}",
+        fleet_bin.display()
+    );
 }

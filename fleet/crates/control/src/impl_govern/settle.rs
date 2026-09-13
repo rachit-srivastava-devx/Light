@@ -7,7 +7,11 @@ use ::types::Tokens;
 use super::store::MeterStore;
 use super::types::{LaneState, Reservation, SettleError};
 
-pub fn settle(store: &dyn MeterStore, reservation: Reservation, actual: Tokens) -> Result<(), SettleError> {
+pub fn settle(
+    store: &dyn MeterStore,
+    reservation: Reservation,
+    actual: Tokens,
+) -> Result<(), SettleError> {
     let mut outcome: Option<Result<(), SettleError>> = None;
     store.with_lane_locked(&reservation.lane, &mut |slot| {
         outcome = Some(settle_locked(&reservation, actual, slot));

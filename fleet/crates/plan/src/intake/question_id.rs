@@ -56,6 +56,9 @@ impl QuestionId {
     }
 
     pub fn as_str(self) -> &'static str {
-        ALL.iter().find(|(q, _)| *q == self).map(|(_, n)| *n).expect("total")
+        ALL.iter()
+            .find(|(q, _)| *q == self)
+            .map(|(_, n)| *n)
+            .expect("total")
     }
 }

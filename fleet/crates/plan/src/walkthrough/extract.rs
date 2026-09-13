@@ -31,7 +31,11 @@ fn str_field(v: &Value, key: &str) -> Option<String> {
 fn str_array_field(v: &Value, key: &str) -> Vec<String> {
     v.get(key)
         .and_then(Value::as_array)
-        .map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|x| x.as_str().map(str::to_string))
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -40,7 +44,12 @@ fn guarantees(v: &Value) -> Vec<GuaranteeSummary> {
         .and_then(Value::as_array)
         .map(|arr| {
             arr.iter()
-                .filter_map(|g| Some(GuaranteeSummary { claim: str_field(g, "claim")?, label: str_field(g, "label")? }))
+                .filter_map(|g| {
+                    Some(GuaranteeSummary {
+                        claim: str_field(g, "claim")?,
+                        label: str_field(g, "label")?,
+                    })
+                })
                 .collect()
         })
         .unwrap_or_default()

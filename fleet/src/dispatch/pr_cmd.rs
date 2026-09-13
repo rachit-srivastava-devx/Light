@@ -9,7 +9,13 @@ use std::path::Path;
 
 pub fn pr_emit(args: PrArgs) -> Result<(), DispatchError> {
     let repo = Path::new(&args.repo);
-    let outcome = integrate::pr_emit(repo, repo, &args.branch, &args.module_brief, &args.diff_summary)?;
+    let outcome = integrate::pr_emit(
+        repo,
+        repo,
+        &args.branch,
+        &args.module_brief,
+        &args.diff_summary,
+    )?;
     crate::print::json::print_pretty(&serde_json::json!({
         "status": "success",
         "branch": args.branch,

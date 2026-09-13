@@ -18,7 +18,9 @@ static O200K: OnceLock<CoreBPE> = OnceLock::new();
 /// Real BPE token count for `text` under `model`; pure, deterministic, no IO.
 pub fn count_tokens(text: &str, model: TokenModel) -> u32 {
     let encoder = match model {
-        TokenModel::Cl100kBase => CL100K.get_or_init(|| cl100k_base().expect("bundled cl100k ranks")),
+        TokenModel::Cl100kBase => {
+            CL100K.get_or_init(|| cl100k_base().expect("bundled cl100k ranks"))
+        }
         TokenModel::O200kBase => O200K.get_or_init(|| o200k_base().expect("bundled o200k ranks")),
     };
     encoder.encode_ordinary(text).len() as u32

@@ -2,8 +2,8 @@
 //! reachability regression and the `ORDER` ordering it depends on.
 
 use router::{decide, CandidateSpec, RuntimeState, TaskClass, Tier, ORDER};
-use types::Role;
 use std::collections::{BTreeMap, BTreeSet};
+use types::Role;
 
 fn role_for(tier: Tier) -> Role {
     match tier {
@@ -19,7 +19,13 @@ fn every_reachable_candidate_is_reachable() {
     // candidate's adapter is capable/quota'd/uncooled must route to it -- no entry may be
     // structurally unreachable (e.g. `freelane` sitting outside every reachable path).
     for candidate in ORDER {
-        let CandidateSpec { adapter, id, resolved, tier, .. } = *candidate;
+        let CandidateSpec {
+            adapter,
+            id,
+            resolved,
+            tier,
+            ..
+        } = *candidate;
         let mut remaining = BTreeMap::new();
         remaining.insert(adapter.to_string(), Some(1_000));
         let runtime = RuntimeState {
@@ -30,7 +36,15 @@ fn every_reachable_candidate_is_reachable() {
             preference: ORDER.iter().map(|c| c.id).collect(),
         };
         let decision = decide(Some(role_for(tier)), TaskClass::General, None, &runtime);
-        assert_eq!(decision.selected_adapter, Some(adapter), "candidate {id} unreachable");
-        assert_eq!(decision.resolved_model, Some(resolved), "candidate {id} unreachable");
+        assert_eq!(
+            decision.selected_adapter,
+            Some(adapter),
+            "candidate {id} unreachable"
+        );
+        assert_eq!(
+            decision.resolved_model,
+            Some(resolved),
+            "candidate {id} unreachable"
+        );
     }
 }

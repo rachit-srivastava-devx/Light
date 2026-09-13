@@ -3,7 +3,10 @@
 mod common;
 use common::input;
 
-use scan::{EnvFault, MemoryHit, MemoryPort, MemoryProbe, Probe, ProbeKind, ProbeOutcome, ResearchPort, ResearchProbe};
+use scan::{
+    EnvFault, MemoryHit, MemoryPort, MemoryProbe, Probe, ProbeKind, ProbeOutcome, ResearchPort,
+    ResearchProbe,
+};
 
 struct MockMemory(Vec<MemoryHit>);
 impl MemoryPort for MockMemory {
@@ -15,8 +18,14 @@ impl MemoryPort for MockMemory {
 #[test]
 fn memory_probe_flags_high_similarity_hits() {
     let memory = MockMemory(vec![
-        MemoryHit { text: "prior decision".into(), score: 0.9 },
-        MemoryHit { text: "unrelated".into(), score: 0.1 },
+        MemoryHit {
+            text: "prior decision".into(),
+            score: 0.9,
+        },
+        MemoryHit {
+            text: "unrelated".into(),
+            score: 0.1,
+        },
     ]);
     let probe = MemoryProbe { memory: &memory };
     let out = probe.probe(&input("new decision"));
@@ -37,7 +46,9 @@ impl ResearchPort for MockResearch {
 #[test]
 fn research_probe_flags_empty_results() {
     let research = MockResearch(vec![]);
-    let probe = ResearchProbe { research: &research };
+    let probe = ResearchProbe {
+        research: &research,
+    };
     let out = probe.probe(&input("some obscure claim"));
     match out {
         ProbeOutcome::Questions(qs) => assert_eq!(qs.len(), 1),
@@ -49,7 +60,9 @@ fn research_probe_flags_empty_results() {
 #[test]
 fn research_probe_clears_when_results_found() {
     let research = MockResearch(vec!["ref".into()]);
-    let probe = ResearchProbe { research: &research };
+    let probe = ResearchProbe {
+        research: &research,
+    };
     let out = probe.probe(&input("well documented thing"));
     assert_eq!(out, ProbeOutcome::Questions(vec![]));
 }

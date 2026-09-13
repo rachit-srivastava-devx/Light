@@ -41,11 +41,21 @@ fn verifier_compares_resolved_identity_in_both_directions() {
 
     // A codex builder must not be re-picked as its own verifier: "codex" is filtered by
     // resolved-identity, so the next worker-tier candidate (sonnet) is chosen instead.
-    let against_resolved = decide(Some(Role::Verifier), TaskClass::General, Some("codex"), &runtime);
+    let against_resolved = decide(
+        Some(Role::Verifier),
+        TaskClass::General,
+        Some("codex"),
+        &runtime,
+    );
     assert_eq!(against_resolved.resolved_model, Some("sonnet"));
 
     // The comparison is against `resolved`, not `requested`: "codex-worker" is codex's
     // *requested* alias, not its resolved identity, so it does not filter codex out.
-    let against_requested = decide(Some(Role::Verifier), TaskClass::General, Some("codex-worker"), &runtime);
+    let against_requested = decide(
+        Some(Role::Verifier),
+        TaskClass::General,
+        Some("codex-worker"),
+        &runtime,
+    );
     assert_eq!(against_requested.resolved_model, Some("codex"));
 }

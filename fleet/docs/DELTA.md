@@ -77,6 +77,11 @@ never made — the most valuable class) · **BLUEPRINT-RIGHT** · **BLUEPRINT-TO
 | D55 | the parity harness predated the SOW gate, and the skip had no reason attached | — | see §D55 below | — | — |
 | D57 | attempt six: the harness is right, the lane is not, and that is now the honest answer | — | see §D57 below | — | — |
 | D61 | route command capability evidence | router caller assembles live RuntimeState | route_cmd default_runtime marks every ORDER entry capable, without probes | IMPL-WRONG at this CLI boundary | Recorded only; live snapshot wiring is separate implementation work. |
+| D62 | `fleet run` claims dispatch without executing user work | LLD user flow requires an authorized agent action, evidence, then verification | live TTY run reported `PASS stage dispatch` but left the requested repository unchanged; `stages_dispatch::dispatch` only routes and round-trips an in-memory channel | IMPL-WRONG | Replace the no-op dispatch proof with an authorized adapter invocation; require a non-empty, repo-scoped change/evidence receipt before Verify; add a real-binary regression using the exact user prompt. |
+| D63 | no supported user command can exercise a configured agent | a user must be able to provide a prompt and observe an agent stream | the only compiled adapter command is hidden `__agent`, which rejects direct TTY use because it requires worker-owned fd 3; `fleet run` never reaches it | IMPL-WRONG | Expose a public, permission-planned task command that owns the parent receipt channel and streams bounded user milestones; retain `__agent` as an internal-only protocol target. |
+| D64 | REPL default model is retired | an out-of-the-box interactive request must reach the selected provider | bare `fleet` defaulted to `claude-3-7-sonnet`; Claude rejected it as retired before task execution | IMPL-WRONG | Default to the stable `sonnet` alias and pin a unit test; preserve `FLEET_MODEL` and `/model` overrides. |
+| D65 | adapter discards stdout-only provider errors | refusals must name the actionable failure | Claude's account-pool wait was written to stdout; Fleet rendered `worker exited Some(1):` with no reason | IMPL-WRONG | Prefer non-empty stderr, otherwise stdout, otherwise a named no-diagnostic fallback; regression-test stdout-only refusal. |
+| D66 | interactive prompts bypassed effect authorization | LLD requires all required effects to be presented and approved before implementation | bare `fleet` sent task text directly to the adapter with no plan, approval, or denial receipt | IMPL-WRONG | Interactive entrypoint now discovers model/write/test/publish/schedule effects, requires explicit `y`/`yes`, and writes an attributed hash-chained refusal receipt before returning to the REPL. |
 
 ## D20 — a 10/10 green gate over a suite it never ran, and a test that asserted the forgery
 
@@ -1299,3 +1304,103 @@ assemble a real versioned capability snapshot outside the pure router, preserve 
 and expose the decision evidence. The separate dynamic model catalog proposal in
 `docs/design/fleet-harness/LLD.md` is a future blueprint evolution, not evidence of a defect in
 the intentionally static ORDER contract.
+
+## D62 — `fleet run` reports a dispatch that never executes the user's task
+
+Observed 2026-09-13 through the installed `fleet` binary at source commit
+`27e41977b3bb`. In a disposable Rust repository, the user request “Add a pure helper that formats
+a greeting, test it, and do not publish or push anything.” produced `PASS stage dispatch`, then
+failed verification. The repository had no requested source or test change; its only new file was
+Cargo's generated lockfile. The mirrored ledger had 11 hash-chained records, so the problem is not
+lost stream events.
+
+The implementation explains the false success. `src/pipeline/stages_dispatch.rs` calls
+`route::decide`, manufactures a `Task<Building>`, and sends then receives it through an in-memory
+channel. It neither invokes `dispatch::agent_cmd_run`, collects authorization, nor measures a
+repo-scoped diff. Passing that round-trip is useful wiring evidence, but it is not dispatch.
+
+Verdict: **IMPL-WRONG**. The repair must make the user path fail closed before verification when
+no authorized adapter ran or no attributable task evidence exists. It must preserve the existing
+zero-measurement gate rule rather than weakening Verify to accommodate an empty change. The
+regression must drive the installed binary with this exact prompt, assert a real adapter receipt
+and a non-empty scoped diff on success, and assert a typed refusal with a receipt otherwise.
+
+## D63 — the only agent command is an internal protocol, not a user workflow
+
+The installed binary exposes `fleet __agent claude <worktree> <task> <model>` in help, but the
+real TTY invocation exits 8: `fd 3 is not open -- __agent is not meant to be run by hand`. That
+is correct for the worker protocol: its parent must own the receipt channel. It becomes a user
+experience failure because `fleet run` does not invoke that protocol either, and no public command
+owns the parent side and relays bounded milestones to the person who supplied the task.
+
+Verdict: **IMPL-WRONG**. Keep `__agent` internal and fail closed when its receipt channel is
+absent. Add a public task command that first presents required effects and authorization, then
+owns fd 3, invokes the selected adapter, records the resolved model/token evidence, and renders
+only user-actionable stream milestones. Its integration test must use a real executable and the
+same local-only greeting prompt from D62; an unavailable credential must become an environment
+fault or refusal with a receipt, never a successful dispatch.
+
+## D64 — the REPL's default Claude model had been retired
+
+Bare `fleet` entered the intended interactive REPL and displayed `claude-3-7-sonnet` as its
+default. The first local-only greeting request reached the direct `claude` executable, which
+refused: that model was retired on 2026-02-19. `/model sonnet` accepted the current alias, proving
+the REPL override works; the wrong default was the breakage.
+
+Verdict: **IMPL-WRONG**. The default is now `sonnet`, with a small isolated regression test. The
+environment and `/model` remain explicit overrides, so an operator who needs a pinned model can
+still supply one without changing product defaults.
+
+## D65 — the adapter discarded the only actionable provider error
+
+With the current `sonnet` alias, the direct `claude --print` process exited 1 and wrote its actual
+reason to stdout: account-pool approval was pending. Fleet read only stderr on a nonzero worker
+exit, then rendered an empty `worker exited Some(1):` refusal. The user sees neither the account
+that needs approval nor the next action.
+
+Verdict: **IMPL-WRONG**. The adapter now preserves non-empty stderr first, then stdout, and names
+the absence of both explicitly. A unit regression covers the stdout-only path. This repair does
+not infer provider billing or pretend the CLI is authenticated; it makes the provider's own
+diagnostic visible.
+
+## D66 — interactive prompts bypassed permissions entirely
+
+The only actual user prompt surface, bare `fleet` in a TTY, previously passed any submitted task
+straight to `agent_loop::execute_task`. It did not enumerate model-provider use, repository
+writes, local commands, remote publication, or deferred scheduling. A user could neither deny
+the planned effects nor obtain a durable record that Fleet had stopped before starting work.
+
+Verdict: **IMPL-WRONG**. The interactive boundary now deterministically discovers these effects,
+renders the complete detected set, and accepts only explicit `y` or `yes`. Denial or cancellation
+writes a parent-owned `refusal` receipt before returning to the REPL. Live evidence used the exact
+local-only greeting task: it displayed model/write/test effects, omitted publication because the
+prompt explicitly prohibited it, accepted `n`, started no adapter, and `fleet ledger --verify`
+reported `1/1` with actor `fleet-cli-interactive` and the effect list in the receipt body.
+
+This is the first authorization boundary, not a claim that the full permission system is complete:
+approved effects are not yet minted into broker grants, and `DeferredSchedule` is disclosed but
+has no scheduler execution path. Those remain implementation work, not permission to silently
+continue.
+
+## D67 — conversational requests were forced through a permission plan and streamed output was not terminal-safe
+
+The ordinary user input `hi` previously received a “Plan Required permissions” prompt even though
+its only effect was sending text to the selected provider. Once approved, Fleet also treated
+Claude's stream-json terminal record as ordinary text: some answers were printed twice, and a
+status line could be appended directly to the final assistant sentence. The raw provider stream
+contains nested `stream_event.content_block_delta` messages followed by an `assistant` summary
+and a `result` usage record; displaying both summary and deltas duplicates the user-visible answer.
+
+Verdict: **IMPL-WRONG**. Model-only conversational prompts now run directly. Any detected local
+write, local command, remote publication, or deferred scheduling effect remains approval-gated.
+Fleet renders only text deltas, indents multiline output, forces a terminal boundary before its
+own status, and falls back to the provider's final result only when no deltas arrive. The parent
+receipt preserves the provider-resolved model and raw usage object; `tokens` is only
+`input_tokens + output_tokens`, never a fabricated cache-inclusive total. Live installed-binary
+evidence: `Return exactly READY.` rendered one `READY`, then `✓ Done (model: claude-sonnet-5)` and
+`Reported tokens: 6`; its ledger verified `1/1`.
+
+The startup “not on origin” notice was also removed. A remote ref lookup cannot establish that an
+unpublished local commit is stale, so warning users to rebuild was false and distracting. An
+ancestry-aware update check is still future work; Fleet now remains silent rather than inventing
+an update.

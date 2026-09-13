@@ -40,35 +40,53 @@ fn partial_coverage_refused() {
         checked: 1,
         total: 2,
     };
-    assert!(matches!(build(e, "fx".into()), Err(CandidateError::Coverage)));
+    assert!(matches!(
+        build(e, "fx".into()),
+        Err(CandidateError::Coverage)
+    ));
 }
 #[test]
 fn empty_task_type_is_invalid() {
     let mut e = make_evidence();
     e.task_type = String::new();
-    assert!(matches!(build(e, "fx".into()), Err(CandidateError::Invalid)));
+    assert!(matches!(
+        build(e, "fx".into()),
+        Err(CandidateError::Invalid)
+    ));
 }
 #[test]
 fn empty_evidence_digest_is_invalid() {
     let mut e = make_evidence();
     e.evidence_digest = String::new();
-    assert!(matches!(build(e, "fx".into()), Err(CandidateError::Invalid)));
+    assert!(matches!(
+        build(e, "fx".into()),
+        Err(CandidateError::Invalid)
+    ));
 }
 #[test]
 fn empty_fixture_digest_is_invalid() {
-    assert!(matches!(build(make_evidence(), String::new()), Err(CandidateError::Invalid)));
+    assert!(matches!(
+        build(make_evidence(), String::new()),
+        Err(CandidateError::Invalid)
+    ));
 }
 #[test]
 fn empty_tree_digest_is_invalid() {
     let mut e = make_evidence();
     e.tree_digest = String::new();
-    assert!(matches!(build(e, "fx".into()), Err(CandidateError::Invalid)));
+    assert!(matches!(
+        build(e, "fx".into()),
+        Err(CandidateError::Invalid)
+    ));
 }
 #[test]
 fn empty_signature_is_invalid() {
     let mut e = make_evidence();
     e.signature = String::new();
-    assert!(matches!(build(e, "fx".into()), Err(CandidateError::Invalid)));
+    assert!(matches!(
+        build(e, "fx".into()),
+        Err(CandidateError::Invalid)
+    ));
 }
 #[test]
 fn in_memory_store_insert_succeeds_once() {

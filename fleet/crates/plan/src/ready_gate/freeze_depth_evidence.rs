@@ -12,14 +12,19 @@ pub(crate) fn check_freeze_rest(f: &Map<String, Value>, out: &mut Vec<Violation>
         Some(items) if items.len() >= 2 => {
             for (i, alt) in items.iter().enumerate() {
                 let ok = alt.as_object().is_some_and(|o| {
-                    is_non_empty_str(o.get("option")) && is_non_empty_str(o.get("why_killed")) && is_non_empty_str(o.get("revive_trigger"))
+                    is_non_empty_str(o.get("option"))
+                        && is_non_empty_str(o.get("why_killed"))
+                        && is_non_empty_str(o.get("revive_trigger"))
                 });
                 if !ok {
                     out.push(v(format!("freeze.killed_alternatives[{i}]"), "each killed_alternatives entry needs a non-empty option, why_killed, and revive_trigger"));
                 }
             }
         }
-        _ => out.push(v("freeze.killed_alternatives", "killed_alternatives must have at least 2 entries")),
+        _ => out.push(v(
+            "freeze.killed_alternatives",
+            "killed_alternatives must have at least 2 entries",
+        )),
     }
     check_accepts_when(f.get("accepts_when"), "freeze.accepts_when", out);
     if !is_non_empty_str(f.get("owner")) {

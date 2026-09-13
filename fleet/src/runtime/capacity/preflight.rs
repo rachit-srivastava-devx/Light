@@ -3,9 +3,9 @@
 //! and total; this is the only place allowed to say no. Tests: `preflight_tests.rs`.
 
 use super::lanes::{ram_lanes_from_available, PER_LANE_BUDGET_BYTES};
-use super::measurement::{CapacityProbe, ProbeError};
 #[cfg(test)]
 use super::measurement::Measurement;
+use super::measurement::{CapacityProbe, ProbeError};
 use crate::runtime::ConcurrencyCap;
 
 /// Refuse once 1-minute load exceeds cores * this factor. Override via `FLEET_LOAD_FACTOR`.
@@ -27,7 +27,12 @@ impl PreflightConfig {
         let per_lane_budget_bytes = env_f64("FLEET_LANE_BUDGET_MB")
             .map(|mb| (mb * 1024.0 * 1024.0) as u64)
             .unwrap_or(PER_LANE_BUDGET_BYTES);
-        Self { review_cap, load_factor, per_lane_budget_bytes, ram_lanes_ceiling }
+        Self {
+            review_cap,
+            load_factor,
+            per_lane_budget_bytes,
+            ram_lanes_ceiling,
+        }
     }
 }
 
@@ -43,10 +48,18 @@ pub enum CapacityRefusal {
     #[error("available memory {available_mb} MiB is below one lane's budget of {budget_mb} MiB")]
     InsufficientMemory { available_mb: u64, budget_mb: u64 },
     #[error("1-minute load {load:.2} exceeds {cores} cores x {factor} = {threshold:.2}")]
-    Overloaded { load: f64, cores: usize, factor: f64, threshold: f64 },
+    Overloaded {
+        load: f64,
+        cores: usize,
+        factor: f64,
+        threshold: f64,
+    },
 }
 
-pub fn preflight(probe: &dyn CapacityProbe, cfg: &PreflightConfig) -> Result<ConcurrencyCap, CapacityRefusal> {
+pub fn preflight(
+    probe: &dyn CapacityProbe,
+    cfg: &PreflightConfig,
+) -> Result<ConcurrencyCap, CapacityRefusal> {
     let m = probe.measure()?;
     if m.available_memory_bytes < cfg.per_lane_budget_bytes {
         return Err(CapacityRefusal::InsufficientMemory {
@@ -56,13 +69,23 @@ pub fn preflight(probe: &dyn CapacityProbe, cfg: &PreflightConfig) -> Result<Con
     }
     let threshold = m.logical_cores as f64 * cfg.load_factor;
     if m.load_avg_1m > threshold {
-        return Err(CapacityRefusal::Overloaded { load: m.load_avg_1m, cores: m.logical_cores, factor: cfg.load_factor, threshold });
+        return Err(CapacityRefusal::Overloaded {
+            load: m.load_avg_1m,
+            cores: m.logical_cores,
+            factor: cfg.load_factor,
+            threshold,
+        });
     }
-    let mut ram_lanes = ram_lanes_from_available(m.available_memory_bytes, cfg.per_lane_budget_bytes);
+    let mut ram_lanes =
+        ram_lanes_from_available(m.available_memory_bytes, cfg.per_lane_budget_bytes);
     if let Some(ceiling) = cfg.ram_lanes_ceiling {
         ram_lanes = ram_lanes.min(ceiling);
     }
-    Ok(ConcurrencyCap::compute(m.logical_cores, ram_lanes, cfg.review_cap))
+    Ok(ConcurrencyCap::compute(
+        m.logical_cores,
+        ram_lanes,
+        cfg.review_cap,
+    ))
 }
 
 #[cfg(test)]

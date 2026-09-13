@@ -19,11 +19,21 @@ fn words(text: &str) -> BTreeSet<String> {
 }
 
 impl NearestNeighborLookup for InMemoryPorts<'_> {
-    fn nearest(&self, embedding: &Embedding) -> Result<Option<(MemoryId, CosineSimilarity)>, RetrieveError> {
+    fn nearest(
+        &self,
+        embedding: &Embedding,
+    ) -> Result<Option<(MemoryId, CosineSimilarity)>, RetrieveError> {
         let mut best: Option<(MemoryId, CosineSimilarity)> = None;
         for item in self.items {
-            let sim = item.embedding.cosine(embedding).map_err(|e| RetrieveError(e.to_string()))?;
-            if best.as_ref().map(|(_, b)| sim.get() > b.get()).unwrap_or(true) {
+            let sim = item
+                .embedding
+                .cosine(embedding)
+                .map_err(|e| RetrieveError(e.to_string()))?;
+            if best
+                .as_ref()
+                .map(|(_, b)| sim.get() > b.get())
+                .unwrap_or(true)
+            {
                 best = Some((item.id.clone(), sim));
             }
         }
@@ -37,20 +47,39 @@ impl LexicalSearch for InMemoryPorts<'_> {
         let mut scored: Vec<(MemoryId, usize)> = self
             .items
             .iter()
-            .map(|it| (it.id.clone(), words(&it.text).intersection(&query_words).count()))
+            .map(|it| {
+                (
+                    it.id.clone(),
+                    words(&it.text).intersection(&query_words).count(),
+                )
+            })
             .filter(|(_, n)| *n > 0)
             .collect();
         scored.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
         scored.truncate(limit);
-        Ok(scored.into_iter().enumerate().map(|(rank, (id, _))| LexicalHit { id, bm25_rank: rank }).collect())
+        Ok(scored
+            .into_iter()
+            .enumerate()
+            .map(|(rank, (id, _))| LexicalHit {
+                id,
+                bm25_rank: rank,
+            })
+            .collect())
     }
 }
 
 impl VectorSearch for InMemoryPorts<'_> {
-    fn knn(&self, query_embedding: &Embedding, limit: usize) -> Result<Vec<VectorHit>, RetrieveError> {
+    fn knn(
+        &self,
+        query_embedding: &Embedding,
+        limit: usize,
+    ) -> Result<Vec<VectorHit>, RetrieveError> {
         let mut scored: Vec<(MemoryId, f64)> = Vec::new();
         for item in self.items {
-            let sim = item.embedding.cosine(query_embedding).map_err(|e| RetrieveError(e.to_string()))?;
+            let sim = item
+                .embedding
+                .cosine(query_embedding)
+                .map_err(|e| RetrieveError(e.to_string()))?;
             scored.push((item.id.clone(), sim.get()));
         }
         scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap().then_with(|| a.0.cmp(&b.0)));
@@ -58,7 +87,11 @@ impl VectorSearch for InMemoryPorts<'_> {
         Ok(scored
             .into_iter()
             .enumerate()
-            .map(|(rank, (id, distance))| VectorHit { id, vector_rank: rank, distance })
+            .map(|(rank, (id, distance))| VectorHit {
+                id,
+                vector_rank: rank,
+                distance,
+            })
             .collect())
     }
 }

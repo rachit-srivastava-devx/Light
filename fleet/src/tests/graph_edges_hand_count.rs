@@ -27,8 +27,15 @@ fn graph_edges_match_hand_count_for_macro_nested_calls() {
     )
     .unwrap();
 
-    let out = cmd().args(["graph", "--repo", root.path().to_str().unwrap(), "--json"]).output().expect("runs");
-    assert!(out.status.success(), "graph failed: {}", String::from_utf8_lossy(&out.stderr));
+    let out = cmd()
+        .args(["graph", "--repo", root.path().to_str().unwrap(), "--json"])
+        .output()
+        .expect("runs");
+    assert!(
+        out.status.success(),
+        "graph failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).expect("valid json");
     // Hand count: main->add (println!), test_add->add (assert_eq!), test_subtract->subtract
     // (assert_eq!) = 3. Symbols: add, subtract, main, test_add, test_subtract = 5.

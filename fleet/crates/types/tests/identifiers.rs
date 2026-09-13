@@ -26,5 +26,7 @@ fn node_id_matches_module_brief_pattern() {
 fn artifact_id_predicate_matches_main_rs_shape() {
     assert!(valid_artifact_id(&"0".repeat(64)));
     assert!(!valid_artifact_id(&"0".repeat(65)));
-    assert!(!valid_artifact_id("not-hex-at-all-not-hex-at-all-not-hex-at-all-not-hex-at-all12"));
+    assert!(!valid_artifact_id(
+        "not-hex-at-all-not-hex-at-all-not-hex-at-all-not-hex-at-all12"
+    ));
 }

@@ -16,22 +16,48 @@ fn brief() -> Value {
 }
 
 fn diff() -> DiffSummary {
-    DiffSummary { files: vec![FileChange { path: "src/big.rs".into(), lines_added: 40, lines_removed: 10 }] }
+    DiffSummary {
+        files: vec![FileChange {
+            path: "src/big.rs".into(),
+            lines_added: 40,
+            lines_removed: 10,
+        }],
+    }
 }
 
 fn passing_acceptance() -> Vec<AcceptanceResult> {
-    vec![AcceptanceResult { check_name: "check_1".into(), oracle_kind: "test".into(), passed: true, detail: "ok".into() }]
+    vec![AcceptanceResult {
+        check_name: "check_1".into(),
+        oracle_kind: "test".into(),
+        passed: true,
+        detail: "ok".into(),
+    }]
 }
 
 fn attestation(verdict: VerdictName) -> AttestationSummary {
-    AttestationSummary { builder: "worker-1".into(), verdict, notes: "n".into() }
+    AttestationSummary {
+        builder: "worker-1".into(),
+        verdict,
+        notes: "n".into(),
+    }
 }
 
 #[test]
 fn a_failed_check_outranks_diff_size_as_the_riskiest_part() {
     let mut results = passing_acceptance();
-    results.push(AcceptanceResult { check_name: "check_2".into(), oracle_kind: "test".into(), passed: false, detail: "broke".into() });
-    let w = build_pr_walkthrough(&brief(), &diff(), &results, &attestation(VerdictName::Accept)).unwrap();
+    results.push(AcceptanceResult {
+        check_name: "check_2".into(),
+        oracle_kind: "test".into(),
+        passed: false,
+        detail: "broke".into(),
+    });
+    let w = build_pr_walkthrough(
+        &brief(),
+        &diff(),
+        &results,
+        &attestation(VerdictName::Accept),
+    )
+    .unwrap();
     assert!(w.riskiest_part.contains("check_2"));
     assert_eq!(w.verified.len(), 1);
     assert_eq!(w.not_verified.len(), 1);
@@ -41,6 +67,12 @@ fn a_failed_check_outranks_diff_size_as_the_riskiest_part() {
 
 #[test]
 fn non_accept_verdict_leads_reviewer_focus() {
-    let w = build_pr_walkthrough(&brief(), &diff(), &passing_acceptance(), &attestation(VerdictName::Reject)).unwrap();
+    let w = build_pr_walkthrough(
+        &brief(),
+        &diff(),
+        &passing_acceptance(),
+        &attestation(VerdictName::Reject),
+    )
+    .unwrap();
     assert!(w.reviewer_focus[0].contains("Reject"));
 }

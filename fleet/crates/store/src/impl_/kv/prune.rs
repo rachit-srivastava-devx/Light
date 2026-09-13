@@ -9,10 +9,10 @@ use std::fs;
 
 use redb::{ReadableTable, ReadableTableMetadata, TableDefinition, TableHandle};
 
-use super::types::KvError;
-use super::KvStore;
 use super::super::io_fault::IoFault;
 use super::super::retention::{PruneReport, RetentionPolicy, UsageReport};
+use super::types::KvError;
+use super::KvStore;
 
 impl KvStore {
     /// Total entry count across all tables and the redb file's byte size.
@@ -24,7 +24,10 @@ impl KvStore {
             let table = read_txn.open_table(def)?;
             total += table.len()?;
         }
-        Ok(UsageReport { row_count: total, byte_size: self.file_bytes()? })
+        Ok(UsageReport {
+            row_count: total,
+            byte_size: self.file_bytes()?,
+        })
     }
 
     /// Delete entries until every applicable limit in `policy` is satisfied. `max_age_secs` is
@@ -57,7 +60,10 @@ impl KvStore {
         }
         let after = self.file_bytes()?;
         let reclaimed = before.saturating_sub(after);
-        Ok(PruneReport { rows_removed: removed, bytes_reclaimed: reclaimed })
+        Ok(PruneReport {
+            rows_removed: removed,
+            bytes_reclaimed: reclaimed,
+        })
     }
 
     fn file_bytes(&self) -> Result<u64, KvError> {
@@ -65,7 +71,10 @@ impl KvStore {
             return Ok(0);
         }
         Ok(fs::metadata(&self.db_path)
-            .map_err(|e| IoFault::Read { path: self.db_path.clone(), source: e })?
+            .map_err(|e| IoFault::Read {
+                path: self.db_path.clone(),
+                source: e,
+            })?
             .len())
     }
 }

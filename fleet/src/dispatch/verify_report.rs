@@ -22,7 +22,10 @@ use std::time::Duration;
 fn display_name(bin: &str) -> String {
     let path = std::path::Path::new(bin);
     let file = path.file_name().and_then(|n| n.to_str()).unwrap_or(bin);
-    let parent = path.parent().and_then(|d| d.file_name()).and_then(|n| n.to_str());
+    let parent = path
+        .parent()
+        .and_then(|d| d.file_name())
+        .and_then(|n| n.to_str());
     match parent {
         // Gates are materialised into a fresh tempdir, so the parent is a random `.tmpXXXXXX` that
         // means nothing to a reader -- it leaked as `.tmpwRfP6f/semgrep-gate.sh`. Keep a REAL parent
@@ -45,12 +48,18 @@ pub fn running(command: &str, budget: Duration) {
 }
 
 pub fn budget_spent(bin: &str) {
-    let event = Event::Note { source: display_name(bin), text: "verify budget already spent".into() };
+    let event = Event::Note {
+        source: display_name(bin),
+        text: "verify budget already spent".into(),
+    };
     emit(&event, &Style::detect());
 }
 
 pub fn timed_out(bin: &str) {
-    let event = Event::Note { source: display_name(bin), text: "timed out, killed".into() };
+    let event = Event::Note {
+        source: display_name(bin),
+        text: "timed out, killed".into(),
+    };
     emit(&event, &Style::detect());
 }
 

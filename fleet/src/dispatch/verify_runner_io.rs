@@ -2,13 +2,17 @@
 //! out purely to keep that file under the 80-line cap after the S1 `.current_dir(repo)` fix grew
 //! its doc comment and signature.
 
-use verify::ProcessOutput;
 use std::io::Read;
 use std::sync::mpsc;
 use std::time::Duration;
+use verify::ProcessOutput;
 
 pub fn io_error(e: std::io::Error) -> ProcessOutput {
-    ProcessOutput { exit_code: -1, stdout: String::new(), stderr: e.to_string() }
+    ProcessOutput {
+        exit_code: -1,
+        stdout: String::new(),
+        stderr: e.to_string(),
+    }
 }
 
 pub fn timeout_output(command: &[&str], budget: Duration) -> ProcessOutput {

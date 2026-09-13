@@ -1,7 +1,10 @@
 //! The 14-entry `CHECKS` table pairing each check id with its fn. Verbatim from
 //! `lld_ready.rs:85-100`.
 
-use super::gate_checks_a::{check_c1_open, check_c2_owner, check_c3_acc_ground, check_c3_acc_nontaut, check_c3_acc_parse, check_r17_deriv};
+use super::gate_checks_a::{
+    check_c1_open, check_c2_owner, check_c3_acc_ground, check_c3_acc_nontaut, check_c3_acc_parse,
+    check_r17_deriv,
+};
 use super::gate_checks_b::{check_c12_store, check_r19_absolute, check_r21_alts, check_r21_fail};
 use super::gate_checks_c::{check_c12_deps, check_iface, check_reg_verdict, check_shape};
 use super::gate_types::Check;

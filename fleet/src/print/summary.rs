@@ -47,7 +47,9 @@ fn checks_line(checks: &Checks, style: &Style) -> Option<String> {
             "{}  (no gate examined any input -- treat this run as a failure, not a pass)",
             style.paint(style::RED, "checks   0 performed")
         )),
-        Checks::Performed { checked, total } => Some(format!("checks   {checked}/{total} performed")),
+        Checks::Performed { checked, total } => {
+            Some(format!("checks   {checked}/{total} performed"))
+        }
     }
 }
 
@@ -65,7 +67,10 @@ pub fn render_summary(s: &Summary, style: &Style) -> String {
         lines.push(line);
     }
     for (source, reason) in &s.refusals {
-        lines.push(format!("{} {source}: {reason}", style.paint(style::RED, "refused")));
+        lines.push(format!(
+            "{} {source}: {reason}",
+            style.paint(style::RED, "refused")
+        ));
     }
     lines.join("\n")
 }

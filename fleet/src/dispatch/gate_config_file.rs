@@ -48,5 +48,7 @@ pub fn load(repo: &Path) -> Result<Option<GatesFile>, String> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(e) => return Err(format!("{}: {e}", path.display())),
     };
-    toml::from_str(&text).map(Some).map_err(|e| format!("{}: {e}", path.display()))
+    toml::from_str(&text)
+        .map(Some)
+        .map_err(|e| format!("{}: {e}", path.display()))
 }

@@ -10,14 +10,18 @@
 use super::tool_path;
 use super::verify_report as report;
 use super::verify_runner_io::{drain, io_error, timeout_output};
-use verify::ProcessOutput;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
+use verify::ProcessOutput;
 
 pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessOutput {
     let Some((bin, rest)) = command.split_first() else {
-        return ProcessOutput { exit_code: -1, stdout: String::new(), stderr: "empty command".into() };
+        return ProcessOutput {
+            exit_code: -1,
+            stdout: String::new(),
+            stderr: "empty command".into(),
+        };
     };
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
@@ -44,9 +48,17 @@ pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessO
     loop {
         match child.try_wait() {
             Ok(Some(status)) => {
-                let stdout = out_rx.and_then(|r| r.recv_timeout(Duration::from_secs(2)).ok()).unwrap_or_default();
-                let stderr = err_rx.and_then(|r| r.recv_timeout(Duration::from_secs(2)).ok()).unwrap_or_default();
-                return ProcessOutput { exit_code: status.code().unwrap_or(-1), stdout, stderr };
+                let stdout = out_rx
+                    .and_then(|r| r.recv_timeout(Duration::from_secs(2)).ok())
+                    .unwrap_or_default();
+                let stderr = err_rx
+                    .and_then(|r| r.recv_timeout(Duration::from_secs(2)).ok())
+                    .unwrap_or_default();
+                return ProcessOutput {
+                    exit_code: status.code().unwrap_or(-1),
+                    stdout,
+                    stderr,
+                };
             }
             Ok(None) => {
                 if Instant::now() >= deadline {
@@ -56,7 +68,9 @@ pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessO
                     // sleep (D state). SIGKILL is queued but not delivered until flock() wakes,
                     // which can take many seconds while other cargo processes hold the lock.
                     // Reap the zombie on a background thread so we return immediately.
-                    std::thread::spawn(move || { let _ = child.wait(); });
+                    std::thread::spawn(move || {
+                        let _ = child.wait();
+                    });
                     report::timed_out(&bin);
                     return timeout_output(command, remaining);
                 }

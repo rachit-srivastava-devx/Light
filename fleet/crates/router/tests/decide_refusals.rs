@@ -4,8 +4,8 @@ mod common;
 
 use common::{assert_mutually_exclusive, empty_runtime, full_runtime};
 use router::{decide, TaskClass};
-use types::Role;
 use std::collections::BTreeMap;
+use types::Role;
 
 #[test]
 fn every_filter_stage_names_its_empty_set() {
@@ -17,7 +17,12 @@ fn every_filter_stage_names_its_empty_set() {
     let stage2 = decide(Some(Role::Lead), TaskClass::Implementation, None, &full);
     assert_eq!(stage2.refusal.unwrap().stage, 2);
 
-    let stage3 = decide(Some(Role::Builder), TaskClass::General, None, &empty_runtime());
+    let stage3 = decide(
+        Some(Role::Builder),
+        TaskClass::General,
+        None,
+        &empty_runtime(),
+    );
     assert_eq!(stage3.refusal.unwrap().stage, 3);
 
     let mut no_quota = full.clone();
@@ -31,7 +36,12 @@ fn every_filter_stage_names_its_empty_set() {
 
     let mut no_preference = full.clone();
     no_preference.preference = Vec::new();
-    let stage6 = decide(Some(Role::Builder), TaskClass::General, None, &no_preference);
+    let stage6 = decide(
+        Some(Role::Builder),
+        TaskClass::General,
+        None,
+        &no_preference,
+    );
     assert_eq!(stage6.refusal.unwrap().stage, 6);
 }
 
@@ -39,14 +49,25 @@ fn every_filter_stage_names_its_empty_set() {
 fn first_refusal_wins_over_later_stages() {
     // Empties both stage 3 (no capable adapter) and stage 4 (no measured quota) at once --
     // the reported refusal must still name stage 3, never stage 4.
-    let decision = decide(Some(Role::Builder), TaskClass::General, None, &empty_runtime());
+    let decision = decide(
+        Some(Role::Builder),
+        TaskClass::General,
+        None,
+        &empty_runtime(),
+    );
     assert_eq!(decision.refusal.unwrap().stage, 3);
 }
 
 #[test]
 fn decision_refusal_and_selection_are_mutually_exclusive() {
     for runtime in [empty_runtime(), full_runtime()] {
-        for role in [Role::Lead, Role::Builder, Role::Verifier, Role::Designer, Role::Meter] {
+        for role in [
+            Role::Lead,
+            Role::Builder,
+            Role::Verifier,
+            Role::Designer,
+            Role::Meter,
+        ] {
             assert_mutually_exclusive(&decide(Some(role), TaskClass::General, None, &runtime));
         }
     }

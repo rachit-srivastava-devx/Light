@@ -5,8 +5,8 @@
 //! Only an ACCEPTED SOW is a prior decision worth remembering. Drives the real binary.
 
 mod support;
-use support::cmd;
 use std::path::Path;
+use support::cmd;
 
 const DRAFT: &str = "fix the flaky pagination test";
 const VALID: &str = "source_intent_hash: abc123\n\
@@ -24,7 +24,10 @@ fn run(state_dir: &Path, text: &str) -> (bool, String) {
         .args(["sow", "--text", text, "--intent-hash", "abc123"])
         .output()
         .expect("binary runs");
-    (out.status.success(), String::from_utf8_lossy(&out.stderr).to_string())
+    (
+        out.status.success(),
+        String::from_utf8_lossy(&out.stderr).to_string(),
+    )
 }
 
 fn store(state_dir: &Path) -> std::path::PathBuf {
@@ -62,5 +65,8 @@ fn an_accepted_sow_is_remembered() {
     let dir = tempfile::tempdir().expect("tempdir");
     let (ok, err) = run(dir.path(), VALID);
     assert!(ok, "a well-formed sow must be accepted\n{err}");
-    assert!(store(dir.path()).exists(), "an accepted sow must be recorded");
+    assert!(
+        store(dir.path()).exists(),
+        "an accepted sow must be recorded"
+    );
 }

@@ -2,8 +2,7 @@
 //! `fleet/keel/fleet/src/lifecycle.rs:335-394`.
 
 use super::attestation_checks::{
-    blind_suite_is_complete, independent_verification_is_complete,
-    oracle_independence_is_complete,
+    blind_suite_is_complete, independent_verification_is_complete, oracle_independence_is_complete,
 };
 use serde_json::Value;
 

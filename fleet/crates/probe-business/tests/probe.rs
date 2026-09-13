@@ -1,4 +1,4 @@
-use probe_business::{BusinessInput, BusinessReader, ProbeError, probe};
+use probe_business::{probe, BusinessInput, BusinessReader, ProbeError};
 
 struct FakeBusinessReader {
     response: String,
@@ -45,7 +45,13 @@ fn question_body_contains_domain_term() {
     };
     let questions = probe(&input, &reader).unwrap();
     let body = questions[0].text.to_lowercase();
-    let domain_terms = ["stakeholder", "requirement", "constraint", "scope", "budget"];
+    let domain_terms = [
+        "stakeholder",
+        "requirement",
+        "constraint",
+        "scope",
+        "budget",
+    ];
     assert!(
         domain_terms.iter().any(|t| body.contains(t)),
         "question '{}' does not contain any domain term",

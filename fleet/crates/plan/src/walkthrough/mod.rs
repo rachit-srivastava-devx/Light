@@ -11,4 +11,6 @@ mod work_order;
 
 pub use build::build_walkthrough;
 pub use error::WalkthroughError;
-pub use types::{AcceptancePreviewItem, BuildItem, DecisionItem, RiskItem, Walkthrough, WorkOrderItem};
+pub use types::{
+    AcceptancePreviewItem, BuildItem, DecisionItem, RiskItem, Walkthrough, WorkOrderItem,
+};

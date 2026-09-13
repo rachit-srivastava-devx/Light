@@ -33,9 +33,12 @@ impl FileLoopStore {
     fn write_all(&self, rows: &BTreeMap<String, LoopProgress>) -> Result<(), LoopIoError> {
         let tmp = self.path.with_extension("tmp");
         let text: String = rows.iter().map(|(id, p)| encode_row(id, p)).collect();
-        let mut file = fs::File::create(&tmp).map_err(|e| LoopIoError(format!("create tmp: {e}")))?;
-        file.write_all(text.as_bytes()).map_err(|e| LoopIoError(format!("write tmp: {e}")))?;
-        file.sync_all().map_err(|e| LoopIoError(format!("sync tmp: {e}")))?;
+        let mut file =
+            fs::File::create(&tmp).map_err(|e| LoopIoError(format!("create tmp: {e}")))?;
+        file.write_all(text.as_bytes())
+            .map_err(|e| LoopIoError(format!("write tmp: {e}")))?;
+        file.sync_all()
+            .map_err(|e| LoopIoError(format!("sync tmp: {e}")))?;
         drop(file);
         fs::rename(&tmp, &self.path).map_err(|e| LoopIoError(format!("rename: {e}")))
     }

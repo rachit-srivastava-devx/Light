@@ -9,19 +9,16 @@ pub use runner::{
     evaluate_coverage, run_all_gates, CoverageProvider, FakeCoverageProvider, FakeGateRunner,
     GateRunner,
 };
-pub use secret::{FakeFindingsProvider, FindingsProvider, normalize_findings};
+pub use secret::{normalize_findings, FakeFindingsProvider, FindingsProvider};
 // Internal canonical types (new implementations — distinct from impl_'s GateSpec/GateResult)
-pub use types::{
-    GateEvidence, ReviewedCandidate, SecretFinding, Status, VerifyError,
-};
 pub use types::GateResult as CanonicalGateResult;
 pub use types::GateSpec as CanonicalGateSpec;
+pub use types::{GateEvidence, ReviewedCandidate, SecretFinding, Status, VerifyError};
 
 // Re-exports from the inlined implementation (formerly fleet-verify).
 pub use impl_::{
-    FailReason, GateAssetError, GateCommand, GateResult, GateSpec, GatesRoot,
-    ProbeTool, ProcessOutput, ProcessRunner, Report, Requirement, ToolProbe, Verdict,
-    GATES, run_all, run_gate,
+    run_all, run_gate, FailReason, GateAssetError, GateCommand, GateResult, GateSpec, GatesRoot,
+    ProbeTool, ProcessOutput, ProcessRunner, Report, Requirement, ToolProbe, Verdict, GATES,
 };
 
 pub fn verify(

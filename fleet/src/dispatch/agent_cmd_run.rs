@@ -7,20 +7,71 @@
 use builder::freelane;
 use builder::CliAdapter;
 use serde_json::{json, Value};
+use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 use std::process::{Command, Stdio};
+
+#[path = "agent_stream.rs"]
+mod agent_stream;
+#[path = "agent_tool_policy.rs"]
+mod agent_tool_policy;
+
+pub use agent_tool_policy::AgentToolPolicy;
 
 /// What `run` produced: a genuine "done" body (+ the model that actually answered), or a genuine
 /// "refuse" reason. Never fabricated.
 pub enum AgentOutcome {
-    Done { body: Value, resolved_model: Option<String> },
+    Done {
+        body: Value,
+        resolved_model: Option<String>,
+        tokens: Option<u64>,
+    },
     Refused(String),
 }
 
 pub fn run(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
+    run_with_progress(
+        adapter,
+        worktree,
+        task,
+        model,
+        AgentToolPolicy::worker_default(),
+        |_| {},
+    )
+}
+
+/// Exercises only the direct-CLI lane. Keep this test-only because production dispatch
+/// intentionally routes Freelane through its embedded keyless provider instead.
+#[cfg(test)]
+fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
+    run_cli_with_progress(
+        adapter,
+        worktree,
+        task,
+        model,
+        AgentToolPolicy::worker_default(),
+        |_| {},
+    )
+}
+
+/// Runs one adapter and forwards provider text as it arrives. The interactive parent renders it;
+/// the fd-3 child deliberately supplies a no-op because its only worker channel is fd 3.
+pub fn run_with_progress<F>(
+    adapter: CliAdapter,
+    worktree: &Path,
+    task: &str,
+    model: Option<&str>,
+    policy: AgentToolPolicy,
+    progress: F,
+) -> AgentOutcome
+where
+    F: FnMut(&str),
+{
     match adapter {
         CliAdapter::Freelane => run_freelane(worktree, task, model),
-        CliAdapter::Claude | CliAdapter::Codex => run_cli(adapter, worktree, task, model),
+        CliAdapter::Claude | CliAdapter::Codex => {
+            run_cli_with_progress(adapter, worktree, task, model, policy, progress)
+        }
     }
 }
 
@@ -32,7 +83,11 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
             let resolved_model = out.resolved_model.clone();
             // Surface apply's signal: applied N files, vs named no target (`apply_note` set,
             // e.g. `AmbiguousTarget`), vs no code at all (both empty, e.g. `NoFence`).
-            let applied: Vec<String> = out.applied_files.iter().map(|p| p.display().to_string()).collect();
+            let applied: Vec<String> = out
+                .applied_files
+                .iter()
+                .map(|p| p.display().to_string())
+                .collect();
             AgentOutcome::Done {
                 body: json!({
                     "agent": "freelane",
@@ -45,6 +100,7 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
                     "apply_note": out.apply_note,
                 }),
                 resolved_model,
+                tokens: out.tokens,
             }
         }
         Err(err) => AgentOutcome::Refused(err.to_string()),
@@ -53,13 +109,29 @@ fn run_freelane(worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcom
 
 /// `claude`/`codex`: `builder::spawn` already confirmed the named binary is on `PATH`
 /// before ever spawning this child, so invoke it for real with the task as its argument.
-fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>) -> AgentOutcome {
-    let binary = adapter.cli_binary_name().unwrap_or("true");
+fn run_cli_with_progress<F>(
+    adapter: CliAdapter,
+    worktree: &Path,
+    task: &str,
+    model: Option<&str>,
+    policy: AgentToolPolicy,
+    mut progress: F,
+) -> AgentOutcome
+where
+    F: FnMut(&str),
+{
+    let Some(binary) = adapter.cli_binary_name() else {
+        return AgentOutcome::Refused(format!(
+            "{} has no direct CLI executable",
+            adapter.agent_kind()
+        ));
+    };
     let mut cmd = Command::new(binary);
     // Claude CLI requires --print for non-interactive (batch) mode; without it, it tries
     // to start an interactive session and fails when stdin is null.
     if matches!(adapter, CliAdapter::Claude) {
-        cmd.arg("--print");
+        cmd.args(claude_stream_args());
+        policy.configure_claude(&mut cmd);
     }
     cmd.arg(task);
     if let Some(m) = model {
@@ -67,21 +139,99 @@ fn run_cli(adapter: CliAdapter, worktree: &Path, task: &str, model: Option<&str>
             cmd.args(["--model", m]);
         }
     }
-    let output = cmd.current_dir(worktree).stdin(Stdio::null()).output();
-    match output {
-        Ok(out) if out.status.success() => AgentOutcome::Done {
-            body: json!({
-                "agent": adapter.agent_kind(),
-                "status": "done",
-                "response": String::from_utf8_lossy(&out.stdout).trim().to_string(),
-                "log": String::from_utf8_lossy(&out.stderr).trim().to_string(),
-            }),
-            resolved_model: model.map(str::to_string),
-        },
-        Ok(out) => {
-            let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            AgentOutcome::Refused(format!("{}: worker exited {:?}: {stderr}", adapter.agent_kind(), out.status.code()))
+    let launched = cmd
+        .current_dir(worktree)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn();
+    let Ok(mut child) = launched else {
+        return AgentOutcome::Refused(format!("{}: cannot launch", adapter.agent_kind()));
+    };
+    let Some(stdout) = child.stdout.take() else {
+        return AgentOutcome::Refused(format!("{}: stdout pipe unavailable", adapter.agent_kind()));
+    };
+    let Some(mut stderr) = child.stderr.take() else {
+        return AgentOutcome::Refused(format!("{}: stderr pipe unavailable", adapter.agent_kind()));
+    };
+    let stderr_thread = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let _ = stderr.read_to_end(&mut bytes);
+        bytes
+    });
+    let mut raw_stdout = Vec::new();
+    let mut stream = agent_stream::ClaudeStream::with_root(worktree);
+    for line in BufReader::new(stdout).split(b'\n') {
+        let Ok(line) = line else { break };
+        raw_stdout.extend_from_slice(&line);
+        raw_stdout.push(b'\n');
+        let text = String::from_utf8_lossy(&line);
+        if matches!(adapter, CliAdapter::Claude) {
+            if let Some(delta) = stream.push(&text) {
+                progress(&delta);
+            }
         }
-        Err(err) => AgentOutcome::Refused(format!("{}: cannot launch: {err}", adapter.agent_kind())),
+    }
+    let waited = child.wait();
+    let stderr = stderr_thread.join().unwrap_or_default();
+    match waited {
+        Ok(status)
+            if status.success()
+                && (!matches!(adapter, CliAdapter::Claude) || stream.has_result()) =>
+        {
+            let (body, resolved_model, tokens) = if matches!(adapter, CliAdapter::Claude) {
+                let resolved_model = stream.model();
+                let tokens = stream.tokens();
+                (stream.body(), resolved_model, tokens)
+            } else {
+                (
+                    json!({"response": String::from_utf8_lossy(&raw_stdout).trim(), "log": String::from_utf8_lossy(&stderr).trim()}),
+                    None,
+                    None,
+                )
+            };
+            AgentOutcome::Done {
+                body,
+                resolved_model,
+                tokens,
+            }
+        }
+        Ok(status) => {
+            let detail = failure_detail(&raw_stdout, &stderr);
+            AgentOutcome::Refused(format!(
+                "{}: worker exited {:?}: {detail}",
+                adapter.agent_kind(),
+                status.code()
+            ))
+        }
+        Err(err) => AgentOutcome::Refused(format!("{}: cannot wait: {err}", adapter.agent_kind())),
     }
 }
+
+fn claude_stream_args() -> [&'static str; 5] {
+    [
+        "--print",
+        "--verbose",
+        "--output-format",
+        "stream-json",
+        "--include-partial-messages",
+    ]
+}
+
+/// Providers do not agree on an error stream: Claude can put an API refusal on stdout.
+/// Keep the non-empty diagnostic rather than reporting a useless trailing colon.
+fn failure_detail(stdout: &[u8], stderr: &[u8]) -> String {
+    let stderr = String::from_utf8_lossy(stderr).trim().to_string();
+    if !stderr.is_empty() {
+        return stderr;
+    }
+    let stdout = String::from_utf8_lossy(stdout).trim().to_string();
+    if !stdout.is_empty() {
+        return stdout;
+    }
+    "worker produced no diagnostic".into()
+}
+
+#[cfg(test)]
+#[path = "agent_cmd_run_tests.rs"]
+mod tests;

@@ -30,11 +30,24 @@ fn graph_finishes_quickly_despite_a_heavy_target_and_git_subtree() {
     stuff(&root.path().join("node_modules").join("pkg"), 1000);
 
     let started = Instant::now();
-    let out = cmd().args(["graph", "--repo", root.path().to_str().unwrap()]).output().expect("binary runs");
+    let out = cmd()
+        .args(["graph", "--repo", root.path().to_str().unwrap()])
+        .output()
+        .expect("binary runs");
     let elapsed = started.elapsed();
 
-    assert!(out.status.success(), "graph failed: {}", String::from_utf8_lossy(&out.stderr));
-    assert!(elapsed < Duration::from_secs(20), "graph took {elapsed:?}, should skip target/.git/node_modules");
+    assert!(
+        out.status.success(),
+        "graph failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        elapsed < Duration::from_secs(20),
+        "graph took {elapsed:?}, should skip target/.git/node_modules"
+    );
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("files_scanned: 1"), "expected only the one real file, got: {stdout}");
+    assert!(
+        stdout.contains("files_scanned: 1"),
+        "expected only the one real file, got: {stdout}"
+    );
 }

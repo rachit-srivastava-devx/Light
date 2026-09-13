@@ -14,19 +14,35 @@ use tree_sitter::Node;
 /// counting commas inside a token tree can't distinguish top-level args from nested ones cheaply
 /// and correctly; `resolve_callee`'s unique-name fallback does not consult arity, so a wrong
 /// placeholder can only ever cost precision (an extra, still-correct edge), never resolve wrong.
-pub fn macro_body_call(name_node: Node<'_>, args_node: Node<'_>, source: &str) -> Option<(String, u64)> {
+pub fn macro_body_call(
+    name_node: Node<'_>,
+    args_node: Node<'_>,
+    source: &str,
+) -> Option<(String, u64)> {
     if args_node.kind() != "token_tree" {
         return None;
     }
-    if !matches!(name_node.kind(), "identifier" | "scoped_identifier" | "field_expression") {
+    if !matches!(
+        name_node.kind(),
+        "identifier" | "scoped_identifier" | "field_expression"
+    ) {
         return None;
     }
-    let opens_with_paren = node_text(args_node, source).ok()?.trim_start().starts_with('(');
+    let opens_with_paren = node_text(args_node, source)
+        .ok()?
+        .trim_start()
+        .starts_with('(');
     if !opens_with_paren {
         return None;
     }
     let raw_name = node_text(name_node, source).ok()?;
-    let name = raw_name.trim().rsplit([':', '.']).next().unwrap_or(raw_name.trim()).trim().to_string();
+    let name = raw_name
+        .trim()
+        .rsplit([':', '.'])
+        .next()
+        .unwrap_or(raw_name.trim())
+        .trim()
+        .to_string();
     if name.is_empty() || matches!(name.as_str(), "if" | "for" | "while" | "case") {
         return None;
     }

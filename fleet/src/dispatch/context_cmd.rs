@@ -21,7 +21,11 @@ struct GraphReport {
 pub fn graph(args: GraphArgs) -> Result<(), DispatchError> {
     let files = read_source_files_bounded(Path::new(&args.repo))?;
     let map = build_repo_map(&files).map_err(|e| DispatchError::Refusal(e.to_string()))?;
-    let report = GraphReport { files_scanned: files.len(), symbols: map.symbols.len(), edges: map.edges.len() };
+    let report = GraphReport {
+        files_scanned: files.len(),
+        symbols: map.symbols.len(),
+        edges: map.edges.len(),
+    };
     if args.json {
         crate::print::json::print_pretty(&report);
     } else {
@@ -42,7 +46,9 @@ pub fn impact(args: ImpactArgs) -> Result<(), DispatchError> {
     let map = build_repo_map(&files).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     let hits = map.symbols.iter().filter(|s| s.name == args.symbol).count();
     if args.json {
-        crate::print::json::print_pretty(&ImpactReport { matching_symbols: hits });
+        crate::print::json::print_pretty(&ImpactReport {
+            matching_symbols: hits,
+        });
     } else {
         human::line("matching_symbols", hits);
     }

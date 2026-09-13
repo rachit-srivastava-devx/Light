@@ -1,4 +1,6 @@
-use connectors::{pull_once, ConnectorError, CredentialPort, NativeEvent, PollPage, ProviderClient, SecretRef};
+use connectors::{
+    pull_once, ConnectorError, CredentialPort, NativeEvent, PollPage, ProviderClient, SecretRef,
+};
 use serde_json::json;
 
 struct FailClient(ConnectorError);
@@ -16,7 +18,11 @@ impl ProviderClient for FailClient {
 struct EmptyClient;
 impl ProviderClient for EmptyClient {
     fn poll(&mut self, _: Option<&str>) -> Result<PollPage, ConnectorError> {
-        Ok(PollPage { events: vec![], next_cursor: None, retry_after_seconds: None })
+        Ok(PollPage {
+            events: vec![],
+            next_cursor: None,
+            retry_after_seconds: None,
+        })
     }
 }
 
@@ -37,7 +43,11 @@ impl ProviderClient for BadDeliveryClient {
             actor: "u1".into(),
             payload: json!({}),
         };
-        Ok(PollPage { events: vec![ev], next_cursor: None, retry_after_seconds: None })
+        Ok(PollPage {
+            events: vec![ev],
+            next_cursor: None,
+            retry_after_seconds: None,
+        })
     }
 }
 
@@ -62,7 +72,10 @@ fn auth_required_when_token_missing() {
 
 #[test]
 fn provider_error_propagates() {
-    let result = pull_once(&mut FailClient(ConnectorError::Provider("500".into())), None);
+    let result = pull_once(
+        &mut FailClient(ConnectorError::Provider("500".into())),
+        None,
+    );
     assert!(matches!(result, Err(ConnectorError::Provider(_))));
 }
 

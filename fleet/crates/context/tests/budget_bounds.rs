@@ -2,15 +2,26 @@ use context::{budget::pack, ContextError, Evidence, EvidenceRef, Span, TokenCoun
 
 struct Tok;
 impl TokenCounter for Tok {
-    fn count(&self, t: &str) -> u64 { (t.len() as u64).div_ceil(4) }
+    fn count(&self, t: &str) -> u64 {
+        (t.len() as u64).div_ceil(4)
+    }
 }
 
 fn ev(id: &str, content: &str) -> Evidence {
-    Evidence { source_digest: id.into(), content: content.into(), tokens: 0 }
+    Evidence {
+        source_digest: id.into(),
+        content: content.into(),
+        tokens: 0,
+    }
 }
 
 fn sp(label: &str) -> Span {
-    Span { source_digest: "s".into(), start: 0, end: 1, label: label.into() }
+    Span {
+        source_digest: "s".into(),
+        start: 0,
+        end: 1,
+        label: label.into(),
+    }
 }
 
 // Kills: budget.rs `>` → `==` and `>` → `>=` for mandatory overflow check
@@ -18,7 +29,11 @@ fn sp(label: &str) -> Span {
 fn mandatory_exact_budget_fits() {
     let mandatory = vec![sp(&"a".repeat(400))]; // 100 tokens exactly
     let result = pack(&mandatory, &[], 100, 0, &Tok);
-    assert!(result.is_ok(), "100 tokens must fit in budget=100, got {:?}", result);
+    assert!(
+        result.is_ok(),
+        "100 tokens must fit in budget=100, got {:?}",
+        result
+    );
 }
 
 // Kills: budget.rs mandatory overflow check — mandatory exceeds budget
@@ -44,7 +59,11 @@ fn evidence_overflow_omitted() {
     let mandatory = vec![sp(&"a".repeat(4))]; // 1 token mandatory
     let candidates = vec![ev("e", &"a".repeat(16))]; // 4 tokens, only 3 left
     let result = pack(&mandatory, &candidates, 4, 0, &Tok).unwrap();
-    assert_eq!(result.0.len(), 0, "evidence must be omitted when it doesn't fit");
+    assert_eq!(
+        result.0.len(),
+        0,
+        "evidence must be omitted when it doesn't fit"
+    );
     assert_eq!(result.1, vec!["e".to_string()]);
 }
 
@@ -61,7 +80,11 @@ fn duplicate_evidence_deduped() {
 fn reserve_reduces_available() {
     let candidates = vec![ev("e", &"a".repeat(16))]; // 4 tokens
     let result = pack(&[], &candidates, 5, 2, &Tok).unwrap(); // available = 3
-    assert_eq!(result.0.len(), 0, "reserve=2 leaves 3 tokens; 4 token item must be omitted");
+    assert_eq!(
+        result.0.len(),
+        0,
+        "reserve=2 leaves 3 tokens; 4 token item must be omitted"
+    );
 }
 
 // Kills: missing provenance check removed

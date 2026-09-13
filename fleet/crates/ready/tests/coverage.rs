@@ -31,14 +31,22 @@ fn all_seven_predicates_pass_with_correct_counts() {
 /// checked=0, total=7 → ZeroCoverage (zero-checked is not a passing gate).
 #[test]
 fn checked_zero_with_nonzero_total_is_zero_coverage() {
-    let v = evaluate(&ReadyInput { checked: 0, total: 7, ..passing() });
+    let v = evaluate(&ReadyInput {
+        checked: 0,
+        total: 7,
+        ..passing()
+    });
     assert_eq!(v.status, Status::ZeroCoverage);
 }
 
 /// checked=5, total=7 → ZeroCoverage (partial coverage is refused).
 #[test]
 fn checked_partial_mismatch_is_zero_coverage() {
-    let v = evaluate(&ReadyInput { checked: 5, total: 7, ..passing() });
+    let v = evaluate(&ReadyInput {
+        checked: 5,
+        total: 7,
+        ..passing()
+    });
     assert_eq!(v.status, Status::ZeroCoverage);
 }
 
@@ -58,5 +66,8 @@ fn receipt_to_json_contains_status() {
     let receipt = Receipt::from_verdict(&input, &verdict);
     let json = serde_json::to_string(&receipt).unwrap();
     assert!(!json.is_empty(), "serialised receipt must not be empty");
-    assert!(json.contains("Ready"), "serialised receipt must contain the status; got: {json}");
+    assert!(
+        json.contains("Ready"),
+        "serialised receipt must contain the status; got: {json}"
+    );
 }

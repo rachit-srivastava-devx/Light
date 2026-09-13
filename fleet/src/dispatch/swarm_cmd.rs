@@ -8,9 +8,9 @@ use crate::print::human_stream::emit;
 use crate::print::render_event::Event;
 use crate::print::style::Style;
 use builder::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
-use types::{Role, TaskId};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+use types::{Role, TaskId};
 
 /// Env var name `fleet-worker::spawn::worker_state_dir::resolve` reads. Kept as a literal, not a
 /// shared const, since crossing the crate boundary for one string would cost more than it saves;
@@ -30,13 +30,18 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // with the CLI's resolution by construction instead of by coincidence.
     std::env::set_var(ENV_STATE_DIR, state_dir);
     let role = Role::parse(&args.role).map_err(|e| DispatchError::Refusal(e.to_string()))?;
-    let task_id = TaskId::parse(args.task.clone()).map_err(|e| DispatchError::Refusal(e.to_string()))?;
+    let task_id =
+        TaskId::parse(args.task.clone()).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     // `--task` is both the lane's task id and, unless `--prompt` overrides it, the free-text
     // instructions sent to the worker (`SpawnRequest::task`) -- this used to be wired to
     // `args.prompt` alone, so a non-empty `--task` with no `--prompt` was rejected as an empty
     // prompt (S1-4). `--prompt` remains a genuinely distinct, optional override: pass it to
     // give the worker different instructions than the task id/name itself.
-    let prompt = if args.prompt.trim().is_empty() { args.task.clone() } else { args.prompt };
+    let prompt = if args.prompt.trim().is_empty() {
+        args.task.clone()
+    } else {
+        args.prompt
+    };
     let request = SpawnRequest {
         repo: PathBuf::from(&args.repo),
         role,
@@ -50,17 +55,39 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     let lane = handle.lane_id.as_str().to_string();
     let style = Style::detect();
     // Lane-attributed lines -- so this worker's output is never blurred with any other lane's.
-    emit(&Event::Worker { lane: lane.clone(), text: "spawned".into() }, &style);
-    let policy = if args.merge { MergePolicy::OnSuccess } else { MergePolicy::Never };
+    emit(
+        &Event::Worker {
+            lane: lane.clone(),
+            text: "spawned".into(),
+        },
+        &style,
+    );
+    let policy = if args.merge {
+        MergePolicy::OnSuccess
+    } else {
+        MergePolicy::Never
+    };
     let (outcome, merge_outcome) = join(handle, policy)?;
     if let Some(m) = &merge_outcome {
         let text = format!(
             "merged: branch={} staged={} changed={} {}..{}",
             m.branch, m.staged_files, m.changed_files, m.before, m.after
         );
-        emit(&Event::Worker { lane: lane.clone(), text }, &style);
+        emit(
+            &Event::Worker {
+                lane: lane.clone(),
+                text,
+            },
+            &style,
+        );
     }
-    emit(&Event::Worker { lane, text: format!("outcome: {outcome:?}") }, &style);
+    emit(
+        &Event::Worker {
+            lane,
+            text: format!("outcome: {outcome:?}"),
+        },
+        &style,
+    );
     // The EXIT CODE must agree with the receipt. `swarm` used to exit 0 for every outcome, so a
     // lane that changed nothing ("the adapter returned advice", `changed_files: 0`) still looked
     // like success to a script or CI -- an honest label paired with a lying exit code.

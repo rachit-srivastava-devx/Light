@@ -25,7 +25,10 @@ fn threads_resolved_state_dir_to_worker_even_when_env_var_was_unset() {
     };
     let result = swarm(&resolved, args);
 
-    assert!(result.is_err(), "invalid role must be refused, not silently accepted");
+    assert!(
+        result.is_err(),
+        "invalid role must be refused, not silently accepted"
+    );
     assert_eq!(
         std::env::var(ENV_STATE_DIR).as_deref(),
         Ok("/tmp/fleet-swarm-gap2-test-state-dir"),

@@ -5,20 +5,31 @@ use offline::{
 struct PassingRunner;
 impl TrialRunner for PassingRunner {
     fn run(&self, task: &HeldOutTask, variant: Variant) -> Result<Outcome, OfflineError> {
-        Ok(Outcome { task_id: task.id.clone(), variant, passed: true })
+        Ok(Outcome {
+            task_id: task.id.clone(),
+            variant,
+            passed: true,
+        })
     }
 }
 
 fn tasks(n: usize) -> Vec<HeldOutTask> {
-    (0..n).map(|i| HeldOutTask {
-        id: format!("t{i}"),
-        input: format!("input-{i}"),
-        input_digest: format!("digest-{i}"),
-    }).collect()
+    (0..n)
+        .map(|i| HeldOutTask {
+            id: format!("t{i}"),
+            input: format!("input-{i}"),
+            input_digest: format!("digest-{i}"),
+        })
+        .collect()
 }
 
 fn req(ts: Vec<HeldOutTask>, seed: u64) -> EvaluationRequest {
-    EvaluationRequest { candidate_id: "cand-1".into(), tasks: ts, min_pairs: 1, seed }
+    EvaluationRequest {
+        candidate_id: "cand-1".into(),
+        tasks: ts,
+        min_pairs: 1,
+        seed,
+    }
 }
 
 // Kills: evaluate body → constant stub (same seed must produce same output)
