@@ -33,3 +33,20 @@ fn threads_resolved_state_dir_to_worker_even_when_env_var_was_unset() {
     );
     std::env::remove_var(ENV_STATE_DIR);
 }
+
+// The human-path `spawned` line must name the CLI adapter driving the lane so a script or a
+// human reader can tell freelane apart from claude apart from codex at a glance -- the plain
+// "spawned" line looks identical across adapters otherwise, which becomes actively confusing
+// once `--agent` picks a non-default. The format is additive: `spawned` stays the leading
+// token so any downstream regex on `[lane] spawned` keeps matching; `agent=<kind>` is
+// appended, and the `<kind>` string is exactly `CliAdapter::agent_kind()` -- never invented.
+#[test]
+fn spawned_line_appends_adapter_kind_from_cli_adapter_agent_kind() {
+    for adapter in [CliAdapter::Freelane, CliAdapter::Claude, CliAdapter::Codex] {
+        let kind = adapter.agent_kind();
+        let line = spawned_line(kind);
+        assert!(line.starts_with("spawned "), "prefix must stay `spawned ` (line={line:?})");
+        assert_eq!(line, format!("spawned agent={kind}"));
+        assert!(line.contains(&format!("agent={kind}")), "line must carry agent={kind}: {line:?}");
+    }
+}

@@ -21,6 +21,14 @@ const ENV_STATE_DIR: &str = "FLEET_STATE_DIR";
 #[path = "swarm_cmd_tests.rs"]
 mod tests;
 
+/// Format the `Event::Worker` text for the "spawned" line, appending `agent=<kind>` so a
+/// reader (or a script grepping the human stream) can tell freelane apart from claude apart
+/// from codex at a glance. Kept pure so `swarm_cmd_tests` can assert the exact bytes without
+/// having to actually spawn a lane.
+fn spawned_line(adapter_kind: &str) -> String {
+    format!("spawned agent={adapter_kind}")
+}
+
 pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // Thread the CLI's already-resolved state dir into the worker EXPLICITLY, rather than
     // relying on both sides happening to read the same env var name (the gap: a future
@@ -46,11 +54,15 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
         task: prompt,
         deadline: Duration::from_secs(300),
     };
+    let adapter_kind = request.adapter.agent_kind();
     let handle = spawn(request)?;
     let lane = handle.lane_id.as_str().to_string();
     let style = Style::detect();
     // Lane-attributed lines -- so this worker's output is never blurred with any other lane's.
-    emit(&Event::Worker { lane: lane.clone(), text: "spawned".into() }, &style);
+    // `agent=<kind>` is appended (never a prefix change) so a reader can tell freelane apart
+    // from claude apart from codex at a glance without breaking any downstream regex that
+    // already matches on the leading `[lane] spawned` shape.
+    emit(&Event::Worker { lane: lane.clone(), text: spawned_line(adapter_kind) }, &style);
     let policy = if args.merge { MergePolicy::OnSuccess } else { MergePolicy::Never };
     let (outcome, merge_outcome) = join(handle, policy)?;
     if let Some(m) = &merge_outcome {
