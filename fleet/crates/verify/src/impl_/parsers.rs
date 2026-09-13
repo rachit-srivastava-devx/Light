@@ -68,11 +68,47 @@ pub fn corpus(stdout: &str, _stderr: &str) -> D {
     }
 }
 
-/// libtest's own fixed `"test result: ok. N passed; M failed"` line -- greenfield, no fleet
-/// script wraps this today.
-pub fn unit_tests(stdout: &str, _stderr: &str) -> D {
-    match before(stdout, " passed;").zip(before(stdout, " failed;")) {
-        Some((p, f)) => D::Counted(p, p + f),
-        None => D::Unparseable,
+/// A repo's unit-test suite. Handles three summary shapes so `.fleet/gates.toml` can point at
+/// any of them without a per-repo parser:
+///
+/// * **libtest** (Rust) -- `"test result: ok. N passed; M failed; ..."` (semicolons).
+/// * **Jest / npm test** -- `"Tests:       N passed, T total"` (commas; may include `failed`
+///   and/or `skipped` counts before `passed`).
+/// * **Vitest** -- `"      Tests  N passed (T)"` (parens; may include `failed | passed`).
+///
+/// `libtest` is tried first because its `passed;` / `failed;` markers are unambiguous. `Jest`
+/// then `Vitest` share the `passed` keyword but disambiguate on the trailing punctuation. This
+/// closes FD-8 (posx-first-external-use.md) -- gate result parsers were libtest-shaped, so a
+/// configured Jest/Vitest gate could never publish a denominator.
+pub fn unit_tests(stdout: &str, stderr: &str) -> D {
+    // libtest: "N passed; M failed;" -- always on stdout.
+    if let Some((p, f)) = before(stdout, " passed;").zip(before(stdout, " failed;")) {
+        return D::Counted(p, p + f);
     }
+    // Jest and Vitest print their summary to STDERR (verified against posx-frido-backend's
+    // `npm run --silent test:unit`). Scan both so the parser does not depend on which stream a
+    // runner happens to use.
+    for stream in [stdout, stderr] {
+        // Jest: `Tests:       N passed, T total`. Anchor on the `Tests:` prefix so a
+        // `Test Suites:` line's own "N passed, M total" is not mistaken for the test count.
+        if let Some(line) = stream
+            .lines()
+            .find(|l| l.trim_start().starts_with("Tests:") && l.contains(" total"))
+        {
+            if let Some((p, t)) = before(line, " passed,").zip(before(line, " total")) {
+                return D::Counted(p, t);
+            }
+        }
+        // Vitest: `Tests  N passed (T)`. Anchor on `Tests ` (with the whitespace, not a colon)
+        // so the earlier `Test Files ` line's own `passed (` is not picked up.
+        if let Some(line) = stream
+            .lines()
+            .find(|l| l.trim_start().starts_with("Tests ") && l.contains(" passed ("))
+        {
+            if let Some((p, t)) = before(line, " passed (").zip(after(line, " passed (")) {
+                return D::Counted(p, t);
+            }
+        }
+    }
+    D::Unparseable
 }
