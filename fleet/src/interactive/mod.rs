@@ -9,6 +9,7 @@ mod commands;
 mod effect_parse;
 mod effect_plan;
 mod effect_words;
+mod fallback_read;
 mod help;
 mod input_prompt;
 mod line_reader;

@@ -23,10 +23,8 @@ pub struct LifecycleArgs {
 
 #[derive(Args, Debug)]
 pub struct RunArgs {
-    /// One or more repo paths. `--repo a` (single, back-compat) still works; `--repo a --repo b`
-    /// (repeat) and `--repo a b` (variadic per occurrence) both parse to a two-element `Vec`.
-    /// One task, N repos, aggregated verdict -- the Frido workspace's three sibling repos
-    /// (posx-frido-{store,backend,admin}) is the shape driving this.
+    /// One or more repo paths (`--repo a`, `--repo a --repo b`, or `--repo a b` all parse to a
+    /// `Vec`) -- one task, N repos, aggregated verdict; see `run_multi_repo` for the shape.
     #[arg(long = "repo", num_args = 1.., action = clap::ArgAction::Append, required = true)]
     pub repos: Vec<String>,
     #[arg(long)]
@@ -36,6 +34,8 @@ pub struct RunArgs {
     /// With N repos: N successive JSON objects (one per repo), in the given order.
     #[arg(long)]
     pub json: bool,
+    #[arg(long = "no-git", help = "Allow a plain (non-git) --repo; skips only Merge")]
+    pub no_git: bool,
 }
 
 #[derive(Args, Debug)]

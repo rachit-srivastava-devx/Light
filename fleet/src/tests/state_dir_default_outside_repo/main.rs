@@ -67,10 +67,9 @@ fn default_state_dir_never_lands_in_the_repo_and_is_the_per_user_default() {
 
     // The fix: state actually lands under the per-user default, `$HOME/.local/state/fleet`.
     let expected_dir = fake_home.path().join(".local").join("state").join("fleet");
-    let log_path = expected_dir.join(format!("{task_id}.steps.json"));
     assert!(
-        log_path.exists(),
-        "expected step log at {log_path:?}, dir contents: {:?}",
+        support::step_log_path(&expected_dir, task_id).is_some(),
+        "expected a step log for {task_id:?} under {expected_dir:?}, dir contents: {:?}",
         fs::read_dir(&expected_dir).ok().map(|d| d
             .filter_map(|e| e.ok().map(|e| e.file_name()))
             .collect::<Vec<_>>())

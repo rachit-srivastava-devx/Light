@@ -1,5 +1,7 @@
 //! The one match arm per non-`Teach` stage, factored out of `graph.rs` to stay under the
-//! 80-line file gate. Exactly one `stages::*` call per arm -- no decision logic here.
+//! 80-line file gate. Exactly one `stages::*` call per arm -- no decision logic here, except
+//! `Merge`'s `git_backed` check: under `--no-git` it is the one stage genuinely unavailable, so
+//! it is skipped rather than called at all (never a fabricated pass).
 
 use super::ctx::StageCtx;
 use super::event::{PipelineError, StageOutput};
@@ -28,7 +30,13 @@ pub fn run_one(
         }
         PipelineStage::Verify => stages::verify(ctx.verify_gates, ctx.repo, ctx.state_dir, gates)
             .map(|_| StageOutput::None),
-        PipelineStage::Merge => stages::merge(ctx.repo).map(|_| StageOutput::None),
+        PipelineStage::Merge => {
+            if ctx.git_backed {
+                stages::merge(ctx.repo).map(|_| StageOutput::None)
+            } else {
+                Ok(StageOutput::Skipped)
+            }
+        }
         PipelineStage::Teach => unreachable!("Teach is run as the trailer, not in this loop"),
     }
 }

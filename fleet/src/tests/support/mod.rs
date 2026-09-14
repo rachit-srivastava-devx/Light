@@ -9,7 +9,7 @@ pub mod m4;
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 pub fn bin() -> &'static str {
@@ -96,6 +96,23 @@ pub fn scratch_repo_staged(dir: &Path) {
     run(&["config", "user.name", "test"]);
     fs::write(dir.join("f.txt"), "hello").unwrap();
     run(&["add", "f.txt"]);
+}
+
+/// The on-disk `StepLog` file for one `task_id` under `state_dir`, if any. `StepLog` keys its
+/// filename by `(task_id, repo)` (see `pipeline::step_log::StepLog::open_for_repo`) so a test
+/// cannot assume the pre-repo-scoping flat name `{task_id}.steps.json` -- it globs for the
+/// task_id prefix instead, which stays correct regardless of how the repo-scoped suffix is
+/// derived.
+pub fn step_log_path(state_dir: &Path, task_id: &str) -> Option<PathBuf> {
+    let prefix = format!("{task_id}.");
+    fs::read_dir(state_dir)
+        .ok()?
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .find(|p| {
+            let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            name.starts_with(&prefix) && name.ends_with(".steps.json")
+        })
 }
 
 /// Runs the hidden `__pipeline_probe` (real `Verify`, zero gates -- see `run_cmd.rs`'s own doc

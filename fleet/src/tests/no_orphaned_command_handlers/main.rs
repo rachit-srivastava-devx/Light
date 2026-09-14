@@ -9,7 +9,8 @@
 //! `src/dispatch/*_cmd.rs` modules vs. `src/cli/root.rs`'s `Commands` enum -- is intrinsic to
 //! this package's own module layout, not a generic cross-repo gate `fleet-verify` owns. Parsing
 //! helpers live in `support/m4.rs`; the variant-side check lives in
-//! `no_orphaned_commands_variants.rs` (≤80-line split).
+//! `no_orphaned_commands_variants.rs` (≤80-line split). `root.rs` itself now lives in the
+//! `cli` crate (`crates/cli/src/root.rs`) since the cli-crate extraction, not under `src/cli/`.
 
 #[path = "../support/mod.rs"]
 mod support;

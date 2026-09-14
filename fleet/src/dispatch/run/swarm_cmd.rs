@@ -141,7 +141,8 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     match verify_plan(then_verify, done, &verify_repo, &verify_task) {
         Some(plan) => {
             println!("-- then-verify --");
-            crate::dispatch::run_cmd::run_pipeline_on(state_dir, plan.repo, plan.task, false)
+            // `swarm` has no `--no-git`; its own intake above already required a git worktree.
+            crate::dispatch::run_cmd::run_pipeline_on(state_dir, plan.repo, plan.task, false, false)
         }
         None => {
             if then_verify && !done {

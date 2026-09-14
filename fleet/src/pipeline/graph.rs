@@ -20,20 +20,27 @@ use types::{NodeId, Role, TaskId};
 
 /// Advance one pipeline run through every stage in order, skipping any stage the step log
 /// already marked done (crash-resume) and always running `Teach` last regardless of outcome.
+/// `git_backed` is false only for `fleet run --no-git`; every other caller passes `true`.
 pub fn run_pipeline(
     state_dir: &Path,
     repo: &Path,
     task: TaskId,
     runtime: &route::RuntimeState,
     verify_gates: &[verify::GateSpec],
+    git_backed: bool,
 ) -> PipelineOutcome {
-    let log = StepLog::open(state_dir, task.as_str());
+    // Repo-scoped: `state_dir` is shared across every `--repo` in one invocation (per-user
+    // default, never per-repo -- see `runtime::state_dir_default`), so a plain
+    // `StepLog::open(state_dir, task_id)` here would let repo 2+ under the same task_id find
+    // repo 1's completed step log and report every stage "resumed" without running anything.
+    let log = StepLog::open_for_repo(state_dir, task.as_str(), repo);
     let ctx = StageCtx {
         state_dir,
         repo,
         task: &task,
         runtime,
         verify_gates,
+        git_backed,
     };
     let mut records = RunRecords::new();
     let result = run_through_merge(&log, &ctx, &mut records);
@@ -57,5 +64,5 @@ pub fn run_pipeline(
     }
 
     run_ledger::run_end(state_dir, &task, records.final_stage, result.is_ok());
-    records.into_outcome(task, result)
+    records.into_outcome(task, result, git_backed)
 }

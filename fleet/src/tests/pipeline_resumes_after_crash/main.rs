@@ -62,8 +62,9 @@ fn a_second_process_against_the_same_state_dir_replays_instead_of_rerunning() {
         String::from_utf8_lossy(&first.stderr)
     );
 
-    let log_path = dir.path().join(format!("{task_id}.steps.json"));
-    let after_first = fs::read_to_string(&log_path).expect("step log written by first process");
+    let log_path =
+        support::step_log_path(dir.path(), task_id).expect("step log written by first process");
+    let after_first = fs::read_to_string(&log_path).expect("read step log");
     for stage in [
         "Event", "Classify", "Scan", "Plan", "Dispatch", "Verify", "Merge", "Teach",
     ] {
@@ -80,7 +81,11 @@ fn a_second_process_against_the_same_state_dir_replays_instead_of_rerunning() {
         "second run: {}",
         String::from_utf8_lossy(&second.stderr)
     );
-    let after_second = fs::read_to_string(&log_path).expect("step log still present");
+    assert!(
+        support::step_log_path(dir.path(), task_id).is_some(),
+        "step log still present"
+    );
+    let after_second = fs::read_to_string(&log_path).expect("read step log");
     assert_eq!(
         after_first, after_second,
         "replay must not mutate the completed step log"

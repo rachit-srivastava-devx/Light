@@ -44,6 +44,65 @@ fn two_repos_one_task_id_two_receipts() {
     }
 }
 
+/// Same task_id, same shared state_dir, two DIFFERENT repos: repo B must run its own stages for
+/// real, not find repo A's completed step log and report every stage "resumed". Regression pin
+/// for a defect where `StepLog::open` keyed its on-disk file by `task_id` alone -- since
+/// `state_dir` is per-user by default (never per-repo), N `--repo`s under one task_id shared ONE
+/// step log, so repo 2+ silently skipped every stage while still emitting a JSON outcome that
+/// looked like a completed run.
+#[test]
+fn two_repos_same_task_id_each_gets_real_stage_outcomes_not_resumed() {
+    let state_dir = tempfile::tempdir().unwrap();
+    let repo_a = tempfile::tempdir().unwrap();
+    let repo_b = tempfile::tempdir().unwrap();
+    scratch_repo_staged(repo_a.path());
+    gates_toml(repo_a.path());
+    scratch_repo_staged(repo_b.path());
+    gates_toml(repo_b.path());
+
+    let out = cmd()
+        .env("FLEET_STATE_DIR", state_dir.path())
+        .env("FLEET_LANE_BUDGET_MB", "1")
+        .args(["run", "--json", "--task", "shared-state-task", "--repo"])
+        .arg(repo_a.path())
+        .arg("--repo")
+        .arg(repo_b.path())
+        .output()
+        .expect("binary runs");
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(out.status.success(), "both repos green: stdout={stdout} stderr={}",
+        String::from_utf8_lossy(&out.stderr));
+
+    let objs: Vec<Value> = serde_json::Deserializer::from_str(&stdout)
+        .into_iter::<Value>()
+        .collect::<Result<_, _>>()
+        .unwrap_or_else(|e| panic!("expected N JSON objects, got err {e}: {stdout}"));
+    assert_eq!(objs.len(), 2, "one outcome per repo: {stdout}");
+
+    for (i, v) in objs.iter().enumerate() {
+        let stages = v["stages"].as_array().expect("stages array");
+        assert!(!stages.is_empty(), "repo #{i} reported no stages: {v}");
+        for s in stages {
+            assert_ne!(
+                s["outcome"], "resumed",
+                "repo #{i} stage {} came back \"resumed\" -- it shared a step log with an \
+                 earlier repo under the same task id and never actually ran: {s}",
+                s["stage"]
+            );
+            assert_eq!(
+                s["outcome"], "pass",
+                "repo #{i} stage {} did not pass for real: {s}",
+                s["stage"]
+            );
+            assert!(
+                s["elapsed_ms"].is_u64(),
+                "repo #{i} stage {} must publish a real duration, not a resumed null: {s}",
+                s["stage"]
+            );
+        }
+    }
+}
+
 /// Mixed pass/fail -> aggregated exit code = worst (non-zero).
 #[test]
 fn mixed_pass_fail_aggregates_to_worst() {

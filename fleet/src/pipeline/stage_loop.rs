@@ -8,6 +8,7 @@ use super::run_records::RunRecords;
 use super::stage::PipelineStage;
 use super::stage_report;
 use super::step_log::StepLog;
+use print::render_event::Outcome;
 
 pub fn run_through_merge(
     log: &StepLog,
@@ -30,16 +31,26 @@ pub fn run_through_merge(
         let started = stage_report::started(stage);
         let result = run_one(stage, ctx, &mut out.gates);
         let elapsed = started.elapsed();
-        stage_report::finished(stage, started, result.is_ok());
-        out.stage(
-            stage,
-            if result.is_ok() { "pass" } else { "fail" },
-            Some(elapsed),
-        );
+        // A skipped stage gets its own outcome/elapsed pair -- "skip" with `elapsed_ms` absent
+        // (hard rule 9: this invocation spent no time in it, and a fabricated `0` would read as
+        // "ran, instantly"), never folded into "pass" the way `result.is_ok()` alone would.
         match result {
-            Ok(StageOutput::Classified(decision)) => out.classification = Some(decision),
-            Ok(StageOutput::None) => {}
+            Ok(StageOutput::Classified(decision)) => {
+                stage_report::finished(stage, started, Outcome::Pass);
+                out.stage(stage, "pass", Some(elapsed));
+                out.classification = Some(decision);
+            }
+            Ok(StageOutput::None) => {
+                stage_report::finished(stage, started, Outcome::Pass);
+                out.stage(stage, "pass", Some(elapsed));
+            }
+            Ok(StageOutput::Skipped) => {
+                stage_report::finished(stage, started, Outcome::Skip);
+                out.stage(stage, "skip", None);
+            }
             Err(e) => {
+                stage_report::finished(stage, started, Outcome::Fail);
+                out.stage(stage, "fail", Some(elapsed));
                 // Invariant from BLUEPRINT §4: every stage's only failure successor is `Teach`.
                 debug_assert!(stage.allowed_successors().contains(&PipelineStage::Teach));
                 run_ledger::refusal(ctx.state_dir, stage, &e);

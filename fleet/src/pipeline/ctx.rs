@@ -17,4 +17,9 @@ pub struct StageCtx<'a> {
     /// gate would itself re-trigger) pass a filtered table; `fleet run` passes the real, full
     /// `verify::GATES`.
     pub verify_gates: &'a [verify::GateSpec],
+    /// False iff `fleet run --no-git` declared `repo` a plain, non-git directory. Drives two
+    /// things: `Merge` (the one stage that genuinely needs git) is skipped rather than run, and
+    /// the outcome's `repo_mode` field. Every other stage ignores this -- Event/Classify/Scan/
+    /// Plan/Dispatch/Verify touch no git at all.
+    pub git_backed: bool,
 }

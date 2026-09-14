@@ -1,14 +1,15 @@
 //! Reedline-backed input with Fleet-specific mode and clear keybindings.
 
+use super::fallback_read::fallback_read;
 use super::input_prompt::InputPrompt;
 use reedline::{
     default_emacs_keybindings, Emacs, KeyCode, KeyModifiers, Reedline, ReedlineEvent, Signal,
 };
-use std::io::{self, Write};
 
 const TOGGLE_MODE: &str = "fleet:toggle-mode";
 const CLEAR_SCREEN: &str = "fleet:clear-screen";
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum ReadOutcome {
     Submit(String),
     ToggleMode,
@@ -48,16 +49,5 @@ impl LineReader {
             Ok(_) => ReadOutcome::Exit,
             Err(_) => fallback_read(),
         }
-    }
-}
-
-fn fallback_read() -> ReadOutcome {
-    print!("> ");
-    let _ = io::stdout().flush();
-    let mut s = String::new();
-    if io::stdin().read_line(&mut s).is_ok() {
-        ReadOutcome::Submit(s.trim_end().into())
-    } else {
-        ReadOutcome::Exit
     }
 }

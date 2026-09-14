@@ -55,6 +55,8 @@ pub mod role_cmd;
 pub mod route_cmd;
 #[path = "run/run_cmd.rs"]
 pub mod run_cmd;
+#[path = "runtime_snapshot.rs"]
+mod runtime_snapshot;
 // `fleet run-modules` arg parsing, split out of `mod.rs` for its 80-line gate
 #[path = "run/run_modules_cmd.rs"]
 mod run_modules_cmd;
@@ -137,7 +139,7 @@ pub async fn run(
         Commands::SpawnProbe(a) => spawn_probe_cmd::probe(a),
         Commands::CapacityProbe => capacity_probe_cmd::report(3, None),
         Commands::Adjudicate(a) => adjudicate_cmd::adjudicate(a.artifact, a.json),
-        Commands::Pr(a) => ops_cmd::pr_emit(a),
+        Commands::Pr(a) => pr_cmd::pr_emit(a),
         other @ (Commands::Console { .. }
         | Commands::Freeze(_)
         | Commands::Contract(_)

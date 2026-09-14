@@ -19,8 +19,7 @@ pub fn started(stage: PipelineStage) -> Instant {
     Instant::now()
 }
 
-pub fn finished(stage: PipelineStage, start: Instant, ok: bool) {
-    let outcome = if ok { Outcome::Pass } else { Outcome::Fail };
+pub fn finished(stage: PipelineStage, start: Instant, outcome: Outcome) {
     let event = Event::StageFinished {
         stage: stage.name().to_string(),
         outcome,

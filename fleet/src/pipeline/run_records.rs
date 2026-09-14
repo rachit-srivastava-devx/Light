@@ -38,11 +38,14 @@ impl RunRecords {
     }
 
     /// `refusal` is derived here, from the one `Result` that owns the truth, so the JSON's
-    /// refusal text can never disagree with the process's exit code.
+    /// refusal text can never disagree with the process's exit code. `git_backed` mirrors the
+    /// same flag `StageCtx` carried for this run, so `repo_mode` can never disagree with whether
+    /// `Merge` was actually attempted.
     pub fn into_outcome(
         self,
         task: types::TaskId,
         result: Result<(), PipelineError>,
+        git_backed: bool,
     ) -> PipelineOutcome {
         let refusal = result.as_ref().err().map(|e| e.to_string());
         PipelineOutcome {
@@ -53,6 +56,7 @@ impl RunRecords {
             stages: self.stages,
             gates: self.gates,
             refusal,
+            repo_mode: if git_backed { "git" } else { "no-git" },
         }
     }
 }

@@ -2,7 +2,7 @@
 //! printing/generation, no crate delegation needed) plus `fleet console|freeze|contract|
 //! attest|adjudicate|skills`, flagged `NotYetImplemented` where their owning crate (BLUEPRINT
 //! §2's non-goals table) exposes no entry point reachable without inventing business logic here.
-//! `fleet pr` used to be in that list too; it now delegates to `pr_cmd`, see below.
+//! `fleet pr` used to be in that list too; it now dispatches straight to `pr_cmd::pr_emit`.
 
 use cli::{Cli, Commands};
 use crate::dispatch::error::DispatchError;
@@ -78,7 +78,6 @@ pub fn completions(shell: Shell) -> Result<(), DispatchError> {
     generate(shell, &mut cmd, name, &mut std::io::stdout());
     Ok(())
 }
-pub use super::pr_cmd::pr_emit;
 
 /// One named refusal per subcommand this pass could not reach a real owning-crate entry point
 /// for -- see BLUEPRINT §2's non-goals table for who owns each (fleet-stream/console,

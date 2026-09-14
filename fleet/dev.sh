@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
-# Hot-reload dev loop for the fleet CLI -- the `npm run dev` equivalent for this repo.
-# Thin wrapper over cargo-watch (the standard tool for this in Rust) so file-change
-# detection is real fs events, not a poll loop.
+# Dev entrypoint for the fleet CLI -- the `npm run dev` equivalent for this repo.
 #
 # Usage:
-#   ./dev.sh                 # watch + rebuild only (debug profile)
-#   ./dev.sh <fleet-args...> # watch + rebuild + rerun `fleet <fleet-args>` after every change
+#   ./dev.sh                 # build, then launch fleet's interactive CLI (Claude-Code-style REPL)
+#   ./dev.sh watch            # watch + rebuild loop only, never runs the binary
+#   ./dev.sh <fleet-args...>  # watch + rebuild + rerun `fleet <fleet-args>` after every change
+#
+# The bare (no-args) case execs straight into `cargo run --bin fleet --` rather than going
+# through cargo-watch: `fleet` only opens its interactive REPL when BOTH stdin and stdout are
+# a real terminal (src/main.rs's `is_terminal()` gate -- reedline's raw-mode input needs an
+# actual tty, not a pipe). cargo-watch's `--shell`/`--exec` runs the child through an
+# intermediate subshell, which does not reliably preserve tty-ness end to end; routing the
+# interactive launch through it silently falls back to fleet's --help branch instead of
+# opening the REPL. A plain `exec` here replaces this script's own process image, so the
+# terminal's fds pass straight through to `cargo run` and then to `fleet`.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -38,7 +46,9 @@ for m in "${MEMBERS[@]}"; do
     WATCH_ARGS+=(-w "$m")
 done
 
-if [[ $# -gt 0 ]]; then
+if [[ $# -eq 1 && "$1" == "watch" ]]; then
+    exec cargo watch --clear "${WATCH_ARGS[@]}" --exec "build --bin fleet"
+elif [[ $# -gt 0 ]]; then
     CMD="cargo run --bin fleet --"
     for arg in "$@"; do
         CMD+=" $(printf '%q' "$arg")"
@@ -47,5 +57,6 @@ if [[ $# -gt 0 ]]; then
     # re-parsed by bash, not whatever /bin/sh cargo-watch would otherwise default to.
     exec cargo watch --clear "${WATCH_ARGS[@]}" --use-shell bash --shell "$CMD"
 else
-    exec cargo watch --clear "${WATCH_ARGS[@]}" --exec "build --bin fleet"
+    echo "[dev] launching fleet's interactive CLI (building if needed) -- use './dev.sh watch' for a rebuild-only loop" >&2
+    exec cargo run --bin fleet --
 fi

@@ -8,7 +8,7 @@ use support::m4::{commands_variants, mentions_variant, read_or_fail_loudly};
 
 #[test]
 fn every_commands_variant_is_named_somewhere_in_the_dispatch_match() {
-    let root_rs = read_or_fail_loudly("cli/root.rs");
+    let root_rs = read_or_fail_loudly("../crates/cli/src/root.rs");
     let mod_rs = read_or_fail_loudly("dispatch/mod.rs");
     let orphaned: Vec<String> = commands_variants(&root_rs)
         .into_iter()

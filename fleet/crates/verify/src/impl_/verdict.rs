@@ -6,6 +6,8 @@ use super::denominator::Denominator;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum FailReason {
     /// The wrapped process exited nonzero; the raw code is kept for diagnostics, not normalized.
+    /// Never exit 3 -- `classify` reads that as the gate's own documented "environment fault"
+    /// signal (AGENTS.md #7) and reports `Verdict::Skip` instead.
     NonZeroExit(i32),
     /// Exit was 0, but `parse_denominator` returned `Counted(_, 0)` -- the gate measured nothing.
     MeasuredNothing,

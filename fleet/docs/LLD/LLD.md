@@ -638,7 +638,7 @@ This is a design backlog. It does not authorize implementation in this documenta
 
 Each increment includes human teach-back from a real artifact. If acceptance requires changing contracts, author the ADR first. If implementation and blueprint disagree, record it in DELTA rather than silently forcing implementation to match a flawed design. A library function and unit test do not prove a reachable complete CLI workflow.
 
-## 24. Functional requirements trace: 46 / 46 addressed in design
+## 24. Functional requirements trace: 47 / 47 addressed in design (FR47 added by Addendum 4-V)
 
 “Addressed” means a specified mechanism, boundary and acceptance idea exists. It does **not** mean implemented, remotely verified or production-ready.
 
@@ -690,6 +690,7 @@ Each increment includes human teach-back from a real artifact. If acceptance req
 | 44 | Outside-terminal notification | events/stream, §16 | Redacted deduplicated meaningful event to authorized destination |
 | 45 | Block secret commit | broker/verify, §13 | Strict mediated-edit child cannot create Git stores; broker commits only scanned tree; raw-shell tier explicitly unsupported |
 | 46 | Adopt new models without code table edit | catalog/router, §9,19 | New runtime catalog candidate enters probation, then qualified activation |
+| 47 | Local/non-git repo operation ([Addendum 4-V](LLD-META-L8-ADDENDUM-4.md#v-non-git--local-directory-execution-mode--owner-verify-srcpipeline)) | verify/pipeline, §14 | `--repo` accepted without a git worktree; the one git-dependent stage (`Merge`) records `skip`, never `pass`; machine receipt names its `repo_mode` |
 
 ## 25. Current evidence and deliberate proposal deltas
 

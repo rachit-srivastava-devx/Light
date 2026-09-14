@@ -7,6 +7,26 @@ use super::spec::GateSpec;
 use super::verdict::{FailReason, Verdict};
 
 pub(crate) fn classify(spec: &GateSpec, out: &ProcessOutput) -> Verdict {
+    // Exit 3 is this estate's documented, project-wide contract for "environment fault"
+    // (AGENTS.md #7: 0 ok / 3 environment fault / 6 invariant violation / 7 refusal / 8
+    // verification mismatch -- "an environment fault must never be reported as an agent
+    // failure"). Every fleet-authored gate script uses it exactly this way (recur-gate.sh,
+    // detector-integrity.sh, policy/run.sh, corpus/run.sh and gates/corpus/*.sh): the gate could
+    // not even attempt its check -- no git, no interpreter, no diff producible -- which is not
+    // the same claim as running the check and finding a real invariant violation (exit 6).
+    // Handled once here, gate-agnostically, so any gate following the convention gets the right
+    // outcome without teaching its own parser a private not-applicable marker for this case.
+    if out.exit_code == 3 {
+        let message = [out.stdout.trim(), out.stderr.trim()]
+            .into_iter()
+            .find(|s| !s.is_empty())
+            .unwrap_or("environment fault (exit 3), no diagnostic on stdout/stderr");
+        return Verdict::Skip {
+            reason: format!("{}: {message}", spec.id),
+            was_required: matches!(spec.requirement, super::requirement::Requirement::Required),
+        };
+    }
+
     if out.exit_code != 0 {
         let denominator = match (spec.parse_denominator)(&out.stdout, &out.stderr) {
             DenominatorResult::Counted(n, total) => Denominator::new(n, total).ok(),

@@ -5,7 +5,7 @@
 //! failing report still exited 0 -- the defect this file exists to not regress.
 
 use super::verify_ports::{resolve_gates_root, RealRunner};
-use super::verify_repo::ensure_repo;
+use super::verify_repo::ensure_repo_mode;
 use super::which_probe::WhichProbe;
 use cli::args_ctx::{GateArgs, OracleArgs};
 use crate::dispatch::error::DispatchError;
@@ -33,7 +33,7 @@ fn to_result(report: Report) -> Result<(), DispatchError> {
 }
 
 pub fn oracle(args: OracleArgs) -> Result<(), DispatchError> {
-    let repo = ensure_repo(&args.repo)?;
+    let repo = ensure_repo_mode(&args.repo, !args.no_git)?;
     let specs = super::gate_config::resolve(&repo)?;
     let gates = resolve_gates_root()?;
     let runner = RealRunner::new(repo);
@@ -43,7 +43,7 @@ pub fn oracle(args: OracleArgs) -> Result<(), DispatchError> {
 }
 
 pub fn gate(args: GateArgs) -> Result<(), DispatchError> {
-    let repo = ensure_repo(&args.repo)?;
+    let repo = ensure_repo_mode(&args.repo, !args.no_git)?;
     let specs: Vec<_> = super::gate_config::resolve(&repo)?
         .into_iter()
         .filter(|g| args.id.as_deref().map(|id| id == g.id).unwrap_or(true))

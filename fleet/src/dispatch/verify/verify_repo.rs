@@ -11,10 +11,20 @@ use super::walk::ensure_repo_readable;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// `swarm`/`gate`/`oracle` (and any caller with no opt-out) always require git.
 pub fn ensure_repo(repo: &str) -> Result<PathBuf, DispatchError> {
+    ensure_repo_mode(repo, true)
+}
+
+/// `ensure_repo` with the git-worktree check made conditional. `fleet run --no-git` is the only
+/// caller that ever passes `git_required: false` -- `ensure_repo_readable` (a mistyped/unreadable
+/// path) still always applies; only the git check becomes opt-in.
+pub fn ensure_repo_mode(repo: &str, git_required: bool) -> Result<PathBuf, DispatchError> {
     let path = Path::new(repo).to_path_buf();
     ensure_repo_readable(&path)?;
-    ensure_git_worktree(&path)?;
+    if git_required {
+        ensure_git_worktree(&path)?;
+    }
     Ok(path)
 }
 

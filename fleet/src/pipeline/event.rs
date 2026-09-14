@@ -51,6 +51,10 @@ pub struct PipelineOutcome {
     pub gates: Vec<GateRecord>,
     /// The refusal reason, verbatim -- the same text the human path prints after `REFUSED`.
     pub refusal: Option<String>,
+    /// `"git"` or `"no-git"`, driven by `fleet run --no-git` (absent that flag, always `"git"`).
+    /// Lets a `--json` consumer tell "Merge ran" from "Merge was structurally unavailable" --
+    /// a run that skipped merge must not read as a run that merged.
+    pub repo_mode: &'static str,
 }
 
 /// What a stage handed back beyond pass/fail. Only `Classify` carries data today; every other
@@ -58,4 +62,7 @@ pub struct PipelineOutcome {
 pub enum StageOutput {
     None,
     Classified(Box<route::Decision>),
+    /// The stage was structurally unavailable this run (only `Merge`, only under `--no-git`) and
+    /// was never attempted -- distinct from `None`'s "ran and succeeded".
+    Skipped,
 }

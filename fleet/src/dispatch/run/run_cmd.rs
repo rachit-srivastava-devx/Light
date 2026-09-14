@@ -8,58 +8,39 @@
 //! to `run_pipeline_on` -- one task_id, N repos, one aggregated verdict. The final exit code is
 //! the worst of the set. Sequential is intentional (single-machine concurrency cap).
 
-use cli::args_ops::RunArgs;
 use crate::dispatch::error::DispatchError;
 use crate::dispatch::plan_cmd::{plan_modules, sow_modules};
+use crate::dispatch::runtime_snapshot::healthy_runtime;
 use crate::pipeline::{maybe_flush, run_pipeline};
-use print::json;
+use cli::args_ops::RunArgs;
 use integrate::LaneManager;
-use std::collections::{BTreeMap, BTreeSet};
+use print::json;
 use std::path::Path;
 use types::{Module, TaskId};
-
-/// Every candidate confirmed installed, with an unmeasured-but-generous quota window and no
-/// cooldown -- the "everything is healthy" default a fresh CLI invocation has no better basis to
-/// assume (real measured values are `fleet-govern`'s job, not this composition root's).
-fn healthy_runtime() -> route::RuntimeState {
-    let preference: Vec<&'static str> = route::ORDER.iter().map(|c| c.id).collect();
-    let capable = route::ORDER
-        .iter()
-        .map(|c| c.adapter)
-        .collect::<BTreeSet<_>>();
-    let remaining = capable
-        .iter()
-        .map(|a| (a.to_string(), Some(u64::MAX)))
-        .collect::<BTreeMap<_, _>>();
-    route::RuntimeState {
-        capable,
-        remaining,
-        cooldown: BTreeSet::new(),
-        required_tokens: 0,
-        preference,
-    }
-}
 
 /// Shared entrypoint for the verify pipeline. `run` is the CLI-invoked path (looping per
 /// `--repo`); `swarm_cmd`'s `--then-verify` reuses this same function so the two never drift
 /// (BLUEPRINT §5: one composition root per subcommand). String args match `swarm_cmd`'s call
-/// site; `json` mirrors `RunArgs::json`.
+/// site; `json` mirrors `RunArgs::json`. `no_git` mirrors `RunArgs::no_git` -- `swarm_cmd` always
+/// passes `false`, since its own intake already required a git worktree.
 pub(crate) fn run_pipeline_on(
     state_dir: &Path,
     repo: String,
     task_id: String,
     json: bool,
+    no_git: bool,
 ) -> Result<(), DispatchError> {
     let task = TaskId::parse(task_id).map_err(|e| DispatchError::Refusal(e.to_string()))?;
     // Intake: refuse a `--repo` that isn't a git worktree up front, with an actionable
     // message -- otherwise the failure surfaces deep in the verify stage on a per-gate `git`
     // command, which is what happens today on `/Users/.../work/Frido` (a directory holding
-    // three sibling checkouts). Same helper `oracle`/`gate` already use.
-    let repo = super::verify_repo::ensure_repo(&repo)?;
+    // three sibling checkouts). Same helper `oracle`/`gate` already use, except this call site
+    // alone can opt out of the git check via `--no-git`.
+    let repo = super::verify_repo::ensure_repo_mode(&repo, !no_git)?;
     // The committed table with this repo's `.fleet/gates.toml` applied -- identical to
     // `verify::GATES` when the repo has no such file (see `gate_config`).
     let gates = super::gate_config::resolve(&repo)?;
-    let outcome = run_pipeline(state_dir, &repo, task, &healthy_runtime(), &gates);
+    let outcome = run_pipeline(state_dir, &repo, task, &healthy_runtime(), &gates, !no_git);
     maybe_flush(state_dir);
     if json {
         json::print_pretty(&outcome);
@@ -77,7 +58,7 @@ pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
     // nonexistent/unreadable paths). Refuse before running anything so a bad path in position 3
     // doesn't leave repos 1-2 with completed receipts.
     for r in &args.repos {
-        super::verify_repo::ensure_repo(r)?;
+        super::verify_repo::ensure_repo_mode(r, !args.no_git)?;
     }
     // Sequential loop -- single-machine concurrency cap governs per-repo work; per-PR-scope
     // this stays serial. Same task_id across all repos so the ledger correlates the set.
@@ -85,7 +66,13 @@ pub fn run(state_dir: &Path, args: RunArgs) -> Result<(), DispatchError> {
     let mut passed = 0usize;
     let total = args.repos.len();
     for repo in &args.repos {
-        match run_pipeline_on(state_dir, repo.clone(), args.task.clone(), args.json) {
+        match run_pipeline_on(
+            state_dir,
+            repo.clone(),
+            args.task.clone(),
+            args.json,
+            args.no_git,
+        ) {
             Ok(()) => {
                 passed += 1;
                 if !args.json {
@@ -188,6 +175,7 @@ pub fn pipeline_probe(
         task,
         &healthy_runtime(),
         NO_GATES,
+        true, // this hidden probe has no `--no-git`; every caller in tree uses a real git repo.
     );
     maybe_flush(state_dir);
     json::print_pretty(&outcome);

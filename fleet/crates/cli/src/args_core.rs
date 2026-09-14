@@ -21,6 +21,11 @@ pub struct MeterArgs {
 pub struct RouteArgs {
     #[arg(long)]
     pub role: Option<String>,
+    /// The builder's resolved model (e.g. "sonnet", "codex"). `--role verifier` refuses every
+    /// candidate whose resolved model would match an unknown builder -- pass this to give the
+    /// verifier-independence check something to compare against. Ignored for other roles.
+    #[arg(long)]
+    pub builder_model: Option<String>,
     #[arg(long)]
     pub json: bool,
 }

@@ -17,6 +17,10 @@ pub struct GateArgs {
     /// spawned gate's `.current_dir()` -- see `verify_runner_bounded.rs` (S1 fix).
     #[arg(long, default_value = ".")]
     pub repo: String,
+    /// Opt-in: `--repo` may be a plain directory, not a git worktree. `gate` never touched git
+    /// itself; this only relaxes the intake check `run --no-git` also relaxes.
+    #[arg(long = "no-git")]
+    pub no_git: bool,
 }
 
 /// `fleet oracle --repo <path>`: previously accepted no `--repo` at all (S1), always verifying
@@ -25,6 +29,9 @@ pub struct GateArgs {
 pub struct OracleArgs {
     #[arg(long, default_value = ".")]
     pub repo: String,
+    /// See `GateArgs::no_git` -- same opt-in, same reasoning: `oracle` never touched git itself.
+    #[arg(long = "no-git")]
+    pub no_git: bool,
 }
 
 #[derive(Args, Debug)]

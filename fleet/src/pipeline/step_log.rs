@@ -16,17 +16,33 @@ use std::path::{Path, PathBuf};
 mod step_log_module_id;
 #[path = "step_log_module.rs"]
 mod step_log_module;
+#[path = "step_log_repo_key.rs"]
+mod step_log_repo_key;
 #[allow(unused_imports)] // not yet consumed outside this module -- see its own TODO
 pub use step_log_module_id::ModuleId;
+use step_log_repo_key::repo_key;
 
 pub struct StepLog {
     path: PathBuf,
 }
 
 impl StepLog {
-    pub fn open(state_dir: &Path, task_id: &str) -> Self {
+    /// Task-only, no repo scoping -- kept for `step_log_tests.rs` to exercise the underlying
+    /// resume/reopen mechanic in isolation. Production must go through `open_for_repo`: an
+    /// unscoped log is exactly the defect this file exists to prevent (see its doc comment).
+    #[cfg(test)]
+    fn open(state_dir: &Path, task_id: &str) -> Self {
         Self {
             path: state_dir.join(format!("{task_id}.steps.json")),
+        }
+    }
+
+    /// The step log for one (task, repo) pair -- what `run_pipeline` must use so N `--repo`s
+    /// under one task_id in one `fleet run` invocation get N independent step logs instead of
+    /// silently sharing (and short-circuiting on) one.
+    pub fn open_for_repo(state_dir: &Path, task_id: &str, repo: &Path) -> Self {
+        Self {
+            path: state_dir.join(format!("{task_id}.{}.steps.json", repo_key(repo))),
         }
     }
 
