@@ -37,13 +37,12 @@ fn fmt_elapsed(d: Duration) -> String {
 
 pub fn render(event: &Event, style: &Style) -> String {
     match event {
-        Event::StageStarted { stage } => {
-            format!(
-                "{} stage {}",
-                style.paint(style::CYAN, "\u{25b6}"),
-                style.paint(style::BOLD, stage)
-            )
-        }
+        Event::StageStarted { stage, lld_node } => format!(
+            "{} stage {} {}",
+            style.paint(style::CYAN, "\u{25b6}"),
+            style.paint(style::BOLD, stage),
+            style.paint(style::CYAN, &format!("[{lld_node}]"))
+        ),
         Event::StageFinished {
             stage,
             outcome,

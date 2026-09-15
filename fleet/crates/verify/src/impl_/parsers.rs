@@ -5,10 +5,10 @@
 use super::denominator::DenominatorResult as D;
 use super::digits::{after, before};
 
-#[path = "parsers_suite.rs"]
-mod parsers_suite;
 #[path = "parsers_scanners.rs"]
 mod parsers_scanners;
+#[path = "parsers_suite.rs"]
+mod parsers_suite;
 pub use parsers_scanners::{semgrep, trivy};
 pub use parsers_suite::unit_tests;
 
@@ -74,3 +74,7 @@ pub fn corpus(stdout: &str, _stderr: &str) -> D {
 }
 
 // `unit_tests` (a repo's own test-runner summary, three formats) lives in `parsers_suite.rs`.
+
+#[cfg(test)]
+#[path = "parsers_tests.rs"]
+mod tests;

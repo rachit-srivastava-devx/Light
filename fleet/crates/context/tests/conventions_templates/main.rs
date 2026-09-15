@@ -29,7 +29,11 @@ fn a_bare_repo_discovers_nothing() {
 #[test]
 fn a_repo_missing_templates_is_unambiguously_detectable_for_enforcement() {
     let root = tempdir().expect("tempdir");
-    std::fs::write(root.path().join("README.md"), "# a repo with no conventions").unwrap();
+    std::fs::write(
+        root.path().join("README.md"),
+        "# a repo with no conventions",
+    )
+    .unwrap();
     let found = kinds(root.path(), root.path());
     let has_pr_template = found.iter().any(|(_, k)| *k == DocKind::PrTemplate);
     let has_contributing = found.iter().any(|(_, k)| *k == DocKind::Contributing);
@@ -123,9 +127,7 @@ fn single_file_and_directory_pr_templates_can_coexist() {
     .unwrap();
     let found = kinds(root.path(), root.path());
     assert_eq!(found.len(), 2, "both forms must surface: {found:?}");
-    assert!(found
-        .iter()
-        .all(|(_, k)| *k == DocKind::PrTemplate));
+    assert!(found.iter().all(|(_, k)| *k == DocKind::PrTemplate));
 }
 
 /// Non-`.md` files and unrelated files in `.github/` are not templates.
@@ -152,7 +154,10 @@ fn templates_tie_break_alphabetically_against_root_level_docs() {
     assert_eq!(
         found,
         vec![
-            (".github/PULL_REQUEST_TEMPLATE.md".to_string(), DocKind::PrTemplate),
+            (
+                ".github/PULL_REQUEST_TEMPLATE.md".to_string(),
+                DocKind::PrTemplate
+            ),
             ("AGENTS.md".to_string(), DocKind::AgentsMd),
         ]
     );
@@ -200,7 +205,10 @@ fn nested_agents_md_layering_and_templates_combine_nearest_wins() {
         vec![
             ("crates/approval/AGENTS.md".to_string(), DocKind::AgentsMd),
             ("crates/AGENTS.md".to_string(), DocKind::AgentsMd),
-            (".github/PULL_REQUEST_TEMPLATE.md".to_string(), DocKind::PrTemplate),
+            (
+                ".github/PULL_REQUEST_TEMPLATE.md".to_string(),
+                DocKind::PrTemplate
+            ),
             ("AGENTS.md".to_string(), DocKind::AgentsMd),
         ],
         "nearest AGENTS.md must sort first, root-precedence docs tie-break by path: {found:?}"

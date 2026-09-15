@@ -5,7 +5,7 @@
 
 use crate::dispatch::error::DispatchError;
 use print::human;
-use runtime::capacity::{preflight, Measurement, PreflightConfig, StdCapacityProbe};
+use runtime::capacity::{Measurement, PreflightConfig, StdCapacityProbe, preflight};
 
 pub fn report(review_cap: usize, ram_lanes_ceiling: Option<usize>) -> Result<(), DispatchError> {
     let probe = StdCapacityProbe;

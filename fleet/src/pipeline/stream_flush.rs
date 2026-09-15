@@ -7,11 +7,11 @@
 
 use super::ledger_events;
 use super::ledger_log_source::LedgerLogSource;
+use notify::sinks::FileSink;
+use notify::{CursorStore, FileCursorStore, LogSource, Sink, SinkError, StreamEvent};
 use print::human_stream::emit;
 use print::render_event::Event;
 use print::style::Style;
-use notify::sinks::FileSink;
-use notify::{CursorStore, FileCursorStore, LogSource, Sink, SinkError, StreamEvent};
 use std::path::Path;
 
 pub const FLEET_STREAM_DIR: &str = "FLEET_STREAM_DIR";

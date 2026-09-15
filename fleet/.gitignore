@@ -27,3 +27,6 @@ var/
 # lives at `<repo>/.fleet-state`; override with FLEET_STATE_DIR (NOT `FLEET_STATE` -- see
 # src/runtime/config.rs, figment reads `state_dir` under the `FLEET_` prefix).
 .fleet-state/
+
+# dev.sh's background build-watcher pid/log, machine-local (see ensure_background_watcher).
+.dev-watch/

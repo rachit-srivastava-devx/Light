@@ -19,8 +19,13 @@ use super::super::digits::{after, before};
 /// configured Jest/Vitest gate could never publish a denominator.
 pub fn unit_tests(stdout: &str, stderr: &str) -> D {
     // libtest: "N passed; M failed;" -- always on stdout.
-    if let Some((p, f)) = before(stdout, " passed;").zip(before(stdout, " failed;")) {
-        return D::Counted(p, p + f);
+    if let Some(line) = stdout
+        .lines()
+        .find(|line| line.trim_start().starts_with("test result:") && line.contains(" passed;"))
+    {
+        if let Some((p, f)) = before(line, " passed;").zip(before(line, " failed;")) {
+            return D::Counted(p, p + f);
+        }
     }
     // Jest and Vitest print their summary to STDERR (verified against posx-frido-backend's
     // `npm run --silent test:unit`). Scan both so the parser does not depend on which stream a

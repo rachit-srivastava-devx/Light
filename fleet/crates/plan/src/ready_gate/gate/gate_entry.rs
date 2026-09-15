@@ -1,7 +1,7 @@
-use super::evaluate;
 use super::super::gate_types::{GateRefs, Verdict};
 use super::super::module_brief::validate_module_brief;
 use super::super::violation::Violation;
+use super::evaluate;
 use serde_json::Value;
 
 /// Shape-then-readiness, as one pure function.

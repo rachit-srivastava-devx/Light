@@ -5,7 +5,7 @@
 use crate::pipeline::event::PipelineOutcome;
 use crate::pipeline::stage::PipelineStage;
 use print::style::Style;
-use print::summary::{render_summary, Checks, Summary};
+use print::summary::{Checks, Summary, render_summary};
 
 /// How many stages the pipeline attempted to reach `final_stage`, inclusive. Derived from the
 /// canonical `PipelineStage::ALL` order so adding a stage cannot leave this count stale.

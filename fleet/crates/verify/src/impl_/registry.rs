@@ -1,7 +1,3 @@
-//! The committed gate table -- mirrors `verify.sh`'s `stage "name" req probe reason cmd...`
-//! call list, retyped as data. Each entry maps one gate family from the reuse map (§5) to its
-//! `ProbeTool`, requirement level, and stdout parser.
-
 use super::parsers;
 use super::requirement::{ProbeTool, Requirement};
 use super::spec::{GateCommand, GateSpec};

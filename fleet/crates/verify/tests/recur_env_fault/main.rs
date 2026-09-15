@@ -8,7 +8,7 @@
 use std::path::Path;
 use std::process::Command;
 
-use verify::{GatesRoot, ProbeTool, ProcessOutput, ProcessRunner, ToolProbe, Verdict, GATES};
+use verify::{GATES, GatesRoot, ProbeTool, ProcessOutput, ProcessRunner, ToolProbe, Verdict};
 
 struct AlwaysAvailable;
 impl ToolProbe for AlwaysAvailable {
@@ -55,39 +55,20 @@ fn recur_spec() -> &'static verify::GateSpec {
 
 fn assert_env_fault_skip(result: verify::GateResult) {
     match result.verdict {
-        Verdict::Skip { was_required, ref reason } => {
-            assert!(was_required, "recur is Required, so its skip must count in Report::env_faults(): {reason}");
+        Verdict::Skip {
+            was_required,
+            ref reason,
+        } => {
+            assert!(
+                was_required,
+                "recur is Required, so its skip must count in Report::env_faults(): {reason}"
+            );
         }
-        other => panic!("expected Verdict::Skip (env fault, exit 3), got {other:?} -- not an invariant violation (AGENTS.md #7)"),
+        other => panic!(
+            "expected Verdict::Skip (env fault, exit 3), got {other:?} -- not an invariant violation (AGENTS.md #7)"
+        ),
     }
 }
 
-#[test]
-fn exit_3_is_skip_not_fail_for_a_synthetic_env_fault() {
-    let spec = recur_spec();
-    let gates = GatesRoot::materialize().expect("materialize embedded gate scripts");
-    let runner = Canned(ProcessOutput {
-        exit_code: 3,
-        stdout: "recur-gate: repo /does/not/exist not accessible".to_string(),
-        stderr: String::new(),
-    });
-
-    let result = verify::run_gate(spec, &AlwaysAvailable, &runner, &gates);
-    assert_env_fault_skip(result);
-}
-
-#[test]
-fn recur_reports_skip_not_fail_when_target_repo_has_no_git() {
-    let plain_dir = tempfile::tempdir().expect("tempdir");
-    // Sanity: genuinely not a git repo, or this test would pass downstream for the wrong reason.
-    assert!(!plain_dir.path().join(".git").exists());
-
-    let spec = recur_spec();
-    let gates = GatesRoot::materialize().expect("materialize embedded gate scripts");
-    let runner = RealShellRunner {
-        repo: plain_dir.path(),
-    };
-
-    let result = verify::run_gate(spec, &AlwaysAvailable, &runner, &gates);
-    assert_env_fault_skip(result);
-}
+#[path = "recur_tests.rs"]
+mod tests;

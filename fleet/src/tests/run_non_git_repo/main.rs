@@ -22,9 +22,9 @@
 //! **Out of scope for this node:** `swarm`/`gate`/`oracle` intake, `crates/merge` worktree
 //! isolation, `crates/builder` spawn/change-detect, `fleet pr`, rollback. All inherently git.
 
+mod fixture;
 #[path = "../support/mod.rs"]
 mod support;
-mod fixture;
 
 use fixture::{git_dir, plain_dir, run, stage, why};
 use serde_json::Value;
@@ -34,7 +34,11 @@ use serde_json::Value;
 fn plain_non_git_directory_runs_green_with_the_flag() {
     let repo = plain_dir();
     let (out, json) = run(repo.path(), &["--no-git"]);
-    assert!(out.status.success(), "--no-git must accept a plain dir: {}", why(&out));
+    assert!(
+        out.status.success(),
+        "--no-git must accept a plain dir: {}",
+        why(&out)
+    );
     let v = json.unwrap_or_else(|| panic!("--json must print one outcome: {}", why(&out)));
     assert_eq!(v["final_stage"], "Teach", "a green run ends at Teach: {v}");
     assert_eq!(v["refusal"], Value::Null, "no refusal on a green run: {v}");
@@ -48,8 +52,15 @@ fn merge_is_recorded_as_skipped_never_as_passed() {
     let (out, json) = run(repo.path(), &["--no-git"]);
     let v = json.unwrap_or_else(|| panic!("--json must print one outcome: {}", why(&out)));
     let merge = stage(&v, "Merge");
-    assert_eq!(merge["outcome"], "skip", "Merge must be skipped, not passed/failed: {merge}");
-    assert_eq!(merge["elapsed_ms"], Value::Null, "a skipped stage spent no time: {merge}");
+    assert_eq!(
+        merge["outcome"], "skip",
+        "Merge must be skipped, not passed/failed: {merge}"
+    );
+    assert_eq!(
+        merge["elapsed_ms"],
+        Value::Null,
+        "a skipped stage spent no time: {merge}"
+    );
 }
 
 /// The receipt names its own mode, both ways: a consumer must be able to tell "merged" from
@@ -59,13 +70,23 @@ fn json_declares_repo_mode_on_both_paths() {
     let plain = plain_dir();
     let (out, json) = run(plain.path(), &["--no-git"]);
     let v = json.unwrap_or_else(|| panic!("--json must print one outcome: {}", why(&out)));
-    assert_eq!(v["repo_mode"], "no-git", "no-git run must declare its mode: {v}");
+    assert_eq!(
+        v["repo_mode"], "no-git",
+        "no-git run must declare its mode: {v}"
+    );
 
     let git = git_dir();
     let (out, json) = run(git.path(), &[]);
     let v = json.unwrap_or_else(|| panic!("--json must print one outcome: {}", why(&out)));
-    assert_eq!(v["repo_mode"], "git", "the default path must declare git mode: {v}");
-    assert_eq!(stage(&v, "Merge")["outcome"], "pass", "git path still merges: {v}");
+    assert_eq!(
+        v["repo_mode"], "git",
+        "the default path must declare git mode: {v}"
+    );
+    assert_eq!(
+        stage(&v, "Merge")["outcome"],
+        "pass",
+        "git path still merges: {v}"
+    );
 }
 
 /// The gates really executed in `--repo`, not in the test process's cwd. Every gate command is
@@ -75,13 +96,21 @@ fn gates_execute_with_the_plain_directory_as_cwd() {
     let repo = plain_dir();
     let (out, json) = run(repo.path(), &["--no-git"]);
     let v = json.unwrap_or_else(|| panic!("--json must print one outcome: {}", why(&out)));
-    let gates = v["gates"].as_array().unwrap_or_else(|| panic!("no gates array: {v}"));
+    let gates = v["gates"]
+        .as_array()
+        .unwrap_or_else(|| panic!("no gates array: {v}"));
     let unit = gates
         .iter()
         .find(|g| g["id"] == "unit tests")
         .unwrap_or_else(|| panic!("no 'unit tests' gate record: {v}"));
-    assert_eq!(unit["verdict"], "pass", "marker-guarded gate passed => right cwd: {unit}");
-    assert_eq!(unit["checked"], 3, "denominator published, not null: {unit}");
+    assert_eq!(
+        unit["verdict"], "pass",
+        "marker-guarded gate passed => right cwd: {unit}"
+    );
+    assert_eq!(
+        unit["checked"], 3,
+        "denominator published, not null: {unit}"
+    );
     assert_eq!(unit["total"], 3, "denominator published, not null: {unit}");
 }
 
@@ -91,9 +120,17 @@ fn gates_execute_with_the_plain_directory_as_cwd() {
 fn plain_directory_without_the_flag_still_refuses_with_exit_3() {
     let repo = plain_dir();
     let (out, _) = run(repo.path(), &[]);
-    assert_eq!(out.status.code(), Some(3), "env fault is exit 3: {}", why(&out));
+    assert_eq!(
+        out.status.code(),
+        Some(3),
+        "env fault is exit 3: {}",
+        why(&out)
+    );
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(stderr.contains("not a git repository"), "message unchanged: {stderr}");
+    assert!(
+        stderr.contains("not a git repository"),
+        "message unchanged: {stderr}"
+    );
 }
 
 /// `--no-git` on a real git worktree is legal and merely declines the merge -- so a wrapper that
@@ -102,8 +139,19 @@ fn plain_directory_without_the_flag_still_refuses_with_exit_3() {
 fn flag_on_a_real_git_worktree_is_legal_and_skips_merge() {
     let repo = git_dir();
     let (out, json) = run(repo.path(), &["--no-git"]);
-    assert!(out.status.success(), "--no-git on a git repo is not an error: {}", why(&out));
+    assert!(
+        out.status.success(),
+        "--no-git on a git repo is not an error: {}",
+        why(&out)
+    );
     let v = json.unwrap_or_else(|| panic!("--json must print one outcome: {}", why(&out)));
-    assert_eq!(stage(&v, "Merge")["outcome"], "skip", "flag wins over detection: {v}");
-    assert_eq!(v["repo_mode"], "no-git", "declared mode, not detected mode: {v}");
+    assert_eq!(
+        stage(&v, "Merge")["outcome"],
+        "skip",
+        "flag wins over detection: {v}"
+    );
+    assert_eq!(
+        v["repo_mode"], "no-git",
+        "declared mode, not detected mode: {v}"
+    );
 }

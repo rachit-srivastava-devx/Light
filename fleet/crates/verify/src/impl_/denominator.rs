@@ -48,3 +48,15 @@ pub enum DenominatorResult {
     /// cannot be used to dodge the `MeasuredNothing` invariant by staying silent.
     NotApplicable,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Denominator;
+
+    #[test]
+    fn accessors_publish_the_original_integer_pair() {
+        let denominator = Denominator::new(7, 9).expect("positive total");
+        assert_eq!(denominator.numerator(), 7);
+        assert_eq!(denominator.total(), 9);
+    }
+}

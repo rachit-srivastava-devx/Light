@@ -1,6 +1,5 @@
 //! Orchestration -- the only two fns that touch the injected traits.
 
-use super::classify::classify;
 use super::gates::GatesRoot;
 use super::ports::{ProcessRunner, ToolProbe};
 use super::report::Report;
@@ -8,7 +7,10 @@ use super::requirement::Requirement;
 use super::spec::{GateCommand, GateSpec};
 use super::verdict::{GateResult, Verdict};
 
-fn skip(spec: &GateSpec, reason: String) -> GateResult {
+#[path = "orchestrate_output.rs"]
+pub(crate) mod gate_output;
+
+pub(super) fn skip(spec: &GateSpec, reason: String) -> GateResult {
     GateResult {
         id: spec.id,
         verdict: Verdict::Skip {
@@ -20,7 +22,7 @@ fn skip(spec: &GateSpec, reason: String) -> GateResult {
 
 /// Build this gate's argv, resolving a `Script` variant's path against `gates` first. Returns
 /// owned strings -- a resolved script path cannot be `'static`.
-fn resolve_argv(spec: &GateSpec, gates: &GatesRoot) -> Result<Vec<String>, GateResult> {
+pub(super) fn resolve_argv(spec: &GateSpec, gates: &GatesRoot) -> Result<Vec<String>, GateResult> {
     match spec.command {
         GateCommand::OnPath(args) => Ok(args.iter().map(|s| s.to_string()).collect()),
         GateCommand::Script { relative, args } => match gates.require(relative) {
@@ -37,34 +39,15 @@ fn resolve_argv(spec: &GateSpec, gates: &GatesRoot) -> Result<Vec<String>, GateR
     }
 }
 
-/// Run one gate to completion: probe -> (skip | resolve -> run -> classify). Never panics; every
-/// branch produces a `GateResult`.
 pub fn run_gate(
     spec: &GateSpec,
     probe: &dyn ToolProbe,
     runner: &dyn ProcessRunner,
     gates: &GatesRoot,
 ) -> GateResult {
-    if !probe.available(spec.probe) {
-        return skip(
-            spec,
-            format!("{} {}", spec.id, probe.unavailable_reason(spec.probe)),
-        );
-    }
-    let argv = match resolve_argv(spec, gates) {
-        Ok(argv) => argv,
-        Err(result) => return result,
-    };
-    let argv: Vec<&str> = argv.iter().map(String::as_str).collect();
-    let out = runner.run(&argv);
-    GateResult {
-        id: spec.id,
-        verdict: classify(spec, &out),
-    }
+    gate_output::run_gate_with_output(spec, probe, runner, gates).0
 }
 
-/// Run every committed gate in order, in a fresh `Report`. Gates are independent -- nothing here
-/// assumes gate N's outcome affects gate N+1's inputs.
 pub fn run_all(
     specs: &[GateSpec],
     probe: &dyn ToolProbe,
@@ -78,3 +61,7 @@ pub fn run_all(
             .collect(),
     }
 }
+
+#[cfg(test)]
+#[path = "orchestrate_tests.rs"]
+mod tests;

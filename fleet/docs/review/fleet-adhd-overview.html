@@ -1,0 +1,572 @@
+<title>Fleet at a Glance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ink:#0A0A0A; --ink-2:#1A1A1A; --muted:#5C6066; --muted-2:#8A8F96;
+  --rule:#E5E5E5; --rule-2:#F0F0F0;
+  --paper:#FFFFFF; --paper-2:#FAFAF8; --paper-3:#F4F4F1;
+  --accent:#1E6FFF; --accent-soft:#E8F0FF;
+  --warn:#C0392B; --ok:#0A7C53;
+  --f-display:'Inter Tight',-apple-system,BlinkMacSystemFont,sans-serif;
+  --f-serif:'Source Serif 4',Georgia,serif;
+  --f-mono:'JetBrains Mono','SFMono-Regular',monospace;
+}
+*{box-sizing:border-box}
+body{font-family:var(--f-display); color:var(--ink); background:var(--paper); font-size:15px; line-height:1.5; margin:0}
+main{max-width:920px; margin:0 auto; padding:36px 20px 100px}
+.eyebrow{font-family:var(--f-mono); font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--accent); margin:0 0 12px}
+h1{font-weight:600; font-size:clamp(26px,4vw,38px); letter-spacing:-0.02em; line-height:1.1; margin:0 0 10px}
+h1 em{font-family:var(--f-serif); font-style:italic; font-weight:400; color:var(--accent)}
+.lede{font-size:16px; color:var(--muted); max-width:64ch; margin:0 0 22px}
+.lede b{color:var(--ink); font-weight:600}
+h2{font-weight:600; font-size:20px; letter-spacing:-0.01em; margin:0 0 4px}
+h2 em{font-family:var(--f-serif); font-style:italic; font-weight:400; color:var(--accent)}
+.secnum{font-family:var(--f-mono); font-size:10.5px; letter-spacing:.1em; color:var(--accent); margin-bottom:4px}
+.deck{color:var(--muted); font-size:14px; max-width:68ch; margin:0 0 18px}
+section{padding:34px 0; border-top:1px solid var(--rule)}
+section.first{border-top:none; padding-top:0}
+
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); margin:22px 0}
+.stats div{padding:14px 16px 16px; border-right:1px solid var(--rule)}
+.stats div:last-child{border-right:none}
+.stats .n{font-weight:500; font-size:32px; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; line-height:1; color:var(--ink)}
+.stats .n.acc{color:var(--accent)}
+.stats .l{font-family:var(--f-mono); font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-top:8px; line-height:1.5}
+
+.callout{border:1px solid var(--rule); background:var(--paper-2); padding:14px 18px; margin:0 0 18px; max-width:74ch; border-left:2px solid var(--accent)}
+.callout .h{font-family:var(--f-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px; color:var(--muted)}
+.callout p{margin:0; color:var(--ink-2)}
+
+.tw{overflow-x:auto; margin:0 0 8px; border:1px solid var(--rule)}
+table{width:100%; border-collapse:collapse; font-size:12.6px}
+th,td{text-align:left; padding:9px 11px; border-bottom:1px solid var(--rule-2); vertical-align:top}
+tr:last-child td{border-bottom:none}
+th{font-family:var(--f-mono); font-size:9px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:500; background:var(--paper-2); border-bottom:1px solid var(--rule)}
+td.num,th.num{font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
+.note{font-size:11.5px; color:var(--muted-2); margin:8px 0 0}
+
+.tag{font-family:var(--f-mono); font-size:9px; font-weight:500; padding:2px 6px; border:1px solid; white-space:nowrap; letter-spacing:.03em}
+.tag.na{color:var(--muted); border-color:var(--rule)}
+.tag.acc{color:var(--accent); border-color:var(--accent)}
+.tag.done{color:var(--ok); border-color:var(--ok)}
+.tag.prog{color:var(--accent); border-color:var(--accent)}
+
+figure{margin:0 0 8px}
+figure svg{width:100%; height:auto; display:block; border:1px solid var(--rule); background:var(--paper-2)}
+figcaption{font-family:var(--f-mono); font-size:10.5px; color:var(--muted); margin-top:10px; line-height:1.55}
+.svg-l{font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; fill:#0A0A0A}
+.svg-s{font-family:'JetBrains Mono',monospace; font-size:7.2px; fill:#5C6066}
+.svg-t{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.06em; fill:#5C6066}
+.nb{fill:#FFFFFF; stroke:#0A0A0A; stroke-width:1}
+.nb-g{fill:#E8F0FF; stroke:#1E6FFF; stroke-width:1.3}
+.nb-s{fill:#F4F4F1; stroke:#8A8F96; stroke-width:1}
+.ln{stroke:#0A0A0A; stroke-width:1.3; fill:none}
+.ln-d{stroke:#1E6FFF; stroke-width:1.3; fill:none; stroke-dasharray:4 3}
+.lane{fill:#FAFAF8; stroke:#E5E5E5; stroke-width:1}
+
+footer{border-top:1px solid var(--ink); margin-top:20px; padding-top:18px; font-size:11px; color:var(--muted); font-family:var(--f-mono); line-height:1.7}
+</style>
+
+<main>
+<section class="first">
+  <p class="eyebrow">Fleet · local coding harness · proposal, not built yet</p>
+  <h1>Fleet in <em>one look</em></h1>
+  <p class="lede">A local tool that plans, builds, checks and ships code with AI agents &mdash; while a small deterministic controller keeps final say over everything risky.<br>Source: <code>docs/LLD/LLD.md</code>, checked 2026-09-11&ndash;13.</p>
+
+  <div class="stats">
+    <div><div class="n">36</div><div class="l">Named parts,<br>all in the diagram below</div></div>
+    <div><div class="n acc">8</div><div class="l">Build stages,<br>1 done, 1 in progress</div></div>
+    <div><div class="n">~90</div><div class="l">Agent-days to build<br>(estimate, see table)</div></div>
+    <div><div class="n">$0</div><div class="l">Fleet's own cost &mdash;<br>you pay only your CLI agent</div></div>
+  </div>
+
+  <div class="callout">
+    <div class="h">The one thing to remember</div>
+    <p>You talk or type a request. Fleet plans it in small, reviewed pieces, builds pieces in parallel, checks every piece twice, and asks you before anything leaves your machine. Nothing below changes that shape &mdash; it's the detail behind it.</p>
+  </div>
+</section>
+
+<section>
+  <div class="secnum">00 &middot; MARKET</div>
+  <h2>This already has a market &mdash; <em>others sell it today</em></h2>
+  <p class="deck">The plan is a product, the same shape as a retail OS: one thing every dev team needs, sold as a seat. Six reference points, not a novel bet &mdash; from a human-in-the-loop IDE to fully autonomous engineers at billion-dollar valuations.</p>
+  <div class="tw">
+    <table>
+      <tr><th style="width:170px">Reference</th><th>What it is</th><th>Why it matters here</th></tr>
+      <tr><td><strong><a href="https://www.humanlayer.dev/">HumanLayer</a></strong></td><td>Closest shape to Fleet today: a QRSPI cycle (Questions &rarr; Research &rarr; Design &rarr; Structure &rarr; Plan &rarr; Implement) with a mandatory human checkpoint at every phase</td><td>Proof the category sells now, at roughly <strong>$100/month per seat</strong> &mdash; but it stops at implement: no automated verify, gate, or merge step of its own</td></tr>
+      <tr><td><strong><a href="https://github.com/slee-persis/GVS5H">GVS5H</a></strong></td><td>Not a product &mdash; the Qwen team's own proof-of-concept for the self-orchestration technique Fleet's repair loop already benchmarks against (<code>LLD-META-L8-ADDENDUM-2.md</code> &amp; <code>-3.md</code>)</td><td>Per its authors, a 32B-parameter Qwen model outperformed Fable 5 on it &mdash; a data point on model choice, not on Fleet itself</td></tr>
+      <tr><td><strong><a href="https://www.ycombinator.com/companies/ara">Ara</a></strong> <span class="tag acc">YC</span></td><td>A closed loop, in its own words: suggest &rarr; act &rarr; learn &rarr; improve &mdash; background agents, persistent memory, reusable skills</td><td>The closest full-loop match to Fleet's shape of all six &mdash; same suggest/build/learn cycle, same background-agent model as Phase 3</td></tr>
+      <tr><td><strong><a href="https://www.factory.ai/">Factory</a> (Droids)</strong></td><td>Droids handle plan &rarr; code &rarr; test &rarr; review &rarr; deploy &rarr; monitor, with engineers dialing autonomy per workflow</td><td>$1.5B valuation, hundreds of thousands of daily users at NVIDIA, Adobe, EY &mdash; proof this sells at real enterprise scale, not just to solo devs</td></tr>
+      <tr><td><strong><a href="https://cognition.ai/">Cognition</a> (Devin)</strong></td><td>Assign a task; Devin plans, writes, tests, and submits a PR with no intervention &mdash; the most autonomous of the six</td><td>Cut its entry price from $500/seat to $20/seat in its 2.0 relaunch &mdash; the strongest signal yet that full autonomy is what the market will pay for</td></tr>
+      <tr><td><strong><a href="https://www.ycombinator.com/companies/conductor">Conductor</a></strong> <span class="tag acc">YC S24</span></td><td>Runs several coding agents at once, each in its own Git-worktree sandbox, with per-agent model choice</td><td>The closest existing analog to Fleet's own Fan-Out Scheduler + isolated-worktree Builder Agent, one lane at a time</td></tr>
+    </table>
+  </div>
+
+</section>
+
+<section>
+  <div class="secnum">01</div>
+  <h2>The SDLC big orgs run, <em>vs. what Fleet takes over</em></h2>
+  <p class="deck">Not just the build steps &mdash; every kind of ticket that starts one, plus the ceremonies around it. Color says who does the work now.</p>
+
+  <figure>
+    <svg viewBox="0 0 980 700" role="img" aria-label="Full picture. Nine request types — feature, bug/refactor, incident/hotfix, multi-repo, review-only, small change, investigate, research/design, answer/Q&amp;A — all enter one pipeline, auto-classified by Fleet. Three org rituals also feed in: backlog grooming, fully automated; sprint and release planning, assisted, a human still sets priority; daily status updates, fully automated via live streaming. Then the standard eight-step build spine: Requirements and Intake, assisted; Design and Planning, Implementation and Coding, Code Review, Testing, Security Scan, Merge and Integration, all fully automated; Release and Deployment, assisted, a human approves. Two more rituals branch off the end: Documentation, Retro and Lessons Learned, fully automated, a tested lesson after every merge; and Production On-Call, which stays fully human — Fleet has no ops or paging surface.">
+    <defs>
+      <marker id="sh" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#8A8F96"/></marker>
+      <marker id="shd" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#1E6FFF"/></marker>
+    </defs>
+
+    <!-- legend -->
+    <rect x="20" y="10" width="14" height="14" rx="3" fill="#0A7C53"/>
+    <text x="40" y="21" class="svg-s" fill="#0A0A0A">Fleet does this end to end</text>
+    <rect x="270" y="10" width="14" height="14" rx="3" fill="#B8860B"/>
+    <text x="290" y="21" class="svg-s" fill="#0A0A0A">Fleet assists — a human still decides</text>
+    <rect x="600" y="10" width="14" height="14" rx="3" fill="#8A8F96"/>
+    <text x="620" y="21" class="svg-s" fill="#0A0A0A">still fully human / org process</text>
+
+    <!-- ===== ROW A: 9 request types — same entry point ===== -->
+    <text x="20" y="42" class="svg-t">EVERY KIND OF TICKET &middot; ONE ENTRY POINT, AUTO-CLASSIFIED</text>
+    <g font-family="'JetBrains Mono',monospace">
+      <!-- 9 chips -->
+      <g>
+        <rect x="20" y="48" width="98" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="69" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Feature</text>
+      </g>
+      <g>
+        <rect x="126" y="48" width="98" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="175" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Bug / Refactor</text>
+      </g>
+      <g>
+        <rect x="232" y="48" width="98" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="281" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Incident / Hotfix</text>
+      </g>
+      <g>
+        <rect x="338" y="48" width="98" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="387" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Multi-repo change</text>
+      </g>
+      <g>
+        <rect x="444" y="48" width="98" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="493" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Review-only</text>
+      </g>
+      <g>
+        <rect x="550" y="48" width="98" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="599" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Small change</text>
+      </g>
+      <g>
+        <rect x="656" y="48" width="98" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="705" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Investigate</text>
+      </g>
+      <g>
+        <rect x="762" y="48" width="98" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="811" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Research / Design</text>
+      </g>
+      <g>
+        <rect x="868" y="48" width="92" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+        <text x="914" y="68" text-anchor="middle" class="svg-s" fill="#0A0A0A">Answer / Q&amp;A</text>
+      </g>
+    </g>
+    <!-- funnel: ticks from each chip to a bar, one arrow down -->
+    <path d="M69 80 L69 90 M175 80 L175 90 M281 80 L281 90 M387 80 L387 90 M493 80 L493 90 M599 80 L599 90 M705 80 L705 90 M811 80 L811 90 M914 80 L914 90" stroke="#8A8F96" stroke-width="1"/>
+    <line x1="69" y1="90" x2="914" y2="90" stroke="#8A8F96" stroke-width="1"/>
+    <path d="M490 90 L490 108" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <!-- ===== ROW B: org rituals that feed the same spine ===== -->
+    <text x="20" y="106" class="svg-t">ORG RITUALS THAT FEED IT</text>
+    <g>
+      <rect x="20" y="112" width="290" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+      <text x="165" y="132" text-anchor="middle" class="svg-s" fill="#0A0A0A">Backlog grooming &mdash; auto-broken into contracts</text>
+    </g>
+    <g>
+      <rect x="345" y="112" width="290" height="32" rx="5" fill="#FFF9E8" stroke="#B8860B" stroke-width="1.2"/>
+      <text x="490" y="132" text-anchor="middle" class="svg-s" fill="#0A0A0A">Sprint / release planning &mdash; priority stays yours</text>
+    </g>
+    <g>
+      <rect x="670" y="112" width="290" height="32" rx="5" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.2"/>
+      <text x="815" y="132" text-anchor="middle" class="svg-s" fill="#0A0A0A">Daily status &mdash; live, no stand-up needed</text>
+    </g>
+    <path d="M165 144 L165 154 L490 154 L490 164" stroke="#8A8F96" stroke-width="1" fill="none"/>
+    <path d="M815 144 L815 154 L490 154" stroke="#8A8F96" stroke-width="1" fill="none"/>
+    <path d="M490 144 L490 164" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <!-- ===== SPINE: the 8-step build pipeline ===== -->
+    <line x1="490" y1="180" x2="490" y2="640" stroke="#E5E5E5" stroke-width="2"/>
+
+    <rect x="330" y="180" width="320" height="42" rx="6" fill="#FFF9E8" stroke="#B8860B" stroke-width="1.4"/>
+    <text x="490" y="197" text-anchor="middle" class="svg-l">1 &middot; Requirements &amp; Intake</text>
+    <text x="490" y="212" text-anchor="middle" class="svg-s">Fleet resolves ambiguity; a human still writes the ask</text>
+    <path d="M490 222 L490 238" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <rect x="330" y="238" width="320" height="42" rx="6" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.4"/>
+    <text x="490" y="255" text-anchor="middle" class="svg-l">2 &middot; Design &amp; Planning</text>
+    <text x="490" y="270" text-anchor="middle" class="svg-s">Fleet drafts modules; a second model reviews the plan</text>
+    <path d="M490 280 L490 296" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <!-- feeds Design & Planning: cross-repo context + the standards loop -->
+    <path d="M700 259 L650 259" class="ln" stroke="#0A7C53" marker-end="url(#sh)"/>
+    <rect x="700" y="230" width="240" height="58" rx="6" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.4"/>
+    <text x="820" y="248" text-anchor="middle" class="svg-l">Cross-Repo Context &amp; Standards</text>
+    <text x="820" y="262" text-anchor="middle" class="svg-s">Checks inter-repo dependencies first</text>
+    <text x="820" y="274" text-anchor="middle" class="svg-s">Pulls prior learnings + current standards</text>
+
+    <rect x="330" y="296" width="320" height="42" rx="6" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.4"/>
+    <text x="490" y="313" text-anchor="middle" class="svg-l">3 &middot; Implementation &amp; Coding</text>
+    <text x="490" y="328" text-anchor="middle" class="svg-s">Fleet builds several modules in parallel, sandboxed</text>
+    <path d="M490 338 L490 354" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <rect x="330" y="354" width="320" height="42" rx="6" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.4"/>
+    <text x="490" y="371" text-anchor="middle" class="svg-l">4 &middot; Code Review</text>
+    <text x="490" y="386" text-anchor="middle" class="svg-s">A different model reviews every diff, before tests run</text>
+    <path d="M490 396 L490 412" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <rect x="330" y="412" width="320" height="42" rx="6" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.4"/>
+    <text x="490" y="429" text-anchor="middle" class="svg-l">5 &middot; Testing</text>
+    <text x="490" y="444" text-anchor="middle" class="svg-s">Runs the real suite &mdash; a pass claim needs a real pass</text>
+    <path d="M490 454 L490 470" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <rect x="330" y="470" width="320" height="42" rx="6" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.4"/>
+    <text x="490" y="487" text-anchor="middle" class="svg-l">6 &middot; Security &amp; Compliance Scan</text>
+    <text x="490" y="502" text-anchor="middle" class="svg-s">Scans staged content and commit messages for secrets</text>
+    <path d="M490 512 L490 528" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <rect x="330" y="528" width="320" height="42" rx="6" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.4"/>
+    <text x="490" y="545" text-anchor="middle" class="svg-l">7 &middot; Merge &amp; Integration</text>
+    <text x="490" y="560" text-anchor="middle" class="svg-s">Serializes merges and re-checks right after</text>
+    <path d="M490 570 L490 586" class="ln" marker-end="url(#sh)" stroke="#8A8F96"/>
+
+    <rect x="330" y="586" width="320" height="42" rx="6" fill="#FFF9E8" stroke="#B8860B" stroke-width="1.4"/>
+    <text x="490" y="603" text-anchor="middle" class="svg-l">8 &middot; Release &amp; Deployment</text>
+    <text x="490" y="618" text-anchor="middle" class="svg-s">Fleet prepares it; a human approves before it's public</text>
+
+    <!-- side branches: Docs/Retro (green) and Production On-Call (grey) -->
+    <path d="M650 607 L800 607 L800 590" class="ln" stroke="#8A8F96" marker-end="url(#sh)"/>
+    <rect x="700" y="528" width="220" height="58" rx="6" fill="#F4F4F1" stroke="#8A8F96" stroke-width="1.4"/>
+    <text x="810" y="548" text-anchor="middle" class="svg-l">Production On-Call</text>
+    <text x="810" y="562" text-anchor="middle" class="svg-s">stays fully human &mdash; no ops or paging surface</text>
+    <text x="810" y="575" text-anchor="middle" class="svg-s">outside Fleet's scope, by design</text>
+
+    <path d="M330 607 L160 607 L160 590" class="ln" stroke="#0A7C53" marker-end="url(#sh)"/>
+    <rect x="60" y="528" width="220" height="58" rx="6" fill="#E8F5EE" stroke="#0A7C53" stroke-width="1.4"/>
+    <text x="170" y="548" text-anchor="middle" class="svg-l">Retro &amp; Lessons Learned</text>
+    <text x="170" y="562" text-anchor="middle" class="svg-s">A tested lesson written after every merge</text>
+    <text x="170" y="575" text-anchor="middle" class="svg-s">continuous, not a once-a-sprint meeting</text>
+
+    <!-- loop: an on-call incident becomes a new intake ticket — routed through the
+         empty margin at x=950, entering Requirements & Intake's right edge, so it
+         never crosses another box's text -->
+    <path d="M920 557 L950 557 L950 201 L650 201" class="ln-d" marker-end="url(#shd)"/>
+    <text x="700" y="192" class="svg-s" fill="#1E6FFF">on-call incident &rarr; new intake ticket</text>
+
+    <!-- loop: every lesson also feeds the next plan directly — routed through the
+         empty left margin at x=12, entering Design & Planning's left edge -->
+    <path d="M60 557 L12 557 L12 259 L330 259" class="ln-d" marker-end="url(#shd)"/>
+    <text x="20" y="250" class="svg-s" fill="#1E6FFF">every lesson feeds the next plan</text>
+
+    <text x="490" y="654" text-anchor="middle" class="svg-t">automated: build + review + test + scan + merge + retro + grooming + status</text>
+    <text x="490" y="670" text-anchor="middle" class="svg-t">assisted: what you ask for, what ships first, the final release yes/no</text>
+    <text x="490" y="686" text-anchor="middle" class="svg-t">still fully yours: production on-call</text>
+    </svg>
+  </figure>
+  <p class="note">Request types from <code>docs/LLD/LLD.md</code> §6 (the 9 workflow kinds). Fleet is a local CLI harness, not an ops platform &mdash; production monitoring and paging are deliberately out of scope.</p>
+</section>
+
+<section>
+  <div class="secnum">02</div>
+  <h2>HLD <em>diagram</em></h2>
+  <p class="deck">All 36 components from the design doc, grouped by the 8 stages above. Blue boxes are decision gates &mdash; nothing risky moves without clearing one. Grey boxes are storage.</p>
+
+  <figure>
+    <svg viewBox="0 0 980 2280" role="img" aria-label="Full Fleet pipeline, every node with a 3-line description of what it does, how, and using what. Intake through Learning and Central Standards, 36 components in 8 stages, with a repair loop from Verify back to the Controller and a learning loop from Central Standards Sync back to Repo Memory.">
+
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#0A0A0A"/></marker>
+    <marker id="ahd" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#1E6FFF"/></marker>
+  </defs>
+
+  <!-- Lane bands -->
+  <rect class="lane" x="10" y="10" width="960" height="220"/>
+  <rect class="lane" x="10" y="240" width="960" height="312"/>
+  <rect class="lane" x="10" y="562" width="960" height="312"/>
+  <rect class="lane" x="10" y="884" width="960" height="404"/>
+  <rect class="lane" x="10" y="1298" width="960" height="128"/>
+  <rect class="lane" x="10" y="1436" width="960" height="220"/>
+  <rect class="lane" x="10" y="1666" width="960" height="312"/>
+  <rect class="lane" x="10" y="1988" width="960" height="220"/>
+
+  <text x="24" y="26" class="svg-t">STAGE 1 · INTAKE</text>
+  <text x="24" y="256" class="svg-t">STAGE 2 · CLASSIFICATION &amp; ROUTING</text>
+  <text x="24" y="578" class="svg-t">STAGE 3 · AMBIGUITY RESOLUTION</text>
+  <text x="24" y="900" class="svg-t">STAGE 4 · PLANNING</text>
+  <text x="24" y="1314" class="svg-t">STAGE 5 · EXECUTION</text>
+  <text x="24" y="1452" class="svg-t">STAGE 6 · VERIFICATION</text>
+  <text x="24" y="1682" class="svg-t">STAGE 7 · INTEGRATION &amp; PUBLICATION</text>
+  <text x="24" y="2004" class="svg-t">STAGE 8 · LEARNING &amp; CENTRAL STANDARDS</text>
+
+  <!-- ===== LANE 0 · INTAKE ===== -->
+  <g><rect class="nb" x="20" y="44" width="450" height="78" rx="5"/><text x="245" y="62" text-anchor="middle" class="svg-l">User / CLI</text>
+    <text x="245" y="77" text-anchor="middle" class="svg-s">Asks, answers, pauses, approves</text>
+    <text x="245" y="89" text-anchor="middle" class="svg-s">Sends text or voice into Fleet</text>
+    <text x="245" y="101" text-anchor="middle" class="svg-s">Terminal / CLI, no GUI needed</text></g>
+  <g><rect class="nb" x="510" y="44" width="450" height="78" rx="5"/><text x="735" y="62" text-anchor="middle" class="svg-l">GitHub / Gmail Connectors</text>
+    <text x="735" y="77" text-anchor="middle" class="svg-s">Reacts to authorized events only</text>
+    <text x="735" y="89" text-anchor="middle" class="svg-s">Webhook or poll, then normalizes</text>
+    <text x="735" y="101" text-anchor="middle" class="svg-s">OAuth-scoped, never a raw key</text></g>
+  <g><rect class="nb" x="20" y="136" width="450" height="78" rx="5"/><text x="245" y="154" text-anchor="middle" class="svg-l">Event Ingest</text>
+    <text x="245" y="169" text-anchor="middle" class="svg-s">Normalizes every event the same way</text>
+    <text x="245" y="181" text-anchor="middle" class="svg-s">Dedupes by delivery ID first</text>
+    <text x="245" y="193" text-anchor="middle" class="svg-s">Deterministic Rust, no model call</text></g>
+  <g><rect class="nb-s" x="510" y="136" width="450" height="78" rx="5"/><text x="735" y="154" text-anchor="middle" class="svg-l">SQLite Store</text>
+    <text x="735" y="169" text-anchor="middle" class="svg-s">Holds events, leases, outbox rows</text>
+    <text x="735" y="181" text-anchor="middle" class="svg-s">One transaction per state change</text>
+    <text x="735" y="193" text-anchor="middle" class="svg-s">SQLite WAL mode, single writer</text></g>
+
+  <!-- ===== LANE 1 · ROUTING ===== -->
+  <g><rect class="nb" x="20" y="274" width="450" height="78" rx="5"/><text x="245" y="292" text-anchor="middle" class="svg-l">Controller</text>
+    <text x="245" y="307" text-anchor="middle" class="svg-s">Owns every state change + schedule</text>
+    <text x="245" y="319" text-anchor="middle" class="svg-s">Reduces state + event to next state</text>
+    <text x="245" y="331" text-anchor="middle" class="svg-s">Deterministic reducer, no model</text></g>
+  <g><rect class="nb" x="510" y="274" width="450" height="78" rx="5"/><text x="735" y="292" text-anchor="middle" class="svg-l">Intent Agent</text>
+    <text x="735" y="307" text-anchor="middle" class="svg-s">Reads the request, proposes its type</text>
+    <text x="735" y="319" text-anchor="middle" class="svg-s">Emits a schema-constrained IntentSpec</text>
+    <text x="735" y="331" text-anchor="middle" class="svg-s">One model call, second vote checks it</text></g>
+  <g><rect class="nb" x="20" y="366" width="450" height="78" rx="5"/><text x="245" y="384" text-anchor="middle" class="svg-l">Discovery</text>
+    <text x="245" y="399" text-anchor="middle" class="svg-s">Finds installed CLIs to delegate to</text>
+    <text x="245" y="411" text-anchor="middle" class="svg-s">Probes PATH, times out, reports caps</text>
+    <text x="245" y="423" text-anchor="middle" class="svg-s">probe(exe, timeout) → CapabilityReport</text></g>
+  <g><rect class="nb-g" x="510" y="366" width="450" height="78" rx="5"/><text x="735" y="384" text-anchor="middle" class="svg-l">Route Admission · gate</text>
+    <text x="735" y="399" text-anchor="middle" class="svg-s">Decides who's allowed to do this task</text>
+    <text x="735" y="411" text-anchor="middle" class="svg-s">Ranks candidates by cost + risk</text>
+    <text x="735" y="423" text-anchor="middle" class="svg-s">Deterministic, reads Quality Ledger</text></g>
+  <g><rect class="nb-s" x="20" y="458" width="450" height="78" rx="5"/><text x="245" y="476" text-anchor="middle" class="svg-l">Model / Adapter Catalog</text>
+    <text x="245" y="491" text-anchor="middle" class="svg-s">Tracks which model fits which task</text>
+    <text x="245" y="503" text-anchor="middle" class="svg-s">New models start on probation first</text>
+    <text x="245" y="515" text-anchor="middle" class="svg-s">Runtime snapshot, refreshed daily</text></g>
+
+  <!-- ===== LANE 2 · AMBIGUITY ===== -->
+  <g><rect class="nb" x="20" y="596" width="450" height="78" rx="5"/><text x="245" y="614" text-anchor="middle" class="svg-l">Ambiguity Scan</text>
+    <text x="245" y="629" text-anchor="middle" class="svg-s">Checks if anything is truly unclear</text>
+    <text x="245" y="641" text-anchor="middle" class="svg-s">Tests 4 fixed rules, not a feeling</text>
+    <text x="245" y="653" text-anchor="middle" class="svg-s">Deterministic check on the IntentSpec</text></g>
+  <g><rect class="nb" x="510" y="596" width="450" height="78" rx="5"/><text x="735" y="614" text-anchor="middle" class="svg-l">Business-Context Probe</text>
+    <text x="735" y="629" text-anchor="middle" class="svg-s">Reads for stakeholder context</text>
+    <text x="735" y="641" text-anchor="middle" class="svg-s">Runs only if Scan flags a gap</text>
+    <text x="735" y="653" text-anchor="middle" class="svg-s">One model call, read-only, 90s</text></g>
+  <g><rect class="nb" x="20" y="688" width="450" height="78" rx="5"/><text x="245" y="706" text-anchor="middle" class="svg-l">Technical-Context Probe</text>
+    <text x="245" y="721" text-anchor="middle" class="svg-s">Reads the repo for real constraints</text>
+    <text x="245" y="733" text-anchor="middle" class="svg-s">Checks code, configs, patterns</text>
+    <text x="245" y="745" text-anchor="middle" class="svg-s">One model call, read-only, 20s</text></g>
+  <g><rect class="nb" x="510" y="688" width="450" height="78" rx="5"/><text x="735" y="706" text-anchor="middle" class="svg-l">Learning-Retrieval Probe</text>
+    <text x="735" y="721" text-anchor="middle" class="svg-s">Checks if this failed before</text>
+    <text x="735" y="733" text-anchor="middle" class="svg-s">Searches Repo Memory for a lesson</text>
+    <text x="735" y="745" text-anchor="middle" class="svg-s">One model call on the memory index</text></g>
+  <g><rect class="nb" x="20" y="780" width="450" height="78" rx="5"/><text x="245" y="798" text-anchor="middle" class="svg-l">Research Probe</text>
+    <text x="245" y="813" text-anchor="middle" class="svg-s">Checks docs only if relevant</text>
+    <text x="245" y="825" text-anchor="middle" class="svg-s">Only for a real unresolved unknown</text>
+    <text x="245" y="837" text-anchor="middle" class="svg-s">One model call, bounded budget</text></g>
+  <g><rect class="nb" x="510" y="780" width="450" height="78" rx="5"/><text x="735" y="798" text-anchor="middle" class="svg-l">Question Merger</text>
+    <text x="735" y="813" text-anchor="middle" class="svg-s">Combines every probe's question</text>
+    <text x="735" y="825" text-anchor="middle" class="svg-s">Dedupes, asks you at most 3</text>
+    <text x="735" y="837" text-anchor="middle" class="svg-s">Deterministic merge + priority sort</text></g>
+
+  <!-- ===== LANE 3 · PLANNING ===== -->
+  <g><rect class="nb" x="20" y="918" width="450" height="78" rx="5"/><text x="245" y="936" text-anchor="middle" class="svg-l">Workflow DAG</text>
+    <text x="245" y="951" text-anchor="middle" class="svg-s">Picks the recipe for this task type</text>
+    <text x="245" y="963" text-anchor="middle" class="svg-s">9 named workflows: feature, incident…</text>
+    <text x="245" y="975" text-anchor="middle" class="svg-s">Versioned task graph, not ad hoc</text></g>
+  <g><rect class="nb-s" x="510" y="918" width="450" height="78" rx="5"/><text x="735" y="936" text-anchor="middle" class="svg-l">Repo Memory + Standards</text>
+    <text x="735" y="951" text-anchor="middle" class="svg-s">Holds past lessons + pinned rules</text>
+    <text x="735" y="963" text-anchor="middle" class="svg-s">Filters by scope before it's trusted</text>
+    <text x="735" y="975" text-anchor="middle" class="svg-s">Markdown + index, via Git or MCP</text></g>
+  <g><rect class="nb" x="20" y="1010" width="450" height="78" rx="5"/><text x="245" y="1028" text-anchor="middle" class="svg-l">Module Planner</text>
+    <text x="245" y="1043" text-anchor="middle" class="svg-s">Breaks work into small provable pieces</text>
+    <text x="245" y="1055" text-anchor="middle" class="svg-s">Each piece gets its own contract</text>
+    <text x="245" y="1067" text-anchor="middle" class="svg-s">One model call per module, ungated</text></g>
+  <g><rect class="nb" x="510" y="1010" width="450" height="78" rx="5"/><text x="735" y="1028" text-anchor="middle" class="svg-l">Context Compiler</text>
+    <text x="735" y="1043" text-anchor="middle" class="svg-s">Packs exactly what's needed next</text>
+    <text x="735" y="1055" text-anchor="middle" class="svg-s">Ranks by relevance, recency, size</text>
+    <text x="735" y="1067" text-anchor="middle" class="svg-s">Deterministic retrieval + token budget</text></g>
+  <g><rect class="nb" x="20" y="1102" width="450" height="78" rx="5"/><text x="245" y="1120" text-anchor="middle" class="svg-l">Approach Ideation</text>
+    <text x="245" y="1135" text-anchor="middle" class="svg-s">Proposes 2&ndash;3 real alternatives</text>
+    <text x="245" y="1147" text-anchor="middle" class="svg-s">Only for feature / refactor work</text>
+    <text x="245" y="1159" text-anchor="middle" class="svg-s">Prose only, no code written yet</text></g>
+  <g><rect class="nb-g" x="510" y="1102" width="450" height="78" rx="5"/><text x="735" y="1120" text-anchor="middle" class="svg-l">Reviewer Gate · gate</text>
+    <text x="735" y="1135" text-anchor="middle" class="svg-s">A different, stronger model checks it</text>
+    <text x="735" y="1147" text-anchor="middle" class="svg-s">Must hold a proven track record</text>
+    <text x="735" y="1159" text-anchor="middle" class="svg-s">Independence enforced by rule</text></g>
+  <g><rect class="nb" x="20" y="1194" width="450" height="78" rx="5"/><text x="245" y="1212" text-anchor="middle" class="svg-l">Ready Contract</text>
+    <text x="245" y="1227" text-anchor="middle" class="svg-s">Confirms the plan is safe to build</text>
+    <text x="245" y="1239" text-anchor="middle" class="svg-s">Checks budget, grants, fresh context</text>
+    <text x="245" y="1251" text-anchor="middle" class="svg-s">8-condition deterministic checklist</text></g>
+  <g><rect class="nb" x="510" y="1194" width="450" height="78" rx="5"/><text x="735" y="1212" text-anchor="middle" class="svg-l">Next-Module Planner</text>
+    <text x="735" y="1227" text-anchor="middle" class="svg-s">Drafts module N+1 while N builds</text>
+    <text x="735" y="1239" text-anchor="middle" class="svg-s">Keeps the pipeline from sitting idle</text>
+    <text x="735" y="1251" text-anchor="middle" class="svg-s">Same Reviewer Gate as any plan</text></g>
+
+  <!-- ===== LANE 4 · EXECUTION ===== -->
+  <g><rect class="nb" x="20" y="1332" width="450" height="78" rx="5"/><text x="245" y="1350" text-anchor="middle" class="svg-l">Fan-Out Scheduler</text>
+    <text x="245" y="1365" text-anchor="middle" class="svg-s">Picks the next ready piece of work</text>
+    <text x="245" y="1377" text-anchor="middle" class="svg-s">Reserves CPU, RAM, disk up front</text>
+    <text x="245" y="1389" text-anchor="middle" class="svg-s">Priority heap, atomic reservation</text></g>
+  <g><rect class="nb" x="510" y="1332" width="450" height="78" rx="5"/><text x="735" y="1350" text-anchor="middle" class="svg-l">Builder Agent</text>
+    <text x="735" y="1365" text-anchor="middle" class="svg-s">Actually writes and edits the code</text>
+    <text x="735" y="1377" text-anchor="middle" class="svg-s">Works alone in a sandboxed worktree</text>
+    <text x="735" y="1389" text-anchor="middle" class="svg-s">The model Route Admission picked</text></g>
+
+  <!-- ===== LANE 5 · VERIFICATION ===== -->
+  <g><rect class="nb" x="20" y="1470" width="450" height="78" rx="5"/><text x="245" y="1488" text-anchor="middle" class="svg-l">Code Review</text>
+    <text x="245" y="1503" text-anchor="middle" class="svg-s">Reviews the diff before tests run</text>
+    <text x="245" y="1515" text-anchor="middle" class="svg-s">A different model than the builder</text>
+    <text x="245" y="1527" text-anchor="middle" class="svg-s">Gated, independence enforced</text></g>
+  <g><rect class="nb-g" x="510" y="1470" width="450" height="78" rx="5"/><text x="735" y="1488" text-anchor="middle" class="svg-l">Verify + Secret Scan · gate</text>
+    <text x="735" y="1503" text-anchor="middle" class="svg-s">Runs the real tests, not a claim</text>
+    <text x="735" y="1515" text-anchor="middle" class="svg-s">Also scans for leaked secrets</text>
+    <text x="735" y="1527" text-anchor="middle" class="svg-s">Deterministic — exit code decides</text></g>
+  <g><rect class="nb-s" x="20" y="1562" width="450" height="78" rx="5"/><text x="245" y="1580" text-anchor="middle" class="svg-l">Quality Ledger</text>
+    <text x="245" y="1595" text-anchor="middle" class="svg-s">Records what happened each attempt</text>
+    <text x="245" y="1607" text-anchor="middle" class="svg-s">Feeds back into routing + trust</text>
+    <text x="245" y="1619" text-anchor="middle" class="svg-s">Append-only, grouped by task type</text></g>
+
+  <!-- ===== LANE 6 · INTEGRATION ===== -->
+  <g><rect class="nb" x="20" y="1700" width="450" height="78" rx="5"/><text x="245" y="1718" text-anchor="middle" class="svg-l">Integrate</text>
+    <text x="245" y="1733" text-anchor="middle" class="svg-s">Lands one verified change at a time</text>
+    <text x="245" y="1745" text-anchor="middle" class="svg-s">No two changes merge at once</text>
+    <text x="245" y="1757" text-anchor="middle" class="svg-s">Serialized Git op, controller-owned</text></g>
+  <g><rect class="nb" x="510" y="1700" width="450" height="78" rx="5"/><text x="735" y="1718" text-anchor="middle" class="svg-l">Post-Merge Verify</text>
+    <text x="735" y="1733" text-anchor="middle" class="svg-s">Re-checks the code after it lands</text>
+    <text x="735" y="1745" text-anchor="middle" class="svg-s">Catches what pre-merge missed</text>
+    <text x="735" y="1757" text-anchor="middle" class="svg-s">Same gate, run a second time</text></g>
+  <g><rect class="nb-g" x="20" y="1792" width="450" height="78" rx="5"/><text x="245" y="1810" text-anchor="middle" class="svg-l">Approval Gate · gate</text>
+    <text x="245" y="1825" text-anchor="middle" class="svg-s">Stops before anything leaves your box</text>
+    <text x="245" y="1837" text-anchor="middle" class="svg-s">A push, PR, or email needs your yes</text>
+    <text x="245" y="1849" text-anchor="middle" class="svg-s">Bound to one exact content digest</text></g>
+  <g><rect class="nb" x="510" y="1792" width="450" height="78" rx="5"/><text x="735" y="1810" text-anchor="middle" class="svg-l">Rollback</text>
+    <text x="735" y="1825" text-anchor="middle" class="svg-s">Undoes a change that fails after merge</text>
+    <text x="735" y="1837" text-anchor="middle" class="svg-s">Restores the exact prior state</text>
+    <text x="735" y="1849" text-anchor="middle" class="svg-s">Guarded Git revert / compensation</text></g>
+  <g><rect class="nb" x="20" y="1884" width="450" height="78" rx="5"/><text x="245" y="1902" text-anchor="middle" class="svg-l">External Broker</text>
+    <text x="245" y="1917" text-anchor="middle" class="svg-s">The only part that touches outside</text>
+    <text x="245" y="1929" text-anchor="middle" class="svg-s">Every call is checked and authorized</text>
+    <text x="245" y="1941" text-anchor="middle" class="svg-s">Scoped creds, per-server allowlist</text></g>
+
+  <!-- ===== LANE 7 · LEARNING ===== -->
+  <g><rect class="nb-s" x="20" y="2022" width="450" height="78" rx="5"/><text x="245" y="2040" text-anchor="middle" class="svg-l">Learning Candidate</text>
+    <text x="245" y="2055" text-anchor="middle" class="svg-s">Captures a real failure + signature</text>
+    <text x="245" y="2067" text-anchor="middle" class="svg-s">From a bug caught or a correction</text>
+    <text x="245" y="2079" text-anchor="middle" class="svg-s">Structured record, not free text</text></g>
+  <g><rect class="nb" x="510" y="2022" width="450" height="78" rx="5"/><text x="735" y="2040" text-anchor="middle" class="svg-l">Offline Evaluator</text>
+    <text x="735" y="2055" text-anchor="middle" class="svg-s">Tests the lesson before it's a rule</text>
+    <text x="735" y="2067" text-anchor="middle" class="svg-s">Needs a fixture, not just a claim</text>
+    <text x="735" y="2079" text-anchor="middle" class="svg-s">Held-out trial, min. evidence count</text></g>
+  <g><rect class="nb-g" x="20" y="2114" width="450" height="78" rx="5"/><text x="245" y="2132" text-anchor="middle" class="svg-l">Central Standards Sync · gate</text>
+    <text x="245" y="2147" text-anchor="middle" class="svg-s">Turns a proven lesson into a rule</text>
+    <text x="245" y="2159" text-anchor="middle" class="svg-s">Never activates itself, ever</text>
+    <text x="245" y="2171" text-anchor="middle" class="svg-s">Human-only grant, 4-op CRUD</text></g>
+
+  <!-- Spine connectors between lanes -->
+  <path d="M245 214 L245 274" class="ln" marker-end="url(#ah)"/>
+  <path d="M245 536 L245 596" class="ln" marker-end="url(#ah)"/>
+  <path d="M245 858 L245 918" class="ln" marker-end="url(#ah)"/>
+  <path d="M245 1272 L245 1332" class="ln" marker-end="url(#ah)"/>
+  <path d="M245 1410 L245 1470" class="ln" marker-end="url(#ah)"/>
+  <path d="M245 1640 L245 1700" class="ln" marker-end="url(#ah)"/>
+  <path d="M245 1962 L245 2022" class="ln" marker-end="url(#ah)"/>
+
+  <!-- Loop 1: repair — travels the right margin (x=970, outside every box), only crosses
+       into the lane-1 header gap (y=268, below the title text, above row 0) to reach Controller -->
+  <path d="M960 1509 L970 1509 L970 268 L245 268 L245 274" class="ln-d" marker-end="url(#ahd)"/>
+  <text x="520" y="264" class="svg-s" fill="#1E6FFF">repair loop — failing case reinjected, never blind guessing</text>
+
+  <!-- Loop 2: learning — travels the left margin (x=12, outside every box), only crosses
+       into the lane-3 header gap (y=912, below the title text, above row 0) to reach Repo Memory -->
+  <path d="M20 2153 L12 2153 L12 912 L735 912 L735 918" class="ln-d" marker-end="url(#ahd)"/>
+  <text x="520" y="908" class="svg-s" fill="#1E6FFF">learning loop — human-approved, this is what compounds</text>
+  </svg>
+  </figure>
+  <p class="note">Every node, and every line inside it, is drawn from <code>docs/LLD/LLD.md</code> §3&ndash;13. Gates (blue border) are where a bad change gets stopped; nothing skips one.</p>
+</section>
+
+<section>
+  <div class="secnum">03</div>
+  <h2>What ships, and <em>how long it takes</em></h2>
+  <p class="deck">Six build increments, in the order the design doc requires (each proves itself before the next starts). Time is <strong>agentic build time</strong> &mdash; how long a supervised agent fleet spends actually building and testing it, not human calendar time. All estimates, nothing measured yet.</p>
+  <div class="tw">
+    <table>
+      <tr><th style="width:26px">#</th><th style="width:150px">Increment</th><th>What ships</th><th class="num" style="width:110px">Agentic time</th><th style="width:80px">Status</th></tr>
+      <tr><td><code>A</code></td><td>Authority + one adapter</td><td>One real CLI does one safe, isolated edit under a durable lease</td><td class="num">~8 agent-days</td><td><span class="tag done">done</span></td></tr>
+      <tr><td><code>B</code></td><td>Full single-repo workflow</td><td>Ask / review / small-change / feature all reach a merged, gated PR</td><td class="num">~18 agent-days</td><td><span class="tag prog">in progress</span></td></tr>
+      <tr><td><code>C</code></td><td>Bounded concurrency</td><td>Two modules build in parallel with real resource limits</td><td class="num">~12 agent-days</td><td><span class="tag na">proposed</span></td></tr>
+      <tr><td><code>D</code></td><td>Memory + economics</td><td>Lessons, pinned standards, cost tracking, retention pressure</td><td class="num">~14 agent-days</td><td><span class="tag na">proposed</span></td></tr>
+      <tr><td><code>E</code></td><td>Long runs + connectors</td><td>Pause/resume, quota failover, GitHub/Gmail triggers, 72h soak</td><td class="num">~10 agent-days</td><td><span class="tag na">proposed</span></td></tr>
+      <tr><td><code>F</code></td><td>Multi-repo + optimization</td><td>One logical change across repos; routing tunes itself within limits</td><td class="num">~12 agent-days</td><td><span class="tag na">proposed</span></td></tr>
+      <tr><td><code>&mdash;</code></td><td>Buffer, ~20%</td><td>Unknowns every one of the above will hit</td><td class="num">~16 agent-days</td><td><span class="tag na">proposed</span></td></tr>
+      <tr><td><code>&mdash;</code></td><td><strong>Total</strong></td><td>&nbsp;</td><td class="num"><strong>~90 agent-days</strong></td><td>1 / 6 built, 1 in progress</td></tr>
+    </table>
+  </div>
+  <p class="note">"Agent-day" = one agent working continuously for a day, under human spot-checks &mdash; not a person's day. Several increments can overlap once their dependencies are proven.</p>
+</section>
+
+<section>
+  <div class="secnum">04</div>
+  <h2>How Fleet <em>rolls out</em></h2>
+  <p class="deck">Three phases of adoption, not to be confused with the six build increments above &mdash; those ship the software; these describe how far it's trusted with your org's work.</p>
+  <div class="tw">
+    <table>
+      <tr><th style="width:26px">#</th><th style="width:190px">Phase</th><th>What changes</th><th>What you get</th></tr>
+      <tr><td><code>1</code></td><td><strong>Per-developer improvement</strong></td><td>Runs local to one developer; memory and standards stay on their machine</td><td>Faster solo loop &mdash; less time lost to old problems, on that one machine</td></tr>
+      <tr><td><code>2</code></td><td><strong>Central DB + standards maintained</strong></td><td>Repo Memory + Standards syncs across the team; one lesson benefits everyone, not just its author</td><td>The team stops re-learning the same mistake; standards drift gets caught centrally</td></tr>
+      <tr><td><code>3</code></td><td><strong>Fleet moves to a server</strong></td><td>The background loop runs 24/7 on an always-on box, not a laptop</td><td>Fleet auto-picks up tech debt and assigned tickets on its own, no one has to kick it off</td></tr>
+    </table>
+  </div>
+  <p class="note">Phase 3 is what the $300&ndash;450/month "server / hosting" line in §06 pays for.</p>
+</section>
+
+<section>
+  <div class="secnum">05</div>
+  <h2>How we'll know it <em>actually works</em></h2>
+  <p class="deck">Three outcomes we're actually watching for &mdash; everything else below is how each build increment proves itself along the way.</p>
+  <div class="tw">
+    <table>
+      <tr><th style="width:220px">Outcome</th><th>What Fleet does about it</th><th>What we watch</th></tr>
+      <tr><td><strong>Developers know more, own more</strong></td><td>Teach-back explains every plan and PR; the knowledge base answers "why is this like this" instead of a colleague</td><td>Repeat-mistake rate; how often a senior engineer gets asked the same question twice</td></tr>
+      <tr><td><strong>Execution gets faster</strong></td><td>Modules build in parallel; review starts with context already explained, not from scratch</td><td>Cycle time, open to merge; review minutes per PR</td></tr>
+      <tr><td><strong>Fewer bugs reach production</strong></td><td>A different model reviews every diff; tests + secret scan gate twice &mdash; before merge and after</td><td>Escaped-defect rate; days a bug survives before it's caught</td></tr>
+    </table>
+  </div>
+
+  <p class="deck" style="margin-top:22px">And underneath those three: each build increment ships with its own pass/fail bar, from the design doc's own exit evidence, §23. No increment is "done" on a demo; it's done on the test.</p>
+  <div class="tw">
+    <table>
+      <tr><th style="width:26px">#</th><th>What we run</th><th>Pass bar</th></tr>
+      <tr><td><code>A</code></td><td>One real installed CLI does one read + one isolated edit</td><td>Worker never touches the ledger, credentials, or controller socket</td></tr>
+      <tr><td><code>B</code></td><td>All 5 request types run end to end</td><td>A changed tree invalidates the verdict; nothing publishes without approval</td></tr>
+      <tr><td><code>C</code></td><td>Two builds fight for the same file on purpose</td><td>Collision detected, one waits &mdash; no double-write, no deadlock</td></tr>
+      <tr><td><code>D</code></td><td>Feed it a poisoned "lesson"</td><td>It's refused; disk pressure never weakens a gate to make room</td></tr>
+      <tr><td><code>E</code></td><td>72-hour soak: sleep, restart, quota loss, injected faults</td><td>Recovers within 30s; no event processed twice</td></tr>
+      <tr><td><code>F</code></td><td>A multi-repo change fails halfway</td><td>Rollback restores the exact prior state, not an approximation</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="secnum">06</div>
+  <h2>What it costs, <em>per month</em></h2>
+  <p class="deck">Fleet itself is a harness, not a product &mdash; no license, no subscription. What costs money is the CLI agent it drives (Claude Code and similar), billed by that vendor per package, per user &mdash; plus, from Phase 3 on, a machine to keep it running.</p>
+  <div class="tw">
+    <table>
+      <tr><th>Line item</th><th>What it actually is</th><th class="num">Est. $ / month</th></tr>
+      <tr><td><strong>Fleet, the harness</strong></td><td>Orchestration only &mdash; no fee of its own</td><td class="num">$0</td></tr>
+      <tr><td><strong>CLI agent package, per developer</strong></td><td>Billed by the agent vendor, not Fleet &mdash; e.g. Claude Code Pro</td><td class="num">~$200</td></tr>
+      <tr><td><strong>Heavier use / multiple lanes</strong></td><td>Same package, a higher seat tier or usage-based add-on</td><td class="num">$200&ndash;400</td></tr>
+      <tr><td><strong>Always-on box (Phase 3)</strong></td><td>System requirement to run the background loop 24/7 &mdash; not a Fleet fee either</td><td class="num">$300&ndash;450</td></tr>
+    </table>
+  </div>
+  <p class="note">Estimate only &mdash; no billing data has been collected against this design yet, and package prices are the vendor's to change. §17 tracks real per-task cost once increment D ships; this table gets replaced with measured numbers then.</p>
+</section>
+
+<footer>
+  Source: docs/LLD/LLD.md (Fleet: local CLI SDLC harness — comprehensive low-level design), sections 1&ndash;4 and 23.<br>
+  Status: proposed design for review — not an implementation or production-readiness claim.<br>
+  Generated 2026-09-14 for a one-glance overview. Full technical detail: docs/LLD/LLD.md.
+</footer>
+</main>

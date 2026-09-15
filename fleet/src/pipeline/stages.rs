@@ -10,6 +10,9 @@
 //! that owns them (BLUEPRINT §2 non-goals), not this composition layer's call to invent.
 
 use super::event::PipelineError;
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
 
 pub use super::classify_stage::classify;
 pub use super::event_stage::event;
@@ -18,13 +21,31 @@ pub use super::stages_dispatch::dispatch;
 pub use super::teach_stage::teach;
 pub use super::verify_stage::verify;
 
+fn note(source: &str, text: &str) {
+    emit(
+        &Event::Note {
+            source: source.into(),
+            text: text.into(),
+        },
+        &Style::detect(),
+    );
+}
+
 pub fn scan() -> Result<(), PipelineError> {
     let _ = scan::merge_questions(Vec::new());
+    note(
+        "scan",
+        "no ambiguity probe wired -- merged zero questions (composition stub)",
+    );
     Ok(())
 }
 
 pub fn plan() -> Result<(), PipelineError> {
     let _ = planner::assemble_acceptance_checks_draft("wired-by-fleet-cli");
+    note(
+        "plan",
+        "fixed literal draft, not derived from this task (composition stub)",
+    );
     Ok(())
 }
 

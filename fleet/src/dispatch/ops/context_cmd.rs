@@ -4,11 +4,11 @@
 //! and print. Parsing/symbol-graph/PageRank logic is entirely `fleet-context`'s; this only reads
 //! files off disk (a real, named IO touch this outermost layer is allowed -- BLUEPRINT §4).
 
-use cli::args_ctx::{GraphArgs, ImpactArgs};
 use crate::dispatch::error::DispatchError;
 use crate::dispatch::walk::read_source_files_bounded;
-use print::human;
+use cli::args_ctx::{GraphArgs, ImpactArgs};
 use context::build_repo_map;
+use print::human;
 use std::path::Path;
 
 #[derive(serde::Serialize)]

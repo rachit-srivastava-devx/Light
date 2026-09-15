@@ -63,6 +63,22 @@ pub fn append_as_with_model(
         .map_err(|e| e.to_string())
 }
 
+/// Append a receipt whose process outcome is part of the durable authority.  Verification uses
+/// this instead of `observe`: a missing secret-scan verdict is itself a verification failure and
+/// must not be silently downgraded to a stderr note.
+pub fn append_as_with_exit(
+    state_dir: &Path,
+    event: ReceiptEvent,
+    body: Value,
+    actor: &str,
+    exit_code: Option<types::ExitCode>,
+) -> Result<(), String> {
+    open(state_dir)
+        .append(event, body, actor.to_string(), None, exit_code)
+        .map(|_receipt| ())
+        .map_err(|e| e.to_string())
+}
+
 /// Best-effort append for the observability trail: stage timings, gate verdicts, refusals. A
 /// failure here is reported through the same `Note`-styled render path a sink failure uses, then
 /// ignored -- it must never turn an otherwise-successful pipeline run into a failed one.

@@ -7,16 +7,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::ident::TaskId;
 
-#[path = "module_impl.rs"]
-mod module_impl;
 #[path = "module_graph.rs"]
 mod module_graph;
+#[path = "module_graph_batches.rs"]
+mod module_graph_batches;
 #[path = "module_graph_ready.rs"]
 mod module_graph_ready;
 #[path = "module_graph_sort.rs"]
 mod module_graph_sort;
-#[path = "module_graph_batches.rs"]
-mod module_graph_batches;
+#[path = "module_impl.rs"]
+mod module_impl;
 #[cfg(test)]
 #[path = "module_tests.rs"]
 mod tests;

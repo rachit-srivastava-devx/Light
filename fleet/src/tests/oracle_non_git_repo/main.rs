@@ -47,10 +47,19 @@ fn plain_dir_all_gates_pass() -> tempfile::TempDir {
     toml.push_str(&echo("unit tests", "test result: ok. 1 passed; 0 failed;"));
     toml.push_str(&echo("mutants", "mutants: caught=2 total=2"));
     toml.push_str(&echo("semgrep", "10 files scanned, 0 findings"));
-    toml.push_str(&echo("trivy", "0 secret findings across 4 reported targets"));
+    toml.push_str(&echo(
+        "trivy",
+        "0 secret findings across 4 reported targets",
+    ));
     toml.push_str(&echo("recur", "recur-gate: checked=1 flagged=0"));
-    toml.push_str(&echo("detectors", "7 detectors match the manifest (denominator: 7)"));
-    toml.push_str(&echo("policy", "-- 3 passed, 0 failed (denominator: 3 policies) --"));
+    toml.push_str(&echo(
+        "detectors",
+        "7 detectors match the manifest (denominator: 7)",
+    ));
+    toml.push_str(&echo(
+        "policy",
+        "-- 3 passed, 0 failed (denominator: 3 policies) --",
+    ));
     toml.push_str(&echo("corpus", "DENOMINATOR checked=9 total=9 caught=0"));
     std::fs::write(dir.path().join(".fleet/gates.toml"), toml).unwrap();
     dir
@@ -63,7 +72,10 @@ fn plain_directory_without_the_flag_still_refuses() {
     let out = run_oracle(repo.path(), &[]);
     assert_eq!(out.status.code(), Some(3));
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(stderr.contains("not a git repository"), "message unchanged: {stderr}");
+    assert!(
+        stderr.contains("not a git repository"),
+        "message unchanged: {stderr}"
+    );
 }
 
 /// The headline: `--no-git` lets `fleet oracle` run every real (non-skipped) gate against a

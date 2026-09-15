@@ -39,8 +39,7 @@ fn test_module_graph_batches() {
     graph.add_module(Module::new("B", "B", "SOW B").with_dependencies(vec!["A".to_string()]));
     graph.add_module(Module::new("C", "C", "SOW C").with_dependencies(vec!["A".to_string()]));
     graph.add_module(
-        Module::new("D", "D", "SOW D")
-            .with_dependencies(vec!["B".to_string(), "C".to_string()]),
+        Module::new("D", "D", "SOW D").with_dependencies(vec!["B".to_string(), "C".to_string()]),
     );
 
     let batches = graph.batches().unwrap();

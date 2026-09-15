@@ -51,9 +51,15 @@ fn spawned_line_appends_adapter_kind_from_cli_adapter_agent_kind() {
     for adapter in [CliAdapter::Freelane, CliAdapter::Claude, CliAdapter::Codex] {
         let kind = adapter.agent_kind();
         let line = spawned_line(kind);
-        assert!(line.starts_with("spawned "), "prefix must stay `spawned ` (line={line:?})");
+        assert!(
+            line.starts_with("spawned "),
+            "prefix must stay `spawned ` (line={line:?})"
+        );
         assert_eq!(line, format!("spawned agent={kind}"));
-        assert!(line.contains(&format!("agent={kind}")), "line must carry agent={kind}: {line:?}");
+        assert!(
+            line.contains(&format!("agent={kind}")),
+            "line must carry agent={kind}: {line:?}"
+        );
     }
 }
 
@@ -64,7 +70,13 @@ fn spawned_line_appends_adapter_kind_from_cli_adapter_agent_kind() {
 #[test]
 fn then_verify_on_done_hands_verify_the_same_repo_and_task() {
     let plan = verify_plan(true, true, "/some/repo", "TASK-42");
-    assert_eq!(plan, Some(VerifyPlan { repo: "/some/repo".into(), task: "TASK-42".into() }));
+    assert_eq!(
+        plan,
+        Some(VerifyPlan {
+            repo: "/some/repo".into(),
+            task: "TASK-42".into()
+        })
+    );
 }
 
 /// `--then-verify` on a Refused/EnvironmentFault lane must NOT invoke the verify pipeline --
@@ -111,8 +123,10 @@ fn then_verify_with_refused_lane_returns_swarm_refusal() {
     };
     let result = swarm(&resolved, args);
 
-    assert!(matches!(result, Err(DispatchError::Refusal(_))),
-        "then-verify must preserve swarm's Refusal exit code, got: {result:?}");
+    assert!(
+        matches!(result, Err(DispatchError::Refusal(_))),
+        "then-verify must preserve swarm's Refusal exit code, got: {result:?}"
+    );
     std::env::remove_var(ENV_STATE_DIR);
 }
 
@@ -136,7 +150,10 @@ fn unknown_agent_flag_is_refused_not_silently_defaulted() {
     let result = swarm(&resolved, args);
     match result {
         Err(DispatchError::EnvFault(msg)) => {
-            assert!(msg.contains("bogus"), "EnvFault must name the offending value: {msg}");
+            assert!(
+                msg.contains("bogus"),
+                "EnvFault must name the offending value: {msg}"
+            );
         }
         other => panic!("expected EnvFault for unknown --agent, got {other:?}"),
     }

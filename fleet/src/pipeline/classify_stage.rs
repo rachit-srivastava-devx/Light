@@ -4,6 +4,9 @@
 //! not derive one from free text itself) and runs it through the real `route::decide`
 //! path so the result is an auditable `Decision`, not a discarded `Ok(())`.
 
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
 use route::{Decision, TaskClass};
 
 /// `HumanOnly` keywords mirror the A15/D4 doctrine already named in this repo's `CLAUDE.md`:
@@ -32,5 +35,24 @@ fn task_class(task_text: &str) -> TaskClass {
 /// adapter, no role assigned yet) is part of the returned `Decision`, not an error here; `Dispatch`
 /// is the stage that actually needs a selected adapter and owns failing on that.
 pub fn classify(task_text: &str, runtime: &route::RuntimeState) -> Decision {
-    route::decide(None, task_class(task_text), None, runtime)
+    let class = task_class(task_text);
+    let decision = route::decide(None, class, None, runtime);
+    let text = match &decision.refusal {
+        Some(r) => format!(
+            "task_class={class:?} -- refused at stage {} ({}): {}",
+            r.stage, r.stage_name, r.reason
+        ),
+        None => format!(
+            "task_class={class:?} adapter={:?} resolved_model={:?}",
+            decision.selected_adapter, decision.resolved_model
+        ),
+    };
+    emit(
+        &Event::Note {
+            source: "classify".into(),
+            text,
+        },
+        &Style::detect(),
+    );
+    decision
 }

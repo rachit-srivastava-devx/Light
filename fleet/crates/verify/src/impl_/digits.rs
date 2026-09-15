@@ -3,7 +3,7 @@
 
 /// Digits immediately following `key` (e.g. `"caught="` -> the `40` in `"caught=40"`).
 pub(crate) fn after(text: &str, key: &str) -> Option<u64> {
-    let after = text.split_once(key)?.1;
+    let after = text.rsplit_once(key)?.1;
     after
         .chars()
         .take_while(|c| c.is_ascii_digit())
@@ -14,7 +14,7 @@ pub(crate) fn after(text: &str, key: &str) -> Option<u64> {
 
 /// Digits immediately preceding `marker` (e.g. the `5` in `"5 files scanned"`).
 pub(crate) fn before(text: &str, marker: &str) -> Option<u64> {
-    let prefix = &text[..text.find(marker)?];
+    let prefix = text.rsplit_once(marker)?.0;
     prefix
         .chars()
         .rev()
@@ -26,3 +26,7 @@ pub(crate) fn before(text: &str, marker: &str) -> Option<u64> {
         .parse()
         .ok()
 }
+
+#[cfg(test)]
+#[path = "digits_tests.rs"]
+mod tests;

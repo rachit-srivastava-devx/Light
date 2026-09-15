@@ -22,7 +22,10 @@ fn task_id_error_names_rule_and_shows_input() {
         msg.contains("task_id must not be empty or whitespace-only"),
         "message should name the rule that failed: {msg}"
     );
-    assert!(msg.contains("\"\""), "message should quote the offending input: {msg}");
+    assert!(
+        msg.contains("\"\""),
+        "message should quote the offending input: {msg}"
+    );
     assert!(
         msg.contains("fleet_types::TaskId::parse"),
         "message should point at the grammar source: {msg}"
@@ -34,7 +37,10 @@ fn task_id_error_shows_whitespace_input_verbatim() {
     let err = TaskId::parse("   ").unwrap_err();
     let msg = err.to_string();
     // Debug-quoted, so trailing whitespace is visible to the user.
-    assert!(msg.contains("\"   \""), "whitespace input must be visible in the message: {msg}");
+    assert!(
+        msg.contains("\"   \""),
+        "whitespace input must be visible in the message: {msg}"
+    );
 }
 
 #[test]
@@ -43,7 +49,10 @@ fn lane_id_error_names_its_own_type() {
     assert_eq!(err.field, "lane_id");
     assert_eq!(err.type_name, "LaneId");
     let msg = err.to_string();
-    assert!(msg.contains("lane_id must not be empty or whitespace-only"), "{msg}");
+    assert!(
+        msg.contains("lane_id must not be empty or whitespace-only"),
+        "{msg}"
+    );
     assert!(msg.contains("fleet_types::LaneId::parse"), "{msg}");
 }
 

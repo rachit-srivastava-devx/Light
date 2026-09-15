@@ -2,7 +2,7 @@
 
 use super::doctor_optional::Optional;
 use crate::build_info::BuildIdentity;
-use runtime::capacity::{preflight, PreflightConfig, StdCapacityProbe};
+use runtime::capacity::{PreflightConfig, StdCapacityProbe, preflight};
 
 #[derive(serde::Serialize)]
 pub struct DoctorReport<'a> {

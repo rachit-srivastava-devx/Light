@@ -59,5 +59,8 @@ fn identical_real_prefixes_score_exactly_one() {
     let cut_a = KT_A.find(marker).expect("marker present in fixture A");
     let cut_b = KT_B.find(marker).expect("marker present in fixture B");
     let score = jaccard_similarity(&KT_A[..cut_a], &KT_B[..cut_b]);
-    assert_eq!(score, 1.0, "identical real prefixes must score 1.0, got {score}");
+    assert_eq!(
+        score, 1.0,
+        "identical real prefixes must score 1.0, got {score}"
+    );
 }

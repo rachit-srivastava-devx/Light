@@ -10,8 +10,8 @@
 pub use super::agent_cmd_error::AgentCmdError;
 
 use super::agent_cmd_run::{self, AgentOutcome};
+use builder::{CliAdapter, fd3};
 use cli::args_agent::AgentArgs;
-use builder::{fd3, CliAdapter};
 
 pub fn agent(args: AgentArgs) -> Result<(), AgentCmdError> {
     let adapter = CliAdapter::from_agent_kind(&args.kind)?;

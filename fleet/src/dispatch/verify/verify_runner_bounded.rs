@@ -15,6 +15,45 @@ use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 use verify::ProcessOutput;
 
+fn repo_target_dir(repo: &Path) -> Option<String> {
+    let base = std::env::var_os("CARGO_TARGET_DIR")?;
+    let base = Path::new(&base);
+    let base = if base.is_absolute() {
+        base.to_path_buf()
+    } else {
+        std::env::current_dir().ok()?.join(base)
+    };
+    let identity = repo.canonicalize().unwrap_or_else(|_| repo.to_path_buf());
+    let hash = identity
+        .as_os_str()
+        .as_encoded_bytes()
+        .iter()
+        .fold(14_695_981_039_346_656_037u64, |state, byte| {
+            (state ^ u64::from(*byte)).wrapping_mul(1_099_511_628_211)
+        });
+    Some(
+        base.join(format!("fleet-repo-{hash:016x}"))
+            .to_string_lossy()
+            .into_owned(),
+    )
+}
+
+fn apply_gate_environment(process: &mut Command, target_dir: Option<String>) {
+    let inherited = ["PATH", "HOME", "TMPDIR", "CARGO_HOME", "RUSTUP_HOME"];
+    process.env_clear();
+    for key in inherited {
+        if let Some(value) = std::env::var_os(key) {
+            process.env(key, value);
+        }
+    }
+    if let Some(value) = std::env::var_os("FLEET_GATES_ROOT") {
+        process.env("FLEET_GATES_ROOT", value);
+    }
+    if let Some(value) = target_dir {
+        process.env("CARGO_TARGET_DIR", value);
+    }
+}
+
 pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessOutput {
     let Some((bin, rest)) = command.split_first() else {
         return ProcessOutput {
@@ -32,14 +71,15 @@ pub fn run_bounded(command: &[&str], deadline: Instant, repo: &Path) -> ProcessO
     // The probe may have found this tool outside `$PATH` (rustup's `~/.cargo/bin`); spawning the
     // bare name would then fail with ENOENT right after the probe said it was available.
     let bin = tool_path::resolve_bin(bin);
-    let mut child = match Command::new(&bin)
+    let mut process = Command::new(&bin);
+    process
         .args(rest)
         .current_dir(repo)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-    {
+        .stderr(Stdio::piped());
+    apply_gate_environment(&mut process, repo_target_dir(repo));
+    let mut child = match process.spawn() {
         Ok(c) => c,
         Err(e) => return io_error(e),
     };

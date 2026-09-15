@@ -10,7 +10,9 @@ fn keeps_provider_text_model_and_usage_without_using_the_requested_alias() {
         stream.push(r#"{"type":"assistant","message":{"model":"claude-sonnet-4","content":[{"type":"text","text":"Hello"}]}}"#),
         Some("Hello".to_string())
     );
-    assert!(stream.push(r#"{"type":"result","result":"Hello","usage":{"input_tokens":11,"output_tokens":7}}"#).is_none());
+    assert!(stream
+        .push(r#"{"type":"result","result":"Hello","usage":{"input_tokens":11,"output_tokens":7}}"#)
+        .is_none());
     assert_eq!(stream.model().as_deref(), Some("claude-sonnet-4"));
     assert_eq!(stream.tokens(), Some(18));
     assert_eq!(stream.body()["response"], "Hello");
@@ -35,9 +37,11 @@ fn renders_claudes_nested_deltas_once_and_keeps_final_usage() {
         Some("DY".to_string())
     );
     assert!(stream.push(r#"{"type":"assistant","message":{"model":"claude-sonnet-5","content":[{"type":"text","text":"READY"}]}}"#).is_none());
-    assert!(stream
-        .push(r#"{"type":"result","usage":{"input_tokens":2,"output_tokens":4}}"#)
-        .is_none());
+    assert!(
+        stream
+            .push(r#"{"type":"result","usage":{"input_tokens":2,"output_tokens":4}}"#)
+            .is_none()
+    );
     assert_eq!(stream.tokens(), Some(6));
     let body = stream.body();
     assert_eq!(body["response"], "READY");
@@ -48,7 +52,9 @@ fn renders_claudes_nested_deltas_once_and_keeps_final_usage() {
 fn result_text_is_shown_when_a_provider_did_not_emit_deltas() {
     let mut stream = ClaudeStream::default();
     assert!(stream
-        .push(r#"{"type":"result","result":"Complete","usage":{"input_tokens":2,"output_tokens":4}}"#)
+        .push(
+            r#"{"type":"result","result":"Complete","usage":{"input_tokens":2,"output_tokens":4}}"#
+        )
         .is_none());
     assert_eq!(stream.body()["response"], "Complete");
 }

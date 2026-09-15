@@ -2,8 +2,8 @@
 //! split out of `module_brief.rs`; `alternatives`/`failure_story` live in
 //! `module_brief_alternatives.rs` to stay under the 80-line cap.
 
-use super::module_brief_core::is_string_array;
 use super::module_brief_alternatives::check_alternatives_and_failure_story;
+use super::module_brief_core::is_string_array;
 use super::violation::{v, Violation};
 use serde_json::{Map, Value};
 

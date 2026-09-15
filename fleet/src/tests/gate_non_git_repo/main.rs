@@ -48,7 +48,10 @@ fn plain_directory_without_the_flag_still_refuses() {
     let out = run_gate(repo.path(), &[]);
     assert_eq!(out.status.code(), Some(3));
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(stderr.contains("not a git repository"), "message unchanged: {stderr}");
+    assert!(
+        stderr.contains("not a git repository"),
+        "message unchanged: {stderr}"
+    );
 }
 
 /// The headline: `--no-git` lets `fleet gate` run against a plain directory, with the real gate
@@ -94,5 +97,9 @@ fn flag_on_a_real_git_worktree_is_still_legal() {
     )
     .unwrap();
     let out = run_gate(dir.path(), &["--no-git", "--id", "unit tests"]);
-    assert!(out.status.success(), "stderr={}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 }

@@ -3,10 +3,10 @@
 //! (a plain append-only JSON-lines file under `state_dir`) that crate declares and does not
 //! implement itself.
 
-use cli::args_ops::LifecycleArgs;
 use crate::dispatch::error::DispatchError;
+use cli::args_ops::LifecycleArgs;
+use control::{ReceiptLedger, TaskId, TransitionReceipt, advance_any, resume};
 use print::human;
-use control::{advance_any, resume, ReceiptLedger, TaskId, TransitionReceipt};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};

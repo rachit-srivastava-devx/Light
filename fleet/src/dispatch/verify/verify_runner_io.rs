@@ -26,11 +26,18 @@ pub fn timeout_output(command: &[&str], budget: Duration) -> ProcessOutput {
 
 /// Read a pipe to completion on a background thread, delivering the collected text over a
 /// channel so the poll loop in `run_bounded` never blocks on a `read` directly.
-pub fn drain(mut pipe: impl Read + Send + 'static) -> mpsc::Receiver<String> {
+pub fn drain(pipe: impl Read + Send + 'static) -> mpsc::Receiver<String> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
-        let mut buf = String::new();
-        let _ = pipe.read_to_string(&mut buf);
+        const MAX_BYTES: usize = 8 * 1024 * 1024;
+        let mut bytes = Vec::with_capacity(MAX_BYTES);
+        let _ = pipe.take((MAX_BYTES + 1) as u64).read_to_end(&mut bytes);
+        let truncated = bytes.len() > MAX_BYTES;
+        bytes.truncate(MAX_BYTES);
+        let mut buf = String::from_utf8_lossy(&bytes).into_owned();
+        if truncated {
+            buf.push_str("\n[fleet: gate output truncated at 8 MiB]");
+        }
         let _ = tx.send(buf);
     });
     rx

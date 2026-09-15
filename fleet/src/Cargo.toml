@@ -36,6 +36,7 @@ sow-memory = { path = "../crates/sow-memory" }
 cli      = { path = "../crates/cli" }
 runtime  = { path = "../crates/runtime" }
 print    = { path = "../crates/print" }
+ingest  = { path = "../crates/ingest" }
 
 [features]
 # Passthrough to `review`'s own `llm7` feature (real keyless HTTP adapter). OFF by

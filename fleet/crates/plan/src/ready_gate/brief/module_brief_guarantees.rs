@@ -1,7 +1,9 @@
 //! The per-`guarantees[i]` check, split from `module_brief_nested.rs` for size
 //! (`lld.rs:317-381`).
 
-use super::super::module_brief_core::{as_str, is_non_empty_str, number_calc_ok, structural_enforced_by_ok};
+use super::super::module_brief_core::{
+    as_str, is_non_empty_str, number_calc_ok, structural_enforced_by_ok,
+};
 use super::super::violation::{v, Violation};
 use serde_json::Value;
 

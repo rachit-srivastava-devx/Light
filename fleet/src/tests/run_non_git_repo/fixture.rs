@@ -68,13 +68,22 @@ pub const MARKER: &str = ".fleet/cwd-marker";
 /// denominator out of. Same payloads as `support::gates`, so a failure here is about cwd or
 /// about `--no-git`, never about parser drift.
 const ECHOES: &[(&str, &str)] = &[
-    ("unit tests", "test result: ok. 3 passed; 0 failed; 0 ignored"),
+    (
+        "unit tests",
+        "test result: ok. 3 passed; 0 failed; 0 ignored",
+    ),
     ("mutants", "mutants: caught=2 total=2"),
     ("semgrep", "10 files scanned, 0 findings"),
     ("trivy", "0 secret findings across 4 reported targets"),
     ("recur", "recur-gate: checked=5 flagged=0"),
-    ("detectors", "7 detectors match the manifest (denominator: 7)"),
-    ("policy", "-- 3 passed, 0 failed (denominator: 3 policies) --"),
+    (
+        "detectors",
+        "7 detectors match the manifest (denominator: 7)",
+    ),
+    (
+        "policy",
+        "-- 3 passed, 0 failed (denominator: 3 policies) --",
+    ),
     ("corpus", "DENOMINATOR checked=9 total=9 caught=0"),
 ];
 

@@ -23,7 +23,10 @@ fn bash_tool_use_shows_a_shortened_command() {
     .to_string();
     let delta = stream.push(&line).unwrap();
     assert!(delta.starts_with("\n\u{2192} Bash(cargo test --workspace"));
-    assert!(delta.contains('\u{2026}'), "expected an ellipsis in {delta:?}");
+    assert!(
+        delta.contains('\u{2026}'),
+        "expected an ellipsis in {delta:?}"
+    );
     assert!(delta.len() < long_cmd.len());
 }
 

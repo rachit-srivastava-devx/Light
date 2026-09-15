@@ -7,9 +7,9 @@
 //! comment ("`None` builder model clears all candidates -- it does not skip the stage"). This is
 //! not a bug to silently default around; pass `--builder-model` to get a real answer instead.
 
-use cli::args_core::RouteArgs;
 use crate::dispatch::error::DispatchError;
 use crate::dispatch::runtime_snapshot::healthy_runtime;
+use cli::args_core::RouteArgs;
 use print::human;
 use types::Role;
 

@@ -1,8 +1,8 @@
 //! `fleet run-modules`'s arg parsing, split out of `mod.rs` to keep it under the 80-line gate.
 
-use cli::args_core::RunModulesArgs;
 use crate::dispatch::error::DispatchError;
 use crate::dispatch::run_cmd;
+use cli::args_core::RunModulesArgs;
 use std::path::Path;
 use types::Module;
 

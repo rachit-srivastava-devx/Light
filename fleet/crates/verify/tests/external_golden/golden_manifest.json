@@ -1,0 +1,14 @@
+{
+  "root": "/Users/rachitsrivastava/Developer/devx/posx-claude-history",
+  "max_bytes_per_file": 65536,
+  "max_records_per_file": 100,
+  "files": [
+    {"path":"rachit/-Users-rachitsrivastava-youtube-Principal-Engineering-Light-fleet__150e6c82-2ba7-4dc4-98b5-6508528015ae.jsonl","bytes":65536,"records":15},
+    {"path":"rachit/-Users-rachitsrivastava-youtube-Principal-Engineering-Light-fleet__46a0d3e6-f411-4b30-bdb9-fffef482d7d0.jsonl","bytes":65536,"records":12},
+    {"path":"rachit/-Users-rachitsrivastava-youtube-Principal-Engineering-Light-fleet__56b0ac21-9481-47d7-9098-06e6e7dce0a1.jsonl","bytes":65536,"records":8},
+    {"path":"rachit/-Users-rachitsrivastava-youtube-Principal-Engineering-Light-fleet__6b2b9bc4-5aaf-47b5-a150-d1437512cb36.jsonl","bytes":65536,"records":8},
+    {"path":"rachit/-Users-rachitsrivastava-youtube-Principal-Engineering-Light-fleet__ae2602c1-0cb2-47db-925f-2ee6f1ff4306.jsonl","bytes":65536,"records":4},
+    {"path":"rachit/-Users-rachitsrivastava-youtube-Principal-Engineering-Light-fleet__e5337076-9da3-44e3-90b8-9d486d33b15c.jsonl","bytes":65536,"records":12}
+  ],
+  "expected": {"files":6,"records":59,"bytes":393216,"blake3":"blake3:293ada10a8f1063246692bfab7d266018e15b0c18dc3e42363d459b8c455d420"}
+}

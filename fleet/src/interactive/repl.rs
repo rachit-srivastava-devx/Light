@@ -87,7 +87,9 @@ pub async fn run_loop(state_dir: &Path, cap: ConcurrencyCap) {
 /// polls it again (the handle is taken). A silent `None` -- what this probe always returns
 /// today, see `update_check::check`'s own doc comment -- prints nothing, matching prior behavior
 /// exactly; only the blocking wait for that `None` is gone.
-async fn announce_update_if_ready(update_check: &mut Option<tokio::task::JoinHandle<Option<String>>>) {
+async fn announce_update_if_ready(
+    update_check: &mut Option<tokio::task::JoinHandle<Option<String>>>,
+) {
     let ready = matches!(update_check, Some(handle) if handle.is_finished());
     if !ready {
         return;

@@ -12,10 +12,10 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-#[path = "step_log_module_id.rs"]
-mod step_log_module_id;
 #[path = "step_log_module.rs"]
 mod step_log_module;
+#[path = "step_log_module_id.rs"]
+mod step_log_module_id;
 #[path = "step_log_repo_key.rs"]
 mod step_log_repo_key;
 #[allow(unused_imports)] // not yet consumed outside this module -- see its own TODO

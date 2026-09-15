@@ -12,10 +12,23 @@
 
 use super::event::PipelineError;
 use super::stage::PipelineStage;
-use sow_memory::record_sow_refusal;
 use planner::{derive_lesson, Lesson, LessonSource, TaughtOutcome};
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
+use sow_memory::record_sow_refusal;
 use std::path::Path;
 use types::{NodeId, Role};
+
+fn note(text: String) {
+    emit(
+        &Event::Note {
+            source: "teach".into(),
+            text,
+        },
+        &Style::detect(),
+    );
+}
 
 fn lesson_text(lesson: &Lesson) -> String {
     format!(
@@ -34,7 +47,10 @@ pub fn teach(
     role: Role,
     failure: Option<(PipelineStage, &PipelineError)>,
 ) {
-    let Some((stage, err)) = failure else { return };
+    let Some((stage, err)) = failure else {
+        note("run passed -- nothing to teach".into());
+        return;
+    };
     let outcome = TaughtOutcome::GateRefused {
         check_id: stage.name(),
         detail: err.to_string(),
@@ -45,7 +61,11 @@ pub fn teach(
     // failure successor of its own (BLUEPRINT §4: every stage's only failure successor is
     // `Teach`, and `Teach` is the trailer itself), so this is recorded to stderr rather than
     // returned as a `Result` nothing downstream would observe.
-    if let Err(e) = record_sow_refusal(state_dir, &lesson_text(&lesson)) {
-        eprintln!("fleet: teach: lesson computed but could not be persisted: {e}");
+    match record_sow_refusal(state_dir, &lesson_text(&lesson)) {
+        Ok(()) => note(format!(
+            "lesson persisted to sow-memory: {}",
+            lesson_text(&lesson)
+        )),
+        Err(e) => eprintln!("fleet: teach: lesson computed but could not be persisted: {e}"),
     }
 }

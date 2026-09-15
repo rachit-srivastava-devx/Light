@@ -1,4 +1,4 @@
-use super::{claude_stream_args, failure_detail, run_cli, AgentOutcome};
+use super::{AgentOutcome, claude_stream_args, failure_detail, run_cli};
 use builder::CliAdapter;
 use std::path::Path;
 

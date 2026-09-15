@@ -17,12 +17,11 @@ pub(crate) fn classify(spec: &GateSpec, out: &ProcessOutput) -> Verdict {
     // Handled once here, gate-agnostically, so any gate following the convention gets the right
     // outcome without teaching its own parser a private not-applicable marker for this case.
     if out.exit_code == 3 {
-        let message = [out.stdout.trim(), out.stderr.trim()]
-            .into_iter()
-            .find(|s| !s.is_empty())
-            .unwrap_or("environment fault (exit 3), no diagnostic on stdout/stderr");
         return Verdict::Skip {
-            reason: format!("{}: {message}", spec.id),
+            reason: format!(
+                "{}: environment fault (exit 3); diagnostic withheld from the receipt",
+                spec.id
+            ),
             was_required: matches!(spec.requirement, super::requirement::Requirement::Required),
         };
     }
@@ -58,3 +57,7 @@ pub(crate) fn classify(spec: &GateSpec, out: &ProcessOutput) -> Verdict {
         },
     }
 }
+
+#[cfg(test)]
+#[path = "classify_tests.rs"]
+mod tests;

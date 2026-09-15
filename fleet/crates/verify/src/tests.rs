@@ -1,6 +1,6 @@
 use crate::types::GateSpec;
 use crate::{
-    verify, FakeCoverageProvider, FakeFindingsProvider, FakeGateRunner, ReviewedCandidate, Status,
+    FakeCoverageProvider, FakeFindingsProvider, FakeGateRunner, ReviewedCandidate, Status, verify,
 };
 
 fn candidate(gates: Vec<GateSpec>) -> ReviewedCandidate {
@@ -59,39 +59,5 @@ fn failing_gate_produces_gate_evidence_not_panic() {
     assert!(!ev.failures.is_empty());
 }
 
-#[test]
-fn coverage_below_floor_marks_gate_failed() {
-    let mut c = candidate(vec![spec("g1")]);
-    c.coverage_floor = Some(80);
-    let ev = run(&c, true, 70, FakeFindingsProvider::empty());
-    let cov = ev.gate_results.iter().find(|r| r.id == "coverage").unwrap();
-    assert!(!cov.passed);
-    let msg = cov.failure_message.as_deref().unwrap_or("");
-    assert!(msg.contains("70"), "msg={msg}");
-    assert!(msg.contains("80"), "msg={msg}");
-}
-
-#[test]
-fn secret_finding_blocks_gate() {
-    let ev = run(
-        &candidate(vec![spec("g1")]),
-        true,
-        100,
-        FakeFindingsProvider::with_critical("secrets.txt"),
-    );
-    assert!(!ev.passed);
-    assert!(!ev.findings.is_empty());
-}
-
-#[test]
-fn evidence_digest_mismatch_refused() {
-    let mut c = candidate(vec![spec("g1")]);
-    c.output_digest = Some("wrong-digest".into());
-    let ev = run(&c, true, 100, FakeFindingsProvider::empty());
-    assert!(!ev.passed);
-    let found = ev
-        .failures
-        .iter()
-        .any(|f| f.contains("mismatch") || f.contains("digest"));
-    assert!(found, "failures: {:?}", ev.failures);
-}
+#[path = "tests_edge_cases.rs"]
+mod edge_cases;

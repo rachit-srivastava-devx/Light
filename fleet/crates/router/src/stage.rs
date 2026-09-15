@@ -58,4 +58,3 @@ pub(crate) fn refusal_capability(candidates: &[CandidateSpec]) -> Option<Refusal
         fix: "install and authenticate the eligible Claude Code or Codex CLI, then retry".into(),
     })
 }
-

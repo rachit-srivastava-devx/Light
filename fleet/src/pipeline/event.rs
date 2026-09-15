@@ -3,6 +3,7 @@
 
 use super::records::{GateRecord, StageRecord};
 use super::stage::PipelineStage;
+use types::ExitCode;
 
 /// `Scan`/`Plan` are still never constructed: `stages::{scan,plan}` remain pure wiring (BLUEPRINT
 /// §2 non-goals -- no decision logic lives in `fleet-cli`) and have no real failure input fed to
@@ -20,6 +21,10 @@ pub enum PipelineError {
     Plan(String),
     Dispatch(route::Refusal),
     Verify(String),
+    VerifyTyped {
+        detail: String,
+        code: ExitCode,
+    },
     Merge(integrate::MergeRefusal),
     /// The step-log / durable-journal shim itself faulted (distinct from a stage's own
     /// business error). Named `Runtime` to match BLUEPRINT §3's `PipelineError::Runtime`.

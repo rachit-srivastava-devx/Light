@@ -30,6 +30,8 @@ mod gate_types;
 mod lld_v1;
 #[path = "brief/module_brief.rs"]
 mod module_brief;
+#[path = "brief/module_brief_alternatives.rs"]
+mod module_brief_alternatives;
 #[path = "brief/module_brief_core.rs"]
 mod module_brief_core;
 #[path = "brief/module_brief_fields.rs"]
@@ -38,8 +40,6 @@ mod module_brief_fields;
 mod module_brief_mid;
 #[path = "brief/module_brief_nested.rs"]
 mod module_brief_nested;
-#[path = "brief/module_brief_alternatives.rs"]
-mod module_brief_alternatives;
 mod registry_verdict;
 mod sow_seed;
 mod violation;

@@ -60,4 +60,3 @@ pub(crate) fn valid_content_hash(s: &str) -> bool {
             .bytes()
             .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
 }
-

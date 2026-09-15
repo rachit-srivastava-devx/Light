@@ -75,6 +75,8 @@ pub mod verify_cmd;
 /// `pub(crate)`: `pipeline::verify_stage` reuses this module's real `WhichProbe`/`RealRunner`.
 #[path = "verify/verify_ports.rs"]
 pub(crate) mod verify_ports;
+#[path = "verify/verify_receipt.rs"]
+mod verify_receipt;
 #[path = "verify/verify_repo.rs"]
 mod verify_repo;
 #[path = "verify/verify_report.rs"]
@@ -92,8 +94,8 @@ pub(crate) mod which_probe;
 #[path = "ops/worker_cmd.rs"]
 pub mod worker_cmd;
 use cli::Commands;
-use runtime::ConcurrencyCap;
 use error::DispatchError;
+use runtime::ConcurrencyCap;
 use std::path::Path;
 
 pub async fn run(
@@ -112,8 +114,8 @@ pub async fn run(
         Commands::Agents(a) => agents_cmd::agents(a),
         Commands::Lifecycle(a) => lifecycle_cmd::lifecycle(state_dir, a),
         Commands::Run(a) => run_cmd::run(state_dir, a),
-        Commands::Oracle(a) => verify_cmd::oracle(a),
-        Commands::Gate(a) => verify_cmd::gate(a),
+        Commands::Oracle(a) => verify_cmd::oracle(state_dir, a),
+        Commands::Gate(a) => verify_cmd::gate(state_dir, a),
         Commands::Ledger(a) => ledger_cmd::ledger(state_dir, a),
         Commands::Rollback(a) => ledger_cmd::rollback(a),
         Commands::Graph(a) => context_cmd::graph(a),

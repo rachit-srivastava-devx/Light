@@ -24,7 +24,9 @@ impl GateRunner for FakeGateRunner {
             exit_code: self.exit_code,
             stdout_digest: "sha256:aabbcc".into(),
             stderr_digest: "sha256:ddeeff".into(),
-            input_digest: "sha256:112233".into(),
+            input_digest: "denominator:1/1".into(),
+            checked: 1,
+            total: 1,
             passed,
             failure_message: if passed {
                 None

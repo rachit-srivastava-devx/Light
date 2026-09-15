@@ -3,9 +3,9 @@
 //! round-trips through a REAL re-exec, not the `FLEET_WORKER_TEST_CHILD_EXE` fault-injection
 //! seam (`src/tests/agent_child_dispatch.rs` is the test that drives this).
 
-use cli::args_agent::SpawnProbeArgs;
 use crate::dispatch::error::DispatchError;
-use builder::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
+use builder::{CliAdapter, LaneOutcome, MergePolicy, SpawnRequest, join, spawn};
+use cli::args_agent::SpawnProbeArgs;
 use std::path::PathBuf;
 use std::time::Duration;
 use types::{Role, TaskId};
@@ -28,7 +28,7 @@ pub fn probe(args: SpawnProbeArgs) -> Result<(), DispatchError> {
         LaneOutcome::EnvironmentFault { detail } => {
             return Err(DispatchError::Refusal(format!(
                 "__spawn_probe: no receipt came back over fd 3: {detail}"
-            )))
+            )));
         }
     }
     Ok(())

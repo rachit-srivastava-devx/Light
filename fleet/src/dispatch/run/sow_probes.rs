@@ -7,7 +7,7 @@
 //! IS wired, via `memory_adapter::RealMemory` (backed by `knowledge::retrieve`).
 
 use scan::{CodebasePort, ConcurrentRunner, EnvFault, ProbeJob, ProbeRun, ResearchPort};
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
 /// No codebase index is wired into `sow` yet; every symbol reports "not found" rather than
 /// blocking `sow` on a walk of the working tree (see `walk.rs` for why a full walk is not free).

@@ -42,7 +42,10 @@ fn route(args: &[&str]) -> (i32, String, String) {
 fn bare_role_verifier_refuses_at_stage_five_by_design() {
     let (code, out, err) = route(&["--role", "verifier", "--json"]);
     assert_eq!(code, REFUSAL, "stdout: {out}\nstderr: {err}");
-    assert!(out.is_empty(), "refusal must not also print a report: {out}");
+    assert!(
+        out.is_empty(),
+        "refusal must not also print a report: {out}"
+    );
     assert!(err.contains("stage: 5"), "wrong stage: {err}");
     assert!(
         err.contains("verifier independence"),
@@ -61,7 +64,10 @@ fn builder_model_distinct_from_every_candidate_routes_successfully() {
         "--json",
     ]);
     assert_eq!(code, 0, "stderr: {err}");
-    assert!(out.contains("codex"), "expected the top-preference verifier candidate: {out}");
+    assert!(
+        out.contains("codex"),
+        "expected the top-preference verifier candidate: {out}"
+    );
 }
 
 /// Passing the model of the candidate that would otherwise be picked first must skip only THAT

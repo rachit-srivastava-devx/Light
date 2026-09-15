@@ -28,8 +28,14 @@ pub fn run_one(
         PipelineStage::Dispatch => {
             stages::dispatch(ctx.runtime, ctx.task).map(|_| StageOutput::None)
         }
-        PipelineStage::Verify => stages::verify(ctx.verify_gates, ctx.repo, ctx.state_dir, gates)
-            .map(|_| StageOutput::None),
+        PipelineStage::Verify => stages::verify(
+            ctx.verify_gates,
+            ctx.repo,
+            ctx.state_dir,
+            gates,
+            ctx.git_backed,
+        )
+        .map(|_| StageOutput::None),
         PipelineStage::Merge => {
             if ctx.git_backed {
                 stages::merge(ctx.repo).map(|_| StageOutput::None)

@@ -7,15 +7,15 @@
 //! **Module-level parallel execution**: Extended to support parallel SOW validation and planning
 //! for multiple modules, with blueprint streaming to the user as an L8 engineer.
 
-use cli::args_core::{PlanArgs, SowArgs};
 use crate::dispatch::error::DispatchError;
-use sow_memory::{record_accepted_sow, RealMemory};
 use crate::dispatch::sow_probes::{SequentialRunner, StubCodebase, StubResearch};
+use cli::args_core::{PlanArgs, SowArgs};
 use print::human;
 use scan::{
-    assess, Assessment, BusinessProbe, MemoryProbe, ProbeSet, RequirementInput, ResearchProbe,
-    TechnicalProbe,
+    Assessment, BusinessProbe, MemoryProbe, ProbeSet, RequirementInput, ResearchProbe,
+    TechnicalProbe, assess,
 };
+use sow_memory::{RealMemory, record_accepted_sow};
 use std::collections::HashMap;
 use std::path::Path;
 use types::{Blueprint, Module, TaskId};

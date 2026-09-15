@@ -40,13 +40,18 @@ pub enum DispatchError {
     EnvFault(String),
     /// `fleet oracle`/`fleet gate` ran to completion but the aggregate verdict was not clean --
     /// the exit code is `Report::exit_code()`'s own, never collapsed to a fixed variant here.
-    #[error("verification failed: {failed} failed, {skipped} skipped (of {total} gate(s))")]
+    #[error(
+        "verification failed: {failed} failed, {skipped} skipped (of {total} gate(s)): {detail}"
+    )]
     VerifyFailed {
         failed: usize,
         skipped: usize,
         total: usize,
         code: ExitCode,
+        detail: String,
     },
+    #[error("verification blocked by {count} secret finding(s)")]
+    SecretsFound { count: usize },
     /// `fleet gate --id <id>` where `<id>` matches no entry in `verify::GATES`.
     #[error("no gate matches id {0:?}")]
     UnknownGate(String),

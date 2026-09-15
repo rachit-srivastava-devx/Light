@@ -44,7 +44,10 @@ fn tool_use_detail(root: &Path, name: &str, input: Option<&Value>) -> Option<Str
                     .to_string(),
             )
         }
-        "Glob" | "Grep" => input.get("pattern").and_then(Value::as_str).map(str::to_owned),
+        "Glob" | "Grep" => input
+            .get("pattern")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
         "Bash" => input
             .get("command")
             .and_then(Value::as_str)

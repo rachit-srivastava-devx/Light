@@ -12,8 +12,9 @@ const COLOR: Style = Style::new(true);
 fn stage_started_plain() {
     let e = Event::StageStarted {
         stage: "Verify".into(),
+        lld_node: "Verify".into(),
     };
-    assert_eq!(render(&e, &PLAIN), "\u{25b6} stage Verify");
+    assert_eq!(render(&e, &PLAIN), "\u{25b6} stage Verify [Verify]");
 }
 
 #[test]

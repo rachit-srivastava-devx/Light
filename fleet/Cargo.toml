@@ -42,3 +42,13 @@ exclude = ["keel", "registry-reference", "tests", "crew", "crates/fleet-crew"]
 
 [workspace.package]
 license = "MIT"
+
+# macOS-specific: full DWARF debug info triggers dsymutil bundling on every link, which
+# dominates dev/test build time on a 38-crate workspace. line-tables-only keeps panic/backtrace
+# line numbers; split-debuginfo=unpacked skips the dsymutil bundling step entirely.
+[profile.dev]
+debug = "line-tables-only"
+split-debuginfo = "unpacked"
+
+[profile.test]
+inherits = "dev"

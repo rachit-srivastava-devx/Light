@@ -2,12 +2,12 @@
 //! (worktree, fd-3, subprocess) is entirely `fleet-worker`'s; this only builds the typed
 //! `SpawnRequest` from CLI args and reports the outcome (BLUEPRINT §2 non-goals).
 
-use cli::args_core::SwarmArgs;
 use crate::dispatch::error::DispatchError;
+use builder::{CliAdapter, LaneOutcome, MergePolicy, SpawnRequest, join, spawn};
+use cli::args_core::SwarmArgs;
 use print::human_stream::emit;
 use print::render_event::Event;
 use print::style::Style;
-use builder::{join, spawn, CliAdapter, LaneOutcome, MergePolicy, SpawnRequest};
 use std::path::Path;
 use std::time::Duration;
 use types::{Role, TaskId};
@@ -40,11 +40,19 @@ pub(crate) struct VerifyPlan {
     pub task: String,
 }
 
-pub(crate) fn verify_plan(then_verify: bool, swarm_done: bool, repo: &str, task: &str) -> Option<VerifyPlan> {
+pub(crate) fn verify_plan(
+    then_verify: bool,
+    swarm_done: bool,
+    repo: &str,
+    task: &str,
+) -> Option<VerifyPlan> {
     if !then_verify || !swarm_done {
         return None;
     }
-    Some(VerifyPlan { repo: repo.to_string(), task: task.to_string() })
+    Some(VerifyPlan {
+        repo: repo.to_string(),
+        task: task.to_string(),
+    })
 }
 
 pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
@@ -67,7 +75,11 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // `args.prompt` alone, so a non-empty `--task` with no `--prompt` was rejected as an empty
     // prompt (S1-4). `--prompt` remains a genuinely distinct, optional override: pass it to
     // give the worker different instructions than the task id/name itself.
-    let prompt = if args.prompt.trim().is_empty() { args.task.clone() } else { args.prompt };
+    let prompt = if args.prompt.trim().is_empty() {
+        args.task.clone()
+    } else {
+        args.prompt
+    };
     // `--agent` selects the CLI adapter; unknown values fail here as EnvironmentFault rather
     // than silently defaulting to Freelane (the prior behavior -- Claude/Codex existed in the
     // type system but were unreachable from CLI). `from_agent_kind` is the single parse point.
@@ -101,8 +113,18 @@ pub fn swarm(state_dir: &Path, args: SwarmArgs) -> Result<(), DispatchError> {
     // `agent=<kind>` is appended (never a prefix change) so a reader can tell freelane apart
     // from claude apart from codex at a glance without breaking any downstream regex that
     // already matches on the leading `[lane] spawned` shape.
-    emit(&Event::Worker { lane: lane.clone(), text: spawned_line(adapter_kind) }, &style);
-    let policy = if args.merge { MergePolicy::OnSuccess } else { MergePolicy::Never };
+    emit(
+        &Event::Worker {
+            lane: lane.clone(),
+            text: spawned_line(adapter_kind),
+        },
+        &style,
+    );
+    let policy = if args.merge {
+        MergePolicy::OnSuccess
+    } else {
+        MergePolicy::Never
+    };
     let (outcome, merge_outcome) = join(handle, policy)?;
     if let Some(m) = &merge_outcome {
         let text = format!(

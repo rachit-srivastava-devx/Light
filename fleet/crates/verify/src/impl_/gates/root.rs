@@ -53,3 +53,14 @@ impl GatesRoot {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::GatesRoot;
+
+    #[test]
+    fn missing_override_directory_is_rejected() {
+        let path = tempfile::tempdir().expect("tempdir").path().join("missing");
+        assert!(GatesRoot::from_override(path).is_err());
+    }
+}

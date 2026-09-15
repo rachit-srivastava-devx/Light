@@ -52,7 +52,9 @@ impl Report {
     /// `ExitCode::Ok`. Env-fault check strictly outranks invariant-fail, matching
     /// `verify.sh:125-126`'s literal ordering.
     pub fn exit_code(&self) -> ExitCode {
-        if self.env_faults() > 0 {
+        if self.results.is_empty() {
+            ExitCode::Invariant
+        } else if self.env_faults() > 0 {
             ExitCode::Env
         } else if self.failed() > 0 {
             ExitCode::Invariant
@@ -61,3 +63,7 @@ impl Report {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "report_tests.rs"]
+mod tests;

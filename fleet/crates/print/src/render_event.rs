@@ -18,6 +18,11 @@ pub enum Outcome {
 pub enum Event {
     StageStarted {
         stage: String,
+        /// The docs/LLD §3 node(s) this stage's real wiring exercises today -- named so a CLI
+        /// run can be read against the design graph, not just this composition root's own
+        /// 8-stage names. Never claims a node the wiring does not actually reach (see
+        /// `PipelineStage::lld_nodes`'s doc comment for the honesty rule behind this field).
+        lld_node: String,
     },
     StageFinished {
         stage: String,

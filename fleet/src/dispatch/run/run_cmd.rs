@@ -11,6 +11,7 @@
 use crate::dispatch::error::DispatchError;
 use crate::dispatch::plan_cmd::{plan_modules, sow_modules};
 use crate::dispatch::runtime_snapshot::healthy_runtime;
+use crate::pipeline::event::PipelineError;
 use crate::pipeline::{maybe_flush, run_pipeline};
 use cli::args_ops::RunArgs;
 use integrate::LaneManager;
@@ -49,6 +50,17 @@ pub(crate) fn run_pipeline_on(
     }
     match outcome.result {
         Ok(()) => Ok(()),
+        Err(PipelineError::VerifyTyped {
+            detail,
+            code: types::ExitCode::Refusal,
+        }) => Err(DispatchError::Refusal(detail)),
+        Err(PipelineError::VerifyTyped { detail, code }) => Err(DispatchError::VerifyFailed {
+            failed: 1,
+            skipped: 0,
+            total: 1,
+            code,
+            detail,
+        }),
         Err(e) => Err(DispatchError::Refusal(e.to_string())),
     }
 }

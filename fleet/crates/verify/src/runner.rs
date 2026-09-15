@@ -40,7 +40,9 @@ pub fn evaluate_coverage(
         exit_code: if passed { 0 } else { 6 },
         stdout_digest: format!("coverage:{}", percent),
         stderr_digest: String::new(),
-        input_digest: format!("floor:{}", floor),
+        input_digest: "denominator:1/1".into(),
+        checked: 1,
+        total: 1,
         passed,
         failure_message,
     })

@@ -4,7 +4,7 @@
 //! never a doctor failure. Kept in sync with the registry automatically: adding a new
 //! `ProbeTool::Named("...")` gate shows up here without touching this file.
 
-use verify::{GateSpec, ProbeTool, GATES};
+use verify::{GATES, GateSpec, ProbeTool};
 
 /// One row in the section. `path` is `Some` when the tool resolves, else `None` and the
 /// caller prints `install`. Flat so `--json` serializes it verbatim.
@@ -39,7 +39,9 @@ fn install_hint(name: &str) -> String {
     }
     match name {
         "semgrep" => "pip install semgrep  # or https://semgrep.dev/docs/getting-started/".into(),
-        "trivy" => "https://aquasecurity.github.io/trivy/latest/getting-started/installation/".into(),
+        "trivy" => {
+            "https://aquasecurity.github.io/trivy/latest/getting-started/installation/".into()
+        }
         "conftest" => "https://www.conftest.dev/install/".into(),
         "uv" => "https://docs.astral.sh/uv/getting-started/installation/".into(),
         other => format!("see the {other} project homepage for install instructions"),
@@ -52,13 +54,19 @@ fn install_hint(name: &str) -> String {
 pub fn collect() -> Vec<Optional> {
     let (mut seen, mut out): (Vec<&'static str>, Vec<Optional>) = (Vec::new(), Vec::new());
     for spec in GATES {
-        let Some(name) = probe_name(spec) else { continue };
+        let Some(name) = probe_name(spec) else {
+            continue;
+        };
         if seen.contains(&name) {
             continue;
         }
         seen.push(name);
         let path = super::tool_path::find(name).map(|p| p.display().to_string());
-        out.push(Optional { tool: name, path, install: install_hint(name) });
+        out.push(Optional {
+            tool: name,
+            path,
+            install: install_hint(name),
+        });
     }
     out
 }
@@ -74,7 +82,12 @@ pub fn print(items: &[Optional]) {
     for i in items {
         match &i.path {
             Some(p) => println!("OK   {:<width$}  {}", i.tool, p, width = width),
-            None => println!("MISS {:<width$}  install: {}", i.tool, i.install, width = width),
+            None => println!(
+                "MISS {:<width$}  install: {}",
+                i.tool,
+                i.install,
+                width = width
+            ),
         }
     }
 }

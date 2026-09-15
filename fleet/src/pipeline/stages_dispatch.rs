@@ -5,7 +5,20 @@
 
 use super::channels::{blueprint_q, enqueue_build};
 use super::event::PipelineError;
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
 use types::Role;
+
+fn note(text: String) {
+    emit(
+        &Event::Note {
+            source: "dispatch".into(),
+            text,
+        },
+        &Style::detect(),
+    );
+}
 
 pub fn dispatch(
     runtime: &route::RuntimeState,
@@ -18,8 +31,16 @@ pub fn dispatch(
         runtime,
     );
     if let Some(r) = decision.refusal {
+        note(format!(
+            "Route refused Builder at stage {} ({}): {}",
+            r.stage, r.stage_name, r.reason
+        ));
         return Err(PipelineError::Dispatch(r));
     }
+    note(format!(
+        "Route admitted Builder: adapter={:?} resolved_model={:?}",
+        decision.selected_adapter, decision.resolved_model
+    ));
     let lifecycle_id = control::TaskId::new(task_id.as_str())
         .map_err(|e| PipelineError::Runtime(e.message().to_string()))?;
     let any = control::resume("Building", lifecycle_id, 0)
@@ -29,6 +50,7 @@ pub fn dispatch(
             "resume(\"Building\") yielded the wrong state".into(),
         ));
     };
+    note("Ready contract gate cleared: lifecycle state -> Building".into());
     let (tx, mut rx) = blueprint_q(1);
     enqueue_build(&tx, building)
         .map_err(|_| PipelineError::Runtime("build_q enqueue failed".into()))?;
@@ -40,5 +62,9 @@ pub fn dispatch(
             "build_q delivered the wrong task".into(),
         ));
     }
+    note(format!(
+        "task {} handed to build-queue (no Builder process spawned by this stage)",
+        task_id.as_str()
+    ));
     Ok(())
 }

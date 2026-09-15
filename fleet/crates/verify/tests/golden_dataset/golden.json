@@ -1,0 +1,26 @@
+[
+  {
+    "name": "clean-pass",
+    "tree_digest": "t1",
+    "acceptance_digest": "a1",
+    "gate": {
+      "id": "g1",
+      "exit_code": 0,
+      "stdout_digest": "abc",
+      "stderr_digest": "",
+      "input_digest": "denominator:1/1",
+      "checked": 1,
+      "total": 1,
+      "passed": true,
+      "failure_message": null
+    },
+    "findings": [],
+    "expected": {
+      "evidence_digest": "blake3:3193d9a75b41b5c09e4976f2fbf05b3f5d294695172e8ae3e0e009b1b6e7d1e9",
+      "status": "Passed",
+      "passed": true,
+      "checked": 1,
+      "total": 1
+    }
+  }
+]

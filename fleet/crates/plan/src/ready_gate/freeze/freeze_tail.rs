@@ -36,4 +36,3 @@ pub(crate) fn check_freeze_tail(f: &Map<String, Value>, out: &mut Vec<Violation>
         ));
     }
 }
-

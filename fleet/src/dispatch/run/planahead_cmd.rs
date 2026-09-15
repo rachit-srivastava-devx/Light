@@ -2,9 +2,9 @@
 //! real call site that makes `pipeline::planahead` reachable from the compiled binary, matching
 //! `run_cmd::pipeline_probe`'s role for `pipeline::graph`.
 
-use cli::args_ctx::PlanAheadProbeArgs;
 use crate::dispatch::error::DispatchError;
-use crate::pipeline::planahead::{run_plan_ahead, UnitStep};
+use crate::pipeline::planahead::{UnitStep, run_plan_ahead};
+use cli::args_ctx::PlanAheadProbeArgs;
 use print::human;
 use std::path::Path;
 use std::sync::Arc;

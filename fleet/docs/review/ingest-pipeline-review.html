@@ -1,0 +1,3120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fleet CLI — prompt flow &amp; event ingress, full review</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --bg-elevated:#ffffff; --text:#1b1a17; --text-dim:#6b6a65;
+    --border:#dedad2; --accent:#8a4b2f; --accent-soft:#f1e2d6;
+    --danger:#a3342a; --danger-soft:#f6e4e1;
+    --info:#2b5e8a; --info-soft:#e2edf5;
+    --ok:#3f7a45; --ok-soft:#e5f0e3;
+    --code-bg:#efece5; --code-border:#dcd6c9;
+    --node-bg:#ffffff; --node-border:#c9c2b3; --node-title-bg:#efe6da;
+    --dedup-bg:#fbfaf7; --dedup-border:#b7a98f;
+    --shadow: 0 1px 2px rgba(0,0,0,.05), 0 1px 12px rgba(0,0,0,.04);
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#17130f; --bg-elevated:#1f1a15; --text:#ece6dc; --text-dim:#a89d8c;
+      --border:#3a332a; --accent:#e0a377; --accent-soft:#3a2c20;
+      --danger:#e2837a; --danger-soft:#3a2320;
+      --info:#8fc1ee; --info-soft:#20303e;
+      --ok:#94cf98; --ok-soft:#1f2e20;
+      --code-bg:#231d16; --code-border:#3a332a;
+      --node-bg:#1f1a15; --node-border:#4a4132; --node-title-bg:#2b2319;
+      --dedup-bg:#1a1611; --dedup-border:#5b4f3a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#17130f; --bg-elevated:#1f1a15; --text:#ece6dc; --text-dim:#a89d8c;
+    --border:#3a332a; --accent:#e0a377; --accent-soft:#3a2c20;
+    --danger:#e2837a; --danger-soft:#3a2320;
+    --info:#8fc1ee; --info-soft:#20303e;
+    --ok:#94cf98; --ok-soft:#1f2e20;
+    --code-bg:#231d16; --code-border:#3a332a;
+    --node-bg:#1f1a15; --node-border:#4a4132; --node-title-bg:#2b2319;
+    --dedup-bg:#1a1611; --dedup-border:#5b4f3a;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--bg); color:var(--text); margin:0; padding:0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height:1.55; }
+  code, pre, .mono{ font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+  a{ color: var(--accent); }
+  .wrap{ max-width: 1040px; margin: 0 auto; padding: 0 24px 120px; }
+
+  header.page{ background:var(--bg-elevated); border-bottom:1px solid var(--border); padding:28px 0; margin-bottom:8px; }
+  header.page .wrap{ padding-bottom:0; }
+  .kicker{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); font-weight:600; }
+  h1{ font-size:26px; margin:6px 0 10px; }
+  .badges{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 4px; }
+  .badge{ font-size:12px; font-weight:600; padding:4px 10px; border-radius:999px; border:1px solid var(--border); color:var(--text-dim); }
+  .badge.warn{ background:var(--danger-soft); border-color:var(--danger); color:var(--danger); }
+  .badge.info{ background:var(--info-soft); border-color:var(--info); color:var(--info); }
+  .badge.ok{ background:var(--ok-soft); border-color:var(--ok); color:var(--ok); }
+
+  nav.toc{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:13px; padding:14px 0; border-bottom:1px solid var(--border); margin-bottom:34px; position:sticky; top:0; background:var(--bg); z-index:5; }
+  nav.toc a{ color:var(--text-dim); text-decoration:none; padding:4px 0; }
+  nav.toc a:hover{ color:var(--accent); }
+
+  section{ margin-bottom:56px; }
+  h2{ font-size:20px; border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:16px; }
+  h3{ font-size:16px; margin: 28px 0 8px; }
+  h3 .path{ color:var(--text-dim); font-weight:400; font-size:13px; }
+  p{ margin: 10px 0; }
+  .lede{ font-size:15px; color:var(--text-dim); }
+
+  .stat-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap:10px; margin:18px 0; }
+  .stat{ background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .stat .n{ font-size:22px; font-weight:700; }
+  .stat .l{ font-size:12px; color:var(--text-dim); }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; margin:14px 0; }
+  th,td{ text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th{ color:var(--text-dim); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+  tr:hover td{ background: var(--bg-elevated); }
+  td code, th code{ font-size:12.5px; }
+
+  pre{ background:var(--code-bg); border:1px solid var(--code-border); border-radius:8px; padding:14px 16px;
+       overflow-x:auto; font-size:12.6px; line-height:1.6; margin:10px 0; }
+  pre code{ background:none; border:0; padding:0; }
+  code.inline{ background:var(--code-bg); border:1px solid var(--code-border); border-radius:4px; padding:1px 5px; font-size:12.5px; }
+
+  .filecard{ border:1px solid var(--border); border-radius:12px; background:var(--bg-elevated); padding:18px 20px; margin:18px 0; box-shadow: var(--shadow); }
+  .filecard .meta{ display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--text-dim); margin-bottom:10px; }
+  .filecard .meta b{ color:var(--text); }
+  details.src{ margin-top:10px; }
+  details.src summary{ cursor:pointer; font-size:13px; color:var(--info); font-weight:600; padding:6px 0; }
+  details.src[open] summary{ margin-bottom:4px; }
+
+  .callout{ border-left:4px solid var(--accent); background:var(--accent-soft); padding:10px 14px; border-radius:0 8px 8px 0; font-size:13.5px; margin:14px 0; }
+  .callout.danger{ border-color:var(--danger); background:var(--danger-soft); }
+  .callout.info{ border-color:var(--info); background:var(--info-soft); }
+  .callout b{ display:block; margin-bottom:2px; }
+
+  .chip{ display:inline-block; font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:999px; margin:2px 4px 2px 0; }
+  .chip.err{ background:var(--danger-soft); color:var(--danger); border:1px solid var(--danger); }
+  .chip.art{ background:var(--info-soft); color:var(--info); border:1px solid var(--info); }
+
+  .diagram-wrap{ background:var(--bg-elevated); border:1px solid var(--border); border-radius:14px; padding:18px; overflow-x:auto; box-shadow: var(--shadow); }
+  svg text{ font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; fill:var(--text); }
+  svg .title-txt{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-weight:700; }
+  .legend{ display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--text-dim); margin:10px 2px 0; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .swatch{ width:12px; height:12px; border-radius:3px; display:inline-block; }
+
+  .walk-step{ border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin:10px 0; background:var(--bg-elevated); }
+  .walk-step .n{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:12px; font-weight:700; margin-right:8px; }
+
+  footer.page{ border-top:1px solid var(--border); margin-top:60px; padding-top:18px; font-size:12.5px; color:var(--text-dim); }
+
+  .theme-toggle{ position:fixed; bottom:18px; right:18px; z-index:9; background:var(--bg-elevated); border:1px solid var(--border);
+    border-radius:999px; padding:8px 14px; font-size:12.5px; cursor:pointer; color:var(--text); box-shadow:var(--shadow); }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <div class="wrap">
+    <div class="kicker">Code review artifact · Light/fleet</div>
+    <h1>fleet CLI — prompt flow &amp; event ingress</h1>
+    <p class="lede">Two subsystems, covered separately below. <b>Part A</b> is what actually runs the instant you type
+      into <code class="inline">fleet</code> and hit Enter — the live REPL → approval gate → real subprocess exec.
+      <b>Part B</b> is the <code class="inline">ingest</code> crate — built and tested, but not wired to anything yet.
+      Don't confuse the two: only Part A is on the path your keystrokes take today.</p>
+    <div class="badges">
+      <span class="badge ok">Part A is LIVE — this runs on every prompt you type</span>
+      <span class="badge info">12-stage flow · 20 source files · ~1,430 lines</span>
+      <span class="badge warn">Part B (ingest) — zero callers, not wired into any binary yet</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap" style="display:flex; flex-wrap:wrap; gap:4px 14px; padding:0;">
+    <a href="#cli-overview">A · Overview</a>
+    <a href="#cli-diagram">A · Flow diagram</a>
+    <a href="#cli-files">A · File-by-file source</a>
+    <a href="#cli-reference">A · Reference tables</a>
+    <a href="#cli-walkthrough">A · Traced example</a>
+    <a href="#overview">B · ingest overview</a>
+    <a href="#diagram">B · ingest diagram</a>
+    <a href="#files">B · ingest source</a>
+    <a href="#reference">B · ingest reference</a>
+    <a href="#walkthrough">B · ingest example</a>
+    <a href="#tests">B · ingest tests</a>
+    <a href="#checklist">Review checklist (both parts)</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<section id="cli-overview">
+  <h2>A · Live CLI prompt flow — this is what actually runs</h2>
+  <p class="lede">You run <code class="inline">fleet</code> with no subcommand, in a real terminal, and type a line.
+    This traces every file and function that touches that line, from keystroke to the real subprocess it launches,
+    to the log line it writes when it's done. No stand-in, no simplification — every named function below is real
+    and is on this exact path.</p>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="n">12</div><div class="l">stages from keystroke to response</div></div>
+    <div class="stat"><div class="n">20</div><div class="l">source files on this path</div></div>
+    <div class="stat"><div class="n">1</div><div class="l">real subprocess spawned per prompt (claude / codex / freelane)</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">normalization/redaction steps on your raw text</div></div>
+  </div>
+
+  <div class="callout ok">
+    <b>How this differs from Part B (<code class="inline">ingest</code>)</b>
+    This is real, wired, exercised-on-every-keystroke code — <a href="../../src/main.rs">src/main.rs:56-57</a> is the
+    one line that decides "no subcommand + real terminal → start this loop." Nothing here is a contract sitting
+    unused; it's the thing that ran the last time you opened <code class="inline">fleet</code> and typed anything.
+  </div>
+</section>
+
+<section id="cli-diagram">
+  <h2>A · Flow diagram — full component detail</h2>
+  <p class="lede">Every function, every decision branch, every CLI flag, and every constant on the path from your
+    keystroke to the model's response, as its own labelled element. Where an arrow says "zoom into step N," the box
+    below it is detail on one step of the box above — not a later point in time; both are the same call, unpacked.</p>
+
+  <div class="diagram-wrap">
+<svg viewBox="0 0 860 2660" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="fleet CLI prompt flow full component diagram">
+  <defs>
+    <marker id="arrow-cli" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-dim)"></path>
+    </marker>
+  </defs>
+
+  <!-- N0 Entry -->
+  <g>
+    <rect x="60" y="20" width="740" height="150" rx="10" fill="var(--node-bg)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2 3"></rect>
+    <text x="84" y="46" class="title-txt" font-size="14">fleet, no subcommand, a real terminal on both ends</text>
+    <text x="84" y="70" font-size="12.5" fill="var(--text-dim)">main.rs:53-64</text>
+    <text x="84" y="94" font-size="12.5">stdin.is_terminal() &amp;&amp; stdout.is_terminal() → true → interactive::run(state_dir, cap)</text>
+    <text x="84" y="116" font-size="12.5">a subcommand given (e.g. `fleet agent run`) → dispatch::run() — a different path, not here</text>
+    <text x="84" y="140" font-size="12.5">neither a terminal (e.g. piped) → prints --help and exits</text>
+  </g>
+  <line x1="430" y1="170" x2="430" y2="210" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+
+  <!-- N1 Stage 1 -->
+  <g>
+    <rect x="60" y="210" width="740" height="160" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="210" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="226" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="233" class="title-txt" font-size="13.5">STAGE 1 · repl::run_loop() setup</text>
+    <text x="700" y="233" font-size="11.5" fill="var(--text-dim)" text-anchor="end">repl.rs:14-36</text>
+    <text x="84" y="270" font-size="12.5">1. render_banner() — prints the ASCII banner once</text>
+    <text x="84" y="292" font-size="12.5">2. path_check::check() — quick, synchronous, filesystem-only sanity warning</text>
+    <text x="84" y="314" font-size="12.5">3. update_check::check() spawned in the background (tokio::spawn) — never blocks input</text>
+    <text x="84" y="336" font-size="12.5">4. render_status_bar() — shows model name, lane count, auto-mode flag</text>
+  </g>
+  <line x1="430" y1="370" x2="430" y2="410" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="395" font-size="11.5" fill="var(--text-dim)">loop starts — waits for you to type</text>
+
+  <!-- N2 Stage 2 -->
+  <g>
+    <rect x="60" y="410" width="740" height="180" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="410" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="426" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="433" class="title-txt" font-size="13.5">STAGE 2 · reader.read_input()</text>
+    <text x="700" y="433" font-size="11.5" fill="var(--text-dim)" text-anchor="end">line_reader.rs:42-52</text>
+    <text x="84" y="470" font-size="12.5">1. reedline reads raw keystrokes — arrow keys, history, Shift+Tab, Ctrl+L, Ctrl+C/D</text>
+    <text x="84" y="492" font-size="12.5">2. on success → ReadOutcome::Submit(line)</text>
+    <text x="84" y="514" font-size="12.5">3. Ctrl+C / Ctrl+D → ReadOutcome::Exit</text>
+    <text x="84" y="536" font-size="12.5">4. on a raw-mode read error → fallback_read.rs (byte-by-byte reader, 64KB cap)</text>
+    <text x="84" y="568" font-size="12.5" fill="var(--info)">→ emits: ReadOutcome — Submit(String) | ToggleMode | Clear | Exit</text>
+  </g>
+  <line x1="430" y1="590" x2="430" y2="630" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+
+  <!-- N3 Decision -->
+  <g>
+    <rect x="60" y="630" width="740" height="140" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="630" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="646" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="653" class="title-txt" font-size="13.5">DECISION · commands.rs — does the line start with "/"?</text>
+    <text x="700" y="653" font-size="11.5" fill="var(--text-dim)" text-anchor="end">commands.rs:15</text>
+    <text x="84" y="690" font-size="12.5">yes → execute_slash(): /help /doctor /status /gates /model /mode /clear /exit|/quit</text>
+    <text x="84" y="712" font-size="12.5">     handled entirely here — the model never sees it; loops straight back to Stage 2</text>
+    <text x="84" y="734" font-size="12.5">no → treated as a real task, passed to approval::execute()</text>
+  </g>
+  <line x1="430" y1="770" x2="430" y2="810" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="795" font-size="11.5" fill="var(--text-dim)">not a "/" command</text>
+
+  <!-- N4 approval::execute -->
+  <g>
+    <rect x="60" y="810" width="740" height="210" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="810" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="826" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="833" class="title-txt" font-size="13.5">STAGE 3 · approval::execute()</text>
+    <text x="700" y="833" font-size="11.5" fill="var(--text-dim)" text-anchor="end">approval.rs:9-40</text>
+    <text x="84" y="870" font-size="12.5">1. effects = effect_plan::discover(task) — what might this text do?</text>
+    <text x="84" y="892" font-size="12.5">2. requires_approval(effects) — true if ANY effect besides plain "Model" is present</text>
+    <text x="84" y="914" font-size="12.5">3. false → runs immediately, straight to agent_loop::execute_task, no prompt shown</text>
+    <text x="84" y="936" font-size="12.5">4. true → prints each effect's label, asks "approve all listed effects? [y/N]"</text>
+    <text x="84" y="958" font-size="12.5">5. y/yes → run it; anything else (including Ctrl+C) → refuse()</text>
+    <text x="84" y="990" font-size="12.5" fill="var(--danger)">→ on refusal: record_refusal() → ledger_events::append_as(Refusal); loops to Stage 2</text>
+  </g>
+  <line x1="430" y1="1020" x2="430" y2="1060" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="1045" font-size="11.5" fill="var(--text-dim)">▼ zoom into step 1: effect_plan::discover()</text>
+
+  <!-- N5 effect discovery -->
+  <g>
+    <rect x="60" y="1060" width="740" height="230" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="1060" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="1076" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="1083" class="title-txt" font-size="13.5">STAGE 3a · effect_plan::discover() → effect_parse::classify()</text>
+    <text x="700" y="1083" font-size="11.5" fill="var(--text-dim)" text-anchor="end">effect_plan.rs, effect_parse.rs</text>
+    <text x="84" y="1120" font-size="12.5">1. splits task on . , ; and newlines into clauses</text>
+    <text x="84" y="1142" font-size="12.5">2. normalize(): strips ONE leading "please/can you/could you/would you/..." if present</text>
+    <text x="84" y="1164" font-size="12.5">3. informational(): "explain/how do i/what is/why ..." → zero effects for that clause</text>
+    <text x="84" y="1186" font-size="12.5">4. leads_with(): does the clause's FIRST WORD match the WRITE / COMMAND / PUBLISH lists?</text>
+    <text x="84" y="1208" font-size="12.5">5. action_in_followup(): "X and then Y" / "X then Y" — checks Y's first word too</text>
+    <text x="84" y="1230" font-size="12.5">6. requests_schedule(): "remind/schedule/after/at/every/in/later/tomorrow"</text>
+    <text x="84" y="1262" font-size="12.5" fill="var(--info)">→ emits: Vec&lt;Effect&gt; — Model, LocalWrite, LocalCommand, RemotePublish, DeferredSchedule</text>
+  </g>
+  <line x1="430" y1="1290" x2="430" y2="1330" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="1315" font-size="11.5" fill="var(--text-dim)">approval granted (or none needed) →</text>
+
+  <!-- N6 agent_loop -->
+  <g>
+    <rect x="60" y="1330" width="740" height="180" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="1330" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="1346" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="1353" class="title-txt" font-size="13.5">STAGE 4 · agent_loop::execute_task()</text>
+    <text x="700" y="1353" font-size="11.5" fill="var(--text-dim)" text-anchor="end">agent_loop.rs:11-57</text>
+    <text x="84" y="1390" font-size="12.5">1. worktree = std::env::current_dir() — wherever you launched fleet from</text>
+    <text x="84" y="1412" font-size="12.5">2. adapter = detect_adapter() — `which claude` → `which codex` → else Freelane (embedded)</text>
+    <text x="84" y="1434" font-size="12.5">3. announce() prints "▶ Running via {adapter} in {worktree}"</text>
+    <text x="84" y="1456" font-size="12.5">4. AgentToolPolicy::approved(LocalWrite?, LocalCommand?) — from Stage 3's effects</text>
+    <text x="84" y="1478" font-size="12.5">5. runs on spawn_blocking — a background OS thread, so the REPL doesn't freeze while it works</text>
+  </g>
+  <line x1="430" y1="1510" x2="430" y2="1550" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="1535" font-size="11.5" fill="var(--text-dim)">via dispatch::agent_cmd_run::run_with_progress()</text>
+
+  <!-- N7 branch -->
+  <g>
+    <rect x="60" y="1550" width="740" height="110" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="1550" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="1566" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="1573" class="title-txt" font-size="13.5">STAGE 5 · run_with_progress() — adapter branch</text>
+    <text x="700" y="1573" font-size="11.5" fill="var(--text-dim)" text-anchor="end">agent_cmd_run.rs:65-82</text>
+    <text x="84" y="1610" font-size="12.5">Freelane → run_freelane() — embedded offline lane, builder::freelane::run (not covered below)</text>
+    <text x="84" y="1632" font-size="12.5">Claude / Codex → run_cli_with_progress() — spawns the real subprocess, detailed next</text>
+  </g>
+  <line x1="430" y1="1660" x2="430" y2="1700" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="1685" font-size="11.5" fill="var(--text-dim)">adapter = Claude or Codex</text>
+
+  <!-- N8 run_cli_with_progress -->
+  <g>
+    <rect x="60" y="1700" width="740" height="250" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="1700" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="1716" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="1723" class="title-txt" font-size="13.5">STAGE 5a · run_cli_with_progress() — the real subprocess</text>
+    <text x="700" y="1723" font-size="11.5" fill="var(--text-dim)" text-anchor="end">agent_cmd_run.rs:118-223</text>
+    <text x="84" y="1760" font-size="12.5">1. claude → adds --print --verbose --output-format stream-json --include-partial-messages</text>
+    <text x="84" y="1782" font-size="12.5">   codex → adds "exec" as its first argument instead</text>
+    <text x="84" y="1804" font-size="12.5">2. policy.configure_claude() appends --restricted/--allowedTools — Claude only (5b, below)</text>
+    <text x="84" y="1826" font-size="12.5">3. cmd.arg(task) — YOUR EXACT TEXT, byte-for-byte, unmodified</text>
+    <text x="84" y="1848" font-size="12.5">4. spawn(): stdin = null, stdout + stderr = piped, cwd = worktree</text>
+    <text x="84" y="1870" font-size="12.5">5. reads stdout live, line-by-line, via ClaudeStream::push() (Stage 6, below)</text>
+    <text x="84" y="1892" font-size="12.5">6. child.wait() → success (+ a "result" event seen, for Claude) → Done; else → Refused</text>
+    <text x="84" y="1924" font-size="12.5" fill="var(--danger)">→ no redaction, no Unicode normalization, no injection scan on the task text — ever</text>
+  </g>
+  <line x1="430" y1="1950" x2="430" y2="1990" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="1975" font-size="11.5" fill="var(--text-dim)">▼ zoom into step 2: configure_claude()</text>
+
+  <!-- N9 configure_claude -->
+  <g>
+    <rect x="60" y="1990" width="740" height="170" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="1990" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="2006" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="2013" class="title-txt" font-size="13.5">STAGE 5b · agent_tool_policy::configure_claude()</text>
+    <text x="700" y="2013" font-size="11.5" fill="var(--text-dim)" text-anchor="end">agent_tool_policy.rs:44-71</text>
+    <text x="84" y="2050" font-size="12.5">1. picks 1 of 4 tool sets from (write approved?, command approved?)</text>
+    <text x="84" y="2072" font-size="12.5">2. COMMAND sets allow only specific cargo/git/rg/find/wc patterns (table below)</text>
+    <text x="84" y="2094" font-size="12.5">3. sends BOTH --tools=&lt;bare names&gt; and --allowedTools=&lt;full patterns&gt; — both required</text>
+    <text x="84" y="2126" font-size="12.5" fill="var(--danger)">→ Claude-only. Codex gets NO equivalent restriction — see the callout below the diagram</text>
+  </g>
+  <line x1="430" y1="2160" x2="430" y2="2200" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="2185" font-size="11.5" fill="var(--text-dim)">▼ zoom into step 5: ClaudeStream::push()</text>
+
+  <!-- N10 ClaudeStream -->
+  <g>
+    <rect x="60" y="2200" width="740" height="190" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="2200" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="2216" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="2223" class="title-txt" font-size="13.5">STAGE 6 · agent_stream::ClaudeStream — parses stdout live</text>
+    <text x="700" y="2223" font-size="11.5" fill="var(--text-dim)" text-anchor="end">agent_stream.rs:44-59</text>
+    <text x="84" y="2260" font-size="12.5">1. push(line): parses one JSON line from the subprocess's stdout</text>
+    <text x="84" y="2282" font-size="12.5">2. capture_metadata(): grabs the model name + token usage once a "result" event arrives</text>
+    <text x="84" y="2304" font-size="12.5">3. tool_milestone(): a completed tool call → "→ Edit(auth.rs)" / "→ Bash(cargo test …)"</text>
+    <text x="84" y="2326" font-size="12.5">4. streamed_text() / is_delta(): pulls out the actual model text chunk, if this line has one</text>
+    <text x="84" y="2358" font-size="12.5" fill="var(--info)">→ emits: printable text per line, fed straight to your screen as it arrives</text>
+  </g>
+  <line x1="430" y1="2390" x2="430" y2="2430" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow-cli)"></line>
+  <text x="440" y="2415" font-size="11.5" fill="var(--text-dim)">after child.wait() returns</text>
+
+  <!-- N11 finish -->
+  <g>
+    <rect x="60" y="2430" width="740" height="140" rx="10" fill="var(--node-bg)" stroke="var(--ok)" stroke-width="1.6" stroke-dasharray="2 3"></rect>
+    <text x="84" y="2456" class="title-txt" font-size="14">STAGE 7 · agent_output_finish::finish()</text>
+    <text x="84" y="2480" font-size="12.5" fill="var(--text-dim)">agent_output_finish.rs:7-61</text>
+    <text x="84" y="2504" font-size="12.5">1. outcome_receipt::record() → ledger_events::append_as_with_model(LaneStatus)</text>
+    <text x="84" y="2526" font-size="12.5">2. if nothing streamed live (non-streaming provider) → prints the full response now</text>
+    <text x="84" y="2548" font-size="12.5">3. prints "✓ Done (model: …)" + token count, or "✗ Refused: &lt;reason&gt;"</text>
+  </g>
+  <text x="430" y="2600" text-anchor="middle" font-size="12" fill="var(--text-dim)" letter-spacing="0.03em">⟲ BACK TO STAGE 2 — read_input() waits for your next line ⟲</text>
+</svg>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--node-title-bg); border:1px solid var(--node-border);"></span> a real function call, in order</span>
+    <span><span class="swatch" style="background:var(--danger-soft); border:1px solid var(--danger);"></span> a gap or risk worth flagging</span>
+    <span><span class="swatch" style="background:var(--info-soft); border:1px solid var(--info);"></span> what the step emits / produces</span>
+    <span><span class="swatch" style="background:var(--bg-elevated); border:1.6px dashed var(--accent);"></span> entry point / loop boundary</span>
+  </div>
+
+  <div class="callout danger">
+    <b>Confirmed: Codex gets no tool restriction at all</b>
+    Look at <code class="inline">run_cli_with_progress</code> in <a href="../../src/dispatch/agent/agent_cmd_run.rs">agent_cmd_run.rs:140-149</a>:
+    <code class="inline">policy.configure_claude(&amp;mut cmd)</code> is called only inside
+    <code class="inline">if matches!(adapter, CliAdapter::Claude)</code>. The Codex branch just adds
+    <code class="inline">"exec"</code> and the task string — no <code class="inline">AgentToolPolicy</code> call of any
+    kind. Practically: if <code class="inline">codex</code> is your active adapter (which only happens when
+    <code class="inline">claude</code> is not on <code class="inline">PATH</code>, per <code class="inline">detect_adapter()</code>'s
+    order), the y/N approval prompt you answered still shows the right effects — but the subprocess it launches
+    receives none of the corresponding restriction. The approval UI's promise and what the Codex subprocess is
+    actually allowed to do are two different things today.
+  </div>
+</section>
+
+<section id="cli-files">
+  <h2>A · File-by-file source</h2>
+  <p class="lede">All 20 files on the live path, in flow order. Same rule as Part B: every block is the real file, complete.</p>
+
+  <div class="filecard">
+    <h3>repl.rs <span class="path">src/interactive/repl.rs · 98 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> the top-level loop — read a line, decide what it is, do it, repeat</span></div>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>//! Interactive REPL loop wiring banner, status bar, input reader, and execution.
+
+use super::approval;
+use super::banner::render_banner;
+use super::commands::{execute_slash, CommandOutcome};
+use super::line_reader::{LineReader, ReadOutcome};
+use super::status_bar::render_status_bar;
+use super::theme::*;
+use runtime::ConcurrencyCap;
+use std::path::Path;
+
+pub(super) const DEFAULT_MODEL: &amp;str = "sonnet";
+
+pub async fn run_loop(state_dir: &amp;Path, cap: ConcurrencyCap) {
+    let color = print::style::Style::detect().color;
+    let lanes = cap.get();
+    let mut model = std::env::var("FLEET_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.into());
+    let mut auto_mode = true;
+    let mut reader = LineReader::new();
+
+    render_banner(color, &amp;model, lanes);
+
+    // Path check is synchronous and fast (filesystem only).
+    if let Some(warn) = super::path_check::check(color) {
+        println!("{warn}");
+    }
+    // Update check is a network call (git ls-remote, up to a 2s timeout inside
+    // update_check::check itself). It used to be awaited here, ahead of the first prompt --
+    // on a slow or unreachable remote that made every session pay up to 2s (measured ~0.7s on
+    // a reachable one) before the user could type anything, for an advisory notice nobody is
+    // blocked on. Run it in the background instead and surface it the first time the loop has
+    // an idle moment (right before a status-bar redraw), never delaying input.
+    let mut update_check = Some(tokio::spawn(super::update_check::check(color)));
+
+    render_status_bar(color, &amp;model, lanes, auto_mode);
+
+    loop {
+        match reader.read_input("› ", color) {
+            ReadOutcome::ToggleMode =&gt; {
+                auto_mode = !auto_mode;
+                announce_update_if_ready(&amp;mut update_check).await;
+                render_status_bar(color, &amp;model, lanes, auto_mode);
+            }
+            ReadOutcome::Clear =&gt; {
+                print!("\x1b[2J\x1b[H");
+                render_banner(color, &amp;model, lanes);
+                announce_update_if_ready(&amp;mut update_check).await;
+                render_status_bar(color, &amp;model, lanes, auto_mode);
+            }
+            ReadOutcome::Exit =&gt; break,
+            ReadOutcome::Submit(line) =&gt; {
+                let trimmed = line.trim();
+                if trimmed.is_empty() {
+                    continue;
+                }
+                if trimmed.starts_with('/') {
+                    match execute_slash(trimmed, cap, &amp;model, color) {
+                        CommandOutcome::ToggleMode =&gt; {
+                            auto_mode = !auto_mode;
+                            render_status_bar(color, &amp;model, lanes, auto_mode);
+                        }
+                        CommandOutcome::SetModel(m) =&gt; {
+                            model = m;
+                            render_status_bar(color, &amp;model, lanes, auto_mode);
+                        }
+                        CommandOutcome::Clear =&gt; {
+                            print!("\x1b[2J\x1b[H");
+                            render_banner(color, &amp;model, lanes);
+                            render_status_bar(color, &amp;model, lanes, auto_mode);
+                        }
+                        CommandOutcome::Exit =&gt; break,
+                        CommandOutcome::Continue =&gt; {}
+                    }
+                } else {
+                    approval::execute(trimmed, state_dir, &amp;model, auto_mode, color, &amp;mut reader)
+                        .await;
+                    announce_update_if_ready(&amp;mut update_check).await;
+                    render_status_bar(color, &amp;model, lanes, auto_mode);
+                }
+            }
+        }
+    }
+    println!("  {}", paint(color, DIM, "Goodbye."));
+}
+
+/// Prints the background update check's notice the first time it has finished, then never
+/// polls it again (the handle is taken). A silent `None` -- what this probe always returns
+/// today, see `update_check::check`'s own doc comment -- prints nothing, matching prior behavior
+/// exactly; only the blocking wait for that `None` is gone.
+async fn announce_update_if_ready(update_check: &amp;mut Option&lt;tokio::task::JoinHandle&lt;Option&lt;String&gt;&gt;&gt;) {
+    let ready = matches!(update_check, Some(handle) if handle.is_finished());
+    if !ready {
+        return;
+    }
+    if let Ok(Some(notice)) = update_check.take().unwrap().await {
+        println!("{notice}");
+    }
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>line_reader.rs <span class="path">src/interactive/line_reader.rs · 53 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> turns raw keystrokes into a submitted line, using the <code class="inline">reedline</code> library</span></div>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>//! Reedline-backed input with Fleet-specific mode and clear keybindings.
+
+use super::fallback_read::fallback_read;
+use super::input_prompt::InputPrompt;
+use reedline::{
+    default_emacs_keybindings, Emacs, KeyCode, KeyModifiers, Reedline, ReedlineEvent, Signal,
+};
+
+const TOGGLE_MODE: &amp;str = "fleet:toggle-mode";
+const CLEAR_SCREEN: &amp;str = "fleet:clear-screen";
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ReadOutcome {
+    Submit(String),
+    ToggleMode,
+    Clear,
+    Exit,
+}
+
+pub struct LineReader {
+    editor: Reedline,
+}
+
+impl LineReader {
+    pub fn new() -&gt; Self {
+        let mut keys = default_emacs_keybindings();
+        keys.add_binding(
+            KeyModifiers::SHIFT,
+            KeyCode::BackTab,
+            ReedlineEvent::ExecuteHostCommand(TOGGLE_MODE.into()),
+        );
+        keys.add_binding(
+            KeyModifiers::CONTROL,
+            KeyCode::Char('l'),
+            ReedlineEvent::ExecuteHostCommand(CLEAR_SCREEN.into()),
+        );
+        Self {
+            editor: Reedline::create().with_edit_mode(Box::new(Emacs::new(keys))),
+        }
+    }
+
+    pub fn read_input(&amp;mut self, prompt: &amp;str, color: bool) -&gt; ReadOutcome {
+        let prompt = InputPrompt::new(prompt, color);
+        match self.editor.read_line(&amp;prompt) {
+            Ok(Signal::Success(line)) =&gt; ReadOutcome::Submit(line),
+            Ok(Signal::HostCommand(command)) if command == TOGGLE_MODE =&gt; ReadOutcome::ToggleMode,
+            Ok(Signal::HostCommand(command)) if command == CLEAR_SCREEN =&gt; ReadOutcome::Clear,
+            Ok(Signal::CtrlC | Signal::CtrlD) =&gt; ReadOutcome::Exit,
+            Ok(_) =&gt; ReadOutcome::Exit,
+            Err(_) =&gt; fallback_read(),
+        }
+    }
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>fallback_read.rs <span class="path">src/interactive/fallback_read.rs · 49 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> emergency backup reader for when the fancy one can't use the terminal properly</span></div>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>//! Byte-oriented, EOF-safe fallback reader used when reedline's raw-mode read fails -- e.g. a
+//! terminal that never answers a cursor-position query, so `crossterm::cursor::position()`
+//! times out (reedline's own doc comment on that call notes it "is blocking and can time out").
+//! Plain `read_line` cannot be trusted here: raw mode may still be active on the tty, so Ctrl-D
+//! arrives as a literal `0x04` byte rather than a kernel-level EOF, and a line-buffered read
+//! would block forever waiting for a newline that never comes.
+
+use super::line_reader::ReadOutcome;
+use std::io::{self, Read, Write};
+
+/// Longest line this reader will accumulate before giving up. This path is a rare last resort,
+/// not the normal input loop, so a generous but finite bound is enough to stop a runaway or
+/// garbled stream from growing without limit.
+const MAX_LINE_BYTES: usize = 64 * 1024;
+
+pub(super) fn fallback_read() -&gt; ReadOutcome {
+    print!("&gt; ");
+    let _ = io::stdout().flush();
+    read_fallback_line(&amp;mut io::stdin())
+}
+
+fn read_fallback_line&lt;R: Read&gt;(input: &amp;mut R) -&gt; ReadOutcome {
+    let mut line = Vec::new();
+    let mut byte = [0u8; 1];
+    loop {
+        match input.read(&amp;mut byte) {
+            // With nothing typed yet, EOF means "quit" (canonical-mode Ctrl-D, or a stream
+            // that was never going to send more). With something already typed, treat the
+            // stream ending like a line terminator instead of discarding it.
+            Ok(0) if line.is_empty() =&gt; return ReadOutcome::Exit,
+            Ok(0) =&gt; break,
+            Ok(_) =&gt; match byte[0] {
+                0x04 if line.is_empty() =&gt; return ReadOutcome::Exit,
+                b'\n' =&gt; break,
+                _ if line.len() &gt;= MAX_LINE_BYTES =&gt; return ReadOutcome::Exit,
+                b =&gt; line.push(b),
+            },
+            Err(_) =&gt; return ReadOutcome::Exit,
+        }
+    }
+    match String::from_utf8(line) {
+        Ok(s) =&gt; ReadOutcome::Submit(s.trim_end_matches('\r').to_string()),
+        Err(_) =&gt; ReadOutcome::Exit,
+    }
+}
+
+#[cfg(test)]
+#[path = "fallback_read_tests.rs"]
+mod tests;</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>commands.rs <span class="path">src/interactive/commands.rs · 75 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> the fork in the road — "/" commands vs. a real prompt</span></div>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>//! Slash command dispatcher for the interactive session.
+
+use super::help::print_help;
+use super::theme::*;
+use runtime::ConcurrencyCap;
+
+pub enum CommandOutcome {
+    Continue,
+    ToggleMode,
+    SetModel(String),
+    Clear,
+    Exit,
+}
+
+pub fn execute_slash(cmd: &amp;str, cap: ConcurrencyCap, model: &amp;str, color: bool) -&gt; CommandOutcome {
+    let parts: Vec&lt;&amp;str&gt; = cmd.split_whitespace().collect();
+    let root = parts.first().copied().unwrap_or("");
+    match root {
+        "/help" =&gt; {
+            print_help(color);
+            CommandOutcome::Continue
+        }
+        "/doctor" =&gt; {
+            let _ = crate::dispatch::ops_cmd::doctor(false);
+            CommandOutcome::Continue
+        }
+        "/status" =&gt; {
+            let _ = crate::dispatch::ops_cmd::status(false, cap);
+            CommandOutcome::Continue
+        }
+        "/gates" =&gt; {
+            println!("  {}", paint(color, BOLD, "Configured Verification Gates:"));
+            for gate in verify::GATES {
+                let req = match gate.requirement {
+                    verify::Requirement::Required =&gt; "required",
+                    verify::Requirement::Advisory =&gt; "advisory",
+                };
+                println!(
+                    "    {} {:&lt;6} {}",
+                    paint(color, CYAN, "•"),
+                    gate.id,
+                    paint(color, GRAY, req)
+                );
+            }
+            CommandOutcome::Continue
+        }
+        "/model" =&gt; {
+            if let Some(new_m) = parts.get(1) {
+                println!(
+                    "  {} Model switched to: {}",
+                    paint(color, GREEN, "✓"),
+                    paint(color, BOLD, new_m)
+                );
+                CommandOutcome::SetModel((*new_m).to_string())
+            } else {
+                println!(
+                    "  Active model: {} (pass `/model &lt;name&gt;` to switch)",
+                    paint(color, CYAN, model)
+                );
+                CommandOutcome::Continue
+            }
+        }
+        "/mode" =&gt; CommandOutcome::ToggleMode,
+        "/clear" =&gt; CommandOutcome::Clear,
+        "/exit" | "/quit" =&gt; CommandOutcome::Exit,
+        unknown =&gt; {
+            println!(
+                "  {} Unknown command: {unknown}. Type {} for available commands.",
+                paint(color, RED, "error:"),
+                paint(color, CYAN, "/help")
+            );
+            CommandOutcome::Continue
+        }
+    }
+}</code></pre>
+    </details>
+    <div class="callout">
+      <b>Note</b> These 8 commands are the entire set. Anything not in this list — including a line that merely starts
+      with <code class="inline">/</code> but isn't one of these — falls into the <code class="inline">unknown</code>
+      arm and prints an error; it does <b>not</b> fall through to the model as a prompt.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>approval.rs <span class="path">src/interactive/approval.rs · 79 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> the permission gate — the one place a plain-text prompt is judged before it can do anything</span></div>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>//! Interactive approval: enumerate requested effects before an adapter receives the task.
+
+use super::agent_loop::execute_task;
+use super::effect_plan::{discover, label, Effect};
+use super::line_reader::{LineReader, ReadOutcome};
+use super::theme::*;
+use std::path::Path;
+
+pub async fn execute(
+    task: &amp;str,
+    state_dir: &amp;Path,
+    model: &amp;str,
+    auto_mode: bool,
+    color: bool,
+    reader: &amp;mut LineReader,
+) {
+    let effects = discover(task);
+    if !requires_approval(&amp;effects) {
+        execute_task(task, state_dir, model, auto_mode, color, &amp;effects).await;
+        return;
+    }
+    println!(
+        "\n  {}",
+        paint(color, BOLD, "Permissions required before implementation:")
+    );
+    for effect in &amp;effects {
+        println!("    {} {}", paint(color, CYAN, "•"), label(*effect));
+    }
+    println!(
+        "  {} Fleet will not publish without a separate approved task.",
+        paint(color, GRAY, "Note:")
+    );
+    match reader.read_input("approve all listed effects? [y/N] ", color) {
+        ReadOutcome::Submit(answer) if approved(&amp;answer) =&gt; {
+            execute_task(task, state_dir, model, auto_mode, color, &amp;effects).await;
+        }
+        ReadOutcome::Exit =&gt; refuse(state_dir, task, &amp;effects, "user cancelled approval", color),
+        _ =&gt; refuse(state_dir, task, &amp;effects, "user denied approval", color),
+    }
+}
+
+pub fn approved(answer: &amp;str) -&gt; bool {
+    matches!(answer.trim().to_ascii_lowercase().as_str(), "y" | "yes")
+}
+
+/// A model response alone is ordinary chat. Any local or external effect needs one complete
+/// approval plan before the adapter receives the task.
+pub fn requires_approval(effects: &amp;[Effect]) -&gt; bool {
+    effects
+        .iter()
+        .any(|effect| !matches!(effect, Effect::Model))
+}
+
+fn refuse(state_dir: &amp;Path, task: &amp;str, effects: &amp;[Effect], reason: &amp;str, color: bool) {
+    match record_refusal(state_dir, task, effects, reason) {
+        Ok(()) =&gt; println!(
+            "  {} Task refused; no agent was started.\n",
+            paint(color, AMBER, "!")
+        ),
+        Err(error) =&gt; eprintln!("fleet: task refused but could not write receipt: {error}"),
+    }
+}
+
+pub(super) fn record_refusal(
+    state_dir: &amp;Path,
+    task: &amp;str,
+    effects: &amp;[Effect],
+    reason: &amp;str,
+) -&gt; Result&lt;(), String&gt; {
+    std::fs::create_dir_all(state_dir).map_err(|e| e.to_string())?;
+    let effects: Vec&lt;&amp;str&gt; = effects.iter().map(|effect| label(*effect)).collect();
+    let body = serde_json::json!({ "task": task, "effects": effects, "reason": reason });
+    crate::pipeline::ledger_events::append_as(
+        state_dir,
+        types::ReceiptEvent::Refusal,
+        body,
+        "fleet-cli-interactive",
+    )
+}</code></pre>
+    </details>
+    <div class="callout danger">
+      <b>The gate can be walked around by phrasing, not just by intent</b>
+      <code class="inline">requires_approval</code> only looks at what <code class="inline">effect_plan::discover</code>
+      found — and that function only recognizes an effect if a clause's <i>first word</i> (after stripping one very
+      specific set of leading phrases) is in a fixed list. "<code class="inline">fix the bug</code>" is caught
+      (leads with "fix"). "<code class="inline">go fix the bug</code>", "<code class="inline">just patch this</code>",
+      "<code class="inline">quickly delete that file</code>" are <b>not</b> — "go"/"just"/"quickly" aren't stripped by
+      <code class="inline">normalize()</code> (it only strips an exact match on "and / please / can you / could you /
+      would you / i need you to / i want you to") and aren't in <code class="inline">WRITE</code> or
+      <code class="inline">COMMAND</code> either. Verified by reading <a href="../../src/interactive/effect_parse.rs">effect_parse.rs:14-29</a>
+      directly — <code class="inline">leads_with</code> only ever inspects <code class="inline">clause.split_whitespace().next()</code>.
+      A prompt phrased this way skips the approval prompt entirely and goes straight to Stage 4.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>effect_plan.rs <span class="path">src/interactive/effect_plan.rs · 40 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> the 5 possible effects, and turning raw signals into that list</span></div>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>//! Deterministic effect discovery for the interactive approval boundary.
+
+use super::effect_parse::classify;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Effect {
+    Model,
+    LocalWrite,
+    LocalCommand,
+    RemotePublish,
+    DeferredSchedule,
+}
+
+pub fn discover(task: &amp;str) -&gt; Vec&lt;Effect&gt; {
+    let mut effects = vec![Effect::Model];
+    for raw in task.to_ascii_lowercase().split(['.', ',', ';', '\n']) {
+        let signals = classify(raw);
+        add_if(&amp;mut effects, Effect::LocalWrite, signals.write);
+        add_if(&amp;mut effects, Effect::LocalCommand, signals.command);
+        add_if(&amp;mut effects, Effect::RemotePublish, signals.publish);
+        add_if(&amp;mut effects, Effect::DeferredSchedule, signals.schedule);
+    }
+    effects
+}
+
+pub fn label(effect: Effect) -&gt; &amp;'static str {
+    match effect {
+        Effect::Model =&gt; "send this task to the selected model provider; quota may be consumed",
+        Effect::LocalWrite =&gt; "write or modify files in the current repository",
+        Effect::LocalCommand =&gt; "run local build, test, or verification commands",
+        Effect::RemotePublish =&gt; "push, publish, release, or create a remote pull request",
+        Effect::DeferredSchedule =&gt; "create or change a deferred scheduled task",
+    }
+}
+
+fn add_if(effects: &amp;mut Vec&lt;Effect&gt;, effect: Effect, present: bool) {
+    if present &amp;&amp; !effects.contains(&amp;effect) {
+        effects.push(effect);
+    }
+}</code></pre>
+    </details>
+    <div class="callout">
+      <b>Note</b> <code class="inline">task.to_ascii_lowercase()</code> lowercases the WHOLE prompt before splitting —
+      the only case-normalization anywhere on this path, and it exists purely so the word-list match in
+      <code class="inline">classify()</code> is case-insensitive, not for anything sent to the model.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>effect_parse.rs <span class="path">src/interactive/effect_parse.rs · 55 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> the actual guessing logic — turns one clause into write/command/publish/schedule signals</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>//! Conservative parser for user-requested local and remote effects.
+
+use super::effect_words::{action_in_followup, informational, leads_with, normalize};
+use super::effect_words::{COMMAND, PUBLISH, WRITE};
+
+#[derive(Default)]
+pub struct Signals {
+    pub write: bool,
+    pub command: bool,
+    pub publish: bool,
+    pub schedule: bool,
+}
+
+pub fn classify(raw: &amp;str) -&gt; Signals {
+    let clause = normalize(raw.trim());
+    if clause.is_empty() || informational(clause) {
+        return Signals::default();
+    }
+    let effectful = leads_with(clause, WRITE)
+        || leads_with(clause, COMMAND)
+        || requests_publish(clause)
+        || requests_schedule(clause);
+    Signals {
+        write: leads_with(clause, WRITE) || effectful &amp;&amp; action_in_followup(clause, WRITE),
+        command: leads_with(clause, COMMAND) || effectful &amp;&amp; action_in_followup(clause, COMMAND),
+        publish: requests_publish(clause) || effectful &amp;&amp; action_in_followup(clause, PUBLISH),
+        schedule: requests_schedule(clause),
+    }
+}
+
+fn requests_publish(clause: &amp;str) -&gt; bool {
+    if clause.starts_with("do not ") || clause.starts_with("don't ") {
+        return false;
+    }
+    leads_with(clause, PUBLISH)
+        || [
+            "create a pr",
+            "open a pr",
+            "create a pull request",
+            "open a pull request",
+        ]
+        .iter()
+        .any(|phrase| clause.starts_with(phrase))
+}
+
+fn requests_schedule(clause: &amp;str) -&gt; bool {
+    leads_with(clause, &amp;["remind", "schedule"])
+        || ["after ", "at ", "every ", "in ", "later", "tomorrow"]
+            .iter()
+            .any(|marker| clause.starts_with(marker))
+        || ((leads_with(clause, WRITE) || leads_with(clause, COMMAND) || clause.starts_with("do "))
+            &amp;&amp; [" after ", " later", " tomorrow", " every "]
+                .iter()
+                .any(|marker| clause.contains(marker)))
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>effect_words.rs <span class="path">src/interactive/effect_words.rs · 68 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> the actual word lists everything above matches against</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>//! Vocabulary helpers for deterministic effect parsing.
+
+pub const WRITE: &amp;[&amp;str] = &amp;[
+    "add",
+    "change",
+    "delete",
+    "edit",
+    "fix",
+    "implement",
+    "modify",
+    "patch",
+    "refactor",
+    "remove",
+    "rename",
+    "replace",
+    "update",
+    "write",
+];
+pub const COMMAND: &amp;[&amp;str] = &amp;["build", "check", "execute", "run", "test", "verify"];
+pub const PUBLISH: &amp;[&amp;str] = &amp;["deploy", "merge", "publish", "push", "release"];
+const INFO: &amp;[&amp;str] = &amp;[
+    "describe ",
+    "explain ",
+    "how do i ",
+    "how to ",
+    "is it safe to ",
+    "tell me ",
+    "what happens ",
+    "what is ",
+    "why ",
+];
+
+pub fn normalize(mut clause: &amp;str) -&gt; &amp;str {
+    for prefix in [
+        "and ",
+        "please ",
+        "can you ",
+        "could you ",
+        "would you ",
+        "i need you to ",
+        "i want you to ",
+    ] {
+        if let Some(rest) = clause.strip_prefix(prefix) {
+            clause = rest.trim_start();
+            break;
+        }
+    }
+    clause
+}
+
+pub fn informational(clause: &amp;str) -&gt; bool {
+    INFO.iter().any(|prefix| clause.starts_with(prefix))
+}
+
+pub fn leads_with(clause: &amp;str, actions: &amp;[&amp;str]) -&gt; bool {
+    clause
+        .split_whitespace()
+        .next()
+        .is_some_and(|word| actions.contains(&amp;word))
+}
+
+pub fn action_in_followup(clause: &amp;str, actions: &amp;[&amp;str]) -&gt; bool {
+    [" and ", " then "]
+        .iter()
+        .filter_map(|separator| clause.split_once(separator).map(|(_, rest)| rest))
+        .map(normalize)
+        .any(|rest| leads_with(rest, actions))
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>agent_loop.rs <span class="path">src/interactive/agent_loop.rs · 57 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> picks the adapter, builds the tool policy, hands off to the real subprocess runner</span></div>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>//! Autonomous agent loop for free-text coding task prompts.
+//!
+//! Uses the current working directory as the worktree. Adapter selection priority:
+//! claude (if on PATH) → codex (if on PATH) → freelane (embedded, always available).
+
+use super::agent_adapter::detect_adapter;
+use super::agent_output::{announce, finish, StreamPrinter};
+use super::effect_plan::Effect;
+use std::path::Path;
+
+pub async fn execute_task(
+    task: &amp;str,
+    state_dir: &amp;Path,
+    model: &amp;str,
+    _auto_mode: bool,
+    color: bool,
+    effects: &amp;[Effect],
+) {
+    let worktree = match std::env::current_dir() {
+        Ok(p) =&gt; p,
+        Err(e) =&gt; {
+            super::agent_output::cwd_error(color, &amp;e);
+            return;
+        }
+    };
+
+    let adapter = detect_adapter();
+    announce(color, adapter, task, &amp;worktree);
+
+    let model_opt = if model.is_empty() { None } else { Some(model) };
+    let policy = crate::dispatch::agent_cmd_run::AgentToolPolicy::approved(
+        effects.contains(&amp;Effect::LocalWrite),
+        effects.contains(&amp;Effect::LocalCommand),
+    );
+    let outcome = tokio::task::spawn_blocking({
+        let worktree = worktree.clone();
+        let task = task.to_string();
+        let model_str = model_opt.map(str::to_string);
+        move || {
+            let mut stream = StreamPrinter::new();
+            crate::dispatch::agent_cmd_run::run_with_progress(
+                adapter,
+                &amp;worktree,
+                &amp;task,
+                model_str.as_deref(),
+                policy,
+                |delta| stream.push(delta),
+            )
+        }
+    })
+    .await
+    .unwrap_or_else(|e| {
+        crate::dispatch::agent_cmd_run::AgentOutcome::Refused(format!("task panicked: {e}"))
+    });
+
+    finish(state_dir, adapter, outcome, color);
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>agent_adapter.rs <span class="path">src/interactive/agent_adapter.rs · 21 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> picks which AI CLI actually runs — checks what's installed</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>//! Select the first locally available interactive adapter.
+
+use builder::CliAdapter;
+use std::process::{Command, Stdio};
+
+fn on_path(binary: &amp;str) -&gt; bool {
+    Command::new("which")
+        .arg(binary)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|status| status.success())
+        .unwrap_or(false)
+}
+
+pub fn detect_adapter() -&gt; CliAdapter {
+    [CliAdapter::Claude, CliAdapter::Codex]
+        .into_iter()
+        .find(|adapter| adapter.cli_binary_name().is_some_and(on_path))
+        .unwrap_or(CliAdapter::Freelane)
+}</code></pre>
+    </details>
+    <div class="callout">
+      <b>Note</b> This shells out to the real <code class="inline">which</code> command on every single prompt to
+      check adapter availability — it isn't cached across turns within one session.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>agent_cmd_run.rs <span class="path">src/dispatch/agent/agent_cmd_run.rs · 251 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> the real subprocess launcher — this is where the AI CLI actually starts running</span></div>
+    <p>Shared by two callers: this interactive prompt path, and the <code class="inline">fleet agent run</code> /
+      hidden <code class="inline">__agent</code> subcommand path (via the module-private <code class="inline">run()</code>,
+      which uses <code class="inline">AgentToolPolicy::worker_default()</code> — full permissions, no approval gate,
+      since that path is a deliberate one-shot invocation from the shell, not the interactive REPL's approval flow).</p>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>//! Runs one adapter's real work for `__agent`. Ported in spirit from keel's
+//! `agent_command`/`run_freelane_agent` (`git show HEAD:fleet/keel/fleet/src/main.rs`).
+//! `Freelane` now shells out to the freelane.sh keyless lane restored into
+//! `crates/fleet-worker/src/freelane/` (see that module for the embed/materialize/invoke split
+//! this file only wires together); `Claude`/`Codex` invoke their CLI directly.
+//!
+//! Non-TTY invocation: `spawn::child_command::build` sets `stdin(Stdio::null())`, so the child
+//! sees no TTY. `claude`'s default REPL refuses under those conditions -- v2.1.268 exits 1 with
+//! empty stderr; `claude -p "&lt;prompt&gt;"` runs and prints the response. Verified 2026-09-11.
+//! `codex`'s non-interactive shape is `codex exec "&lt;prompt&gt;"`. `run_cli` therefore branches on
+//! adapter to pick the right non-REPL flag; Freelane never reaches `run_cli` (see `run` match).
+
+use builder::freelane;
+use builder::CliAdapter;
+use serde_json::{json, Value};
+use std::io::{BufRead, BufReader, Read};
+use std::path::Path;
+use std::process::{Command, Stdio};
+
+#[path = "agent_stream.rs"]
+mod agent_stream;
+#[path = "agent_tool_policy.rs"]
+mod agent_tool_policy;
+
+pub use agent_tool_policy::AgentToolPolicy;
+
+/// What `run` produced: a genuine "done" body (+ the model that actually answered), or a genuine
+/// "refuse" reason. Never fabricated.
+pub enum AgentOutcome {
+    Done {
+        body: Value,
+        resolved_model: Option&lt;String&gt;,
+        tokens: Option&lt;u64&gt;,
+    },
+    Refused(String),
+}
+
+pub fn run(adapter: CliAdapter, worktree: &amp;Path, task: &amp;str, model: Option&lt;&amp;str&gt;) -&gt; AgentOutcome {
+    run_with_progress(
+        adapter,
+        worktree,
+        task,
+        model,
+        AgentToolPolicy::worker_default(),
+        |_| {},
+    )
+}
+
+/// Exercises only the direct-CLI lane. Keep this test-only because production dispatch
+/// intentionally routes Freelane through its embedded keyless provider instead.
+#[cfg(test)]
+fn run_cli(adapter: CliAdapter, worktree: &amp;Path, task: &amp;str, model: Option&lt;&amp;str&gt;) -&gt; AgentOutcome {
+    run_cli_with_progress(
+        adapter,
+        worktree,
+        task,
+        model,
+        AgentToolPolicy::worker_default(),
+        |_| {},
+    )
+}
+
+/// Runs one adapter and forwards provider text as it arrives. The interactive parent renders it;
+/// the fd-3 child deliberately supplies a no-op because its only worker channel is fd 3.
+pub fn run_with_progress&lt;F&gt;(
+    adapter: CliAdapter,
+    worktree: &amp;Path,
+    task: &amp;str,
+    model: Option&lt;&amp;str&gt;,
+    policy: AgentToolPolicy,
+    progress: F,
+) -&gt; AgentOutcome
+where
+    F: FnMut(&amp;str),
+{
+    match adapter {
+        CliAdapter::Freelane =&gt; run_freelane(worktree, task, model),
+        CliAdapter::Claude | CliAdapter::Codex =&gt; {
+            run_cli_with_progress(adapter, worktree, task, model, policy, progress)
+        }
+    }
+}
+
+/// `builder::freelane::run` owns asset resolution (embedded, or `$FLEET_FREELANE_ROOT` on
+/// disk -- see that module) and invocation; this just shapes the fd-3 body from its typed result.
+fn run_freelane(worktree: &amp;Path, task: &amp;str, model: Option&lt;&amp;str&gt;) -&gt; AgentOutcome {
+    match freelane::run(worktree, task, model) {
+        Ok(out) =&gt; {
+            let resolved_model = out.resolved_model.clone();
+            // Surface apply's signal: applied N files, vs named no target (`apply_note` set,
+            // e.g. `AmbiguousTarget`), vs no code at all (both empty, e.g. `NoFence`).
+            let applied: Vec&lt;String&gt; = out
+                .applied_files
+                .iter()
+                .map(|p| p.display().to_string())
+                .collect();
+            AgentOutcome::Done {
+                body: json!({
+                    "agent": "freelane",
+                    "status": "done",
+                    "response": out.response,
+                    "log": out.log,
+                    "resolved_model": out.resolved_model,
+                    "tokens": out.tokens,
+                    "applied_files": applied,
+                    "apply_note": out.apply_note,
+                }),
+                resolved_model,
+                tokens: out.tokens,
+            }
+        }
+        Err(err) =&gt; AgentOutcome::Refused(err.to_string()),
+    }
+}
+
+/// `claude`/`codex`: `builder::spawn` already confirmed the named binary is on `PATH`
+/// before ever spawning this child, so invoke it for real with the task as its argument.
+fn run_cli_with_progress&lt;F&gt;(
+    adapter: CliAdapter,
+    worktree: &amp;Path,
+    task: &amp;str,
+    model: Option&lt;&amp;str&gt;,
+    policy: AgentToolPolicy,
+    mut progress: F,
+) -&gt; AgentOutcome
+where
+    F: FnMut(&amp;str),
+{
+    let Some(binary) = adapter.cli_binary_name() else {
+        return AgentOutcome::Refused(format!(
+            "{} has no direct CLI executable",
+            adapter.agent_kind()
+        ));
+    };
+    let mut cmd = Command::new(binary);
+    // Claude CLI requires --print for non-interactive (batch) mode; without it, it tries
+    // to start an interactive session and fails when stdin is null. `--print`/`--verbose`/
+    // `--output-format stream-json` also drive the live tool-call milestones and the
+    // restricted tool policy the interactive REPL depends on (see `agent_stream.rs`).
+    if matches!(adapter, CliAdapter::Claude) {
+        cmd.args(claude_stream_args());
+        policy.configure_claude(&amp;mut cmd);
+    }
+    // codex's non-interactive shape is `codex exec "&lt;prompt&gt;"` per the module doc above; a bare
+    // positional arg leaves it waiting on an interactive session it will never get (stdin is
+    // null here). Freelane never reaches this function (dispatched to `run_freelane` instead).
+    if matches!(adapter, CliAdapter::Codex) {
+        cmd.arg("exec");
+    }
+    cmd.arg(task);
+    if let Some(m) = model {
+        if matches!(adapter, CliAdapter::Claude) {
+            cmd.args(["--model", m]);
+        }
+    }
+    let launched = cmd
+        .current_dir(worktree)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn();
+    let Ok(mut child) = launched else {
+        return AgentOutcome::Refused(format!("{}: cannot launch", adapter.agent_kind()));
+    };
+    let Some(stdout) = child.stdout.take() else {
+        return AgentOutcome::Refused(format!("{}: stdout pipe unavailable", adapter.agent_kind()));
+    };
+    let Some(mut stderr) = child.stderr.take() else {
+        return AgentOutcome::Refused(format!("{}: stderr pipe unavailable", adapter.agent_kind()));
+    };
+    let stderr_thread = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let _ = stderr.read_to_end(&amp;mut bytes);
+        bytes
+    });
+    let mut raw_stdout = Vec::new();
+    let mut stream = agent_stream::ClaudeStream::with_root(worktree);
+    for line in BufReader::new(stdout).split(b'\n') {
+        let Ok(line) = line else { break };
+        raw_stdout.extend_from_slice(&amp;line);
+        raw_stdout.push(b'\n');
+        let text = String::from_utf8_lossy(&amp;line);
+        if matches!(adapter, CliAdapter::Claude) {
+            if let Some(delta) = stream.push(&amp;text) {
+                progress(&amp;delta);
+            }
+        }
+    }
+    let waited = child.wait();
+    let stderr = stderr_thread.join().unwrap_or_default();
+    match waited {
+        Ok(status)
+            if status.success()
+                &amp;&amp; (!matches!(adapter, CliAdapter::Claude) || stream.has_result()) =&gt;
+        {
+            let (body, resolved_model, tokens) = if matches!(adapter, CliAdapter::Claude) {
+                let resolved_model = stream.model();
+                let tokens = stream.tokens();
+                (stream.body(), resolved_model, tokens)
+            } else {
+                (
+                    json!({"response": String::from_utf8_lossy(&amp;raw_stdout).trim(), "log": String::from_utf8_lossy(&amp;stderr).trim()}),
+                    None,
+                    None,
+                )
+            };
+            AgentOutcome::Done {
+                body,
+                resolved_model,
+                tokens,
+            }
+        }
+        Ok(status) =&gt; {
+            let detail = failure_detail(&amp;raw_stdout, &amp;stderr);
+            AgentOutcome::Refused(format!(
+                "{}: worker exited {:?}: {detail}",
+                adapter.agent_kind(),
+                status.code()
+            ))
+        }
+        Err(err) =&gt; AgentOutcome::Refused(format!("{}: cannot wait: {err}", adapter.agent_kind())),
+    }
+}
+
+fn claude_stream_args() -&gt; [&amp;'static str; 5] {
+    [
+        "--print",
+        "--verbose",
+        "--output-format",
+        "stream-json",
+        "--include-partial-messages",
+    ]
+}
+
+/// Providers do not agree on an error stream: Claude can put an API refusal on stdout.
+/// Keep the non-empty diagnostic rather than reporting a useless trailing colon.
+fn failure_detail(stdout: &amp;[u8], stderr: &amp;[u8]) -&gt; String {
+    let stderr = String::from_utf8_lossy(stderr).trim().to_string();
+    if !stderr.is_empty() {
+        return stderr;
+    }
+    let stdout = String::from_utf8_lossy(stdout).trim().to_string();
+    if !stdout.is_empty() {
+        return stdout;
+    }
+    "worker produced no diagnostic".into()
+}
+
+#[cfg(test)]
+#[path = "agent_cmd_run_tests.rs"]
+mod tests;</code></pre>
+    </details>
+    <div class="callout danger">
+      <b>This is the literal command line your prompt becomes</b>
+      For the Claude adapter, with both write and command approved, your prompt "fix the bug" turns into a real
+      process spawn equivalent to: <code class="inline">claude --print --verbose --output-format stream-json
+      --include-partial-messages --restricted --strict-mcp-config --disable-slash-commands --permission-mode dontAsk
+      --permission-prompts none --tools=Read,Glob,Grep,Edit,Write,Bash --allowedTools=Read,Glob,Grep,Edit,Write,Bash(cargo
+      test *),... "fix the bug"</code> — run with <code class="inline">stdin</code> closed, in your current directory.
+      <code class="inline">cmd.arg(task)</code> is a single argv element, not shell-interpreted, so there's no shell
+      injection risk from the prompt text itself — but the text reaches the model completely as-is.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>agent_tool_policy.rs <span class="path">src/dispatch/agent/agent_tool_policy.rs · 89 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> compiles your y/N approval into the actual CLI flags that restrict the subprocess</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>//! Provider-native tool restriction compiled from Fleet's approved effect plan.
+
+use std::process::Command;
+
+const READ_TOOLS: &amp;str = "Read,Glob,Grep";
+const WRITE_TOOLS: &amp;str = "Read,Glob,Grep,Edit,Write";
+const COMMAND_TOOLS: &amp;str = concat!(
+    "Read,Glob,Grep,",
+    "Bash(cargo test *),Bash(cargo check *),Bash(cargo clippy *),Bash(cargo fmt *),",
+    "Bash(git status *),Bash(git diff *),Bash(git log *),Bash(git show *),",
+    "Bash(rg *),Bash(find *),Bash(wc *)"
+);
+const WRITE_COMMAND_TOOLS: &amp;str = concat!(
+    "Read,Glob,Grep,Edit,Write,",
+    "Bash(cargo test *),Bash(cargo check *),Bash(cargo clippy *),Bash(cargo fmt *),",
+    "Bash(git status *),Bash(git diff *),Bash(git log *),Bash(git show *),",
+    "Bash(rg *),Bash(find *),Bash(wc *)"
+);
+
+#[derive(Clone, Copy)]
+pub struct AgentToolPolicy {
+    write: bool,
+    command: bool,
+    restricted: bool,
+}
+
+impl AgentToolPolicy {
+    pub const fn approved(write: bool, command: bool) -&gt; Self {
+        Self {
+            write,
+            command,
+            restricted: true,
+        }
+    }
+
+    pub const fn worker_default() -&gt; Self {
+        Self {
+            write: true,
+            command: true,
+            restricted: false,
+        }
+    }
+
+    pub fn configure_claude(self, command: &amp;mut Command) {
+        if !self.restricted {
+            return;
+        }
+        let tools = match (self.write, self.command) {
+            (false, false) =&gt; READ_TOOLS,
+            (true, false) =&gt; WRITE_TOOLS,
+            (false, true) =&gt; COMMAND_TOOLS,
+            (true, true) =&gt; WRITE_COMMAND_TOOLS,
+        };
+        command.args([
+            "--restricted",
+            "--strict-mcp-config",
+            "--disable-slash-commands",
+            "--permission-mode",
+            "dontAsk",
+            "--permission-prompts",
+            "none",
+        ]);
+        // `--restricted` only re-enables a removed tool (Bash included) by its bare name in
+        // `--tools`; a pattern like `Bash(git log *)` there is not recognized and Bash stays
+        // off, so every command-effect task silently degraded to read-only with no error --
+        // verified live: `claude --restricted --tools="...,Bash(git log *)"` reported no Bash
+        // tool at all. `--allowedTools` is the separate, correct place for the fine-grained
+        // per-command patterns, and still enforces them once the tool is actually enabled.
+        command.arg(format!("--tools={}", bare_tool_names(tools)));
+        command.arg(format!("--allowedTools={tools}"));
+    }
+}
+
+/// `"Read,Glob,Grep,Bash(cargo test *),Bash(git log *)"` -&gt; `"Read,Glob,Grep,Bash"`.
+fn bare_tool_names(tools: &amp;str) -&gt; String {
+    let mut names: Vec&lt;&amp;str&gt; = Vec::new();
+    for entry in tools.split(',') {
+        let name = entry.split('(').next().unwrap_or(entry);
+        if !names.contains(&amp;name) {
+            names.push(name);
+        }
+    }
+    names.join(",")
+}
+
+#[cfg(test)]
+#[path = "agent_tool_policy_tests.rs"]
+mod tests;</code></pre>
+    </details>
+    <div class="callout">
+      <b>Notable, already-fixed bug in the comment itself</b> The comment above <code class="inline">command.arg(format!("--tools=…"))</code>
+      documents a real prior incident: <code class="inline">--restricted --tools</code> only accepts BARE tool names
+      (<code class="inline">Bash</code>), not patterns (<code class="inline">Bash(git log *)</code>) — every
+      command-effect task was silently downgraded to read-only with no error before this was caught. The fix sends
+      bare names to <code class="inline">--tools</code> (to re-enable the tool at all) and the fine-grained patterns
+      separately to <code class="inline">--allowedTools</code>. Worth re-checking on any future Claude CLI upgrade —
+      this is exactly the kind of flag-semantics change that breaks silently.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>agent_stream.rs + parse + result + tools <span class="path">src/dispatch/agent/agent_stream*.rs · 227 lines combined</span></h3>
+    <div class="meta"><span><b>Role:</b> turns the subprocess's raw stream-json lines into what you actually see on screen</span></div>
+    <details class="src" open><summary>Show agent_stream.rs (the orchestrator)</summary>
+<pre><code>//! Provider-output parsing for the direct Claude adapter.
+//!
+//! Claude's stream-json protocol is provider-owned and may gain fields. We retain its reported
+//! usage object verbatim, extract only documented scalar evidence, and refuse a zero-event stream.
+
+use serde_json::Value;
+use std::path::{Path, PathBuf};
+
+#[path = "agent_stream_parse.rs"]
+mod agent_stream_parse;
+#[path = "agent_stream_result.rs"]
+mod agent_stream_result;
+#[path = "agent_stream_tools.rs"]
+mod agent_stream_tools;
+use agent_stream_parse::{is_delta, streamed_text};
+use agent_stream_tools::tool_milestone;
+
+#[derive(Default)]
+pub(super) struct ClaudeStream {
+    response: String,
+    result_text: Option&lt;String&gt;,
+    model: Option&lt;String&gt;,
+    usage: Option&lt;Value&gt;,
+    saw_deltas: bool,
+    saw_result: bool,
+    root: PathBuf,
+}
+
+impl ClaudeStream {
+    /// `root` is the worktree a tool-use `file_path` is displayed relative to, so a milestone
+    /// reads `Edit(calc.py)` rather than the scratch/absolute path the provider reports.
+    pub(super) fn with_root(root: &amp;Path) -&gt; Self {
+        Self {
+            root: root.to_path_buf(),
+            ..Self::default()
+        }
+    }
+
+    /// Returns provider text to print as it arrives: a genuine model text delta, a milestone line
+    /// announcing a tool call the model just made (name + primary argument), or both when a
+    /// single message carries both. A milestone is UI-only -- it is never folded into
+    /// `response`/`body()`, which stay the model's own words (LLD §20: observability is
+    /// additive, never a substitute for the recorded evidence).
+    pub(super) fn push(&amp;mut self, line: &amp;str) -&gt; Option&lt;String&gt; {
+        let value: Value = serde_json::from_str(line).ok()?;
+        self.capture_metadata(&amp;value);
+        let milestone = tool_milestone(&amp;self.root, &amp;value);
+        let text = streamed_text(&amp;value, self.saw_deltas);
+        self.saw_deltas |= is_delta(&amp;value);
+        if let Some(text) = &amp;text {
+            self.response.push_str(text);
+        }
+        match (milestone, text) {
+            (Some(milestone), Some(text)) if !text.is_empty() =&gt; Some(milestone + &amp;text),
+            (Some(milestone), _) =&gt; Some(milestone),
+            (None, Some(text)) =&gt; Some(text),
+            (None, None) =&gt; None,
+        }
+    }
+
+    pub(super) fn has_result(&amp;self) -&gt; bool {
+        self.saw_result
+    }
+}
+
+#[cfg(test)]
+#[path = "agent_stream_tests.rs"]
+mod tests;</code></pre>
+    </details>
+    <details class="src"><summary>Show agent_stream_parse.rs (pure text extraction)</summary>
+<pre><code>//! Pure provider-JSON text extraction -- no `ClaudeStream` state, just "what text (if any) does
+//! this one line of stream-json carry."
+
+use serde_json::Value;
+
+pub(super) fn streamed_text(value: &amp;Value, saw_deltas: bool) -&gt; Option&lt;String&gt; {
+    if is_delta(value) {
+        return value
+            .pointer("/event/delta/text")
+            .and_then(Value::as_str)
+            .map(str::to_owned);
+    }
+    let kind = value.get("type").and_then(Value::as_str)?;
+    if kind == "assistant" {
+        if saw_deltas {
+            return None;
+        }
+        return value
+            .pointer("/message/content")?
+            .as_array()?
+            .iter()
+            .filter_map(|part| part.get("text").and_then(Value::as_str))
+            .collect::&lt;String&gt;()
+            .into();
+    }
+    if kind == "content_block_delta" {
+        return value
+            .pointer("/delta/text")
+            .and_then(Value::as_str)
+            .map(str::to_owned);
+    }
+    None
+}
+
+pub(super) fn is_delta(value: &amp;Value) -&gt; bool {
+    value.get("type").and_then(Value::as_str) == Some("stream_event")
+        &amp;&amp; value.pointer("/event/type").and_then(Value::as_str) == Some("content_block_delta")
+}
+
+/// A milestone line is a one-line UI announcement, not a transcript -- cap it so one long
+/// generated command (or a multi-line heredoc) can't push the actual model text off screen.
+pub(super) fn shorten(text: &amp;str, max: usize) -&gt; String {
+    let first_line = text.lines().next().unwrap_or("");
+    let truncated = first_line.chars().count() &gt; max;
+    let kept: String = first_line.chars().take(max).collect();
+    if truncated || first_line.len() != text.len() {
+        format!("{kept}…")
+    } else {
+        kept
+    }
+}</code></pre>
+    </details>
+    <details class="src"><summary>Show agent_stream_result.rs (the recorded evidence)</summary>
+<pre><code>//! The evidence side of `ClaudeStream`: turning captured provider metadata into the recorded
+//! result body, resolved model, and token usage `finish()` reports -- as opposed to `push`'s
+//! live text/milestone stream, which is UI-only and never touches these fields.
+
+use serde_json::{json, Value};
+
+use super::ClaudeStream;
+
+impl ClaudeStream {
+    // pub(in crate::dispatch), not pub(super): `agent_cmd_run.rs` calls these, and it's a
+    // sibling of `agent_stream.rs` (this file's grandparent module), not a child of it.
+    pub(in crate::dispatch) fn body(self) -&gt; Value {
+        let response = if self.response.is_empty() {
+            self.result_text.clone().unwrap_or_default()
+        } else {
+            self.response
+        };
+        json!({
+            "response": response,
+            "result": self.result_text,
+            "streamed": self.saw_deltas,
+            "token_usage": self.usage,
+        })
+    }
+
+    pub(in crate::dispatch) fn model(&amp;self) -&gt; Option&lt;String&gt; {
+        self.model.clone()
+    }
+
+    pub(in crate::dispatch) fn tokens(&amp;self) -&gt; Option&lt;u64&gt; {
+        let usage = self.usage.as_ref()?.as_object()?;
+        let input = usage.get("input_tokens").and_then(Value::as_u64)?;
+        let output = usage.get("output_tokens").and_then(Value::as_u64)?;
+        input.checked_add(output).filter(|total| *total &gt; 0)
+    }
+
+    pub(super) fn capture_metadata(&amp;mut self, value: &amp;Value) {
+        if self.model.is_none() {
+            self.model = value
+                .get("model")
+                .or_else(|| value.pointer("/message/model"))
+                .and_then(Value::as_str)
+                .map(str::to_owned);
+        }
+        if value.get("type").and_then(Value::as_str) == Some("result") {
+            self.saw_result = true;
+            self.result_text = value
+                .get("result")
+                .and_then(Value::as_str)
+                .map(str::to_owned);
+            self.usage = value.get("usage").cloned();
+        }
+    }
+}</code></pre>
+    </details>
+    <details class="src"><summary>Show agent_stream_tools.rs (the "→ Edit(file.rs)" lines)</summary>
+<pre><code>//! Tool-call milestone rendering -- turns a complete `assistant` message's `tool_use` parts into
+//! the one-line `→ Read(calc.py)` style announcements the interactive REPL streams live (see the
+//! module doc on `ClaudeStream::push`). Free functions, not methods: nothing here needs anything
+//! from `ClaudeStream` besides `root`, passed explicitly so this stays testable without a stream.
+
+use serde_json::Value;
+use std::path::Path;
+
+use super::agent_stream_parse::shorten;
+
+/// A complete `assistant` message is the only place a tool call's name and arguments arrive in
+/// full (arguments stream in as `input_json_delta` fragments beforehand, which is raw token
+/// chatter, not a milestone -- LLD §7). One tool_use content part -&gt; one milestone line.
+pub(super) fn tool_milestone(root: &amp;Path, value: &amp;Value) -&gt; Option&lt;String&gt; {
+    if value.get("type").and_then(Value::as_str) != Some("assistant") {
+        return None;
+    }
+    let parts = value.pointer("/message/content")?.as_array()?;
+    let mut out = String::new();
+    for part in parts {
+        if part.get("type").and_then(Value::as_str) != Some("tool_use") {
+            continue;
+        }
+        let name = part.get("name").and_then(Value::as_str).unwrap_or("tool");
+        let label = match tool_use_detail(root, name, part.get("input")) {
+            Some(detail) =&gt; format!("{name}({detail})"),
+            None =&gt; name.to_string(),
+        };
+        out.push_str(&amp;format!("\n\u{2192} {label}\n"));
+    }
+    (!out.is_empty()).then_some(out)
+}
+
+fn tool_use_detail(root: &amp;Path, name: &amp;str, input: Option&lt;&amp;Value&gt;) -&gt; Option&lt;String&gt; {
+    let input = input?.as_object()?;
+    match name {
+        "Read" | "Edit" | "Write" | "NotebookEdit" =&gt; {
+            let path = input.get("file_path").and_then(Value::as_str)?;
+            Some(
+                Path::new(path)
+                    .strip_prefix(root)
+                    .unwrap_or(Path::new(path))
+                    .display()
+                    .to_string(),
+            )
+        }
+        "Glob" | "Grep" =&gt; input.get("pattern").and_then(Value::as_str).map(str::to_owned),
+        "Bash" =&gt; input
+            .get("command")
+            .and_then(Value::as_str)
+            .map(|cmd| shorten(cmd, 72)),
+        _ =&gt; None,
+    }
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>agent_output.rs + agent_output_finish.rs <span class="path">src/interactive/agent_output*.rs · 133 lines combined</span></h3>
+    <div class="meta"><span><b>Role:</b> everything that actually prints to your terminal, plus the final receipt write</span></div>
+    <details class="src"><summary>Show agent_output.rs</summary>
+<pre><code>//! Terminal projection and receipt recording for interactive agent outcomes.
+
+use super::theme::*;
+use builder::CliAdapter;
+use std::io::Write;
+use std::path::Path;
+
+#[path = "agent_output_finish.rs"]
+mod agent_output_finish;
+
+pub use agent_output_finish::finish;
+
+pub fn cwd_error(color: bool, error: &amp;std::io::Error) {
+    println!(
+        "\n  {} Cannot determine working directory: {error}\n",
+        paint(color, RED, "✗")
+    );
+}
+
+pub fn announce(color: bool, adapter: CliAdapter, task: &amp;str, worktree: &amp;Path) {
+    println!(
+        "\n  {} Running via {} in {}",
+        paint(color, GREEN, "▶"),
+        paint(color, CYAN, adapter.agent_kind()),
+        worktree.display()
+    );
+    println!(
+        "  {} {}\n",
+        paint(color, GRAY, "›"),
+        paint(color, BOLD, task)
+    );
+}
+
+pub struct StreamPrinter(bool);
+
+impl StreamPrinter {
+    pub fn new() -&gt; Self {
+        Self(false)
+    }
+
+    pub fn push(&amp;mut self, delta: &amp;str) {
+        if !self.0 {
+            print!("  ");
+            self.0 = true;
+        }
+        print!("{}", indent(delta));
+        let _ = std::io::stdout().flush();
+    }
+}
+
+pub(super) fn indent(delta: &amp;str) -&gt; String {
+    delta.replace('\n', "\n  ")
+}
+
+#[cfg(test)]
+#[path = "agent_output_tests.rs"]
+mod tests;</code></pre>
+    </details>
+    <details class="src"><summary>Show agent_output_finish.rs</summary>
+<pre><code>//! Final status projection kept separate from live streaming.
+
+use super::super::theme::*;
+use builder::CliAdapter;
+use std::path::Path;
+
+pub fn finish(
+    state: &amp;Path,
+    adapter: CliAdapter,
+    outcome: crate::dispatch::agent_cmd_run::AgentOutcome,
+    color: bool,
+) {
+    match outcome {
+        crate::dispatch::agent_cmd_run::AgentOutcome::Done {
+            body,
+            resolved_model,
+            tokens,
+        } =&gt; {
+            super::super::outcome_receipt::record(
+                state,
+                adapter.agent_kind(),
+                &amp;body,
+                resolved_model.as_deref(),
+                tokens,
+                true,
+            );
+            if !body
+                .get("streamed")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+            {
+                print_response(&amp;body);
+            }
+            println!(
+                "\n  {} Done{}",
+                paint(color, GREEN, "✓"),
+                model_suffix(resolved_model, color)
+            );
+            match tokens {
+                Some(count) =&gt; println!("  {} Reported tokens: {count}", paint(color, GRAY, "·")),
+                None =&gt; println!(
+                    "  {} Provider did not report token usage",
+                    paint(color, GRAY, "·")
+                ),
+            }
+        }
+        crate::dispatch::agent_cmd_run::AgentOutcome::Refused(reason) =&gt; {
+            let body = serde_json::json!({"reason": reason});
+            super::super::outcome_receipt::record(
+                state,
+                adapter.agent_kind(),
+                &amp;body,
+                None,
+                None,
+                false,
+            );
+            println!("  {} Refused: {reason}", paint(color, RED, "✗"));
+        }
+    }
+    println!();
+}
+
+fn model_suffix(model: Option&lt;String&gt;, color: bool) -&gt; String {
+    model
+        .filter(|value| !value.is_empty())
+        .map(|value| format!("  (model: {})", paint(color, GRAY, &amp;value)))
+        .unwrap_or_default()
+}
+
+fn print_response(body: &amp;serde_json::Value) {
+    if let Some(text) = body.get("response").and_then(|value| value.as_str()) {
+        for line in text.lines() {
+            println!("  {line}");
+        }
+    }
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>outcome_receipt.rs + ledger_events.rs <span class="path">src/interactive/outcome_receipt.rs + src/pipeline/ledger_events.rs · 135 lines combined</span></h3>
+    <div class="meta"><span><b>Role:</b> the only place this whole flow writes anything durable to disk</span></div>
+    <details class="src"><summary>Show outcome_receipt.rs</summary>
+<pre><code>//! Durable, parent-owned accounting for one interactive adapter attempt.
+
+use std::path::Path;
+
+pub(super) fn record(
+    state_dir: &amp;Path,
+    agent: &amp;str,
+    body: &amp;serde_json::Value,
+    resolved_model: Option&lt;&amp;str&gt;,
+    tokens: Option&lt;u64&gt;,
+    ok: bool,
+) {
+    let receipt = serde_json::json!({
+        "agent": agent,
+        "ok": ok,
+        "reason": body.get("reason"),
+        "tokens": tokens,
+        "token_usage": body.get("token_usage"),
+    });
+    if let Err(error) = crate::pipeline::ledger_events::append_as_with_model(
+        state_dir,
+        types::ReceiptEvent::LaneStatus,
+        receipt,
+        "fleet-cli-interactive",
+        resolved_model,
+    ) {
+        eprintln!("fleet: could not record agent outcome: {error}");
+    }
+}</code></pre>
+    </details>
+    <details class="src"><summary>Show ledger_events.rs (the shared append plumbing)</summary>
+<pre><code>//! Shared ledger-append plumbing for the pipeline's observability trail. `event_stage` uses
+//! `open`/`append` directly (a ledger-append failure there is a real pipeline failure -- no
+//! `RunStart` row means no auditable trace at all). Every OTHER call site in this module
+//! (`observe`) treats a ledger-append failure as non-fatal: observability must never break a
+//! run that would otherwise have succeeded (the append still surfaces on stderr, never silently
+//! swallowed -- see `PRINCIPLES.md` on checks cheaper to fake than to satisfy).
+
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
+use serde_json::Value;
+use std::path::Path;
+use store::ledger::LedgerPaths;
+use store::Ledger;
+use types::ReceiptEvent;
+
+/// The one place `LedgerPaths` is assembled from `state_dir` -- every stage that touches the
+/// ledger goes through this instead of re-deriving `ledger.chain`/`ledger.lock` itself.
+pub fn open(state_dir: &amp;Path) -&gt; Ledger {
+    let paths = LedgerPaths {
+        chain: state_dir.join("ledger.chain"),
+        lock: state_dir.join("ledger.lock"),
+    };
+    Ledger::open(paths)
+}
+
+pub fn append(state_dir: &amp;Path, event: ReceiptEvent, body: Value) -&gt; Result&lt;(), String&gt; {
+    append_as(state_dir, event, body, "fleet-cli-pipeline")
+}
+
+/// Append a parent-owned receipt for a non-pipeline user surface. The actor is explicit so an
+/// interactive refusal cannot be misattributed to the pipeline worker path.
+pub fn append_as(
+    state_dir: &amp;Path,
+    event: ReceiptEvent,
+    body: Value,
+    actor: &amp;str,
+) -&gt; Result&lt;(), String&gt; {
+    open(state_dir)
+        .append(event, body, actor.to_string(), None, None)
+        .map(|_receipt| ())
+        .map_err(|e| e.to_string())
+}
+
+/// Append a parent-owned receipt carrying the model reported by a provider response. Callers must
+/// pass `None` for a requested alias; this field is evidence of what actually answered.
+pub fn append_as_with_model(
+    state_dir: &amp;Path,
+    event: ReceiptEvent,
+    body: Value,
+    actor: &amp;str,
+    resolved_model: Option&lt;&amp;str&gt;,
+) -&gt; Result&lt;(), String&gt; {
+    open(state_dir)
+        .append(
+            event,
+            body,
+            actor.to_string(),
+            resolved_model.map(str::to_owned),
+            None,
+        )
+        .map(|_receipt| ())
+        .map_err(|e| e.to_string())
+}
+
+/// Best-effort append for the observability trail: stage timings, gate verdicts, refusals. A
+/// failure here is reported through the same `Note`-styled render path a sink failure uses, then
+/// ignored -- it must never turn an otherwise-successful pipeline run into a failed one.
+pub fn observe(state_dir: &amp;Path, event: ReceiptEvent, body: Value) {
+    if let Err(reason) = append(state_dir, event, body) {
+        let note = Event::Note {
+            source: "ledger".to_string(),
+            text: format!("append failed: {reason}"),
+        };
+        emit(&amp;note, &amp;Style::detect());
+    }
+}</code></pre>
+    </details>
+    <div class="callout">
+      <b>Note</b> This is the ONE <code class="inline">pipeline/</code> function this whole interactive flow ever
+      calls — <code class="inline">append_as</code> / <code class="inline">append_as_with_model</code>, both just
+      thin wrappers around opening <code class="inline">ledger.chain</code> and appending one JSON row. None of
+      <code class="inline">stage_loop.rs</code>, <code class="inline">graph.rs</code>, or
+      <code class="inline">dispatch_table.rs</code> are reachable from a typed prompt.
+    </div>
+  </div>
+</section>
+
+<section id="cli-reference">
+  <h2>A · Reference tables</h2>
+
+  <h3>Slash commands — the complete set <span class="path">commands.rs:18-73</span></h3>
+  <table>
+    <thead><tr><th>Command</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">/help</code></td><td>prints the help text</td></tr>
+      <tr><td><code class="inline">/doctor</code></td><td>runs <code class="inline">dispatch::ops_cmd::doctor</code> — environment/dependency check</td></tr>
+      <tr><td><code class="inline">/status</code></td><td>runs <code class="inline">dispatch::ops_cmd::status</code> — current capacity/lane status</td></tr>
+      <tr><td><code class="inline">/gates</code></td><td>lists every configured verification gate (<code class="inline">verify::GATES</code>) and whether it's required or advisory</td></tr>
+      <tr><td><code class="inline">/model [name]</code></td><td>shows or switches the active model</td></tr>
+      <tr><td><code class="inline">/mode</code></td><td>toggles auto-mode (same as Shift+Tab)</td></tr>
+      <tr><td><code class="inline">/clear</code></td><td>clears the screen and redraws the banner</td></tr>
+      <tr><td><code class="inline">/exit</code>, <code class="inline">/quit</code></td><td>ends the session</td></tr>
+      <tr><td>anything else starting with <code class="inline">/</code></td><td>prints "Unknown command" — does not reach the model</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Effect word lists — what triggers the approval gate <span class="path">effect_words.rs</span></h3>
+  <table>
+    <thead><tr><th>List</th><th>Words</th><th>Only matches as the clause's FIRST word</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">WRITE</code></td><td>add, change, delete, edit, fix, implement, modify, patch, refactor, remove, rename, replace, update, write</td><td>yes</td></tr>
+      <tr><td><code class="inline">COMMAND</code></td><td>build, check, execute, run, test, verify</td><td>yes</td></tr>
+      <tr><td><code class="inline">PUBLISH</code></td><td>deploy, merge, publish, push, release</td><td>yes</td></tr>
+      <tr><td><code class="inline">INFO</code> (suppresses all effects for that clause)</td><td>describe, explain, how do i, how to, is it safe to, tell me, what happens, what is, why</td><td>yes, as a prefix</td></tr>
+      <tr><td>stripped before matching</td><td>and, please, can you, could you, would you, i need you to, i want you to</td><td>one exact match at the very start only</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Claude subprocess flags — the full command line <span class="path">agent_cmd_run.rs, agent_tool_policy.rs</span></h3>
+  <table>
+    <thead><tr><th>Flag</th><th>Always present?</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">--print</code></td><td>yes (Claude)</td><td>non-interactive batch mode — required since stdin is closed</td></tr>
+      <tr><td><code class="inline">--verbose --output-format stream-json --include-partial-messages</code></td><td>yes (Claude)</td><td>drives the live tool-call milestones and streamed text</td></tr>
+      <tr><td><code class="inline">--model &lt;name&gt;</code></td><td>only if a model was set and adapter is Claude</td><td>picks the model</td></tr>
+      <tr><td><code class="inline">--restricted --strict-mcp-config --disable-slash-commands</code></td><td>only when <code class="inline">AgentToolPolicy::approved(...)</code> is used (the interactive path — not the <code class="inline">worker_default()</code> path)</td><td>locks the subprocess down to what you approved</td></tr>
+      <tr><td><code class="inline">--permission-mode dontAsk --permission-prompts none</code></td><td>same as above</td><td>the subprocess itself never re-prompts — fleet already got your yes/no</td></tr>
+      <tr><td><code class="inline">--tools=&lt;bare names&gt;</code></td><td>same as above</td><td>re-enables specific tool families after <code class="inline">--restricted</code> disabled everything</td></tr>
+      <tr><td><code class="inline">--allowedTools=&lt;full patterns&gt;</code></td><td>same as above</td><td>the actual fine-grained allowlist, e.g. only <code class="inline">Bash(cargo test *)</code></td></tr>
+      <tr><td><code class="inline">exec</code> (positional, Codex only)</td><td>yes (Codex)</td><td>Codex's own non-interactive mode</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Tool sets by approval combination <span class="path">agent_tool_policy.rs:6-18</span></h3>
+  <table>
+    <thead><tr><th>write?</th><th>command?</th><th>Tool set sent</th></tr></thead>
+    <tbody>
+      <tr><td>no</td><td>no</td><td><code class="inline">Read, Glob, Grep</code> — read-only</td></tr>
+      <tr><td>yes</td><td>no</td><td><code class="inline">Read, Glob, Grep, Edit, Write</code></td></tr>
+      <tr><td>no</td><td>yes</td><td><code class="inline">Read, Glob, Grep</code> + specific <code class="inline">Bash(cargo …)</code> / <code class="inline">Bash(git …)</code> / <code class="inline">rg</code> / <code class="inline">find</code> / <code class="inline">wc</code> patterns</td></tr>
+      <tr><td>yes</td><td>yes</td><td>all of the above combined</td></tr>
+    </tbody>
+  </table>
+
+  <h3>stream-json line types this parser understands <span class="path">agent_stream_parse.rs, agent_stream_result.rs</span></h3>
+  <table>
+    <thead><tr><th>JSON <code class="inline">type</code></th><th>What it means</th><th>Handled by</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">stream_event</code> with <code class="inline">event.type == content_block_delta</code></td><td>one small chunk of streamed model text</td><td><code class="inline">is_delta</code> / <code class="inline">streamed_text</code></td></tr>
+      <tr><td><code class="inline">assistant</code></td><td>a complete message — may contain finished <code class="inline">tool_use</code> calls, or full text if nothing streamed as deltas</td><td><code class="inline">tool_milestone</code>, <code class="inline">streamed_text</code></td></tr>
+      <tr><td><code class="inline">content_block_delta</code> (bare, non-stream_event form)</td><td>an older/alternate delta shape</td><td><code class="inline">streamed_text</code></td></tr>
+      <tr><td><code class="inline">result</code></td><td>the final event — carries the resolved model name and token usage</td><td><code class="inline">capture_metadata</code></td></tr>
+      <tr><td>anything else</td><td>ignored for display, but every line's <code class="inline">model</code> field is checked opportunistically</td><td><code class="inline">capture_metadata</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="cli-walkthrough">
+  <h2>A · Traced example — one prompt through all 12 stages</h2>
+  <p class="lede">You type: <code class="inline">fix the login bug in auth.rs and then run the tests</code></p>
+
+  <div class="walk-step"><span class="n">1</span><b>main.rs</b> — already inside the REPL loop (Stage 1 ran once at startup).</div>
+  <div class="walk-step"><span class="n">2</span><b>line_reader.rs</b> — reedline reads the line normally, returns <code class="inline">ReadOutcome::Submit("fix the login bug in auth.rs and then run the tests")</code>.</div>
+  <div class="walk-step"><span class="n">3</span><b>commands.rs</b> — doesn't start with <code class="inline">/</code> → passed to <code class="inline">approval::execute</code>.</div>
+  <div class="walk-step"><span class="n">4</span><b>effect_plan / effect_parse / effect_words</b> — lowercased, split on <code class="inline">.</code>/<code class="inline">,</code>/<code class="inline">;</code>/newline into ONE clause (no punctuation here). <code class="inline">normalize()</code> finds no stripped prefix. First word "fix" ∈ <code class="inline">WRITE</code> → <code class="inline">leads_with</code> true → <code class="inline">LocalWrite</code>. <code class="inline">action_in_followup</code> checks after " and then ": remainder "run the tests" → first word "run" ∈ <code class="inline">COMMAND</code> → <code class="inline">LocalCommand</code> also set. Result: <code class="inline">[Model, LocalWrite, LocalCommand]</code>.</div>
+  <div class="walk-step"><span class="n">5</span><b>approval.rs</b> — <code class="inline">requires_approval</code> is true (2 effects beyond Model). Prints both labels, asks "approve all listed effects? [y/N]". You type <code class="inline">y</code>.</div>
+  <div class="walk-step"><span class="n">6</span><b>agent_loop.rs</b> — <code class="inline">worktree</code> = your cwd. <code class="inline">claude</code> is on PATH → adapter = Claude. <code class="inline">AgentToolPolicy::approved(true, true)</code> — both write and command allowed.</div>
+  <div class="walk-step"><span class="n">7</span><b>agent_cmd_run.rs</b> — builds: <code class="inline">claude --print --verbose --output-format stream-json --include-partial-messages --restricted --strict-mcp-config --disable-slash-commands --permission-mode dontAsk --permission-prompts none --tools=Read,Glob,Grep,Edit,Write,Bash --allowedTools="Read,Glob,Grep,Edit,Write,Bash(cargo test *),Bash(cargo check *),…" "fix the login bug in auth.rs and then run the tests"</code>. Spawns it, <code class="inline">stdin</code> closed.</div>
+  <div class="walk-step"><span class="n">8</span><b>agent_stream.rs</b> — as stdout lines arrive: text deltas print live; when the model calls <code class="inline">Edit</code> on <code class="inline">auth.rs</code>, a milestone line <code class="inline">→ Edit(auth.rs)</code> appears; when it calls <code class="inline">Bash(cargo test …)</code>, <code class="inline">→ Bash(cargo test …)</code> appears (command text capped at 72 chars).</div>
+  <div class="walk-step"><span class="n">9</span><b>agent_cmd_run.rs</b> — process exits 0, a <code class="inline">result</code> event was seen → <code class="inline">AgentOutcome::Done{ body, resolved_model, tokens }</code>.</div>
+  <div class="walk-step"><span class="n">10</span><b>agent_output_finish.rs</b> — <code class="inline">outcome_receipt::record</code> appends one <code class="inline">LaneStatus</code> row to <code class="inline">ledger.chain</code>. Response already streamed, so it isn't reprinted. Prints <code class="inline">✓ Done (model: claude-sonnet-…)</code> and the token count.</div>
+  <div class="walk-step"><span class="n">11</span><b>repl.rs</b> — status bar redraws, loop waits for your next line.</div>
+
+  <p><b>Contrast:</b> if instead you'd typed <code class="inline">go fix the login bug</code> — same intent, different phrasing — step 4 finds first word "go", not in any list, and <code class="inline">normalize()</code> doesn't strip "go " (it's not in its prefix list). <code class="inline">discover()</code> returns only <code class="inline">[Model]</code>. Step 5 never fires — no approval shown, it runs immediately. But step 6's <code class="inline">AgentToolPolicy::approved(false, false)</code> — since neither <code class="inline">LocalWrite</code> nor <code class="inline">LocalCommand</code> was detected — restricts the subprocess to <code class="inline">Read, Glob, Grep</code> only. The model can read <code class="inline">auth.rs</code> and see the bug, but has no <code class="inline">Edit</code> or <code class="inline">Write</code> tool to actually fix it with. Net effect of the phrasing gap: not a security hole here, but a silent capability mismatch — you asked for a fix, got a read-only investigation, with no error telling you why.</p>
+</section>
+
+<section id="overview">
+  <h2>B · ingest crate overview</h2>
+  <p class="lede">Everything from here down through <a href="#tests">Test contract</a> is Part B — the standalone
+    <code class="inline">ingest</code> crate. If you're trying to understand what happens when you actually type a
+    prompt into <code class="inline">fleet</code>, that's <a href="#cli-overview">Part A, above</a> — this section is
+    a related-but-disconnected subsystem, not the live path.</p>
+  <p><code class="inline">crates/ingest</code> is a standalone workspace crate (<a href="../../Cargo.toml">Cargo.toml:13</a>)
+     whose entire public surface is one function — <code class="inline">normalize()</code> — plus a separate dedup
+     tracker, <code class="inline">SeenIds</code>. Its own doc comment states the job precisely:</p>
+  <pre><code>//! `ingest` — validate, redact, and normalize external events before they touch the store.
+//!
+//! Entry point: [`normalize`]. Dedup: [`SeenIds`].</code></pre>
+  <p>It takes an <code class="inline">IncomingEvent</code> (whatever an external source — webhook, CLI, API — handed you,
+     unverified) and returns either a <code class="inline">NormalizedEvent</code> (safe to persist / act on) or an
+     <code class="inline">IngestError</code>. Six checks run in a fixed order inside <code class="inline">normalize()</code>;
+     a seventh subsystem, <code class="inline">SeenIds</code>, is caller-invoked separately for replay/dedup decisions.</p>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="n">6</div><div class="l">pipeline stages in <code class="inline">normalize()</code></div></div>
+    <div class="stat"><div class="n">10</div><div class="l"><code class="inline">IngestError</code> variants</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">secret-value regexes + 6 secret field names</div></div>
+    <div class="stat"><div class="n">5</div><div class="l">injection regexes</div></div>
+    <div class="stat"><div class="n">29</div><div class="l">tests across 8 files</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">call sites outside the crate</div></div>
+  </div>
+
+  <div class="callout danger">
+    <b>Integration status</b>
+    <code class="inline">grep -rn "ingest::"</code> across the whole repo (outside <code class="inline">crates/ingest</code>
+    itself) returns nothing, and no other crate's <code class="inline">Cargo.toml</code> lists <code class="inline">ingest</code>
+    as a dependency. This is a contract-first crate: built and locked down against its own test suite before anything
+    calls it. Review it as "does this satisfy its own contract," not "is event ingress live" — it isn't, yet.
+  </div>
+</section>
+
+<section id="diagram">
+  <h2>B · ingest pipeline diagram — full component detail</h2>
+  <p class="lede">Every function, every branch condition, every constant, every error variant and every emitted artifact
+    in <code class="inline">normalize()</code> and <code class="inline">SeenIds::record()</code>, as its own labelled
+    element. Nothing folded away.</p>
+
+  <div class="diagram-wrap">
+<svg viewBox="0 0 860 2300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ingest pipeline full component diagram">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-dim)"></path>
+    </marker>
+  </defs>
+
+  <!-- N0 Input -->
+  <g>
+    <rect x="60" y="20" width="740" height="150" rx="10" fill="var(--node-bg)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2 3"></rect>
+    <text x="84" y="46" class="title-txt" font-size="14">IncomingEvent — the unvalidated wire struct ingress receives</text>
+    <text x="84" y="70" font-size="12.5" fill="var(--text-dim)">crates/ingest/src/types.rs:41-47</text>
+    <text x="84" y="94" font-size="12.5">source: String        delivery_id: String</text>
+    <text x="84" y="116" font-size="12.5">payload: serde_json::Value      attachments: Vec&lt;AttachmentRef&gt;</text>
+    <text x="84" y="140" font-size="12.5" fill="var(--text-dim)">+ SourceRegistration{ namespace, schema_version } passed alongside, not part of the event</text>
+  </g>
+  <line x1="430" y1="170" x2="430" y2="210" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow)"></line>
+
+  <!-- N1 Stage 1 -->
+  <g>
+    <rect x="60" y="210" width="740" height="180" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="210" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="226" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="233" class="title-txt" font-size="13.5">STAGE 1 · check_source()</text>
+    <text x="700" y="233" font-size="11.5" fill="var(--text-dim)" text-anchor="end">registry.rs:6-17</text>
+    <text x="84" y="270" font-size="12.5">1. source.nfc().collect() — Unicode NFC-normalize (unicode-normalization crate)</text>
+    <text x="84" y="292" font-size="12.5">2. .trim() surrounding whitespace</text>
+    <text x="84" y="314" font-size="12.5">3. reject if empty, or len &gt; MAX_SOURCE_LEN (256)</text>
+    <text x="84" y="336" font-size="12.5">4. reject if trimmed != reg.namespace (exact match against registry)</text>
+    <text x="84" y="368" font-size="12.5" fill="var(--danger)">→ errors: UnknownSource</text>
+  </g>
+  <line x1="430" y1="390" x2="430" y2="430" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow)"></line>
+  <text x="440" y="415" font-size="11.5" fill="var(--text-dim)">source: String (normalized)</text>
+
+  <!-- N2 Stage 2 -->
+  <g>
+    <rect x="60" y="430" width="740" height="160" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="430" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="446" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="453" class="title-txt" font-size="13.5">STAGE 2 · check_size() + ByteCounter</text>
+    <text x="700" y="453" font-size="11.5" fill="var(--text-dim)" text-anchor="end">lib.rs:19-35</text>
+    <text x="84" y="490" font-size="12.5">1. serde_json::to_writer(ByteCounter(0), payload) — streams, never fully allocates</text>
+    <text x="84" y="512" font-size="12.5">2. ByteCounter::write() accumulates and errors once running total &gt; MAX_PAYLOAD_BYTES</text>
+    <text x="84" y="534" font-size="12.5">3. MAX_PAYLOAD_BYTES = 256 KiB (262,144 bytes) — types.rs:3</text>
+    <text x="84" y="566" font-size="12.5" fill="var(--danger)">→ errors: OversizedPayload</text>
+  </g>
+  <line x1="430" y1="590" x2="430" y2="630" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow)"></line>
+
+  <!-- N3 Stage 3 -->
+  <g>
+    <rect x="60" y="630" width="740" height="180" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="630" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="646" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="653" class="title-txt" font-size="13.5">STAGE 3 · check_injection() → scan()</text>
+    <text x="700" y="653" font-size="11.5" fill="var(--text-dim)" text-anchor="end">injection.rs:6-36</text>
+    <text x="84" y="690" font-size="12.5">1. runs on the RAW payload — BEFORE redaction (ordering fixed at lib.rs:60)</text>
+    <text x="84" y="712" font-size="12.5">2. recursively walks String / Object / Array; depth-capped at MAX_JSON_DEPTH (32)</text>
+    <text x="84" y="734" font-size="12.5">3. tests string leaves against 5 static regexes, cached in a OnceLock</text>
+    <text x="84" y="756" font-size="12.5">4. never refuses the event — only sets a flag for downstream to act on</text>
+    <text x="84" y="788" font-size="12.5" fill="var(--info)">→ emits: injection_taint: bool  (on NormalizedEvent)</text>
+  </g>
+  <line x1="430" y1="810" x2="430" y2="850" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow)"></line>
+
+  <!-- N4 Stage 4 -->
+  <g>
+    <rect x="60" y="850" width="740" height="210" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="850" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="866" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="873" class="title-txt" font-size="13.5">STAGE 4 · redact_secrets() → walk()</text>
+    <text x="700" y="873" font-size="11.5" fill="var(--text-dim)" text-anchor="end">redact.rs:8-77</text>
+    <text x="84" y="910" font-size="12.5">1. value-pattern match: string leaf vs 3 regexes (sk-…, Bearer…, PEM) → typed category</text>
+    <text x="84" y="932" font-size="12.5">2. key-name match: object key ∈ SECRET_FIELDS (6 names) → wipes ENTIRE subtree, any type</text>
+    <text x="84" y="954" font-size="12.5">3. depth &gt; MAX_JSON_DEPTH (32) → error   ·   leaf count &gt; MAX_JSON_LEAVES (10,000) → error</text>
+    <text x="84" y="976" font-size="12.5">4. every redaction recorded into RedactionReceipt{ categories, field_count }</text>
+    <text x="84" y="1008" font-size="12.5" fill="var(--danger)">→ errors: JsonTooDeep, JsonTooComplex, RedactionFailed</text>
+    <text x="84" y="1030" font-size="12.5" fill="var(--info)">→ emits: RedactionReceipt{ categories: Vec&lt;RedactedCategory&gt;, field_count }</text>
+  </g>
+  <line x1="430" y1="1060" x2="430" y2="1100" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow)"></line>
+
+  <!-- N5 Stage 5 -->
+  <g>
+    <rect x="60" y="1100" width="740" height="210" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="1100" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="1116" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="1123" class="title-txt" font-size="13.5">STAGE 5 · validate_attachments()</text>
+    <text x="700" y="1123" font-size="11.5" fill="var(--text-dim)" text-anchor="end">attachment.rs:7-46</text>
+    <text x="84" y="1160" font-size="12.5">1. check_count: refs.len() &gt; MAX_ATTACHMENTS_PER_EVENT (100)</text>
+    <text x="84" y="1182" font-size="12.5">2. check_no_duplicate_uris: HashSet&lt;&amp;str&gt; over all ref URIs in this event</text>
+    <text x="84" y="1204" font-size="12.5">3. check_one: uri / digest / mime_type must be non-empty; uri.len() ≤ 4096</text>
+    <text x="84" y="1226" font-size="12.5">4. check_one: size_bytes must be in 1..=16 MiB (both 0 and &gt;max reject)</text>
+    <text x="84" y="1258" font-size="12.5" fill="var(--danger)">→ errors: TooManyAttachments, DuplicateAttachmentUri,</text>
+    <text x="84" y="1280" font-size="12.5" fill="var(--danger)">   InvalidAttachment, AttachmentUriTooLong, AttachmentOversized</text>
+  </g>
+  <line x1="430" y1="1310" x2="430" y2="1350" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow)"></line>
+
+  <!-- N6 Stage 6 -->
+  <g>
+    <rect x="60" y="1350" width="740" height="160" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="1350" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="1366" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="1373" class="title-txt" font-size="13.5">STAGE 6 · compute_digest()</text>
+    <text x="700" y="1373" font-size="11.5" fill="var(--text-dim)" text-anchor="end">lib.rs:37-41</text>
+    <text x="84" y="1410" font-size="12.5">1. serde_json::to_vec(payload) — over the SCRUBBED payload, not the original</text>
+    <text x="84" y="1432" font-size="12.5">2. blake3::hash(bytes).to_hex()</text>
+    <text x="84" y="1454" font-size="12.5">3. formatted as "blake3:&lt;hex&gt;"</text>
+    <text x="84" y="1486" font-size="12.5" fill="var(--info)">→ emits: payload_digest: String</text>
+  </g>
+  <line x1="430" y1="1510" x2="430" y2="1550" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow)"></line>
+
+  <!-- N7 Assemble -->
+  <g>
+    <rect x="60" y="1550" width="740" height="110" rx="10" fill="var(--node-bg)" stroke="var(--node-border)"></rect>
+    <rect x="60" y="1550" width="740" height="34" rx="10" fill="var(--node-title-bg)"></rect>
+    <rect x="60" y="1566" width="740" height="18" fill="var(--node-title-bg)"></rect>
+    <text x="84" y="1573" class="title-txt" font-size="13.5">ASSEMBLE · event_id + receipt tagging</text>
+    <text x="700" y="1573" font-size="11.5" fill="var(--text-dim)" text-anchor="end">lib.rs:64-65</text>
+    <text x="84" y="1610" font-size="12.5">1. event_id = format!("{source}-{delivery_id}")</text>
+    <text x="84" y="1632" font-size="12.5">2. receipt.event_id = event_id.clone()</text>
+  </g>
+  <line x1="430" y1="1660" x2="430" y2="1700" stroke="var(--text-dim)" stroke-width="1.6" marker-end="url(#arrow)"></line>
+
+  <!-- N8 Output -->
+  <g>
+    <rect x="60" y="1700" width="740" height="210" rx="10" fill="var(--node-bg)" stroke="var(--ok)" stroke-width="1.6" stroke-dasharray="2 3"></rect>
+    <text x="84" y="1726" class="title-txt" font-size="14">NormalizedEvent — the trusted, downstream-safe result</text>
+    <text x="84" y="1750" font-size="12.5" fill="var(--text-dim)">types.rs:49-58</text>
+    <text x="84" y="1774" font-size="12.5">event_id: String            source: String</text>
+    <text x="84" y="1796" font-size="12.5">payload: Value (scrubbed)   payload_digest: String</text>
+    <text x="84" y="1818" font-size="12.5">attachments: Vec&lt;AttachmentRef&gt;</text>
+    <text x="84" y="1840" font-size="12.5">redaction_receipt: RedactionReceipt</text>
+    <text x="84" y="1862" font-size="12.5">injection_taint: bool</text>
+    <text x="84" y="1892" font-size="12" fill="var(--text-dim)">Ok(NormalizedEvent) — or Err(IngestError) short-circuited at any stage above</text>
+  </g>
+
+  <!-- divider -->
+  <text x="430" y="1955" text-anchor="middle" font-size="12" fill="var(--text-dim)" letter-spacing="0.04em">▾ CALLER-INVOKED · SEPARATE FROM normalize() · NOT CALLED ABOVE ▾</text>
+  <line x1="60" y1="1970" x2="800" y2="1970" stroke="var(--dedup-border)" stroke-width="1" stroke-dasharray="4 4"></line>
+  <line x1="430" y1="1910" x2="430" y2="1970" stroke="var(--text-dim)" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#arrow)"></line>
+  <text x="440" y="1945" font-size="11" fill="var(--text-dim)">source, delivery_id, payload_digest</text>
+
+  <!-- N9 Dedup -->
+  <g>
+    <rect x="60" y="1990" width="740" height="130" rx="10" fill="var(--dedup-bg)" stroke="var(--dedup-border)" stroke-width="1.4" stroke-dasharray="5 4"></rect>
+    <text x="84" y="2016" class="title-txt" font-size="13.5">SeenIds::record() — LRU-bounded dedup tracker</text>
+    <text x="700" y="2016" font-size="11.5" fill="var(--text-dim)" text-anchor="end">dedup.rs:33-52</text>
+    <text x="84" y="2044" font-size="12.5">1. key = "{source}\0{delivery_id}"</text>
+    <text x="84" y="2066" font-size="12.5">2. LruCache&lt;String,String&gt; capacity MAX_SEEN_IDS (1,000,000) — evicts oldest key on overflow</text>
+    <text x="84" y="2088" font-size="12.5">3. compares the new payload_digest against the digest stored for this key, if any</text>
+  </g>
+  <line x1="220" y1="2120" x2="150" y2="2160" stroke="var(--text-dim)" stroke-width="1.4" marker-end="url(#arrow)"></line>
+  <line x1="430" y1="2120" x2="430" y2="2160" stroke="var(--text-dim)" stroke-width="1.4" marker-end="url(#arrow)"></line>
+  <line x1="640" y1="2120" x2="700" y2="2160" stroke="var(--text-dim)" stroke-width="1.4" marker-end="url(#arrow)"></line>
+
+  <!-- outcome pills -->
+  <g>
+    <rect x="40" y="2160" width="230" height="112" rx="9" fill="var(--ok-soft)" stroke="var(--ok)"></rect>
+    <text x="155" y="2186" text-anchor="middle" class="title-txt" font-size="12.5" fill="var(--ok)">Accepted{ event_id }</text>
+    <text x="155" y="2208" text-anchor="middle" font-size="11.5">no prior key seen</text>
+    <text x="155" y="2230" text-anchor="middle" font-size="11.5">→ safe to persist /</text>
+    <text x="155" y="2248" text-anchor="middle" font-size="11.5">act on</text>
+  </g>
+  <g>
+    <rect x="315" y="2160" width="230" height="112" rx="9" fill="var(--info-soft)" stroke="var(--info)"></rect>
+    <text x="430" y="2186" text-anchor="middle" class="title-txt" font-size="12.5" fill="var(--info)">Duplicate{ event_id }</text>
+    <text x="430" y="2208" text-anchor="middle" font-size="11.5">same key, same digest</text>
+    <text x="430" y="2230" text-anchor="middle" font-size="11.5">→ legitimate retry /</text>
+    <text x="430" y="2248" text-anchor="middle" font-size="11.5">redelivery</text>
+  </g>
+  <g>
+    <rect x="590" y="2160" width="230" height="112" rx="9" fill="var(--danger-soft)" stroke="var(--danger)"></rect>
+    <text x="705" y="2186" text-anchor="middle" class="title-txt" font-size="12.5" fill="var(--danger)">Conflict{ prior, new digest }</text>
+    <text x="705" y="2208" text-anchor="middle" font-size="11.5">same key, DIFFERENT digest</text>
+    <text x="705" y="2230" text-anchor="middle" font-size="11.5">→ delivery_id reused —</text>
+    <text x="705" y="2248" text-anchor="middle" font-size="11.5">flag, don't silently accept</text>
+  </g>
+</svg>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--node-title-bg); border:1px solid var(--node-border);"></span> normalize() pipeline stage</span>
+    <span><span class="swatch" style="background:var(--danger-soft); border:1px solid var(--danger);"></span> error exit (IngestError variant)</span>
+    <span><span class="swatch" style="background:var(--info-soft); border:1px solid var(--info);"></span> emitted artifact / field</span>
+    <span><span class="swatch" style="background:var(--dedup-bg); border:1px dashed var(--dedup-border);"></span> separate, caller-invoked subsystem</span>
+  </div>
+</section>
+
+<section id="files">
+  <h2>B · ingest file-by-file source</h2>
+  <p class="lede">All 8 source files, in read order. Each block is the real file, complete — expand to read every line.</p>
+
+  <div class="filecard">
+    <h3>lib.rs <span class="path">crates/ingest/src/lib.rs · 75 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> entry point — defines <code class="inline">normalize()</code>, the size gate, and the digest function</span></div>
+    <p>The whole pipeline in one place. The doc comment above <code class="inline">normalize()</code> (lines 43-53) is the
+      closest thing this crate has to a spec — it names the exact order and states <i>why</i> injection-scan (step 3)
+      must run before redaction (step 4): so a jailbreak hidden inside a field like <code class="inline">password</code>
+      is still caught before that field's value is wiped to <code class="inline">[REDACTED:…]</code>.</p>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>//! `ingest` — validate, redact, and normalize external events before they touch the store.
+//!
+//! Entry point: [`normalize`]. Dedup: [`SeenIds`].
+
+pub mod dedup;
+pub mod types;
+
+mod attachment;
+mod injection;
+mod redact;
+mod registry;
+
+pub use dedup::{InboxDecision, SeenIds};
+pub use types::*;
+
+use serde_json::Value;
+use std::io::{self, Write};
+
+struct ByteCounter(usize);
+impl Write for ByteCounter {
+    fn write(&mut self, buf: &[u8]) -> io::Result&lt;usize&gt; {
+        self.0 += buf.len();
+        if self.0 &gt; MAX_PAYLOAD_BYTES {
+            return Err(io::Error::other("oversized"));
+        }
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -&gt; io::Result&lt;()&gt; {
+        Ok(())
+    }
+}
+
+fn check_size(payload: &amp;Value) -&gt; Result&lt;(), IngestError&gt; {
+    serde_json::to_writer(ByteCounter(0), payload).map_err(|_| IngestError::OversizedPayload)
+}
+
+fn compute_digest(payload: &amp;Value) -&gt; String {
+    // A validated serde_json::Value is always serializable; expect() is appropriate here.
+    let bytes = serde_json::to_vec(payload).expect("Value always serializes to valid JSON");
+    format!("blake3:{}", blake3::hash(&amp;bytes).to_hex())
+}
+
+/// Normalize an incoming event through the full validation pipeline.
+///
+/// Steps (in order, matching the security contract):
+/// 1. `check_source`   — NFC-normalize, trim, cap, verify namespace
+/// 2. `check_size`     — reject oversized payloads before any allocation-heavy work
+/// 3. `check_injection` (pre-redact) — scan raw payload so injection hidden in secret fields
+///    (e.g. `{"password": "Ignore all previous instructions"}`) is still detected before
+///    the value is wiped by the redaction pass
+/// 4. `redact_secrets` — scrub keys/tokens/passwords; track what was removed
+/// 5. `validate_attachments` — count, URI len, size, uniqueness
+/// 6. `compute_digest` — BLAKE3 over the scrubbed payload
+pub fn normalize(
+    input: IncomingEvent,
+    reg: &amp;SourceRegistration,
+) -&gt; Result&lt;NormalizedEvent, IngestError&gt; {
+    let source = registry::check_source(&amp;input.source, reg)?;
+    check_size(&amp;input.payload)?;
+    let taint = injection::check_injection(&amp;input.payload); // scan raw, before redaction
+    let (payload, mut receipt) = redact::redact_secrets(input.payload)?;
+    attachment::validate_attachments(&amp;input.attachments)?;
+    let digest = compute_digest(&amp;payload);
+    let event_id = format!("{source}-{}", input.delivery_id);
+    receipt.event_id = event_id.clone();
+    Ok(NormalizedEvent {
+        event_id,
+        source,
+        payload,
+        payload_digest: digest,
+        attachments: input.attachments,
+        redaction_receipt: receipt,
+        injection_taint: taint,
+    })
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="filecard">
+    <h3>types.rs <span class="path">crates/ingest/src/types.rs · 84 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> every constant, every struct, the full <code class="inline">IngestError</code> enum</span></div>
+    <p>Nothing here does anything — it's the vocabulary the rest of the crate is written in. Worth reading in full once,
+       since every limit referenced elsewhere in this doc (256 KiB payload cap, 32-deep JSON, 16 MiB attachments…) is
+       defined here and nowhere else.</p>
+    <details class="src"><summary>Show full source</summary>
+<pre><code>use serde_json::Value;
+
+pub const MAX_PAYLOAD_BYTES: usize = 256 * 1024;
+pub const MAX_SOURCE_LEN: usize = 256;
+pub const MAX_ATTACHMENTS_PER_EVENT: usize = 100;
+pub const MAX_ATTACHMENT_URI_LEN: usize = 4096;
+pub const MAX_ATTACHMENT_BYTES: u64 = 16 * 1024 * 1024;
+pub const MAX_JSON_DEPTH: usize = 32;
+pub const MAX_JSON_LEAVES: usize = 10_000; // reachable within MAX_PAYLOAD_BYTES; 100k is not
+pub const MAX_SEEN_IDS: usize = 1_000_000;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AttachmentRef {
+    pub uri: String,
+    pub digest: String,
+    pub mime_type: String,
+    pub size_bytes: u64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum RedactedCategory {
+    ApiKey,
+    BearerToken,
+    PrivateKey,
+    GenericSecret,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct RedactionReceipt {
+    pub event_id: String,
+    pub categories: Vec&lt;RedactedCategory&gt;,
+    pub field_count: usize,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct SourceRegistration {
+    pub namespace: String,
+    pub schema_version: u16,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct IncomingEvent {
+    pub source: String,
+    pub delivery_id: String,
+    pub payload: Value,
+    pub attachments: Vec&lt;AttachmentRef&gt;,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct NormalizedEvent {
+    pub event_id: String,
+    pub source: String,
+    pub payload: Value,
+    pub payload_digest: String,
+    pub attachments: Vec&lt;AttachmentRef&gt;,
+    pub redaction_receipt: RedactionReceipt,
+    pub injection_taint: bool,
+}
+
+#[derive(Debug, thiserror::Error, PartialEq)]
+pub enum IngestError {
+    #[error("unknown or empty source namespace")]
+    UnknownSource,
+    #[error("payload exceeds size limit")]
+    OversizedPayload,
+    #[error("json nesting exceeds depth limit")]
+    JsonTooDeep,
+    #[error("json has too many string leaves")]
+    JsonTooComplex,
+    #[error("serialization error: {0}")]
+    SerializationError(String),
+    #[error("redaction failed: {0}")]
+    RedactionFailed(String),
+    #[error("invalid attachment field")]
+    InvalidAttachment,
+    #[error("attachment binary exceeds size limit")]
+    AttachmentOversized,
+    #[error("too many attachments")]
+    TooManyAttachments,
+    #[error("duplicate attachment URI within event")]
+    DuplicateAttachmentUri,
+    #[error("attachment URI exceeds length limit")]
+    AttachmentUriTooLong,
+}</code></pre>
+    </details>
+    <div class="callout">
+      <b>Dead variant?</b>
+      <code class="inline">SerializationError(String)</code> is declared but never constructed anywhere in this crate
+      (checked: only <code class="inline">OversizedPayload</code>, <code class="inline">JsonTooDeep</code>,
+      <code class="inline">JsonTooComplex</code>, <code class="inline">RedactionFailed</code>, and the four attachment/source
+      variants are ever returned). Worth asking in review whether it's reserved for a future caller (e.g. a JSON
+      deserialization step that doesn't exist yet) or should be removed.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>registry.rs <span class="path">crates/ingest/src/registry.rs · 17 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> Stage 1 — the literal "normalize" in prompt/source normalization</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>use crate::types::{IngestError, SourceRegistration, MAX_SOURCE_LEN};
+use unicode_normalization::UnicodeNormalization;
+
+/// NFC-normalize, trim, cap length, then verify against the registered namespace.
+/// Returns the normalized form on success — this is what all downstream sees.
+pub fn check_source(source: &amp;str, reg: &amp;SourceRegistration) -&gt; Result&lt;String, IngestError&gt; {
+    let normalized: String = source.nfc().collect();
+    let trimmed = normalized.trim();
+
+    if trimmed.is_empty() || trimmed.len() &gt; MAX_SOURCE_LEN {
+        return Err(IngestError::UnknownSource);
+    }
+    if trimmed != reg.namespace.as_str() {
+        return Err(IngestError::UnknownSource);
+    }
+    Ok(trimmed.to_string())
+}</code></pre>
+    </details>
+    <div class="callout info">
+      <b>Why NFC, specifically</b>
+      Unicode allows the same visible character to be encoded two ways: precomposed (NFC — one codepoint, e.g. U+00E9 for "é")
+      or decomposed (NFD — base letter + combining accent, two codepoints). A registry entry stored as NFC "café" must still
+      match an incoming source typed as NFD "cafe´" — same glyphs, different bytes. <code class="inline">.nfc()</code> folds
+      both to the same canonical form before the <code class="inline">==</code> comparison. This does <b>not</b> defend against
+      homograph attacks (different characters that just look similar, e.g. Cyrillic "ɡ" vs Latin "g") — that's a distinct
+      attack class NFC normalization doesn't touch, and the crate correctly still rejects those (see the contract test below).
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>injection.rs <span class="path">crates/ingest/src/injection.rs · 36 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> Stage 3 — prompt-injection detector, taints but never blocks</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>use crate::types::MAX_JSON_DEPTH;
+use regex::Regex;
+use serde_json::Value;
+use std::sync::OnceLock;
+
+static PATTERNS: OnceLock&lt;Vec&lt;Regex&gt;&gt; = OnceLock::new();
+
+fn patterns() -&gt; &amp;'static [Regex] {
+    PATTERNS.get_or_init(|| {
+        vec![
+            Regex::new(r"(?i)ignore\s+(all\s+)?previous\s+instructions").unwrap(),
+            Regex::new(r"(?i)you\s+are\s+now\s+in\s+\S+\s+mode").unwrap(),
+            Regex::new(r"(?i)(reveal|show|print|return)\s+(your\s+)?system\s+prompt").unwrap(),
+            Regex::new(r"(?i)(perform|use|attempt)\s+a\s+jailbreak").unwrap(),
+            Regex::new(r"(?i)disregard\s+(all\s+)?(previous\s+)?instructions").unwrap(),
+        ]
+    })
+}
+
+fn scan(v: &amp;Value, depth: usize) -&gt; bool {
+    if depth &gt; MAX_JSON_DEPTH {
+        return false;
+    }
+    match v {
+        Value::String(s) =&gt; patterns().iter().any(|p| p.is_match(s)),
+        Value::Object(m) =&gt; m.values().any(|c| scan(c, depth + 1)),
+        Value::Array(a) =&gt; a.iter().any(|c| scan(c, depth + 1)),
+        _ =&gt; false,
+    }
+}
+
+/// Returns `true` if the payload contains prompt-injection patterns.
+/// Never refuses — callers set `injection_taint` on the envelope.
+pub fn check_injection(payload: &amp;Value) -&gt; bool {
+    scan(payload, 0)
+}</code></pre>
+    </details>
+    <div class="callout">
+      <b>Design choice: taint, don't block</b>
+      A false positive here (e.g. a legitimate support ticket that quotes "please ignore all previous instructions" as an
+      example of what NOT to do) would otherwise hard-reject a valid event. Instead the crate tags it and defers the
+      accept/reject call to whatever consumes <code class="inline">injection_taint</code> downstream — which, per the
+      "zero callers" finding above, doesn't exist yet either.
+    </div>
+    <div class="callout danger">
+      <b>Depth-cap failure mode is silent</b>
+      At <code class="inline">depth &gt; MAX_JSON_DEPTH</code>, <code class="inline">scan()</code> returns <code class="inline">false</code>
+      — not an error. A payload nested deeper than 32 levels with an injection attempt buried past that depth will
+      pass through <i>untainted</i>, silently. (It would separately fail at the redaction stage's own depth check with
+      <code class="inline">JsonTooDeep</code> — but only because redaction runs after injection scanning and enforces the
+      same cap as a hard error. If a future change ever made injection scanning the only depth-sensitive check, this
+      silent-false behavior would matter a lot more.)
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>redact.rs <span class="path">crates/ingest/src/redact.rs · 77 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> Stage 4 — the actual secret scrubber, walks the whole JSON tree once</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>use crate::types::{IngestError, RedactedCategory, RedactionReceipt, MAX_JSON_DEPTH, MAX_JSON_LEAVES};
+use serde_json::{Map, Value};
+
+#[path = "redact_patterns.rs"]
+mod redact_patterns;
+use redact_patterns::{typed_category, SECRET_FIELDS};
+
+fn walk(
+    v: Value,
+    depth: usize,
+    leaves: &amp;mut usize,
+    r: &amp;mut RedactionReceipt,
+) -&gt; Result&lt;Value, IngestError&gt; {
+    if depth &gt; MAX_JSON_DEPTH {
+        return Err(IngestError::JsonTooDeep);
+    }
+    match v {
+        Value::String(s) =&gt; {
+            *leaves += 1;
+            if *leaves &gt; MAX_JSON_LEAVES {
+                return Err(IngestError::JsonTooComplex);
+            }
+            if let Some(cat) = typed_category(&amp;s) {
+                r.categories.push(cat);
+                r.field_count += 1;
+                return Ok(Value::String(format!("[REDACTED:{cat:?}]")));
+            }
+            Ok(Value::String(s))
+        }
+        Value::Object(map) =&gt; {
+            let mut out = Map::with_capacity(map.len());
+            for (k, v_inner) in map {
+                let is_secret = SECRET_FIELDS.iter().any(|&amp;f| k.to_ascii_lowercase() == f);
+                if is_secret {
+                    // Redact entire subtree regardless of type (D1: {"password":["hunter2"]} was leaking).
+                    *leaves += 1;
+                    if *leaves &gt; MAX_JSON_LEAVES {
+                        return Err(IngestError::JsonTooComplex);
+                    }
+                    // Use typed category when value is a string and matches a known pattern (D3).
+                    let cat = if let Value::String(ref s) = v_inner {
+                        typed_category(s).unwrap_or(RedactedCategory::GenericSecret)
+                    } else {
+                        RedactedCategory::GenericSecret
+                    };
+                    r.categories.push(cat);
+                    r.field_count += 1;
+                    out.insert(k, Value::String(format!("[REDACTED:{cat:?}]")));
+                    continue;
+                }
+                out.insert(k, walk(v_inner, depth + 1, leaves, r)?);
+            }
+            Ok(Value::Object(out))
+        }
+        Value::Array(arr) =&gt; {
+            let mut out = Vec::with_capacity(arr.len());
+            for item in arr {
+                out.push(walk(item, depth + 1, leaves, r)?);
+            }
+            Ok(Value::Array(out))
+        }
+        other =&gt; Ok(other),
+    }
+}
+
+pub fn redact_secrets(payload: Value) -&gt; Result&lt;(Value, RedactionReceipt), IngestError&gt; {
+    let mut receipt = RedactionReceipt {
+        event_id: String::new(),
+        categories: vec![],
+        field_count: 0,
+    };
+    let scrubbed = walk(payload, 0, &amp;mut 0, &amp;mut receipt).map_err(|e| match e {
+        IngestError::JsonTooDeep | IngestError::JsonTooComplex =&gt; e,
+        other =&gt; IngestError::RedactionFailed(other.to_string()),
+    })?;
+    Ok((scrubbed, receipt))
+}</code></pre>
+    </details>
+    <div class="callout danger">
+      <b>D1 — the scar that shaped this function</b>
+      The comment at the "is_secret" branch references a real prior bug: an earlier version of this walk only redacted
+      string <i>values</i> directly under a secret key. <code class="inline">{"password": "hunter2"}</code> was safe, but
+      <code class="inline">{"password": ["hunter2"]}</code> — the same secret one array level deeper — passed straight
+      through unredacted, because the old code never recursed into non-string values under a secret key to redact them
+      individually. The fix wipes the <i>whole subtree</i> the instant a secret key name is seen, regardless of what type
+      the value is. Locked in by <code class="inline">non_string_value_under_secret_field_is_redacted</code> in the test
+      contract below.
+    </div>
+    <div class="callout info">
+      <b>Which branch wins when a key name AND a value pattern both match?</b>
+      If a field is named <code class="inline">api_key</code> <i>and</i> its string value matches the <code class="inline">sk-…</code>
+      pattern, the <b>key-name branch</b> (Object case, line 33) handles it — it runs first for every object entry, and
+      on a match it <code class="inline">continue</code>s without ever calling <code class="inline">walk()</code>
+      recursively on that value. The standalone string-leaf branch (line 18) only ever sees values that were <i>not</i>
+      reached through a secret-named key. The key-name branch still calls <code class="inline">typed_category()</code>
+      itself (line 41) so the category tagging is identical either way — but it's worth knowing only one code path
+      actually executes per field, not both.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>redact_patterns.rs <span class="path">crates/ingest/src/redact_patterns.rs · 43 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> the hand-maintained allowlist <code class="inline">redact.rs</code> runs against</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>//! Secret-detection patterns/field names for `redact.rs::walk` -- split out for its 80-line cap.
+
+use crate::types::RedactedCategory;
+use regex::Regex;
+use std::sync::OnceLock;
+
+static PATTERNS: OnceLock&lt;Vec&lt;(Regex, RedactedCategory)&gt;&gt; = OnceLock::new();
+
+pub(super) fn patterns() -&gt; &amp;'static [(Regex, RedactedCategory)] {
+    PATTERNS.get_or_init(|| {
+        vec![
+            (
+                Regex::new(r"sk-[A-Za-z0-9]{20,}").unwrap(),
+                RedactedCategory::ApiKey,
+            ),
+            (
+                Regex::new(r"Bearer [A-Za-z0-9\-._~+/]+=*").unwrap(),
+                RedactedCategory::BearerToken,
+            ),
+            (
+                Regex::new(r"-----BEGIN .{1,30} PRIVATE KEY-----").unwrap(),
+                RedactedCategory::PrivateKey,
+            ),
+        ]
+    })
+}
+
+pub(super) const SECRET_FIELDS: &amp;[&amp;str] = &amp;[
+    "api_key",
+    "secret",
+    "token",
+    "password",
+    "private_key",
+    "authorization",
+];
+
+/// Match value against typed patterns; returns `None` if no pattern matches.
+pub(super) fn typed_category(s: &amp;str) -&gt; Option&lt;RedactedCategory&gt; {
+    patterns()
+        .iter()
+        .find(|(p, _)| p.is_match(s))
+        .map(|(_, c)| *c)
+}</code></pre>
+    </details>
+    <div class="callout danger">
+      <b>Coverage gap, not a bug</b>
+      This is a static allowlist: 3 value regexes, 6 field names. Anything outside it — a GCP service-account JSON key,
+      an AWS <code class="inline">AKIA…</code> access key, a Slack <code class="inline">xox…</code> token, a field
+      literally named <code class="inline">secretKey</code> in camelCase colliding on <code class="inline">to_ascii_lowercase()</code>
+      (which <i>would</i> still match — lowercasing "secretKey" gives "secretkey", not in the list either way) — passes
+      through unredacted. Worth checking against whatever real event sources this crate will eventually ingest from.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>attachment.rs <span class="path">crates/ingest/src/attachment.rs · 46 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> Stage 5 — pure validation, no normalization, no mutation</span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>use crate::types::{
+    AttachmentRef, IngestError, MAX_ATTACHMENTS_PER_EVENT, MAX_ATTACHMENT_BYTES,
+    MAX_ATTACHMENT_URI_LEN,
+};
+use std::collections::HashSet;
+
+pub fn validate_attachments(refs: &amp;[AttachmentRef]) -&gt; Result&lt;(), IngestError&gt; {
+    check_count(refs)?;
+    check_no_duplicate_uris(refs)?;
+    for r in refs {
+        check_one(r)?;
+    }
+    Ok(())
+}
+
+fn check_count(refs: &amp;[AttachmentRef]) -&gt; Result&lt;(), IngestError&gt; {
+    if refs.len() &gt; MAX_ATTACHMENTS_PER_EVENT {
+        Err(IngestError::TooManyAttachments)
+    } else {
+        Ok(())
+    }
+}
+
+fn check_no_duplicate_uris(refs: &amp;[AttachmentRef]) -&gt; Result&lt;(), IngestError&gt; {
+    let mut seen: HashSet&lt;&amp;str&gt; = HashSet::new();
+    for r in refs {
+        if !seen.insert(r.uri.as_str()) {
+            return Err(IngestError::DuplicateAttachmentUri);
+        }
+    }
+    Ok(())
+}
+
+fn check_one(r: &amp;AttachmentRef) -&gt; Result&lt;(), IngestError&gt; {
+    if r.uri.is_empty() || r.digest.is_empty() || r.mime_type.is_empty() {
+        return Err(IngestError::InvalidAttachment);
+    }
+    if r.uri.len() &gt; MAX_ATTACHMENT_URI_LEN {
+        return Err(IngestError::AttachmentUriTooLong);
+    }
+    match r.size_bytes {
+        0 =&gt; Err(IngestError::InvalidAttachment),
+        n if n &gt; MAX_ATTACHMENT_BYTES =&gt; Err(IngestError::AttachmentOversized),
+        _ =&gt; Ok(()),
+    }
+}</code></pre>
+    </details>
+    <div class="callout">
+      <b>Note</b> Attachments here are <i>references</i> (<code class="inline">AttachmentRef{ uri, digest, mime_type, size_bytes }</code>) —
+      metadata pointing at a blob presumably stored elsewhere (the <code class="inline">s3://…</code> URIs in the tests hint
+      at that). This crate never touches attachment bytes; it only validates the pointer's shape.
+    </div>
+  </div>
+
+  <div class="filecard">
+    <h3>dedup.rs <span class="path">crates/ingest/src/dedup.rs · 59 lines</span></h3>
+    <div class="meta"><span><b>Role:</b> replay/idempotency tracker — exported, caller-invoked, not part of <code class="inline">normalize()</code></span></div>
+    <details class="src" open><summary>Show full source</summary>
+<pre><code>use crate::types::MAX_SEEN_IDS;
+use lru::LruCache;
+use std::num::NonZeroUsize;
+
+#[derive(Debug, PartialEq)]
+pub enum InboxDecision {
+    Accepted {
+        event_id: String,
+    },
+    Duplicate {
+        event_id: String,
+    },
+    Conflict {
+        prior_digest: String,
+        new_digest: String,
+    },
+}
+
+/// LRU-bounded dedup tracker. Key: `(source, delivery_id)`. Value: `payload_digest`.
+/// Evicts oldest entries at `MAX_SEEN_IDS` to prevent unbounded memory growth.
+pub struct SeenIds(LruCache&lt;String, String&gt;);
+
+impl SeenIds {
+    pub fn new() -&gt; Self {
+        Self::with_capacity(MAX_SEEN_IDS)
+    }
+
+    pub fn with_capacity(cap: usize) -&gt; Self {
+        let n = NonZeroUsize::new(cap.max(1)).expect("max(1) is always nonzero");
+        Self(LruCache::new(n))
+    }
+
+    pub fn record(
+        &amp;mut self,
+        source: &amp;str,
+        delivery_id: &amp;str,
+        payload_digest: &amp;str,
+    ) -&gt; InboxDecision {
+        let key = format!("{source}\x00{delivery_id}");
+        let event_id = format!("{source}-{delivery_id}");
+        match self.0.get(&amp;key) {
+            Some(prior) if prior == payload_digest =&gt; InboxDecision::Duplicate { event_id },
+            Some(prior) =&gt; InboxDecision::Conflict {
+                prior_digest: prior.clone(),
+                new_digest: payload_digest.to_string(),
+            },
+            None =&gt; {
+                self.0.put(key, payload_digest.to_string());
+                InboxDecision::Accepted { event_id }
+            }
+        }
+    }
+}
+
+impl Default for SeenIds {
+    fn default() -&gt; Self {
+        Self::new()
+    }
+}</code></pre>
+    </details>
+    <div class="callout info">
+      <b>Eviction changes the guarantee, on purpose</b>
+      Once the cache hits <code class="inline">MAX_SEEN_IDS</code> (1,000,000 keys) and evicts the oldest entry, a
+      re-delivery of that evicted event is <code class="inline">Accepted</code> again, not <code class="inline">Duplicate</code>
+      — the LRU has simply forgotten it saw that key before. Test <code class="inline">seenids_evicts_at_capacity</code>
+      asserts this is the intended behavior ("at-least-once semantics"), not a leak — dedup here is best-effort, bounded
+      by memory, not a durable exactly-once guarantee.
+    </div>
+    <div class="callout">
+      <b>Key separator</b> <code class="inline">"{source}\x00{delivery_id}"</code> uses a NUL byte as separator so a
+      source named <code class="inline">"a-b"</code> with delivery_id <code class="inline">"c"</code> can never collide
+      with source <code class="inline">"a"</code> delivery_id <code class="inline">"b-c"</code> the way a plain
+      <code class="inline">"-"</code>-joined key could.
+    </div>
+  </div>
+</section>
+
+<section id="reference">
+  <h2>B · ingest reference tables</h2>
+
+  <h3>Constants <span class="path">types.rs:3-10</span></h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Guards</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">MAX_PAYLOAD_BYTES</code></td><td>262,144 (256 KiB)</td><td>Stage 2, <code class="inline">ByteCounter</code></td></tr>
+      <tr><td><code class="inline">MAX_SOURCE_LEN</code></td><td>256</td><td>Stage 1, <code class="inline">check_source</code></td></tr>
+      <tr><td><code class="inline">MAX_ATTACHMENTS_PER_EVENT</code></td><td>100</td><td>Stage 5, <code class="inline">check_count</code></td></tr>
+      <tr><td><code class="inline">MAX_ATTACHMENT_URI_LEN</code></td><td>4,096</td><td>Stage 5, <code class="inline">check_one</code></td></tr>
+      <tr><td><code class="inline">MAX_ATTACHMENT_BYTES</code></td><td>16,777,216 (16 MiB)</td><td>Stage 5, <code class="inline">check_one</code></td></tr>
+      <tr><td><code class="inline">MAX_JSON_DEPTH</code></td><td>32</td><td>Stage 3 scan (silent stop) &amp; Stage 4 walk (hard error)</td></tr>
+      <tr><td><code class="inline">MAX_JSON_LEAVES</code></td><td>10,000</td><td>Stage 4, <code class="inline">walk</code> (comment: reachable within the payload cap; 100k is not)</td></tr>
+      <tr><td><code class="inline">MAX_SEEN_IDS</code></td><td>1,000,000</td><td><code class="inline">SeenIds</code> LRU capacity</td></tr>
+    </tbody>
+  </table>
+
+  <h3>IngestError — all 10 variants <span class="path">types.rs:60-84</span></h3>
+  <table>
+    <thead><tr><th>Variant</th><th>Raised by</th><th>Constructed?</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">UnknownSource</code></td><td>Stage 1 — empty/oversized/mismatched source</td><td>yes</td></tr>
+      <tr><td><code class="inline">OversizedPayload</code></td><td>Stage 2 — <code class="inline">ByteCounter</code> overflow</td><td>yes</td></tr>
+      <tr><td><code class="inline">JsonTooDeep</code></td><td>Stage 4 — nesting &gt; 32</td><td>yes</td></tr>
+      <tr><td><code class="inline">JsonTooComplex</code></td><td>Stage 4 — &gt; 10,000 string leaves</td><td>yes</td></tr>
+      <tr><td><code class="inline">SerializationError(String)</code></td><td>—</td><td><span style="color:var(--danger)">no call site found</span></td></tr>
+      <tr><td><code class="inline">RedactionFailed(String)</code></td><td>Stage 4 — wraps any non-depth/complexity error from <code class="inline">walk</code></td><td>yes</td></tr>
+      <tr><td><code class="inline">InvalidAttachment</code></td><td>Stage 5 — empty field or zero size</td><td>yes</td></tr>
+      <tr><td><code class="inline">AttachmentOversized</code></td><td>Stage 5 — size &gt; 16 MiB</td><td>yes</td></tr>
+      <tr><td><code class="inline">TooManyAttachments</code></td><td>Stage 5 — count &gt; 100</td><td>yes</td></tr>
+      <tr><td><code class="inline">DuplicateAttachmentUri</code></td><td>Stage 5 — same URI twice in one event</td><td>yes</td></tr>
+      <tr><td><code class="inline">AttachmentUriTooLong</code></td><td>Stage 5 — URI &gt; 4,096 chars</td><td>yes</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Redaction triggers <span class="path">redact.rs, redact_patterns.rs</span></h3>
+  <table>
+    <thead><tr><th>Mechanism</th><th>Trigger</th><th>Scope of redaction</th><th>Category assigned</th></tr></thead>
+    <tbody>
+      <tr><td>Value-pattern (leaf)</td><td>string matches <code class="inline">sk-[A-Za-z0-9]{20,}</code></td><td>just that string</td><td><code class="inline">ApiKey</code></td></tr>
+      <tr><td>Value-pattern (leaf)</td><td>string matches <code class="inline">Bearer [A-Za-z0-9\-._~+/]+=*</code></td><td>just that string</td><td><code class="inline">BearerToken</code></td></tr>
+      <tr><td>Value-pattern (leaf)</td><td>string matches <code class="inline">-----BEGIN … PRIVATE KEY-----</code></td><td>just that string</td><td><code class="inline">PrivateKey</code></td></tr>
+      <tr><td>Key-name (object)</td><td>key ∈ {api_key, secret, token, password, private_key, authorization} (case-insensitive)</td><td><b>entire subtree</b>, any type</td><td>typed if the value is a string matching a value-pattern, else <code class="inline">GenericSecret</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Injection patterns <span class="path">injection.rs:11-15</span></h3>
+  <table>
+    <thead><tr><th>#</th><th>Pattern (case-insensitive)</th><th>Catches</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code class="inline">ignore\s+(all\s+)?previous\s+instructions</code></td><td>"ignore previous instructions" / "ignore all previous instructions"</td></tr>
+      <tr><td>2</td><td><code class="inline">you\s+are\s+now\s+in\s+\S+\s+mode</code></td><td>"you are now in DAN mode"</td></tr>
+      <tr><td>3</td><td><code class="inline">(reveal|show|print|return)\s+(your\s+)?system\s+prompt</code></td><td>"reveal your system prompt" / "print system prompt"</td></tr>
+      <tr><td>4</td><td><code class="inline">(perform|use|attempt)\s+a\s+jailbreak</code></td><td>"perform a jailbreak" — bare "jailbreak" deliberately excluded (too many false positives, per test comment)</td></tr>
+      <tr><td>5</td><td><code class="inline">disregard\s+(all\s+)?(previous\s+)?instructions</code></td><td>"disregard instructions" / "disregard previous instructions"</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="walkthrough">
+  <h2>B · ingest traced example — one payload through all six stages</h2>
+  <p class="lede">Input: source <code class="inline">"  GitHub  "</code> (registered namespace: <code class="inline">"GitHub"</code>),
+    delivery_id <code class="inline">"evt-42"</code>, payload:</p>
+<pre><code>{
+  "user": "alice",
+  "password": "Ignore all previous instructions",
+  "api_key": "sk-abcdefghijklmnopqrst1234"
+}</code></pre>
+
+  <div class="walk-step"><span class="n">1</span><b>check_source</b> — <code class="inline">"  GitHub  ".nfc()</code> is a no-op (already NFC) → <code class="inline">.trim()</code> → <code class="inline">"GitHub"</code> → matches <code class="inline">reg.namespace</code> exactly → <code class="inline">source = "GitHub"</code>.</div>
+  <div class="walk-step"><span class="n">2</span><b>check_size</b> — payload serializes to ~100 bytes, far under 262,144 → passes silently.</div>
+  <div class="walk-step"><span class="n">3</span><b>check_injection</b> — scans the <i>raw</i> payload. <code class="inline">payload.password</code> matches pattern&nbsp;1 (<code class="inline">ignore\s+(all\s+)?previous\s+instructions</code>) → <code class="inline">injection_taint = true</code>. Note this is the field that's about to be wiped — this is exactly the scenario the doc comment at lib.rs:48-50 calls out.</div>
+  <div class="walk-step"><span class="n">4</span><b>redact_secrets</b> walks the object:
+    <ul style="margin:8px 0 0 18px; padding:0;">
+      <li><code class="inline">"user"</code> — not a secret field name, value "alice" matches no value-pattern → passes through unchanged.</li>
+      <li><code class="inline">"password"</code> — <b>is</b> in <code class="inline">SECRET_FIELDS</code> → whole-subtree wipe. Value is a string; <code class="inline">typed_category("Ignore all previous instructions")</code> matches none of the 3 value regexes → falls back to <code class="inline">GenericSecret</code>. Result: <code class="inline">"[REDACTED:GenericSecret]"</code>.</li>
+      <li><code class="inline">"api_key"</code> — <b>also</b> in <code class="inline">SECRET_FIELDS</code> → whole-subtree wipe (the key-name branch, not the standalone value-pattern branch — see the callout under redact.rs above). Value <code class="inline">"sk-abcdefghijklmnopqrst1234"</code> <b>does</b> match the <code class="inline">sk-…</code> value regex inside <code class="inline">typed_category()</code> → category is <code class="inline">ApiKey</code>, not <code class="inline">GenericSecret</code>. Result: <code class="inline">"[REDACTED:ApiKey]"</code>.</li>
+    </ul>
+    <code class="inline">RedactionReceipt{ categories: [GenericSecret, ApiKey], field_count: 2 }</code>.
+  </div>
+  <div class="walk-step"><span class="n">5</span><b>validate_attachments</b> — empty <code class="inline">Vec</code>, all checks trivially pass.</div>
+  <div class="walk-step"><span class="n">6</span><b>compute_digest</b> — BLAKE3 over the <i>scrubbed</i> payload <code class="inline">{"user":"alice","password":"[REDACTED:GenericSecret]","api_key":"[REDACTED:ApiKey]"}</code> → e.g. <code class="inline">"blake3:9f2a…"</code> (illustrative).</div>
+
+  <p><b>Assembled result:</b></p>
+<pre><code>NormalizedEvent {
+  event_id: "GitHub-evt-42",
+  source: "GitHub",
+  payload: { "user": "alice", "password": "[REDACTED:GenericSecret]", "api_key": "[REDACTED:ApiKey]" },
+  payload_digest: "blake3:9f2a…",
+  attachments: [],
+  redaction_receipt: { event_id: "GitHub-evt-42", categories: [GenericSecret, ApiKey], field_count: 2 },
+  injection_taint: true,
+}</code></pre>
+
+  <p><b>Downstream (separate call):</b> <code class="inline">SeenIds::record("GitHub", "evt-42", "blake3:9f2a…")</code> —
+    first time this key is seen → <code class="inline">Accepted{ event_id: "GitHub-evt-42" }</code>. A webhook retry of
+    the exact same delivery arrives with the same digest → <code class="inline">Duplicate</code>. If <code class="inline">"evt-42"</code>
+    ever arrives again from <code class="inline">"GitHub"</code> with genuinely different content → <code class="inline">Conflict</code>,
+    a signal that <code class="inline">delivery_id</code> got reused — worth surfacing, not silently swallowing.</p>
+</section>
+
+<section id="tests">
+  <h2>B · ingest test contract — 8 files, 29 tests</h2>
+  <p class="lede">This <i>is</i> the spec, in executable form. Every row below is a real <code class="inline">#[test]</code> in the tree today.</p>
+
+  <h3>contract/main.rs <span class="path">5 tests — source normalization + payload size</span></h3>
+  <table>
+    <tbody>
+      <tr><td><code class="inline">unknown_source_refuses</code></td><td>a source not matching the registry is rejected</td></tr>
+      <tr><td><code class="inline">unicode_homograph_source_refused</code></td><td>Cyrillic ɡ (U+0261) look-alike for "g" in "github" is still refused — NFC doesn't fold different characters</td></tr>
+      <tr><td><code class="inline">whitespace_source_normalized</code></td><td><code class="inline">"  github  "</code> → <code class="inline">"github"</code></td></tr>
+      <tr><td><code class="inline">oversized_source_refused</code></td><td>257-char source (1 over the 256 cap) is refused</td></tr>
+      <tr><td><code class="inline">nfc_normalized_source_matches_nfd_input</code></td><td>NFD "café" (5 codepoints) matches an NFC "café" (4 codepoints) registry entry</td></tr>
+      <tr><td><code class="inline">oversized_payload_refused</code></td><td>270,002-byte payload (over the 262,144 cap) is refused</td></tr>
+    </tbody>
+  </table>
+
+  <h3>redact/main.rs <span class="path">6 tests — secret scrubbing</span></h3>
+  <table>
+    <tbody>
+      <tr><td><code class="inline">api_key_is_scrubbed</code></td><td><code class="inline">sk-…</code> value → category <code class="inline">ApiKey</code>, not <code class="inline">GenericSecret</code> — value pattern wins over "field name is just a hint"</td></tr>
+      <tr><td><code class="inline">bearer_token_is_scrubbed</code></td><td><code class="inline">Bearer eyJ…</code> → <code class="inline">BearerToken</code></td></tr>
+      <tr><td><code class="inline">pem_key_is_scrubbed</code></td><td><code class="inline">-----BEGIN RSA PRIVATE KEY-----</code> → <code class="inline">PrivateKey</code></td></tr>
+      <tr><td><code class="inline">secret_field_name_is_scrubbed</code></td><td><code class="inline">password: "hunter2"</code> (no pattern match) → <code class="inline">GenericSecret</code> fallback</td></tr>
+      <tr><td><code class="inline">non_string_value_under_secret_field_is_redacted</code></td><td>the D1 regression test — <code class="inline">password: ["hunter2","another"]</code> must not leak</td></tr>
+      <tr><td><code class="inline">nested_secret_field_is_scrubbed</code></td><td><code class="inline">a.b.password</code> three levels deep is still caught</td></tr>
+    </tbody>
+  </table>
+
+  <h3>redact_limits/main.rs <span class="path">3 tests — JSON shape limits</span></h3>
+  <table>
+    <tbody>
+      <tr><td><code class="inline">clean_payload_has_empty_receipt</code></td><td>no secrets → <code class="inline">field_count: 0</code>, empty categories</td></tr>
+      <tr><td><code class="inline">json_too_deep_refuses</code></td><td>34 levels of nesting → <code class="inline">JsonTooDeep</code></td></tr>
+      <tr><td><code class="inline">json_too_complex_refuses</code></td><td>10,001 string leaves (~40 KB, under the size cap) → <code class="inline">JsonTooComplex</code> — proves the leaf-count limit is a distinct guard from the byte-size limit</td></tr>
+    </tbody>
+  </table>
+
+  <h3>injection/main.rs <span class="path">6 tests — taint detection</span></h3>
+  <table>
+    <tbody>
+      <tr><td><code class="inline">injection_taint_set</code></td><td>"Ignore all previous instructions" → <code class="inline">injection_taint: true</code></td></tr>
+      <tr><td><code class="inline">injection_does_not_refuse</code></td><td>same payload still returns <code class="inline">Ok</code>, not <code class="inline">Err</code></td></tr>
+      <tr><td><code class="inline">clean_payload_not_tainted</code></td><td>ordinary text → <code class="inline">injection_taint: false</code></td></tr>
+      <tr><td><code class="inline">reveal_system_prompt_taints</code></td><td>pattern 3</td></tr>
+      <tr><td><code class="inline">jailbreak_phrase_taints</code></td><td>confirms the deliberate exclusion of bare "jailbreak" — only "perform/use/attempt a jailbreak" matches</td></tr>
+      <tr><td><code class="inline">nested_injection_is_detected</code></td><td>"you are now in DAN mode" two levels deep is still found</td></tr>
+    </tbody>
+  </table>
+
+  <h3>injection_redacted_field/main.rs <span class="path">1 test — the ordering guarantee, isolated</span></h3>
+  <table>
+    <tbody>
+      <tr><td><code class="inline">injection_hidden_in_secret_field_is_still_detected</code></td><td>a jailbreak phrase inside <code class="inline">password</code> both (a) sets <code class="inline">injection_taint</code> and (b) is confirmed absent from the serialized stored payload — the single most important test in this crate, since it's the one that would catch a regression if someone reordered steps 3 and 4 in <code class="inline">normalize()</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>attachment/main.rs <span class="path">6 tests</span> · attachment_shape/main.rs <span class="path">3 tests</span></h3>
+  <table>
+    <tbody>
+      <tr><td><code class="inline">valid_attachment_passes</code></td><td>baseline happy path</td></tr>
+      <tr><td><code class="inline">attachment_empty_uri_refuses</code></td><td><code class="inline">InvalidAttachment</code></td></tr>
+      <tr><td><code class="inline">attachment_empty_digest_refuses</code></td><td><code class="inline">InvalidAttachment</code></td></tr>
+      <tr><td><code class="inline">attachment_empty_mime_refuses</code></td><td><code class="inline">InvalidAttachment</code></td></tr>
+      <tr><td><code class="inline">attachment_uri_too_long_refuses</code></td><td>4,097 chars → <code class="inline">AttachmentUriTooLong</code></td></tr>
+      <tr><td><code class="inline">attachment_zero_size_refuses</code></td><td><code class="inline">InvalidAttachment</code> (0 bytes is invalid, not just "small")</td></tr>
+      <tr><td><code class="inline">attachment_oversized_refuses</code></td><td>16 MiB + 1 byte → <code class="inline">AttachmentOversized</code></td></tr>
+      <tr><td><code class="inline">too_many_attachments_refuses</code></td><td>101 attachments → <code class="inline">TooManyAttachments</code></td></tr>
+      <tr><td><code class="inline">duplicate_attachment_uri_refuses</code></td><td>same URI twice → <code class="inline">DuplicateAttachmentUri</code></td></tr>
+      <tr><td><code class="inline">zero_attachments_passes</code></td><td>empty list is valid, not an error</td></tr>
+    </tbody>
+  </table>
+
+  <h3>dedup/main.rs <span class="path">5 tests — <code class="inline">SeenIds</code></span></h3>
+  <table>
+    <tbody>
+      <tr><td><code class="inline">same_delivery_is_idempotent</code></td><td>first call <code class="inline">Accepted</code>, identical retry <code class="inline">Duplicate</code></td></tr>
+      <tr><td><code class="inline">digest_conflict_refuses</code></td><td>same key, different digest → <code class="inline">Conflict</code></td></tr>
+      <tr><td><code class="inline">seenids_with_capacity_zero_is_safe</code></td><td>capacity 0 is clamped to 1, not a panic</td></tr>
+      <tr><td><code class="inline">seenids_evicts_at_capacity</code></td><td>at capacity 2, a 3rd key evicts the oldest; the evicted key is <code class="inline">Accepted</code> again on redelivery</td></tr>
+      <tr><td><code class="inline">store_row_contains_no_raw_secret</code></td><td>end-to-end: <code class="inline">normalize()</code> output, serialized, never contains the literal secret string "hunter2"</td></tr>
+    </tbody>
+  </table>
+
+  <h3>common/mod.rs <span class="path">shared test fixtures, not a test binary itself</span></h3>
+  <p>Defines <code class="inline">reg()</code> (namespace <code class="inline">"src"</code>), <code class="inline">ev(payload)</code>,
+    <code class="inline">ev_with(attachments)</code>, and <code class="inline">valid_ref(uri)</code> — the builders every other
+    test file imports via <code class="inline">#[path = "../common/mod.rs"]</code>.</p>
+</section>
+
+<section id="checklist">
+  <h2>Review checklist — both parts</h2>
+
+  <h3>A · Live CLI flow — the one people should look at first</h3>
+  <table>
+    <thead><tr><th>#</th><th>Check</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>Confirmed:</b> the approval gate is phrasing-sensitive, not intent-sensitive. "go fix X" / "just patch Y" / "quickly delete Z" bypass it entirely — <code class="inline">leads_with()</code> only inspects the clause's first word, and <code class="inline">normalize()</code> only strips one exact set of leading phrases</td><td>effect_parse.rs:14-29, effect_words.rs:33-49</td></tr>
+      <tr><td>2</td><td><b>Confirmed:</b> the Codex adapter gets zero tool restriction. <code class="inline">policy.configure_claude()</code> is gated on <code class="inline">CliAdapter::Claude</code> only — the approval prompt still shows effects, but nothing enforces them when Codex is the active adapter</td><td>agent_cmd_run.rs:140-149</td></tr>
+      <tr><td>3</td><td>No normalization, redaction, or injection-scanning of your raw prompt text happens anywhere on this path — it goes from <code class="inline">line_reader.rs</code> to <code class="inline">cmd.arg(task)</code> completely unmodified. Contrast with Part B below, which does all three but isn't wired up</td><td>agent_cmd_run.rs:150</td></tr>
+      <tr><td>4</td><td>A phrasing that dodges the approval gate (see #1) still gets a real subprocess launch — just with <code class="inline">AgentToolPolicy::approved(false,false)</code>, i.e. read-only tools. Confirm this silent downgrade (asked for a fix, got a read-only look) is the intended failure mode, not a bug users will file against</td><td>agent_loop.rs:31-34, traced example above</td></tr>
+      <tr><td>5</td><td><code class="inline">detect_adapter()</code> shells out to a real <code class="inline">which</code> process on every single prompt, uncached — cheap today (three adapters checked), but worth knowing if adapters ever grow</td><td>agent_adapter.rs:6-20</td></tr>
+      <tr><td>6</td><td>The <code class="inline">--tools</code> vs <code class="inline">--allowedTools</code> split is fragile by the codebase's own admission (a real past incident silently downgraded every command-effect task to read-only) — worth a regression test pinned to the exact Claude CLI version, since this breaks on upstream flag-semantics changes with no error surfaced</td><td>agent_tool_policy.rs:63-70</td></tr>
+      <tr><td>7</td><td><code class="inline">DeferredSchedule</code> is a real, detected effect (<code class="inline">effect_plan.rs</code>) — confirm what actually consumes it; nothing in this traced flow does anything with it besides asking you to approve it</td><td>effect_plan.rs:6-24</td></tr>
+    </tbody>
+  </table>
+
+  <h3>B · ingest crate (unused — lower priority until it's wired up)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Check</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>No wiring exists yet — confirm this is intentional (contract-first) before treating "event ingress" as live anywhere in the product</td><td>whole-repo grep, see B · ingest overview</td></tr>
+      <tr><td>2</td><td>Injection scan must stay <i>before</i> redaction — any refactor of <code class="inline">normalize()</code> that reorders steps 3/4 silently breaks the one guarantee that has a dedicated regression test</td><td>lib.rs:60-61, injection_redacted_field/main.rs</td></tr>
+      <tr><td>3</td><td><code class="inline">SECRET_FIELDS</code> and the 3 value regexes are a hand-maintained allowlist — verify coverage against the actual event sources planned for integration (cloud provider keys, Slack tokens, etc. are not covered today)</td><td>redact_patterns.rs</td></tr>
+      <tr><td>4</td><td><code class="inline">IngestError::SerializationError</code> has no construction site — confirm it's reserved for planned future use, not dead code</td><td>types.rs:70-71</td></tr>
+      <tr><td>5</td><td>Injection scan silently returns <code class="inline">false</code> past <code class="inline">MAX_JSON_DEPTH</code> rather than erroring — currently masked because redaction separately hard-errors at the same depth; would matter if that ordering ever changed</td><td>injection.rs:20-23</td></tr>
+      <tr><td>6</td><td><code class="inline">SeenIds</code> dedup is best-effort (LRU-evicted, "at-least-once"), not a durable exactly-once guarantee — confirm downstream consumers are built to tolerate an accepted duplicate after 1M other events</td><td>dedup.rs, seenids_evicts_at_capacity</td></tr>
+      <tr><td>7</td><td>All <code class="inline">unwrap()</code>/<code class="inline">expect()</code> calls are on compile-time-constant regex strings or a value already known to serialize — safe as-is, but flag if anyone parameterizes a pattern from config/input in the future</td><td>redact_patterns.rs:13-24, injection.rs:11-15, lib.rs:39</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<footer class="page">
+  <div class="wrap">
+    Generated for manual review of <code class="inline">crates/ingest</code> in <code class="inline">Light/fleet</code>,
+    2026-09-14. Every code excerpt above is reproduced verbatim from the working tree at review time — re-check line
+    numbers if the crate has changed since.
+  </div>
+</footer>
+
+<button class="theme-toggle" onclick="
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : (cur==='light' ? '' : (matchMedia('(prefers-color-scheme: dark)').matches ? 'light':'dark'));
+  if(next==='') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', next);
+  try{ localStorage.setItem('ingest-review-theme', next); }catch(e){}
+">Toggle theme</button>
+<script>
+  try{
+    const saved = localStorage.getItem('ingest-review-theme');
+    if(saved){ document.documentElement.setAttribute('data-theme', saved); }
+  }catch(e){}
+</script>
+
+</body>
+</html>

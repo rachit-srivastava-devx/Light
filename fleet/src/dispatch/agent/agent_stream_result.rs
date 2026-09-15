@@ -2,7 +2,7 @@
 //! result body, resolved model, and token usage `finish()` reports -- as opposed to `push`'s
 //! live text/milestone stream, which is UI-only and never touches these fields.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use super::ClaudeStream;
 

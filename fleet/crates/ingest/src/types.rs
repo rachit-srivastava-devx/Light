@@ -1,12 +1,25 @@
 use serde_json::Value;
 
+mod connector;
+#[cfg(test)]
+mod contract_tests;
+mod envelope;
+mod errors;
+pub use connector::ConnectorEnvelope;
+pub use envelope::NormalizedEvent;
+pub use errors::IngestError;
+
 pub const MAX_PAYLOAD_BYTES: usize = 256 * 1024;
 pub const MAX_SOURCE_LEN: usize = 256;
+pub const MAX_DELIVERY_ID_LEN: usize = 256;
+pub const MAX_AUTH_FIELD_LEN: usize = 256;
+pub const MAX_PAYLOAD_REF_LEN: usize = 4096;
+pub const MAX_CURSOR_POSITION: u64 = i64::MAX as u64;
 pub const MAX_ATTACHMENTS_PER_EVENT: usize = 100;
 pub const MAX_ATTACHMENT_URI_LEN: usize = 4096;
 pub const MAX_ATTACHMENT_BYTES: u64 = 16 * 1024 * 1024;
 pub const MAX_JSON_DEPTH: usize = 32;
-pub const MAX_JSON_LEAVES: usize = 10_000; // reachable within MAX_PAYLOAD_BYTES; 100k is not
+pub const MAX_JSON_LEAVES: usize = 10_000; // stricter than the draft LLD; preserves authored acceptance coverage
 pub const MAX_SEEN_IDS: usize = 1_000_000;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -46,39 +59,21 @@ pub struct IncomingEvent {
     pub attachments: Vec<AttachmentRef>,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct NormalizedEvent {
-    pub event_id: String,
-    pub source: String,
-    pub payload: Value,
-    pub payload_digest: String,
-    pub attachments: Vec<AttachmentRef>,
-    pub redaction_receipt: RedactionReceipt,
-    pub injection_taint: bool,
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AuthEvidence {
+    pub external_actor: String,
+    pub auth_metadata_ref: String,
 }
 
-#[derive(Debug, thiserror::Error, PartialEq)]
-pub enum IngestError {
-    #[error("unknown or empty source namespace")]
-    UnknownSource,
-    #[error("payload exceeds size limit")]
-    OversizedPayload,
-    #[error("json nesting exceeds depth limit")]
-    JsonTooDeep,
-    #[error("json has too many string leaves")]
-    JsonTooComplex,
-    #[error("serialization error: {0}")]
-    SerializationError(String),
-    #[error("redaction failed: {0}")]
-    RedactionFailed(String),
-    #[error("invalid attachment field")]
-    InvalidAttachment,
-    #[error("attachment binary exceeds size limit")]
-    AttachmentOversized,
-    #[error("too many attachments")]
-    TooManyAttachments,
-    #[error("duplicate attachment URI within event")]
-    DuplicateAttachmentUri,
-    #[error("attachment URI exceeds length limit")]
-    AttachmentUriTooLong,
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct AuthenticatedIncomingEvent {
+    pub source: String,
+    pub delivery_id: String,
+    pub object_version: String,
+    pub object_version_position: Option<u64>,
+    pub payload: Value,
+    pub attachments: Vec<AttachmentRef>,
+    pub auth: AuthEvidence,
+    pub cursor: Option<String>,
+    pub cursor_position: Option<u64>,
 }

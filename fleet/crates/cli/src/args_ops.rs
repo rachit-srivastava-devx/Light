@@ -34,7 +34,10 @@ pub struct RunArgs {
     /// With N repos: N successive JSON objects (one per repo), in the given order.
     #[arg(long)]
     pub json: bool,
-    #[arg(long = "no-git", help = "Allow a plain (non-git) --repo; skips only Merge")]
+    #[arg(
+        long = "no-git",
+        help = "Allow a plain (non-git) --repo; skips only Merge"
+    )]
     pub no_git: bool,
 }
 

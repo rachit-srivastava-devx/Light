@@ -29,7 +29,10 @@ fn preview_input(value: &str) -> String {
         format!("{value:?}")
     } else {
         let head: String = value.chars().take(MAX).collect();
-        format!("{head:?} (truncated, {} chars total)", value.chars().count())
+        format!(
+            "{head:?} (truncated, {} chars total)",
+            value.chars().count()
+        )
     }
 }
 

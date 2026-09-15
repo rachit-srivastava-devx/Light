@@ -1,4 +1,6 @@
-use crate::types::{IngestError, RedactedCategory, RedactionReceipt, MAX_JSON_DEPTH, MAX_JSON_LEAVES};
+use crate::types::{
+    IngestError, RedactedCategory, RedactionReceipt, MAX_JSON_DEPTH, MAX_JSON_LEAVES,
+};
 use serde_json::{Map, Value};
 
 #[path = "redact_patterns.rs"]
@@ -75,3 +77,6 @@ pub fn redact_secrets(payload: Value) -> Result<(Value, RedactionReceipt), Inges
     })?;
     Ok((scrubbed, receipt))
 }
+
+#[cfg(test)]
+mod tests;

@@ -4,8 +4,8 @@
 //! a bare lease expression. Flagged rather than silently faked: this subcommand parses but
 //! refuses with a typed, named gap until the owning crate exposes the narrower fn.
 
-use cli::args_ctx::McpArgs;
 use crate::dispatch::error::DispatchError;
+use cli::args_ctx::McpArgs;
 
 pub fn mcp(_args: McpArgs) -> Result<(), DispatchError> {
     Err(DispatchError::NotYetImplemented(

@@ -30,8 +30,11 @@ fn two_repos_one_task_id_two_receipts() {
         .output()
         .expect("binary runs");
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(out.status.success(), "both green -> exit 0. stdout={stdout} stderr={}",
-        String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "both green -> exit 0. stdout={stdout} stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     // Two JSON objects concatenated, one per repo. Split on the pretty-printer's own boundary.
     let objs: Vec<Value> = serde_json::Deserializer::from_str(&stdout)
@@ -40,7 +43,10 @@ fn two_repos_one_task_id_two_receipts() {
         .unwrap_or_else(|e| panic!("expected N JSON objects, got err {e}: {stdout}"));
     assert_eq!(objs.len(), 2, "one JSON outcome per repo: {stdout}");
     for v in &objs {
-        assert_eq!(v["task"], "multi-repo-task", "shared task_id correlates the set: {v}");
+        assert_eq!(
+            v["task"], "multi-repo-task",
+            "shared task_id correlates the set: {v}"
+        );
     }
 }
 
@@ -70,8 +76,11 @@ fn two_repos_same_task_id_each_gets_real_stage_outcomes_not_resumed() {
         .output()
         .expect("binary runs");
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(out.status.success(), "both repos green: stdout={stdout} stderr={}",
-        String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "both repos green: stdout={stdout} stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     let objs: Vec<Value> = serde_json::Deserializer::from_str(&stdout)
         .into_iter::<Value>()
@@ -121,8 +130,11 @@ fn mixed_pass_fail_aggregates_to_worst() {
         .arg(bad.path())
         .output()
         .expect("binary runs");
-    assert!(!out.status.success(), "worst-of-set is a refusal, exit != 0. stderr={}",
-        String::from_utf8_lossy(&out.stderr));
+    assert!(
+        !out.status.success(),
+        "worst-of-set is a refusal, exit != 0. stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 }
 
 /// Non-git repo -> existing preflight refusal message survives (regression pin).
@@ -137,7 +149,10 @@ fn non_git_repo_preflight_message_pinned() {
         .expect("binary runs");
     assert!(!out.status.success(), "missing repo refuses");
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(stderr.contains("fleet:"), "typed refusal via main's error printer: {stderr}");
+    assert!(
+        stderr.contains("fleet:"),
+        "typed refusal via main's error printer: {stderr}"
+    );
 }
 
 /// Single `--repo` invocation unchanged (regression pin).
@@ -154,8 +169,11 @@ fn single_repo_back_compat() {
         .arg(repo.path())
         .output()
         .expect("binary runs");
-    assert!(out.status.success(), "single --repo still green: stderr={}",
-        String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "single --repo still green: stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let stdout = String::from_utf8_lossy(&out.stdout);
     // Exactly one JSON object -- unchanged from pre-multi-repo behaviour.
     let objs: Vec<Value> = serde_json::Deserializer::from_str(&stdout)

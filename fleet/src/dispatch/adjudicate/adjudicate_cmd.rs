@@ -8,7 +8,7 @@
 use crate::dispatch::adjudicate_cmd_error::AdjudicateCmdError;
 use crate::dispatch::adjudicate_render::render;
 use crate::dispatch::error::DispatchError;
-use review::{judge, Candidate, Criteria, JudgeModel, Verdict};
+use review::{Candidate, Criteria, JudgeModel, Verdict, judge};
 use std::fs;
 
 fn criteria() -> Criteria {

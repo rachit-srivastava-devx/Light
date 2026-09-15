@@ -3,8 +3,8 @@
 //! gate. Never merges to main directly -- a PR requires human review (AGENTS.md: "contracts/
 //! migrations/money are human-merge always").
 
-use cli::args_ops::PrArgs;
 use crate::dispatch::error::DispatchError;
+use cli::args_ops::PrArgs;
 use std::path::Path;
 
 pub fn pr_emit(args: PrArgs) -> Result<(), DispatchError> {

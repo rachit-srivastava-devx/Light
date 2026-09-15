@@ -67,4 +67,3 @@ pub fn evaluate_with(brief: &Value, refs: &GateRefs, checks: &[Check]) -> Verdic
         reasons,
     }
 }
-

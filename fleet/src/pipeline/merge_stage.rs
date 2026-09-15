@@ -7,6 +7,9 @@
 
 use super::event::PipelineError;
 use integrate::MergeRefusal;
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
 use std::path::Path;
 use std::process::Command;
 
@@ -19,7 +22,15 @@ pub fn merge(repo: &Path) -> Result<(), PipelineError> {
     let staged = git(repo, &["diff", "--cached", "--name-only"])?;
     let staged_files = staged.lines().filter(|l| !l.trim().is_empty()).count();
     let branch = git(repo, &["symbolic-ref", "--short", "HEAD"])?;
-    integrate::check_stage_nonempty(staged_files, branch.trim()).map_err(PipelineError::Merge)
+    let branch = branch.trim();
+    emit(
+        &Event::Note {
+            source: "merge".into(),
+            text: format!("branch={branch} staged_files={staged_files} (guard only, no commit)"),
+        },
+        &Style::detect(),
+    );
+    integrate::check_stage_nonempty(staged_files, branch).map_err(PipelineError::Merge)
 }
 
 /// `git rev-parse --is-inside-work-tree` succeeds for ANY path inside a real git checkout

@@ -4,12 +4,12 @@
 //! §2's non-goals table) exposes no entry point reachable without inventing business logic here.
 //! `fleet pr` used to be in that list too; it now dispatches straight to `pr_cmd::pr_emit`.
 
-use cli::{Cli, Commands};
 use crate::dispatch::error::DispatchError;
+use clap::CommandFactory;
+use clap_complete::{Shell, generate};
+use cli::{Cli, Commands};
 use print::human;
 use runtime::ConcurrencyCap;
-use clap::CommandFactory;
-use clap_complete::{generate, Shell};
 
 /// `status`'s payload as an actual object -- previously `--json` serialized the bare `usize` from
 /// `cap.get()`, so `fleet status --json` emitted the scalar `3`, unparseable by any caller

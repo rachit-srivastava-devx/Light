@@ -2,10 +2,10 @@
 //! print. The actual admission/settlement arithmetic is `fleet-govern`'s; this only wires args
 //! to it and prints the result.
 
-use cli::args_core::MeterArgs;
 use crate::dispatch::error::DispatchError;
-use print::human;
+use cli::args_core::MeterArgs;
 use control::FileMeterStore;
+use print::human;
 use std::path::Path;
 use types::{LaneId, Tokens};
 

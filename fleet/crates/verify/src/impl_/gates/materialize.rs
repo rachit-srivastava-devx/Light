@@ -53,3 +53,26 @@ fn make_executable(path: &Path) -> io::Result<()> {
     perm.set_mode(0o755);
     fs::set_permissions(path, perm)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::materialize;
+    use std::os::unix::fs::PermissionsExt;
+
+    #[test]
+    fn materializes_direct_and_nested_scripts_as_executable() {
+        let root = tempfile::tempdir().expect("tempdir");
+        materialize(root.path()).expect("assets materialize");
+        for path in [
+            root.path().join("semgrep-gate.sh"),
+            root.path().join("policy/run.sh"),
+            root.path().join("corpus/run.sh"),
+        ] {
+            let mode = std::fs::metadata(path)
+                .expect("script exists")
+                .permissions()
+                .mode();
+            assert_ne!(mode & 0o111, 0, "script is not executable");
+        }
+    }
+}

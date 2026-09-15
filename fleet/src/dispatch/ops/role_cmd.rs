@@ -1,7 +1,7 @@
 //! `fleet roles|role-check`: split out of `route_cmd.rs` to keep both files ≤80 lines.
 
-use cli::args_core::RoleCheckArgs;
 use crate::dispatch::error::DispatchError;
+use cli::args_core::RoleCheckArgs;
 use print::human;
 use types::Role;
 

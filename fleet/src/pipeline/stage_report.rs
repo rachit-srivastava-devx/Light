@@ -13,6 +13,7 @@ pub fn started(stage: PipelineStage) -> Instant {
     emit(
         &Event::StageStarted {
             stage: stage.name().to_string(),
+            lld_node: stage.lld_nodes().to_string(),
         },
         &Style::detect(),
     );

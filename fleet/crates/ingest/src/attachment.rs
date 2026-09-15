@@ -44,3 +44,6 @@ fn check_one(r: &AttachmentRef) -> Result<(), IngestError> {
         _ => Ok(()),
     }
 }
+
+#[cfg(test)]
+mod tests;

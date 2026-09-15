@@ -31,3 +31,23 @@ pub struct ProcessOutput {
 pub trait ProcessRunner {
     fn run(&self, command: &[&str]) -> ProcessOutput;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{ProbeTool, ToolProbe};
+
+    struct DefaultProbe;
+    impl ToolProbe for DefaultProbe {
+        fn available(&self, _: ProbeTool) -> bool {
+            false
+        }
+    }
+
+    #[test]
+    fn default_unavailable_reason_is_stable_and_actionable() {
+        assert_eq!(
+            DefaultProbe.unavailable_reason(ProbeTool::Cargo),
+            "unavailable"
+        );
+    }
+}

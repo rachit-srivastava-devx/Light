@@ -28,7 +28,10 @@ fn interactive_repl_renders_and_exits_cleanly_over_a_real_tty() {
     // the terminal into raw mode (src/interactive/repl.rs), so this proves the process actually
     // started rendering.
     let (saw_banner, captured) = wait_for(&rx, "System capacity healthy", Duration::from_secs(15));
-    assert!(saw_banner, "expected the banner/status bar to render over a real tty; captured so far:\n{captured}");
+    assert!(
+        saw_banner,
+        "expected the banner/status bar to render over a real tty; captured so far:\n{captured}"
+    );
     assert!(
         captured.contains("Fleet") && captured.contains("Local Orchestration"),
         "expected the Claude-Code-style banner (title + mode line); captured:\n{captured}"
@@ -39,7 +42,10 @@ fn interactive_repl_renders_and_exits_cleanly_over_a_real_tty() {
     // than sending Ctrl-D the instant the banner appears -- proves the real reedline path
     // responded, not the line-buffered fallback, and avoids racing the raw-mode transition.
     let (saw_prompt, captured) = wait_for(&rx, "\u{203a} ", Duration::from_secs(10));
-    assert!(saw_prompt, "expected reedline's prompt once raw mode is active; captured so far:\n{captured}");
+    assert!(
+        saw_prompt,
+        "expected reedline's prompt once raw mode is active; captured so far:\n{captured}"
+    );
 
     // Ctrl-D (EOT) is how a real terminal signals end-of-input; line_reader.rs maps
     // `Signal::CtrlD` to `ReadOutcome::Exit`, which breaks the loop and prints "Goodbye.".
@@ -47,10 +53,16 @@ fn interactive_repl_renders_and_exits_cleanly_over_a_real_tty() {
     writer.flush().ok();
 
     let (saw_goodbye, captured) = wait_for(&rx, "Goodbye.", Duration::from_secs(10));
-    assert!(saw_goodbye, "expected a clean exit ('Goodbye.') after Ctrl-D; captured so far:\n{captured}");
+    assert!(
+        saw_goodbye,
+        "expected a clean exit ('Goodbye.') after Ctrl-D; captured so far:\n{captured}"
+    );
 
     let status = wait_child(&mut child, Duration::from_secs(10));
-    assert!(status.success(), "fleet must exit 0 after a clean interactive session; got {status:?}");
+    assert!(
+        status.success(),
+        "fleet must exit 0 after a clean interactive session; got {status:?}"
+    );
 }
 
 /// `Child::wait()` blocks indefinitely on a hang; poll `try_wait()` instead so a regression that

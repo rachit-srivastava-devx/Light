@@ -15,6 +15,7 @@ impl DispatchError {
             DispatchError::Merge(e) => e.exit_code(),
             DispatchError::PrEmit(e) => e.exit_code(),
             DispatchError::VerifyFailed { code, .. } => *code,
+            DispatchError::SecretsFound { .. } => ExitCode::Invariant,
             DispatchError::UnknownGate(_) => ExitCode::Env,
             DispatchError::GateAssets(_) => ExitCode::Env,
             DispatchError::Walk(_) => ExitCode::Env,

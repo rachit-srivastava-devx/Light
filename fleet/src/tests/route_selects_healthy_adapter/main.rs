@@ -40,8 +40,9 @@ fn route_selects_an_adapter_for_builder_and_lead() {
             String::from_utf8_lossy(&out.stderr)
         );
 
-        let v: Value = serde_json::from_str(&stdout)
-            .unwrap_or_else(|e| panic!("role={role}: expected one JSON object, got err {e}: {stdout}"));
+        let v: Value = serde_json::from_str(&stdout).unwrap_or_else(|e| {
+            panic!("role={role}: expected one JSON object, got err {e}: {stdout}")
+        });
         let selected = v["selected_adapter"]
             .as_str()
             .unwrap_or_else(|| panic!("role={role}: missing selected_adapter: {v}"));

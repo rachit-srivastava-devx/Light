@@ -25,7 +25,10 @@ fn write_scratch_crate(dir: &Path, test_body: &str) {
         .arg("--quiet")
         .status()
         .expect("git init");
-    assert!(status.success(), "git init must succeed for the test to be meaningful");
+    assert!(
+        status.success(),
+        "git init must succeed for the test to be meaningful"
+    );
     fs::create_dir_all(dir.join("src")).unwrap();
     fs::write(
         dir.join("Cargo.toml"),

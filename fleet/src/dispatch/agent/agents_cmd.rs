@@ -5,10 +5,10 @@
 //! `lib.rs`. This wires to that real, public entry point instead; flagged for Opus in case the
 //! crate should re-export the narrower functions too.
 
-use cli::args_core::AgentsArgs;
 use crate::dispatch::error::DispatchError;
-use print::human;
 use builder::resolve_hermetic_provision;
+use cli::args_core::AgentsArgs;
+use print::human;
 use std::path::Path;
 
 #[derive(serde::Serialize)]

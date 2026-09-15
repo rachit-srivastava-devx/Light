@@ -34,3 +34,6 @@ fn scan(v: &Value, depth: usize) -> bool {
 pub fn check_injection(payload: &Value) -> bool {
     scan(payload, 0)
 }
+
+#[cfg(test)]
+mod tests;

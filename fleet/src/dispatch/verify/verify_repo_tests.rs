@@ -16,8 +16,14 @@ fn a_directory_that_is_not_a_git_worktree_is_refused_with_env_fault_and_actionab
     let DispatchError::EnvFault(msg) = &err else {
         panic!("expected EnvFault, got {err:?}");
     };
-    assert!(msg.contains("not a git repository"), "message must name the failure: {msg}");
-    assert!(msg.contains("--repo"), "message must reference the flag: {msg}");
+    assert!(
+        msg.contains("not a git repository"),
+        "message must name the failure: {msg}"
+    );
+    assert!(
+        msg.contains("--repo"),
+        "message must reference the flag: {msg}"
+    );
     assert_eq!(err.exit_code().as_i32(), 3, "EnvFault must map to exit 3");
 }
 
@@ -31,7 +37,10 @@ fn a_fresh_git_init_directory_passes_intake() {
         .arg("--quiet")
         .status()
         .expect("git init");
-    assert!(status.success(), "git init must succeed for the test to be meaningful");
+    assert!(
+        status.success(),
+        "git init must succeed for the test to be meaningful"
+    );
     let path = dir.path().to_str().expect("utf-8 tempdir");
     ensure_repo(path).expect("a fresh git-init'd directory must pass intake");
 }

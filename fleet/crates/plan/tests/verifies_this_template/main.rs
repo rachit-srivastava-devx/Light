@@ -20,8 +20,7 @@ fn the_planning_template_passes_its_own_gate_with_zero_violations() {
 /// The template file must actually be where the doc comment (and this include_str!) claims.
 #[test]
 fn the_template_file_exists_at_the_documented_path() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../docs/templates/SOW_TEMPLATE.md");
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/templates/SOW_TEMPLATE.md");
     assert!(path.exists(), "expected {path:?} to exist");
 }
 

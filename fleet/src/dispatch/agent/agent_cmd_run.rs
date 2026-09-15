@@ -10,9 +10,9 @@
 //! `codex`'s non-interactive shape is `codex exec "<prompt>"`. `run_cli` therefore branches on
 //! adapter to pick the right non-REPL flag; Freelane never reaches `run_cli` (see `run` match).
 
-use builder::freelane;
 use builder::CliAdapter;
-use serde_json::{json, Value};
+use builder::freelane;
+use serde_json::{Value, json};
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 use std::process::{Command, Stdio};
