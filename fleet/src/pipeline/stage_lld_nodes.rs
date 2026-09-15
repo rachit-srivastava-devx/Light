@@ -14,6 +14,38 @@
 use super::stage::PipelineStage;
 
 impl PipelineStage {
+    pub fn lld_path(self) -> &'static [&'static str] {
+        match self {
+            PipelineStage::Event => &["LLD §3 Ingest", "LLD §3 Store", "RunStart ledger"],
+            PipelineStage::Classify => &[
+                "LLD §3 Intent",
+                "LLD §3 Route (Discovery/Catalog not wired)",
+            ],
+            PipelineStage::Scan => &[
+                "LLD §3 Scan",
+                "Question merger",
+                "zero questions; ambiguity agents not run",
+            ],
+            PipelineStage::Plan => &["LLD §3 DAG", "LLD §3 Planner", "fixed draft; not per-task"],
+            PipelineStage::Dispatch => &[
+                "LLD §3 Route",
+                "LLD §3 Ready",
+                "build-queue handoff; Builder not spawned here",
+            ],
+            PipelineStage::Verify => &[
+                "LLD §3 Verify",
+                "real gate table; ledgered",
+                "QualityLedger not wired",
+            ],
+            PipelineStage::Merge => &[
+                "LLD §3 Integrate",
+                "stage-nonempty guard",
+                "no commit performed here",
+            ],
+            PipelineStage::Teach => &["LLD §3 Teach", "sow-memory on failure only"],
+        }
+    }
+
     pub fn lld_nodes(self) -> &'static str {
         match self {
             PipelineStage::Event => "Ingest -> Store (ledger: RunStart)",

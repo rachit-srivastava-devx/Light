@@ -29,6 +29,12 @@ pub enum Event {
         outcome: Outcome,
         elapsed: Duration,
     },
+    LldPathStep {
+        stage: String,
+        index: usize,
+        total: usize,
+        node: String,
+    },
     /// One gate's (or gate-shaped subprocess's) verdict, with its published denominator when one
     /// exists -- `checked`/`total` are `None` together, never independently absent.
     GateVerdict {

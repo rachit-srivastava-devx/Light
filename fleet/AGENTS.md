@@ -27,6 +27,11 @@ implementation is evidence.
    absent, never zero. (`Number(null)===0` printed 23 fabricated zeros.)
 10. **Publish the denominator.** A verdict carries `{checked,total}`; `checked==0` is a failure.
 
+11. **Every push to `main` has a release note.** The release note must be committed in
+    `docs/releases/v<MAJOR>.<MINOR>.<PATCH>.md`, and `CHANGELOG.md` must contain the same version,
+    date, changed behavior, verification evidence, and known limitations. A push without both
+    entries is incomplete, even when the code and tests pass.
+
 ## Verify before claiming
 Run all four and paste the real output including failures — a claim with no reproducing command is
 not a measurement:

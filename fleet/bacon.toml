@@ -1,0 +1,8 @@
+default_job = "fleet-build"
+
+[jobs.fleet-build]
+command = ["bash", "scripts/fleet-build.sh"]
+default_watch = false
+watch = ["Cargo.toml", "Cargo.lock", "src", "crates"]
+allow_warnings = true
+need_stdout = true

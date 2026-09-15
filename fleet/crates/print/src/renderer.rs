@@ -55,6 +55,12 @@ pub fn render(event: &Event, style: &Style) -> String {
                 fmt_elapsed(*elapsed)
             )
         }
+        Event::LldPathStep {
+            stage,
+            index,
+            total,
+            node,
+        } => format!("    ↳ LLD path {stage} {index}/{total}: {node}"),
         Event::GateVerdict {
             id,
             outcome,

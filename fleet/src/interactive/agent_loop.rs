@@ -6,7 +6,32 @@
 use super::agent_adapter::detect_adapter;
 use super::agent_output::{announce, finish, StreamPrinter};
 use super::effect_plan::Effect;
+use print::human_stream::emit;
+use print::render_event::Event;
+use print::style::Style;
 use std::path::Path;
+
+fn emit_lld_path() {
+    let path = [
+        "LLD §3 User CLI",
+        "interactive answer path (pipeline::run_pipeline not traversed)",
+        "adapter discovery and route (direct composition wiring)",
+        "LLD §3 Worker adapter",
+        "answer stream -> final response",
+    ];
+    let style = Style::detect();
+    for (offset, node) in path.iter().enumerate() {
+        emit(
+            &Event::LldPathStep {
+                stage: "interactive-answer".into(),
+                index: offset + 1,
+                total: path.len(),
+                node: (*node).into(),
+            },
+            &style,
+        );
+    }
+}
 
 pub async fn execute_task(
     task: &str,
@@ -25,6 +50,7 @@ pub async fn execute_task(
     };
 
     let adapter = detect_adapter();
+    emit_lld_path();
     announce(color, adapter, task, &worktree);
 
     let model_opt = if model.is_empty() { None } else { Some(model) };

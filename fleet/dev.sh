@@ -1,118 +1,116 @@
 #!/usr/bin/env bash
-# Dev entrypoint for the fleet CLI -- the `npm run dev` equivalent for this repo.
-#
-# Usage:
-#   ./dev.sh                 # self-warms a background build watcher, then launches fleet's
-#                             # interactive CLI (Claude-Code-style REPL)
-#   ./dev.sh watch            # watch + rebuild loop only, never runs the binary
-#   ./dev.sh <fleet-args...>  # watch + rebuild + rerun `fleet <fleet-args>` after every change
-#
-# The bare (no-args) case still execs straight into `cargo run --bin fleet --` rather than
-# running the REPL itself through cargo-watch: `fleet` only opens its interactive REPL when BOTH
-# stdin and stdout are a real terminal (src/main.rs's `is_terminal()` gate -- reedline's raw-mode
-# input needs an actual tty, not a pipe). cargo-watch's `--shell`/`--exec` runs the child through
-# an intermediate subshell, which does not reliably preserve tty-ness end to end; routing the
-# interactive launch itself through it silently falls back to fleet's --help branch instead of
-# opening the REPL. A plain `exec` here replaces this script's own process image, so the
-# terminal's fds pass straight through to `cargo run` and then to `fleet`.
-#
-# What IS backgrounded: before that exec, bare mode ensures a detached `cargo watch --exec
-# "build --bin fleet"` is running (`ensure_background_watcher` below), so edits made between REPL
-# sessions are already compiled by the time you next run `./dev.sh` -- "available immediately"
-# without needing a second terminal tab. The watcher never touches this terminal's tty (stdin
-# from /dev/null, stdout/stderr to a log file) and outlives this script's `exec` since it is
-# `disown`ed and immune to SIGHUP -- it is the SAME child-surviving-a-later-exec property real
-# init systems rely on, not something specific to this script.
+# Start Fleet's local development server.
+# One process owns builds; the CLI runs directly so reedline keeps its real TTY.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT_DIR"
-
-WATCH_DIR="$ROOT_DIR/.dev-watch"
-WATCH_PID_FILE="$WATCH_DIR/watch.pid"
-WATCH_LOG_FILE="$WATCH_DIR/watch.log"
-
-# cargo-watch's screen reset requires a terminfo database. CI, minimal containers, and some
-# embedded terminals intentionally do not provide one; that must not prevent Fleet from running.
-WATCH_CLEAR_ARG=""
-if [[ -t 1 ]] && command -v clear >/dev/null 2>&1 && clear >/dev/null 2>&1; then
-    WATCH_CLEAR_ARG="--clear"
+DEV_DIR="$ROOT_DIR/.dev-watch"
+PID_FILE="$DEV_DIR/dev-server.pid"
+LOG_FILE="$DEV_DIR/dev-server.log"
+BUILDER_LOG_FILE="$LOG_FILE"
+BUILDER_PID=""
+if [[ -z "${CARGO_TARGET_DIR:-}" && "$(uname -m)" == "arm64" ]]; then
+    export CARGO_TARGET_DIR="$ROOT_DIR/target/aarch64-apple-darwin"
+fi
+BINARY="${CARGO_TARGET_DIR:-$ROOT_DIR/target}/debug/fleet"
+if [[ -n "${FLEET_CARGO_BIN:-}" ]]; then
+    CARGO_BIN="$FLEET_CARGO_BIN"
+elif [[ "$(uname -m)" == "arm64" ]]; then
+    USER_HOME="$(/usr/bin/dscl . -read "/Users/$(id -un)" NFSHomeDirectory 2>/dev/null | awk '{print $2}')"
+    if [[ -x "$USER_HOME/.cargo-arm64/bin/cargo" ]]; then
+        CARGO_BIN="$USER_HOME/.cargo-arm64/bin/cargo"
+        export PATH="$USER_HOME/.cargo-arm64/bin:$PATH"
+    else
+        CARGO_BIN="$(command -v cargo)"
+    fi
+else
+    CARGO_BIN="$(command -v cargo)"
 fi
 
-# Best-effort: a background warm cache is a convenience, never a precondition for the REPL to
-# launch. Any failure in here prints a warning and falls through to the plain `cargo run` below
-# instead of aborting the whole script (empty/missing MEMBERS is handled separately, below).
-ensure_background_watcher() {
-    if ! mkdir -p "$WATCH_DIR" 2>/dev/null; then
-        echo "[dev] could not create $WATCH_DIR, skipping background watcher" >&2
-        return 0
-    fi
-    # Existing, live, and actually a cargo-watch process (not some unrelated PID the OS recycled
-    # onto a stale pid file) -- only then is it safe to skip spawning a duplicate.
-    if [[ -f "$WATCH_PID_FILE" ]]; then
-        local existing_pid
-        existing_pid="$(cat "$WATCH_PID_FILE" 2>/dev/null || true)"
-        if [[ -n "$existing_pid" ]] && kill -0 "$existing_pid" 2>/dev/null \
-            && ps -p "$existing_pid" -o command= 2>/dev/null | grep -q "cargo-watch\|cargo watch"; then
-            echo "[dev] background build watcher already warm (pid $existing_pid, log: $WATCH_LOG_FILE)" >&2
-            return 0
-        fi
-    fi
-    # mkdir is atomic even on macOS's bash 3.2 (no flock by default) -- guards two concurrent
-    # bare `./dev.sh` launches from both spawning a watcher. Loser just skips spawning; the
-    # winner's watcher covers both.
-    if ! mkdir "$WATCH_DIR/spawn.lock" 2>/dev/null; then
-        echo "[dev] another ./dev.sh is already starting the background watcher, skipping" >&2
-        return 0
-    fi
-    trap 'rmdir "$WATCH_DIR/spawn.lock" 2>/dev/null || true' RETURN
-    nohup cargo watch ${WATCH_CLEAR_ARG:+--clear} "${WATCH_ARGS[@]}" --exec "build --bin fleet" \
-        >"$WATCH_LOG_FILE" 2>&1 </dev/null &
-    local new_pid=$!
-    disown "$new_pid" 2>/dev/null || true
-    echo "$new_pid" >"$WATCH_PID_FILE"
-    echo "[dev] started background build watcher (pid $new_pid, log: $WATCH_LOG_FILE)" >&2
+if [[ "$(uname -m)" == "arm64" ]] && command -v rustup >/dev/null 2>&1 \
+    && rustup toolchain list 2>/dev/null | grep -q '^stable-aarch64-apple-darwin'; then
+    export RUSTUP_TOOLCHAIN="${FLEET_RUST_TOOLCHAIN:-stable-aarch64-apple-darwin}"
+fi
+
+mkdir -p "$DEV_DIR"
+
+is_dev_server() {
+    local pid="$1"
+    [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null \
+        && ps -p "$pid" -o command= 2>/dev/null | grep -qE '(^|/)(bacon|cargo-watch|cargo watch)( |$)'
 }
 
-if ! command -v cargo-watch >/dev/null 2>&1; then
-    echo "[dev] cargo-watch not found, installing (cargo install cargo-watch)..." >&2
-    cargo install cargo-watch
-fi
+newest_source_is_newer() {
+    if [[ ! -x "$BINARY" ]]; then
+        return 0
+    fi
+    [[ -n "$(find Cargo.toml Cargo.lock src crates -type f -newer "$BINARY" -print -quit 2>/dev/null)" ]]
+}
 
-# Watch exactly the real workspace members (from Cargo.toml's `members = [...]`), not the
-# whole `crates/` tree: `crates/fleet-crew` is explicitly `exclude`d there (a Python tool with
-# its own 7k-file/242MB .venv) and can never affect `cargo build --bin fleet`.
-# Not `mapfile`: macOS ships bash 3.2 (mapfile/readarray need bash 4+).
-MEMBERS=()
-while IFS= read -r m; do
-    MEMBERS+=("$m")
-done < <(sed -n '/^members = \[/,/^\]/p' Cargo.toml | grep -oE '"[^"]+"' | tr -d '"')
-if [[ ${#MEMBERS[@]} -eq 0 ]]; then
-    echo "[dev] refusing to start: parsed 0 workspace members out of Cargo.toml (format changed?)" >&2
-    exit 1
-fi
-# --no-vcs-ignores: without it, cargo-watch's initial .gitignore-discovery pass walks every
-# directory under the detected git root regardless of the -w scope above -- including this
-# repo's 43GB target/ (opens target/debug/deps directly) and fleet-crew's .venv -- adding a
-# minute-plus of pure directory-walk before the first run. The -w list above is already the
-# exact, hand-picked watch scope, so no .gitignore-based filtering is needed for correctness.
-WATCH_ARGS=(-w Cargo.toml -w Cargo.lock --no-vcs-ignores)
-for m in "${MEMBERS[@]}"; do
-    WATCH_ARGS+=(-w "$m")
-done
+start_builder() {
+    if [[ -f "$PID_FILE" ]] && is_dev_server "$(<"$PID_FILE")"; then
+        if [[ ! -e "$BUILDER_LOG_FILE" && -e "$DEV_DIR/watch.log" ]]; then
+            BUILDER_LOG_FILE="$DEV_DIR/watch.log"
+        fi
+        return 0
+    fi
+    # Adopt the previous script's watcher so upgrading dev.sh never creates a second builder.
+    if [[ -f "$DEV_DIR/watch.pid" ]] && is_dev_server "$(<"$DEV_DIR/watch.pid")"; then
+        cp "$DEV_DIR/watch.pid" "$PID_FILE"
+        BUILDER_LOG_FILE="$DEV_DIR/watch.log"
+        return 0
+    fi
+    if command -v bacon >/dev/null 2>&1; then
+        echo "[dev] using bacon as the single build owner" >&2
+        nohup env FLEET_CARGO_BIN="$CARGO_BIN" bacon --headless --job fleet-build \
+            >"$LOG_FILE" 2>&1 </dev/null &
+        BUILDER_PID=$!
+    elif command -v cargo-watch >/dev/null 2>&1; then
+        echo "[dev] bacon not found; using cargo-watch as the single build owner" >&2
+        nohup env FLEET_CARGO_BIN="$CARGO_BIN" cargo-watch -w Cargo.toml -w Cargo.lock \
+            --no-vcs-ignores -w src -w crates --shell "bash scripts/fleet-build.sh" \
+            >"$LOG_FILE" 2>&1 </dev/null &
+        BUILDER_PID=$!
+    else
+        echo "[dev] install bacon (recommended) or cargo-watch" >&2
+        exit 3
+    fi
+    echo "$BUILDER_PID" >"$PID_FILE"
+}
 
-if [[ $# -eq 1 && "$1" == "watch" ]]; then
-    exec cargo watch ${WATCH_CLEAR_ARG:+--clear} "${WATCH_ARGS[@]}" --exec "build --bin fleet"
-elif [[ $# -gt 0 ]]; then
-    CMD="cargo run --bin fleet --"
-    for arg in "$@"; do
-        CMD+=" $(printf '%q' "$arg")"
+wait_for_latest_build() {
+    if ! newest_source_is_newer; then
+        return 0
+    fi
+    echo "[dev] waiting for the first successful build..." >&2
+    BUILDER_PID="$(<"$PID_FILE")"
+    local deadline=$((SECONDS + 180))
+    while newest_source_is_newer; do
+        if ! is_dev_server "$BUILDER_PID"; then
+            echo "[dev] build server exited before producing a current binary; see $BUILDER_LOG_FILE" >&2
+            tail -40 "$BUILDER_LOG_FILE" >&2 || true
+            exit 8
+        fi
+        if (( SECONDS >= deadline )); then
+            echo "[dev] build did not produce a current binary; see $BUILDER_LOG_FILE" >&2
+            tail -40 "$BUILDER_LOG_FILE" >&2 || true
+            exit 8
+        fi
+        sleep 0.25
     done
-    # --use-shell bash: printf %q above emits bash-style escaping, so the command must be
-    # re-parsed by bash, not whatever /bin/sh cargo-watch would otherwise default to.
-    exec cargo watch ${WATCH_CLEAR_ARG:+--clear} "${WATCH_ARGS[@]}" --use-shell bash --shell "$CMD"
-else
-    ensure_background_watcher
-    echo "[dev] launching fleet's interactive CLI (building if needed) -- use './dev.sh watch' for a rebuild-only loop" >&2
-    exec cargo run --bin fleet --
+}
+
+start_builder
+wait_for_latest_build
+if [[ $# -eq 1 && "$1" == "watch" ]]; then
+    echo "[dev] build watcher is running; log: $BUILDER_LOG_FILE" >&2
+    while is_dev_server "$BUILDER_PID"; do
+        sleep 1
+    done
+    echo "[dev] build watcher exited; see $BUILDER_LOG_FILE" >&2
+    tail -40 "$BUILDER_LOG_FILE" >&2 || true
+    exit 8
 fi
+echo "[dev] launching latest Fleet binary; build log: $BUILDER_LOG_FILE" >&2
+exec "$BINARY" "$@"

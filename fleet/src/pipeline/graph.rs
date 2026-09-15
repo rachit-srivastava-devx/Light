@@ -46,6 +46,7 @@ pub fn run_pipeline(
     let result = run_through_merge(&log, &ctx, &mut records);
 
     if log.is_done(PipelineStage::Teach) {
+        super::stage_report::resumed(PipelineStage::Teach);
         records.stage(PipelineStage::Teach, "resumed", None);
     } else {
         let node = NodeId::parse("pipeline-run").expect("literal matches NodeId pattern");

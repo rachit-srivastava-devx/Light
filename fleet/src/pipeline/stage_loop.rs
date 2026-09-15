@@ -23,6 +23,7 @@ pub fn run_through_merge(
         if log.is_done(stage) {
             // Recorded, not silently dropped: this is why a crash-resumed run reports
             // `classification: null` for a `Classify` that passed in an EARLIER invocation.
+            stage_report::resumed(stage);
             out.stage(stage, "resumed", None);
             continue;
         }
